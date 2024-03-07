@@ -21,8 +21,9 @@ dependencies:
   - bibtexparser
   - pyvista[all,trame]>=0.42
   - meshio
-  - tetgen
   - scooby
   - sphinx-design
   - pydata-sphinx-theme
-
+  - myst-parser
+  - myst-nb
+  - jupytext
