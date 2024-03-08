@@ -27,3 +27,6 @@ dependencies:
   - myst-parser
   - myst-nb
   - jupytext
+  - trame-vtk
+  - conda-build
+  - linkify-it-py
