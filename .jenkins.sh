@@ -80,8 +80,8 @@ export PYVISTA_OFF_SCREEN=true
 export PYTHONPATH=`pwd`/../trunk:$PYTHONPATH
 OMP_THREAD_LIMIT=4 python -c "import pygimli; print(pygimli.Report()); pygimli.test(show=False, abort=True, htmlreport=\"build_tests.html\", devTests=True)"
 
-# Build documentation
-make clean-gallery
+#Build documentation
+#make clean-gallery # TMP for fast Jenkins builds
 make doc # = doxygen, sphinxapi, sphinxpdf, sphinxhtml
 end=$(date +"%s")
 echo "Ending automatic build #$BUILD_NUMBER".
