@@ -16,7 +16,7 @@ kernelspec:
 
 +++
 
-## What is a `DataContainer`?
+## What is a pyGIMLi DataContainer?
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
@@ -75,7 +75,7 @@ As you can see from the print out there is no sensor information. In the next su
 :::{admonition} Note
 :class: tip
 
-Data containers can also be initialized from different method managers. These have the custom names for sensors and data types of each method. For example `pygimli.physics.ert.DataContainer` already has ['a', 'b', 'm', 'n'] entries. One can also add alias translators like C1, C2, P1, P2, so that dataERT[“P1”] will return dataERT[“m”]
+Data containers can also be initialized from different method managers. These have the custom names for sensors and data types of each method. For example {py:class}`pygimli.physics.ert.DataContainer` already has ['a', 'b', 'm', 'n'] entries. One can also add alias translators like C1, C2, P1, P2, so that dataERT[“P1”] will return dataERT[“m”]
 :::
 
 +++
@@ -160,7 +160,9 @@ print(open("data.dat").read())
 
 Now we will go over the case if you have your own data and want to first import it using pyGIMLi and assign it to a data container. You can manually do this by importing data via Python (data must be assigned as Numpy arrays) and assign the values to the different keys in the data container. 
 
-However, pyGIMLi makes it easier for you using the different physics managers. For example, the `pygimli.physics.ert` has the `load()` function which supports most data formats. `pygimli.physics.em` has a `readusffile` function that reads data from single universal sounding file. Below is a table of the current loading utilities for every method
+pyGIMLi also uses {py:func}`pygimli.load` that loads meshes and data files. It should handle most data types since it detects the headings and file extensions to get a good guess on how to load the data. 
+
+Most methods also have the `load` function to load common data types used for the method. Such as, {py:func}`pygimli.physics.ert.load`. However, some methods have moe specific functions. Below is a table of the current loading utilities for every method. 
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}, "tags": ["hide-cell"]}
 
@@ -174,10 +176,8 @@ However, pyGIMLi makes it easier for you using the different physics managers. F
 | physics manager | available loading functions |
 | --- | --- |
 | em | {py:func}`importMaxminData <pygimli.physics.em.importMaxminData>`, {py:func}`readusffile <pygimli.physics.em.readusffile>`, {py:func}`readHEMData <pygimli.physics.em.FDEM.readHEMData>`, {py:func}`importEmsysAsciiData <pygimli.physics.em.FDEM.importEmsysAsciiData>` |
-| ert |{py:func}`load <pygimli.physics.ert.load>` |
-| SIP | {py:func}`load <pygimli.physics.SIP.load>` |
-| traveltime | {py:func}`load <pygimli.physics.traveltime.load>`|
 | ves |  {py:func}`loadData <pygimli.physics.traveltime.loadData>` |
+
 :::
 
 :::
