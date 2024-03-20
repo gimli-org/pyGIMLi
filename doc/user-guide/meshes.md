@@ -29,13 +29,12 @@ We start off by looking at the general anatomy of a pyGIMLi mesh. It is represen
 ```{code-cell} ipython3
 ---
 editable: true
-jupyter:
-  source_hidden: true
 slideshow:
   slide_type: ''
 ---
 import matplotlib.pyplot as plt
 import pygimli as pg
+import numpy as np
 
 from matplotlib.patches import Circle
 from matplotlib.patheffects import withStroke
@@ -215,19 +214,84 @@ pg.show(m_reg)
 :widths: 200px
 :align: center
 
-| Command              | Useage |
-| :---------------- | :------: |
-| mesh.cells()          |   Allows to access mesh cells   |
-| mesh.cell()          | Allows to access a single cell (using the cell ID) |
+| Command              | Useage | Source code |
+| :---------------- | :------: | :------: |
+| pg.meshtools.createGrid()          |   Creates a grid-style mesh   | [source code](https://www.pygimli.org/_modules/pygimli/meshtools/grid.html#createGrid)|
 :::
 
 +++
 
 ### Creating an irregular mesh with pyGIMLi
 
-After covering the basics of regular meshes
+After covering the basics of regular grids, we want to dive into the world of irregular meshes.
+
+However, we first of all have to create a **geometry** that is used as underlying susurface model for the mesh creation.
+
+```{code-cell} ipython3
+import pygimli as pg # import pygimli with short name
+from pygimli import meshtools as mt # import a module 
+
+# dimensions of the world
+left = -30
+right = 30
+depth = 25
+
+world = mt.createWorld(start=[left, 0],
+                       end=[right, -depth],
+                       layers=[-5])
+print(world)
+pg.show(world)
+```
+
+We are using the mt.createWorld() function to create a world based on the gíven x- & z-coordinates. The following table lists all handy functions that can be utilized when creating a geometry in pyGIMLi:
+
+:::{admonition} PLC creation in pyGIMLi
+:class: tip
+:::{table} **General commands for geometry creations**
+:widths: 200px
+:align: center
+
+| Command              | Useage |
+| :---------------- | :------: |
+| {py:class}`createWorld <pygmli.meshtools.createWorld()>`        |   Creates a PLC out of a given geometry   |
+| {py:class}`createCircle <pygmli.meshtools.createCircle()>`        |   Creates a circular PLC   |
+| {py:class}`createCube <pygmli.meshtools.createCube()>`          |   Creates a cubic PLC   |
+| {py:class}`createCylinder <pygmli.meshtools.createCylinder()>`       |   Creates a cylindric PLC   |
+| {py:class}`createLine <pygmli.meshtools.createLine()>`    |   Creates a line polygon  |
+| {py:class}`createPolygon <pygmli.meshtools.createPolygon()>` |   Creates a polygon from a list of vertices   |
+| {py:class}`createRectangle <pygmli.meshtools.createRectangle()>`      |   Creates a rectangular PLC   |
+:::
 
 +++
+
+To not over-simplify the example, we will add a dipping interface into our subsurface model by adding a simple line. To combine two PLC's, we can simply add them to each other:
+
+```{code-cell} ipython3
+line = mt.createLine(start=[left, -20], end=[right, -15])
+geometry = world + line
+pg.show(geometry)
+```
+
+Note that the line cuts region 2 dividing it into two. The upper part does not contain a region marker and thus becomes region 0.
+
+
+pyGIMLi has different ways to create meshes. mt.createMesh creates a mesh using Triangle, a two-dimensional constrained Delaunay mesh generator.
+
+The additional input parameters control the maximum triangle area and the mesh smoothness. The quality factor prescribes the minimum angles allowed in the final mesh. This can improve numerical accuracy, however, fine meshes lead to increased computational costs. Notice that we are now using showMesh which is convenient for 2D mesh visualization.
+
+```{code-cell} ipython3
+from pygimli.viewer import showMesh
+mesh = mt.createMesh(geometry, 
+                     area=2.0,
+                     quality=33,
+                     smooth=[2, 4] # [0:no smoothing or 1:node center or 2:weighted node center, # of iter]
+                    )
+showMesh(mesh, markers=True, showMesh=True); 
+```
+
+As there are different ways to generate a mesh in pyGIMLi, we
+
++++ {"jp-MarkdownHeadingCollapsed": true}
 
 ## Mesh import
 
@@ -240,6 +304,83 @@ After covering the basics of regular meshes
 ## Mesh modification
 
 +++
+
+pyGIMLi provides a variety of operators to modify your mesh. The following table gives an overview of the most important functions:
+
+:::{admonition} Mesh modifications
+:class: tip
+:::{table}
+:widths: 200px
+:align: center
+
+| Command              | Useage |
+| :---------------- | :------: |
+| {py:class}`merge2Meshes <pygmli.meshtools.merge2Meshes()>`        |   Merges two meshes   |
+| {py:class}`mergeMeshes <pygmli.meshtools.mergMeshes()>`        |   Merges two or more meshes   |
+| mesh.translate()          |   Allows to translate a mesh   |
+| mesh.scale()`       |   Scale a mesh with provided factors   |
+| mesh.rotate()`    |   Rotate a provided mesh  |
+:::
+
++++
+
+### Merging meshes
+
+In some cases, the modelling domain may require different degrees of flexibility in separate mesh regions. In the following, we demonstrate this for a two-dimensional mesh consisting of a region with regularly spaced quadrilaterals and a region with unstructured triangles. 
+
+pyGIMLi offers the possibility to merge two meshes by calling {py:class}`merge2Meshes <pygmli.meshtools.merge2Meshes()>`.
+
+```{code-cell} ipython3
+xmin, xmax = -30, 30.
+zmin, zmax = -50, -25.
+
+xreg = np.linspace(xmin, xmax, 30)
+zreg = np.linspace(zmin, zmax, 25)
+
+mesh2merge = mt.createGrid(xreg, zreg, marker=3)
+mergedMesh = mt.merge2Meshes(mesh,mesh2merge)
+pg.show(mergedMesh, markers=True, showMesh=True)
+```
+
+The merged meshes appear as a singular hybrid mesh now, so we can append a triangle boundary as for non-hybrid meshes:
+
+```{code-cell} ipython3
+mesh_append = mt.appendTriangleBoundary(mergedMesh, xbound=50., ybound=50., quality=31, smooth=True,
+                                 marker=4, isSubSurface=True, addNodes=10)
+
+ax, cb = pg.show(mesh_append)
+```
+
+When merging more than two meshes, the function {py:class}`mergeMeshes() <pygmli.meshtools.mergeMeshes()>` can be utilized instead of {py:class}`merge2Meshes <pygmli.meshtools.merge2Meshes()>`.
+
++++
+
+### Translating meshes
+
+To perform simple changes of the meshs x- and z-coordinates, we can make use of the {py:class}`translate <pygmli.meshtools.mesh().translate()>` function. The following lines of code move the mesh 500 m in x and 25 m in z direction:
+
+```{code-cell} ipython3
+translated_mesh = pg.Mesh(mesh)
+translated_mesh.translate([500, 25])
+pg.show(translated_mesh)
+```
+
+### Scaling meshes
+
+Apart from moving the mesh along its axes, pyGIMLi also provides a tool to scale the mesh
+
+```{code-cell} ipython3
+scaled_mesh = pg.Mesh(mesh) 
+scaled_mesh.scale([1, 2])
+pg.show(scaled_mesh)
+```
+
+```{code-cell} ipython3
+import numpy as np
+rotated_mesh = pg.Mesh(mesh) 
+rotated_mesh.rotate([0, 0, np.deg2rad(-20)])
+pg.show(rotated_mesh)
+```
 
 ## Mesh export
 
