@@ -401,6 +401,7 @@ scaled_mesh.scale([1, 2])
 pg.show(scaled_mesh)
 ```
 
+### Rotating meshes
 Another valuable mesh modification tool is the mesh.rotate function. By providing a rotation angle and the rotation plane, we can adjust the orientation angle of our mesh:
 
 ```{code-cell} ipython3
@@ -426,9 +427,16 @@ Suppose we want to continue working on our GIMLi mesh object in a different mesh
 | :---------------- | :------: |
 | {py:class}` FenicsHDF5Mesh <pygimli.meshtools.exportFenicsHDF5Mesh>`        |   Exports GIMLi mesh in HDF5 format suitable for Fenics   |
 | {py:class}`HDF5Mesh <pygimli.meshtools.exportHDF5Mesh>`        |   Writes given GIMLI::Mesh in a hdf5 format file   |
-| {py:class}` FenicsHDF5Mesh <pygimli.meshtools.exportPLC>`     |   	Export a piece-wise linear complex (PLC) to a .poly file (2D or 3D).   |
-| {py:class}`HDF5Mesh <pygimli.meshtools.exportSTL>`     |   Write STL surface mesh.   |
+| {py:class}` PLC <pygimli.meshtools.exportPLC>`     |   	Export a piece-wise linear complex (PLC) to a .poly file (2D or 3D)   |
+| {py:class}`STL <pygimli.meshtools.exportSTL>`     |   Write STL surface mesh   |
+| {py:class}`STL <pygimli.meshtools.mesh().exportVTK>`     |   Save mesh alongside properties as vtk   |
 :::
+
+```{code-cell} ipython3
+# Save rotated mesh from above as vtk file
+
+rotated_mesh.exportVTK('rotated_mesh.vtk')
+```
 
 ```{code-cell} ipython3
 
