@@ -15,7 +15,8 @@ kernelspec:
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
 # User guide
-```{contents} Table of Contents
+
+```{contents}Table of Content
 :depth: 3
 ```
 
@@ -32,38 +33,44 @@ kernelspec:
 ## Evaluate code
 
 ```{code-cell} ipython3
+<<<<<<< Updated upstream
 ---
 editable: true
 slideshow:
   slide_type: ''
 ---
+=======
+>>>>>>> Stashed changes
 import pygimli as pg
 mesh = pg.createGrid(20,5)
 data = pg.x(mesh)
 pg.show(mesh, data)
 ```
 
-##  Some Markdown features
+## Some Markdown features
 
 ### Math
-Since Pythagoras, we know that {math}`a^2 + b^2 = c^2`.
+
+Since Pythagoras, we know that $a^2 + b^2 = c^2$
 
 $$
-(a + b)^2  &=  (a + b)(a + b) \\
-           &=  a^2 + 2ab + b^2
+(a + b)^2  =  (a + b)(a + b) \\
+           =  a^2 + 2ab + b^2
 $$ (mymath2)
 
-The equation {eq}`mymath2` is also a quadratic equation.
+The equation {eq}"mymath2" is also a quadratic equation.
 
-Some **text**!
+Some **text-like stuff**!
 
 :::{admonition} Here's my title
 :class: tip
 
 Here's my admonition content.
+
 :::
 
 ### Tables
+
 :::{table} Table caption
 :widths: auto
 :align: center
@@ -74,9 +81,11 @@ Here's my admonition content.
 :::
 
 ### Typography
+
 **strong**, _emphasis_, `literal text`, \*escaped symbols\*
 
 ### Footnotes
+
 A longer footnote definition.[^mylongdef]
 
 [^mylongdef]: This is the _**footnote definition**_.
@@ -91,6 +100,7 @@ that are not separated by a blank line
 This is not part of the footnote.
 
 ### Cards
+
 :::{card} Card Title
 Header
 ^^^
@@ -102,6 +112,7 @@ Footer
 :::
 
 ### Tabs
+
 ::::{tab-set}
 
 :::{tab-item} Label1
@@ -113,3 +124,10 @@ Content 2
 :::
 
 ::::
+<<<<<<< Updated upstream
+=======
+
+```{code-cell} ipython3
+
+```
+>>>>>>> Stashed changes
