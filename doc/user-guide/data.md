@@ -16,7 +16,7 @@ kernelspec:
 
 +++
 
-## What is a `DataContainer`
+## What is a `DataContainer`?
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
@@ -27,6 +27,7 @@ A data container holds vectors like in a dictionary, however, all of them need t
 
 ```{code-cell} ipython3
 ---
+editable: true
 slideshow:
   slide_type: ''
 tags: [hide-cell]
@@ -64,7 +65,7 @@ print(ves_data)
 One can also use `showInfos()` to see the content of the data container with more wording. 
 
 ```{code-cell} ipython3
-data.showInfos()
+ves_data.showInfos()
 ```
 
 As you can see from the print out there is no sensor information. In the next subsection we will explain how to add sensor information to a data container.
@@ -142,11 +143,6 @@ At any point we can add sensors in the data container.
 data.showInfos()
 ```
 
-:::{admonition} Note
-:class: tip
-
-+++
-
 ## File export
 
 +++
@@ -162,11 +158,31 @@ print(open("data.dat").read())
 
 +++
 
-Now we will go over the case if you have your own data and want to first import it using pyGIMLi and assign it to a data container. 
+Now we will go over the case if you have your own data and want to first import it using pyGIMLi and assign it to a data container. You can manually do this by importing data via Python (data must be assigned as Numpy arrays) and assign the values to the different keys in the data container. 
 
-```{code-cell} ipython3
+However, pyGIMLi makes it easier for you using the different physics managers. For example, the `pygimli.physics.ert` has the `load()` function which supports most data formats. `pygimli.physics.em` has a `readusffile` function that reads data from single universal sounding file. Below is a table of the current loading utilities for every method
 
-```
++++ {"editable": true, "slideshow": {"slide_type": ""}, "tags": ["hide-cell"]}
+
+:::{admonition} Table of available import functions
+:class: tip
+
+:::{table} Commands to import data types depending on the physics manager
+:widths: auto
+:align: center
+
+| physics manager | available loading functions |
+| --- | --- |
+| em | {py:func}`importMaxminData <pygimli.physics.em.importMaxminData>`, {py:func}`readusffile <pygimli.physics.em.readusffile>`, {py:func}`readHEMData <pygimli.physics.em.FDEM.readHEMData>`, {py:func}`importEmsysAsciiData <pygimli.physics.em.FDEM.importEmsysAsciiData>` |
+| ert |{py:func}`load <pygimli.physics.ert.load>` |
+| SIP | {py:func}`load <pygimli.physics.SIP.load>` |
+| traveltime | {py:func}`load <pygimli.physics.traveltime.load>`|
+| ves |  {py:func}`loadData <pygimli.physics.traveltime.loadData>` |
+:::
+
+:::
+
++++
 
 ## Visualization
 

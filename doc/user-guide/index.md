@@ -44,7 +44,17 @@ data = pg.x(mesh)
 pg.show(mesh, data)
 ```
 
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+<<<<<<< Updated upstream
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
 ## Some Markdown features
+=======
+##  Some Markdown features
+>>>>>>> Stashed changes
 
 ### Math
 
