@@ -251,13 +251,13 @@ We are using the mt.createWorld() function to create a world based on the gíven
 
 | Function              | Usage |
 | :---------------- | :------: |
-| {py:class}`createWorld <pygmli.meshtools.createWorld>`        |   Creates a PLC out of a given geometry   |
-| {py:class}`createCircle <pygmli.meshtools.createCircle>`        |   Creates a circular PLC   |
-| {py:class}`createCube <pygmli.meshtools.createCube>`          |   Creates a cubic PLC   |
-| {py:class}`createCylinder <pygmli.meshtools.createCylinder>`       |   Creates a cylindric PLC   |
-| {py:class}`createLine <pygmli.meshtools.createLine>`    |   Creates a line polygon  |
-| {py:class}`createPolygon <pygmli.meshtools.createPolygon>` |   Creates a polygon from a list of vertices   |
-| {py:class}`createRectangle <pygmli.meshtools.createRectangle>`      |   Creates a rectangular PLC   |
+| {py:class}`createWorld <pygimli.meshtools.createWorld>`        |   Creates a PLC out of a given geometry   |
+| {py:class}`createCircle <pygimli.meshtools.createCircle>`        |   Creates a circular PLC   |
+| {py:class}`createCube <pygimli.meshtools.createCube>`          |   Creates a cubic PLC   |
+| {py:class}`createCylinder <pygimli.meshtools.createCylinder>`       |   Creates a cylindric PLC   |
+| {py:class}`createLine <pygimli.meshtools.createLine>`    |   Creates a line polygon  |
+| {py:class}`createPolygon <pygimli.meshtools.createPolygon>` |   Creates a polygon from a list of vertices   |
+| {py:class}`createRectangle <pygimli.meshtools.createRectangle>`      |   Creates a rectangular PLC   |
 :::
 
 +++
@@ -304,15 +304,15 @@ A broad variety of functions to import and convert different mesh types into a G
 
 | Function              | Usage |
 | :---------------- | :------: |
-| {py:class}`FenicsHDF5Mesh <pygmli.meshtools.readFenicsHDF5Mesh>`        |   Read FEniCS mesh from .h5 format and return a GIMLI mesh object  |
-| {py:class}`Gmsh <pygmli.meshtools.readGmsh>`        |   Read GMSH ASCII file and return a GIMLI mesh object   |
-| {py:class}`HDF5Mesh <pygmli.meshtools.readHDF5Mesh>`          |   Load a mesh from HDF5 file format   |
-| {py:class}`Hydrus2dMesh <pygmli.meshtools.readHydrus2dMesh>`       |   Import mesh from Hydrus 2D   |
-| {py:class}`Hydrus3dMesh <pygmli.meshtools.readHydrus3dMesh>`    |   Import mesh from Hydrus 3D  |
-| {py:class}`MeshIO <pygmli.meshtools.readMeshIO>` |   Read generic meshIO mesh   |
-| {py:class}`STL <pygmli.meshtools.readSTL>`      |   Read STL surface mesh and converts to GIMLI mesh object   |
-| {py:class}`Tetgen <pygmli.meshtools.readTetgen>` |   Read and convert a mesh from the basic Tetgen output   |
-| {py:class}`Triangle <pygmli.meshtools.readTriangle>`      |   Read Triangle mesh   |
+| {py:class}`FenicsHDF5Mesh <pygimli.meshtools.readFenicsHDF5Mesh>`        |   Read FEniCS mesh from .h5 format and return a GIMLI mesh object  |
+| {py:class}`Gmsh <pygimli.meshtools.readGmsh>`        |   Read GMSH ASCII file and return a GIMLI mesh object   |
+| {py:class}`HDF5Mesh <pygimli.meshtools.readHDF5Mesh>`          |   Load a mesh from HDF5 file format   |
+| {py:class}`Hydrus2dMesh <pygimli.meshtools.readHydrus2dMesh>`       |   Import mesh from Hydrus 2D   |
+| {py:class}`Hydrus3dMesh <pygimli.meshtools.readHydrus3dMesh>`    |   Import mesh from Hydrus 3D  |
+| {py:class}`MeshIO <pygimli.meshtools.readMeshIO>` |   Read generic meshIO mesh   |
+| {py:class}`STL <pygimli.meshtools.readSTL>`      |   Read STL surface mesh and converts to GIMLI mesh object   |
+| {py:class}`Tetgen <pygimli.meshtools.readTetgen>` |   Read and convert a mesh from the basic Tetgen output   |
+| {py:class}`Triangle <pygimli.meshtools.readTriangle>`      |   Read Triangle mesh   |
 :::
 
 +++
@@ -341,8 +341,8 @@ pyGIMLi provides a variety of operators to modify your mesh. The following table
 
 | Function              | Usage |
 | :---------------- | :------: |
-| {py:class}`merge2Meshes <pygmli.meshtools.merge2Meshes>`        |   Merges two meshes   |
-| {py:class}`mergeMeshes <pygmli.meshtools.mergMeshes>`        |   Merges two or more meshes   |
+| {py:class}`merge2Meshes <pygimli.meshtools.merge2Meshes>`        |   Merges two meshes   |
+| {py:class}`mergeMeshes <pygimli.meshtools.mergeMeshes>`        |   Merges two or more meshes   |
 | mesh.translate()          |   Allows to translate a mesh   |
 | mesh.scale()`       |   Scale a mesh with provided factors   |
 | mesh.rotate()`    |   Rotate a provided mesh  |
@@ -424,10 +424,10 @@ Suppose we want to continue working on our GIMLi mesh object in a different mesh
 
 | Function              | Usage |
 | :---------------- | :------: |
-| {py:class}` FenicsHDF5Mesh <pygmli.meshtools.exportFenicsHDF5Mesh>`        |   Exports GIMLi mesh in HDF5 format suitable for Fenics   |
-| {py:class}`HDF5Mesh <pygmli.meshtools.exportHDF5Mesh>`        |   Writes given GIMLI::Mesh in a hdf5 format file   |
-| {py:class}` FenicsHDF5Mesh <pygmli.meshtools.exportPLC>`     |   	Export a piece-wise linear complex (PLC) to a .poly file (2D or 3D).   |
-| {py:class}`HDF5Mesh <pygmli.meshtools.exportSTL>`     |   Write STL surface mesh.   |
+| {py:class}` FenicsHDF5Mesh <pygimli.meshtools.exportFenicsHDF5Mesh>`        |   Exports GIMLi mesh in HDF5 format suitable for Fenics   |
+| {py:class}`HDF5Mesh <pygimli.meshtools.exportHDF5Mesh>`        |   Writes given GIMLI::Mesh in a hdf5 format file   |
+| {py:class}` FenicsHDF5Mesh <pygimli.meshtools.exportPLC>`     |   	Export a piece-wise linear complex (PLC) to a .poly file (2D or 3D).   |
+| {py:class}`HDF5Mesh <pygimli.meshtools.exportSTL>`     |   Write STL surface mesh.   |
 :::
 
 ```{code-cell} ipython3
