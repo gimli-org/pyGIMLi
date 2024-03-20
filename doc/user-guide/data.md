@@ -5,20 +5,18 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.16.1
 kernelspec:
-  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
 
-# User guide - Data in pyGIMLi
+# Data
 
 +++
 
 ## What is a pyGIMLi DataContainer?
 
-+++ {"editable": true, "slideshow": {"slide_type": ""}}
++++
 
 Data are often organized in a data container storing the individual data values as well as any description how they were obtained, e.g. the geometry of source and receivers. DataContainer is essentially a class that stores all of this information. It is different for every method and can be then filtered accordingly. It stores two primary things: sensor information and data measurements.
 
@@ -26,19 +24,13 @@ Data are often organized in a data container storing the individual data values 
 A data container holds vectors like in a dictionary, however, all of them need to have the same length defined by the .size() method. Let's first go over how you can create a DataContainer from scratch. Assume we want to create and store Vertical Electrical Sounding (VES) data.
 
 ```{code-cell} ipython3
----
-editable: true
-slideshow:
-  slide_type: ''
-tags: [hide-cell]
----
+:tags: [hide-cell]
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pygimli as pg
 from pygimli.physics import VESManager
 ```
-
-+++ {"editable": true, "slideshow": {"slide_type": ""}}
 
 We define logarithmically equidistant AB/2 spacings. Which is the midpoint of current electrode spacing for each measurement.
 
@@ -70,7 +62,7 @@ ves_data.showInfos()
 
 As you can see from the print out there is no sensor information. In the next subsection we will explain how to add sensor information to a data container.
 
-+++ {"editable": true, "slideshow": {"slide_type": ""}}
++++
 
 :::{admonition} Note
 :class: tip
@@ -82,16 +74,11 @@ Data containers can also be initialized from different method managers. These ha
 
 ## Creating Sensors in DataContainer
 
-+++ {"editable": true, "slideshow": {"slide_type": ""}}
++++
 
 Assume we have data associate with a transmitter, receivers and a property U. The transmitter (Tx) and receiver (Rx) positions are stored separately and we refer them with an Index (integer). Therefore we define these fields index.
 
 ```{code-cell} ipython3
----
-editable: true
-slideshow:
-  slide_type: ''
----
 data = pg.DataContainer()
 data.registerSensorIndex("Tx")
 data.registerSensorIndex("Rx")
@@ -131,13 +118,13 @@ print(data["valid"])
 print(len(data["Rx"]))
 ```
 
-That adds a 'valid' entry to the data container that contains 1 and 0 values. You can also check the data validity by using `checkDataValidity`. It automatically removes values that are 0 in the valid field and writes an `invalid.data` file to your local directory. In this case it will remove the two additional values that were marked invalid. 
+That adds a 'valid' entry to the data container that contains 1 and 0 values. You can also check the data validity by using `checkDataValidity`. It automatically removes values that are 0 in the valid field and writes an `invalid.data` file to your local directory. In this case it will remove the two additional values that were marked invalid.
 
 ```{code-cell} ipython3
 data.checkDataValidity()
 ```
 
-You can pass more information about the data set into the data container. For example, here we calculate the distance between transmitter and receiver. 
+You can pass more information about the data set into the data container. For example, here we calculate the distance between transmitter and receiver.
 
 ```{code-cell} ipython3
 sx = pg.x(data)
@@ -145,9 +132,9 @@ data["dist"] = np.abs(sx[data["Rx"]] - sx[data["Tx"]])
 print(data["dist"])
 ```
 
-+++ {"editable": true, "slideshow": {"slide_type": ""}, "tags": ["hide-cell"]}
++++ {"tags": ["hide-cell"]}
 
-You can also do some pre-processing using the validity option again. For example, here we would like to mark as **invalid** where the receiver is the same as the transmitter. 
+You can also do some pre-processing using the validity option again. For example, here we would like to mark as **invalid** where the receiver is the same as the transmitter.
 
 ```{code-cell} ipython3
 data.markInvalid(data["Rx"] == data["Tx"])
@@ -179,7 +166,7 @@ pyGIMLi also uses {py:func}`pygimli.load` that loads meshes and data files. It s
 
 Most methods also have the `load` function to load common data types used for the method. Such as, {py:func}`pygimli.physics.ert.load`. However, some methods have moe specific functions. Below is a table of the current loading utilities for every method. For a more extensive list of data imports please refer to [pybert importer package](http://resistivity.net/bert/_api/pybert.importer.html#module-pybert.importer).
 
-+++ {"editable": true, "slideshow": {"slide_type": ""}, "tags": ["hide-cell"]}
++++ {"tags": ["hide-cell"]}
 
 :::{admonition} Table of available import functions
 :class: tip

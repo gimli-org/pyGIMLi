@@ -17,8 +17,16 @@ kernelspec:
 :::{toctree}
 :numbered:
 
-test
+fundamentals
 data
 meshes
 inversion
+modelling
+advanced
+:::
+
+:::{toctree}
+:caption: Temp
+
+cheatsheet
 :::

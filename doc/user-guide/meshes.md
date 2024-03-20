@@ -5,16 +5,14 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.16.1
 kernelspec:
-  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
 
-+++ {"editable": true, "slideshow": {"slide_type": ""}, "raw_mimetype": ""}
++++ {"raw_mimetype": ""}
 
-# User guide - mesh section
+# Meshes
 
 This part of the user guide covers mesh-related topics, starting with a [general introduction](#basics-of-the-mesh-class) to the mesh class. Moreover, this section introduces general operations to [create](#mesh-creation) or [import](#mesh-import) meshes. Moreover, the general aspects of [visualization](#mesh-visualization) are covered within this section.
 
@@ -25,11 +23,6 @@ This part of the user guide covers mesh-related topics, starting with a [general
 We start off by looking at the general anatomy of a pyGIMLi mesh. It is represented by a collection of nodes, cells and boundaries, i.e., geometrical entities:
 
 ```{code-cell} ipython3
----
-editable: true
-slideshow:
-  slide_type: ''
----
 import matplotlib.pyplot as plt
 import pygimli as pg
 import numpy as np
@@ -413,7 +406,7 @@ pg.show(rotated_mesh)
 
 ## Mesh export
 
-+++ {"editable": true, "slideshow": {"slide_type": ""}}
++++
 
 Suppose we want to continue working on our GIMLi mesh object in a different meshing tool - pyGIMLi provides a variety of export functions to transfer your GIMLi mesh into a different format: 
 
