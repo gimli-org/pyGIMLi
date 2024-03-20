@@ -80,18 +80,12 @@ Documentation
             Publications cited in the documentation
 
 
-.. only:: latex
+.. toctree::
+    :hidden:
 
-    .. toctree::
-        :maxdepth: 4
-
-        about.rst
-        citation.rst
-        design.rst
-        installation.rst
-        faq.rst
-        _examples_auto/index.rst
-        _tutorials_auto/index.rst
-        pygimliapi/index.rst
-        contrib.rst
-        glossary.rst
+    user-guide/index
+    _examples_auto/index.rst
+    _tutorials_auto/index.rst
+    pygimliapi/index.rst
+    contrib.rst
+    glossary.rst
