@@ -18,6 +18,7 @@ dependencies:
   - sphinxcontrib-programoutput
   - sphinxcontrib-spelling
   - sphinxcontrib-doxylink
+  - sphinx-tippy
   - bibtexparser
   - pyvista[all,trame]>=0.42
   - meshio

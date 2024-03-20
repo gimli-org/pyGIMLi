@@ -107,6 +107,7 @@ extensions = [
     "srclinks",
     "sphinxcontrib.doxylink",
     "sphinx_design",
+    "sphinx_tippy"
     # "sphinxcontrib.spelling"
     #'sphinx.ext.pngmath',   # for breath
     #'sphinx.ext.todo',      # for breath
