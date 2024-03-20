@@ -177,7 +177,7 @@ Now we will go over the case if you have your own data and want to first import 
 
 pyGIMLi also uses {py:func}`pygimli.load` that loads meshes and data files. It should handle most data types since it detects the headings and file extensions to get a good guess on how to load the data. 
 
-Most methods also have the `load` function to load common data types used for the method. Such as, {py:func}`pygimli.physics.ert.load`. However, some methods have moe specific functions. Below is a table of the current loading utilities for every method. For a more extensive list of data imports please refer to [pybert importer package](http://resistivity.net/bert/_api/pybert.importer.html#module-pybert.importer). This also has compatability with pyGIMLi
+Most methods also have the `load` function to load common data types used for the method. Such as, {py:func}`pygimli.physics.ert.load`. However, some methods have moe specific functions. Below is a table of the current loading utilities for every method. For a more extensive list of data imports please refer to [pybert importer package](http://resistivity.net/bert/_api/pybert.importer.html#module-pybert.importer).
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}, "tags": ["hide-cell"]}
 
@@ -202,19 +202,15 @@ Most methods also have the `load` function to load common data types used for th
 
 +++
 
-You can visualize the data in many ways depending on the physics manager. To simply view the data as a matrix you can use 
+You can visualize the data in many ways depending on the physics manager. To simply view the data as a matrix you can use `pg.viewer.mpl.showDataContainerAsMatrix`. This visualizes a matrix of receivers and transmitters pairs with the associated data to plot : 'dist'. 
 
 ```{code-cell} ipython3
 pg.viewer.mpl.showDataContainerAsMatrix(data, "Rx", "Tx", 'dist');
 ```
 
-+++ {"editable": true, "slideshow": {"slide_type": ""}, "tags": ["hide-cell"]}
+There are more formal ways of plotting different data containers depending on the method. As seen in (link to fundamentals show vs draw) here we can focus on showing the data container. Most of the methods use `show()` however, there are some method-dependent show function in the table below. 
 
-### Main difference between `show` functions and `draw` functions
-
-```{code-cell} ipython3
-
-```
++++
 
 ## Processing
 
