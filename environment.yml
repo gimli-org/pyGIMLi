@@ -30,3 +30,4 @@ dependencies:
   - trame-vtk
   - conda-build
   - linkify-it-py
+  - jupytext

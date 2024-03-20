@@ -18,10 +18,6 @@ pygccxml==2.5.0
 # needed to run
 matplotlib>=3.7,<3.9
 
-# useful to run
-ipython
-jupytext
-
 # optional, but strongly recommended
 #scipy<1.14  # for numpy 1
 scipy>=1.14 # for numpy 2
@@ -40,8 +36,13 @@ sphinx-gallery
 sphinx-design
 pydata-sphinx-theme
 bibtexparser
+jupytext
 
-# needed for testing
+# optional, but strongly recommended
+scooby
+ipython
+
+# for testing
 pytest
 meshio
 
