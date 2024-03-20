@@ -33,14 +33,11 @@ kernelspec:
 ## Evaluate code
 
 ```{code-cell} ipython3
-<<<<<<< Updated upstream
 ---
 editable: true
 slideshow:
   slide_type: ''
 ---
-=======
->>>>>>> Stashed changes
 import pygimli as pg
 mesh = pg.createGrid(20,5)
 data = pg.x(mesh)
@@ -122,12 +119,3 @@ Content 1
 :::{tab-item} Label2
 Content 2
 :::
-
-::::
-<<<<<<< Updated upstream
-=======
-
-```{code-cell} ipython3
-
-```
->>>>>>> Stashed changes
