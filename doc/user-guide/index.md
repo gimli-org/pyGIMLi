@@ -4,21 +4,39 @@ jupytext:
   text_representation:
     extension: .md
     format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.16.1
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
 # User guide
 ```{contents} Table of Contents
 :depth: 3
 ```
 
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+## Citations
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+{cite}`Seigel1959` did something great
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
 ## Evaluate code
 
 ```{code-cell} ipython3
-
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 import pygimli as pg
 mesh = pg.createGrid(20,5)
 data = pg.x(mesh)
@@ -77,7 +95,9 @@ This is not part of the footnote.
 Header
 ^^^
 Card content
+
 +++
+
 Footer
 :::
 

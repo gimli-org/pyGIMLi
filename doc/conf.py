@@ -69,8 +69,7 @@ needs_sphinx = "1.8"  # due to napoleon
 deps = [
     "sphinxcontrib-programoutput",
     "sphinxcontrib-bibtex",
-    "sphinxcontrib-doxylink",
-    "bibtexparser",
+    "sphinxcontrib-doxylink"
 ]
 
 # check for p.version too
@@ -95,11 +94,11 @@ if req:
 # They can be extensions coming with Sphinx (named "sphinx.ext.*")
 # or your custom ones.
 extensions = [
+    "myst_nb",
     "sphinx.ext.autodoc",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.autosummary",
-    "sphinx.ext.mathjax",
     "sphinx.ext.intersphinx",
     "sphinx.ext.imgconverter",
     "sphinx.ext.autosectionlabel",
@@ -108,7 +107,6 @@ extensions = [
     "srclinks",
     "sphinxcontrib.doxylink",
     "sphinx_design",
-    "myst_nb",
     # "sphinxcontrib.spelling"
     #'sphinx.ext.pngmath',   # for breath
     #'sphinx.ext.todo',      # for breath
@@ -221,15 +219,6 @@ autodoc_default_options = {
     "undoc-members": False,
     "show-inheritance": True,
 }
-
-# Get mathjax
-# Formulas disappear after scrolling
-# mathjax_path = "https://www.pygimli.org/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-# Slow, but works
-mathjax_path = (
-    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js"
-    + "?config=TeX-AMS-MML_HTMLorMML"
-)
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = [join(SPHINXDOC_PATH, "_templates"), join(DOC_BUILD_DIR, "_templates")]
