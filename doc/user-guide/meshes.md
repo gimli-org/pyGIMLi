@@ -16,8 +16,6 @@ kernelspec:
 
 # User guide - mesh section
 
-
-
 This part of the user guide covers mesh-related topics, starting with a [general introduction](#basics-of-the-mesh-class) to the mesh class. Moreover, this section introduces general operations to [create](#mesh-creation) or [import](#mesh-import) meshes. Moreover, the general aspects of [visualization](#mesh-visualization) are covered within this section.
 
 
@@ -42,7 +40,7 @@ from matplotlib.patheffects import withStroke
 
 def circle(x, y, text=None, radius=0.15, c="blue"):
     circle = Circle((x, y), radius, clip_on=False, zorder=10, linewidth=1,
-                    edgecolor='black', facecolor=(0, 0, 0, .0125),
+                    edgecolor='black', facecolor=(0, 0, 0, .0125), 
                     path_effects=[withStroke(linewidth=5, foreground='w')])
     ax.add_artist(circle)
     ax.plot(x, y, color=c, marker=".")
@@ -117,7 +115,7 @@ The mesh class holds either geometric definitions (piece-wise linear complex - *
 :widths: auto
 :align: center
 
-| Command              | Useage |
+| Function              | Usage |
 | :---------------- | :------: |
 | mesh.cells()          |   Allows to access mesh cells   |
 | mesh.cell()          | Allows to access a single cell (using the cell ID) |
@@ -210,13 +208,13 @@ pg.show(m_reg)
 
 :::{admonition} Regular grids in 2D
 :class: tip
-:::{table} **General commands for 2D regular grids**
+:::{table}
 :widths: 200px
 :align: center
 
-| Command              | Useage | Source code |
-| :---------------- | :------: | :------: |
-| pg.meshtools.createGrid()          |   Creates a grid-style mesh   | [source code](https://www.pygimli.org/_modules/pygimli/meshtools/grid.html#createGrid)|
+| Function              | Usage |
+| :---------------- | :------: |
+| {py:class}`createWorld <pygimli.meshtools.createWorld>`  |   Creates a world based on provided x- and z-coordinates   |
 :::
 
 +++
@@ -251,15 +249,15 @@ We are using the mt.createWorld() function to create a world based on the gíven
 :widths: 200px
 :align: center
 
-| Command              | Useage |
+| Function              | Usage |
 | :---------------- | :------: |
-| {py:class}`createWorld <pygmli.meshtools.createWorld()>`        |   Creates a PLC out of a given geometry   |
-| {py:class}`createCircle <pygmli.meshtools.createCircle()>`        |   Creates a circular PLC   |
-| {py:class}`createCube <pygmli.meshtools.createCube()>`          |   Creates a cubic PLC   |
-| {py:class}`createCylinder <pygmli.meshtools.createCylinder()>`       |   Creates a cylindric PLC   |
-| {py:class}`createLine <pygmli.meshtools.createLine()>`    |   Creates a line polygon  |
-| {py:class}`createPolygon <pygmli.meshtools.createPolygon()>` |   Creates a polygon from a list of vertices   |
-| {py:class}`createRectangle <pygmli.meshtools.createRectangle()>`      |   Creates a rectangular PLC   |
+| {py:class}`createWorld <pygmli.meshtools.createWorld>`        |   Creates a PLC out of a given geometry   |
+| {py:class}`createCircle <pygmli.meshtools.createCircle>`        |   Creates a circular PLC   |
+| {py:class}`createCube <pygmli.meshtools.createCube>`          |   Creates a cubic PLC   |
+| {py:class}`createCylinder <pygmli.meshtools.createCylinder>`       |   Creates a cylindric PLC   |
+| {py:class}`createLine <pygmli.meshtools.createLine>`    |   Creates a line polygon  |
+| {py:class}`createPolygon <pygmli.meshtools.createPolygon>` |   Creates a polygon from a list of vertices   |
+| {py:class}`createRectangle <pygmli.meshtools.createRectangle>`      |   Creates a rectangular PLC   |
 :::
 
 +++
@@ -281,6 +279,7 @@ The additional input parameters control the maximum triangle area and the mesh s
 
 ```{code-cell} ipython3
 from pygimli.viewer import showMesh
+
 mesh = mt.createMesh(geometry, 
                      area=2.0,
                      quality=33,
@@ -289,11 +288,38 @@ mesh = mt.createMesh(geometry,
 showMesh(mesh, markers=True, showMesh=True); 
 ```
 
-As there are different ways to generate a mesh in pyGIMLi, we
-
-+++ {"jp-MarkdownHeadingCollapsed": true}
-
 ## Mesh import
+
++++
+
+### Import options for meshes in pyGIMLi
+
+A broad variety of functions to import and convert different mesh types into a GIMLI mesh object exists within pyGIMLi. The following functions are the most commonly used ones: 
+
+:::{admonition} PLC creation in pyGIMLi
+:class: tip
+:::{table}
+:widths: 200px
+:align: center
+
+| Function              | Usage |
+| :---------------- | :------: |
+| {py:class}`FenicsHDF5Mesh <pygmli.meshtools.readFenicsHDF5Mesh>`        |   Read FEniCS mesh from .h5 format and return a GIMLI mesh object  |
+| {py:class}`Gmsh <pygmli.meshtools.readGmsh>`        |   Read GMSH ASCII file and return a GIMLI mesh object   |
+| {py:class}`HDF5Mesh <pygmli.meshtools.readHDF5Mesh>`          |   Load a mesh from HDF5 file format   |
+| {py:class}`Hydrus2dMesh <pygmli.meshtools.readHydrus2dMesh>`       |   Import mesh from Hydrus 2D   |
+| {py:class}`Hydrus3dMesh <pygmli.meshtools.readHydrus3dMesh>`    |   Import mesh from Hydrus 3D  |
+| {py:class}`MeshIO <pygmli.meshtools.readMeshIO>` |   Read generic meshIO mesh   |
+| {py:class}`STL <pygmli.meshtools.readSTL>`      |   Read STL surface mesh and converts to GIMLI mesh object   |
+| {py:class}`Tetgen <pygmli.meshtools.readTetgen>` |   Read and convert a mesh from the basic Tetgen output   |
+| {py:class}`Triangle <pygmli.meshtools.readTriangle>`      |   Read Triangle mesh   |
+:::
+
++++
+
+### Example: mesh generation using Gmsh
+
+When the scientific task requires a complex finite-element discretization (i.e. incorporation of structural information, usage of a complete electrode model (CEM), etc.), external meshing tools with visualization capabilities may be the option of choice for some users. In general, the bindings provided by pygimli allow to interface any external mesh generation software.
 
 +++
 
@@ -313,10 +339,10 @@ pyGIMLi provides a variety of operators to modify your mesh. The following table
 :widths: 200px
 :align: center
 
-| Command              | Useage |
+| Function              | Usage |
 | :---------------- | :------: |
-| {py:class}`merge2Meshes <pygmli.meshtools.merge2Meshes()>`        |   Merges two meshes   |
-| {py:class}`mergeMeshes <pygmli.meshtools.mergMeshes()>`        |   Merges two or more meshes   |
+| {py:class}`merge2Meshes <pygmli.meshtools.merge2Meshes>`        |   Merges two meshes   |
+| {py:class}`mergeMeshes <pygmli.meshtools.mergMeshes>`        |   Merges two or more meshes   |
 | mesh.translate()          |   Allows to translate a mesh   |
 | mesh.scale()`       |   Scale a mesh with provided factors   |
 | mesh.rotate()`    |   Rotate a provided mesh  |
@@ -367,13 +393,15 @@ pg.show(translated_mesh)
 
 ### Scaling meshes
 
-Apart from moving the mesh along its axes, pyGIMLi also provides a tool to scale the mesh
+Apart from moving the mesh along its axes, pyGIMLi also provides a tool to scale the mesh along specified axes - in this example, we scale along the z-axis with a factor of 2:
 
 ```{code-cell} ipython3
 scaled_mesh = pg.Mesh(mesh) 
 scaled_mesh.scale([1, 2])
 pg.show(scaled_mesh)
 ```
+
+Another valuable mesh modification tool is the mesh.rotate function. By providing a rotation angle and the rotation plane, we can adjust the orientation angle of our mesh:
 
 ```{code-cell} ipython3
 import numpy as np
@@ -384,11 +412,24 @@ pg.show(rotated_mesh)
 
 ## Mesh export
 
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+Suppose we want to continue working on our GIMLi mesh object in a different meshing tool - pyGIMLi provides a variety of export functions to transfer your GIMLi mesh into a different format: 
+
+:::{admonition} Mesh export functions
+:class: tip
+:::{table}
+:widths: 200px
+:align: center
+
+| Function              | Usage |
+| :---------------- | :------: |
+| {py:class}` FenicsHDF5Mesh <pygmli.meshtools.exportFenicsHDF5Mesh>`        |   Exports GIMLi mesh in HDF5 format suitable for Fenics   |
+| {py:class}`HDF5Mesh <pygmli.meshtools.exportHDF5Mesh>`        |   Writes given GIMLI::Mesh in a hdf5 format file   |
+| {py:class}` FenicsHDF5Mesh <pygmli.meshtools.exportPLC>`     |   	Export a piece-wise linear complex (PLC) to a .poly file (2D or 3D).   |
+| {py:class}`HDF5Mesh <pygmli.meshtools.exportSTL>`     |   Write STL surface mesh.   |
+:::
+
 ```{code-cell} ipython3
----
-editable: true
-slideshow:
-  slide_type: ''
----
 
 ```
