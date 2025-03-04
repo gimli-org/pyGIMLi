@@ -23,8 +23,10 @@ This part of the user guide covers mesh-related topics, starting with a [general
 We start off by looking at the general anatomy of a pyGIMLi mesh. It is represented by a collection of nodes, cells and boundaries, i.e., geometrical entities:
 
 ```{code-cell} ipython3
+
 import matplotlib.pyplot as plt
 import pygimli as pg
+import pygimli.meshtools as mt
 import numpy as np
 
 from matplotlib.patches import Circle
@@ -110,20 +112,20 @@ The mesh class holds either geometric definitions (piece-wise linear complex - *
 
 | Function              | Usage |
 | :---------------- | :------: |
-| mesh.cells()          |   Allows to access mesh cells   |
-| mesh.cell()          | Allows to access a single cell (using the cell ID) |
-| mesh.cell().center()  | Allows to point to the center of a specific mesh cell |
-| mesh.cell().center().x()/.y() | Allows to extract the x / y coordinate of a cell center |
-| mesh.boundaries()  |  Accesses mesh boundaries   |
-| mesh.boundary() | Points to a specific boundary of the mesh (using boundary IDs)
-| mesh.boundary().center() | Allows to point to the center of a specific mesh boundary |
-| mesh.boundary().center().x/.y | Allows to extract x / y coordinate of a boundary
-| mesh.nodes() |  Accesses mesh nodes   |
-| mesh.node() | Refers to one specific node within the mesh |
-| mesh.node().x()/.y() | Allows to extract x / y coordinate of a node
+| `mesh.cells()`          |   Allows to access mesh cells   |
+|  `mesh.cell()`          | Allows to access a single cell (using the cell ID) |
+| `mesh.cell().center()`  | Allows to point to the center of a specific mesh cell |
+| `mesh.cell().center().x()/.y()` | Allows to extract the x / y coordinate of a cell center |
+| `mesh.boundaries()`  |  Accesses mesh boundaries   |
+| `mesh.boundary()` | Points to a specific boundary of the mesh (using boundary IDs)
+| `mesh.boundary().center()` | Allows to point to the center of a specific mesh boundary |
+| `mesh.boundary().center().x/.y` | Allows to extract x / y coordinate of a boundary
+| `mesh.nodes()` |  Accesses mesh nodes   |
+| `mesh.node()` | Refers to one specific node within the mesh |
+| `mesh.node().x()/.y()` | Allows to extract x / y coordinate of a node
 :::
 
-+++
+
 
 It is common practice to classify meshes into two main types - structured and unstructured.
 
@@ -143,7 +145,6 @@ jupyter:
   source_hidden: true
 ---
 from pygimli.meshtools import polytools as plc
-import numpy as np
 
 fig, (ax1,ax2) = plt.subplots(1,2,figsize=(16,8), dpi=90)
 ax1.set_title("Structured mesh", fontweight="bold")
@@ -169,15 +170,8 @@ pg.show(m, ax=ax2)
 fig.tight_layout()
 ```
 
-A mesh can have different regions, which are defined by **region markers** for each cell. Region markers can be used to assign properties for forward modelling as well as to control the inversion behavior.
-
-### Add chapter on markers ###
-
-+++
 
 ## Mesh creation
-
-+++
 
 ### Creating a regular mesh / grid in 2D
 
@@ -207,10 +201,9 @@ pg.show(m_reg)
 
 | Function              | Usage |
 | :---------------- | :------: |
-| {py:class}`createWorld <pygimli.meshtools.createWorld>`  |   Creates a world based on provided x- and z-coordinates   |
+| {py:class}`createGrid <pygimli.meshtools.createWorld>`  |   Creates a regular grid mesh from the provided x- and z-coordinates   |
 :::
 
-+++
 
 ### Creating an irregular mesh with pyGIMLi
 
@@ -219,9 +212,6 @@ After covering the basics of regular grids, we want to dive into the world of ir
 However, we first of all have to create a **geometry** that is used as underlying susurface model for the mesh creation.
 
 ```{code-cell} ipython3
-import pygimli as pg # import pygimli with short name
-from pygimli import meshtools as mt # import a module 
-
 # dimensions of the world
 left = -30
 right = 30
@@ -229,10 +219,19 @@ depth = 25
 
 world = mt.createWorld(start=[left, 0],
                        end=[right, -depth],
-                       layers=[-5])
+                       layers=[-5], worldMarker=False)
 print(world)
 pg.show(world)
 ```
+
+:::{admonition} Region markers
+:class: info
+
+A mesh can have different regions, which are defined by **region markers** for each cell. Region markers can be used to assign properties for forward modelling as well as to control the inversion behavior.
+
+For more information, see the later section on **Markers**
+:::
+
 
 We are using the mt.createWorld() function to create a world based on the gíven x- & z-coordinates. The following table lists all handy functions that can be utilized when creating a geometry in pyGIMLi:
 
@@ -253,18 +252,6 @@ We are using the mt.createWorld() function to create a world based on the gíven
 | {py:class}`createRectangle <pygimli.meshtools.createRectangle>`      |   Creates a rectangular PLC   |
 :::
 
-+++
-
-To not over-simplify the example, we will add a dipping interface into our subsurface model by adding a simple line. To combine two PLC's, we can simply add them to each other:
-
-```{code-cell} ipython3
-line = mt.createLine(start=[left, -20], end=[right, -15])
-geometry = world + line
-pg.show(geometry)
-```
-
-Note that the line cuts region 2 dividing it into two. The upper part does not contain a region marker and thus becomes region 0.
-
 
 pyGIMLi has different ways to create meshes. mt.createMesh creates a mesh using Triangle, a two-dimensional constrained Delaunay mesh generator.
 
@@ -273,7 +260,7 @@ The additional input parameters control the maximum triangle area and the mesh s
 ```{code-cell} ipython3
 from pygimli.viewer import showMesh
 
-mesh = mt.createMesh(geometry, 
+mesh = mt.createMesh(world, 
                      area=2.0,
                      quality=33,
                      smooth=[2, 4] # [0:no smoothing or 1:node center or 2:weighted node center, # of iter]
@@ -281,9 +268,93 @@ mesh = mt.createMesh(geometry,
 showMesh(mesh, markers=True, showMesh=True); 
 ```
 
-## Mesh import
 
-+++
+## Utilizing markers
+
+A mesh can have different regions, which are defined by **region markers** for each cell. Region markers can be used to assign properties for forward modelling as well as to control the inversion behavior. Moreover, a pyGIMLi mesh holds specific markers for all boundaries (outer mesh boundaries as well as interfaces between layers and boundaries around structures, see figure above). Those boundary markers are used to define specific properties or conditions on the boundaries of a mesh. They are essential for setting up boundary conditions in simulations, such as specifying fixed values or fluxes. Properly assigning boundary markers ensures accurate representation of physical boundaries and interactions in the model.
+
+When constructing complex geometries out of basic geometric shapes (e.g., circle, rectangle, …) we need to be careful with both the region and boundary markers. In this user guide, we explain the differences as well as the usage of both types of markers.
+
+### Region markers
+
+Let's take a closer look at the region markers of the two-layer case presented above. Every region marker of a specific mesh region has a position, which it is assigned to.  By using ``, we can visualize the position in the PLC:
+
+```{code-cell} ipython3
+
+fig, ax = plt.subplots(1,1)
+pg.show(world, ax=ax)
+for nr, marker in enumerate(world.regionMarkers()):
+    print('Position marker number {}:'.format(nr + 1), marker.x(), marker.y(),
+          marker.z())
+    ax.text(marker.x()+2,marker.y()+2, f"Region marker position {nr+1}",
+            fontweight="bold",fontsize=11, ha="left", va="top", color="black")
+    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color='k')
+
+```
+
+By default, pyGIMLi assigns unique markers to every region of the PLC, starting from 1. A marker value of 0 is assigned to a region if no region marker is found - but even if this happens, we could still manually add a marker to the specific region. For now, we want to add a polygon to the already existing 2-layer PLC. This is done using the `createPolygon()` function. Within this function, we have two adjusting variables for the region markers - *marker* and *markerPosition*. The first variable specifies the marker number and the second the position of the marker. Note, that the **position** of a region marker has to lie **within its region** to work! In this case, we specify the newly defined region to have the marker 3. The marker position is set to *[-10, -10]*.
+
+```{code-cell} ipython3
+poly = mt.createPolygon([[left, -20], [right,-15],[right,-5],[left,-5]], isClosed=True, marker=3, markerPosition=[-10, -10])
+geometry = world + poly
+fig, ax = plt.subplots(1,1)
+pg.show(geometry, ax=ax)
+for nr, marker in enumerate(geometry.regionMarkers()):
+    print('Position marker number {}:'.format(nr + 1), marker.x(), marker.y(),
+          marker.z())
+    ax.text(marker.x()+2,marker.y()+2, f"Region marker position {nr+1}",
+            fontweight="bold",fontsize=11, ha="left", va="top", color="black")
+    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color='k')
+```
+
+Of course it is also possible to assign the same region marker to multiple parts of your PLC. This gets especially handy as soon as you start assigning physical parameters to your meshed geometry for modelling and/or inversion purposes. For more detailed information on this matter, please take a look at the [modelling section](modelling.md) of the user guide.
+
+### Boundary markers
+If we talk about markers in a PLC, one often forgets about the boundary markers. If you create a geometry in pyGIMLi, no matter whether it is a circle, rectangle or layered world, you need to deal with boundaries of different kinds. pyGIMLi automatically assigns numbers to the boundaries and, doing so, follows a specific pattern.
+
+If we assume a simple rectangular world without additional layers, we have two different options on how to enumerate the boundaries:
+
+1) Set `createWorld(worldMarker=False)`, which leads to enumerated boundaries (*1 = left, 2=right, 3=bottom, 4=top, 5=front and 6=back*).
+
+2) Set `createWorld(worldMarker=True)`, which leads to the top holding the boundary marker -1 and other outer boundaries -2. 
+
+
+```{code-cell} ipython3
+start = [left,0]
+end = [right, -depth]
+world1 = mt.createWorld(start=start,
+                       end=end, worldMarker=False)
+
+world2 = mt.createWorld(start=start,
+                       end=end, worldMarker=True)
+
+fig, (ax1,ax2) = plt.subplots(1,2,figsize=(16,12), dpi=90)
+ax1.set_title("worldMarker = False", fontweight="bold")
+ax2.set_title("worldMarker = True", fontweight="bold")
+
+pg.show(world1, markers=True, ax=ax1)
+pg.show(world2, markers=True, ax=ax2)
+```
+
+Let's assume that we want to add an additional feature to our PLC, such as a rectangle. Doing so, the circle is automatically assigned a boundary marker - in this case 1. However, assuming the case where we set `worldMarker=False`, this marker is already assigned to the left boundary of the PLC (which could cause problems in any modelling application later on). So we need to adapt the boundary marker of the circle, which is simply done as follows:
+
+```{code-cell} ipython3
+
+c1 = plc.createRectangle(start=[-10,-5], end=[10,-10], marker=2)
+geom1 = world1+c1
+# %%
+for i in range(geom1.boundaryCount()):
+    if i >= 4:
+        geom1.boundary(i).setMarker(5)
+
+pg.show(geom1, markers=True)
+```
+
+As you can see, the boundaries around the rectangle were all changed to 5, as defined in the for-loop above. `PLC.boundaryCount()` gives us the total count of boundaries in the PLC, while `PLC.boundary().setMarker()` allows us to change a specific boundary marker.
+
+To see applications where the indices of the PLC / mesh boundary are utilized, please refer to the [modelling section](modelling.md) of the user guide.
+
+## Mesh import
 
 ### Import options for meshes in pyGIMLi
 
@@ -308,21 +379,14 @@ A broad variety of functions to import and convert different mesh types into a G
 | {py:class}`Triangle <pygimli.meshtools.readTriangle>`      |   Read Triangle mesh   |
 :::
 
-+++
 
 ### Example: mesh generation using Gmsh
 
-When the scientific task requires a complex finite-element discretization (i.e. incorporation of structural information, usage of a complete electrode model (CEM), etc.), external meshing tools with visualization capabilities may be the option of choice for some users. In general, the bindings provided by pygimli allow to interface any external mesh generation software.
+When the scientific task requires a complex finite-element discretization (i.e. incorporation of structural information, usage of a complete electrode model (CEM), etc.), external meshing tools with visualization capabilities may be the option of choice for some users. In general, the bindings provided by pygimli allow to interface any external mesh generation software. For examples on how to use external meshing software, refer to the [examples section](../examples/1_meshing/) on the pyGIMLi website.
 
-+++
-
-## Mesh visualization
-
-+++
 
 ## Mesh modification
 
-+++
 
 pyGIMLi provides a variety of operators to modify your mesh. The following table gives an overview of the most important functions:
 
@@ -336,12 +400,11 @@ pyGIMLi provides a variety of operators to modify your mesh. The following table
 | :---------------- | :------: |
 | {py:class}`merge2Meshes <pygimli.meshtools.merge2Meshes>`        |   Merges two meshes   |
 | {py:class}`mergeMeshes <pygimli.meshtools.mergeMeshes>`        |   Merges two or more meshes   |
-| mesh.translate()          |   Allows to translate a mesh   |
-| mesh.scale()`       |   Scale a mesh with provided factors   |
-| mesh.rotate()`    |   Rotate a provided mesh  |
+| `mesh.translate()`          |   Allows to translate a mesh   |
+| `mesh.scale()`       |   Scale a mesh with provided factors   |
+| `mesh.rotate()`    |   Rotate a provided mesh  |
 :::
 
-+++
 
 ### Merging meshes
 
@@ -372,7 +435,6 @@ ax, cb = pg.show(mesh_append)
 
 When merging more than two meshes, the function {py:class}`mergeMeshes() <pygmli.meshtools.mergeMeshes()>` can be utilized instead of {py:class}`merge2Meshes <pygmli.meshtools.merge2Meshes()>`.
 
-+++
 
 ### Translating meshes
 
@@ -406,7 +468,6 @@ pg.show(rotated_mesh)
 
 ## Mesh export
 
-+++
 
 Suppose we want to continue working on our GIMLi mesh object in a different meshing tool - pyGIMLi provides a variety of export functions to transfer your GIMLi mesh into a different format: 
 
@@ -429,8 +490,4 @@ Suppose we want to continue working on our GIMLi mesh object in a different mesh
 # Save rotated mesh from above as vtk file
 
 rotated_mesh.exportVTK('rotated_mesh.vtk')
-```
-
-```{code-cell} ipython3
-
 ```

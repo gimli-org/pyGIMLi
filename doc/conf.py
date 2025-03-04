@@ -590,7 +590,7 @@ doxylink = {
 # Create HTML table
 from bib2html import write_html
 
-publications = write_html()
+#publications = write_html()
 
 ################################################################################################
 # Extra call to create small gallery of all already made tutorials and examples in the sidebar.
@@ -603,7 +603,7 @@ from paper_carousel import showcase
 random.shuffle(showcase)  # mix it up
 html_context = {
     "showcase": showcase,
-    "publications": publications,
+    #"publications": publications,
     "default_mode": "light",
 }
 
