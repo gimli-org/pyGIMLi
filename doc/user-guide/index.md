@@ -12,17 +12,16 @@ kernelspec:
   name: python3
 ---
 
-# User guide
-
 :::{toctree}
 :numbered:
+:glob:
 
 fundamentals
 data
 meshes
 inversion
 modelling
-advanced
+advanced/index
 :::
 
 :::{toctree}

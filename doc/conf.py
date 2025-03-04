@@ -153,7 +153,7 @@ try:
         "within_subsection_order": FileNameSortKey,
         "remove_config_comments": True,
         # Only parse filenames starting with plot_
-        "filename_pattern": "plot_",
+        "filename_pattern": "/plot_",
         "first_notebook_cell": ("# Checkout www.pygimli.org for more examples"),
         "reset_modules": (reset_mpl),
         # Avoid representation of mpl axis, LineCollections, etc.
@@ -239,7 +239,7 @@ source_suffix = ".rst"
 source_encoding = "utf-8-sig"
 
 # The master toctree document.
-master_doc = "documentation"
+master_doc = "user-guide/index"
 
 # General information about the project.
 project = "pyGIMLi"
