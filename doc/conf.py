@@ -323,6 +323,7 @@ html_theme_options = {
     "footer_start": ["footer_start"],
     "footer_end": ["footer_end"],
     "pygment_light_style": "friendly",
+    "header_links_before_dropdown": 6,
     "pygment_dark_style": "native",
     "icon_links": [
         {

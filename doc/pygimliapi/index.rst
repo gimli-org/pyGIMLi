@@ -2,9 +2,9 @@
 
 .. _sec:pygimliapi:
 
-=====================
-pyGIMLi API Reference
-=====================
+=============
+API Reference
+=============
 
 .. only:: latex
 

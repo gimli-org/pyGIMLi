@@ -1,20 +1,7 @@
----
-jupytext:
-  formats: ipynb,md:myst
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
-kernelspec:
-  language: python
-  name: python3
----
-
 # Inversion
 
-+++
-
 ## Theory
+
 Inversion frameworks are generalized, abstract approaches to solve a specific inversion problem without specifying the appropriate geophysical methods.
 This can be a specific regularization strategy, an alternative formulation of the inverse problem or algorithms of routine inversion.
 It is initialized by specific forward operators or managers that provide them.
