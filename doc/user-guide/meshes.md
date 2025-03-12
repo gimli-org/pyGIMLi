@@ -23,6 +23,7 @@ This part of the user guide covers mesh-related topics, starting with a [general
 We start off by looking at the general anatomy of a pyGIMLi mesh. It is represented by a collection of nodes, cells and boundaries, i.e., geometrical entities:
 
 ```{code-cell} ipython3
+:tags: [hide-input]
 
 import matplotlib.pyplot as plt
 import pygimli as pg
