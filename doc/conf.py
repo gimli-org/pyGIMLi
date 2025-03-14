@@ -323,7 +323,7 @@ html_theme_options = {
     "footer_start": ["footer_start"],
     "footer_end": ["footer_end"],
     "pygment_light_style": "friendly",
-    "header_links_before_dropdown": 6,
+    "header_links_before_dropdown": 7,
     "pygment_dark_style": "native",
     "icon_links": [
         {
@@ -599,7 +599,7 @@ doxylink = {
 # Create HTML table
 from bib2html import write_html
 
-#publications = write_html()
+publications = write_html()
 
 ################################################################################################
 # Extra call to create small gallery of all already made tutorials and examples in the sidebar.
@@ -612,7 +612,7 @@ from paper_carousel import showcase
 random.shuffle(showcase)  # mix it up
 html_context = {
     "showcase": showcase,
-    #"publications": publications,
+    "publications": publications,
     "default_mode": "light",
 }
 

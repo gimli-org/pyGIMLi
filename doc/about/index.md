@@ -1,15 +1,15 @@
+(about)=
+
 # About pyGIMLi
 
-## Introduction
+pyGIMLi is an open-source library for [modelling](#modelling) and
+[inversion](#inversion) and in geophysics. The object-oriented library provides
+management for structured and unstructured meshes in 2D and 3D, finite-element
+and finite-volume solvers, various geophysical forward operators, as well as
+Gauss-Newton based frameworks for constrained, joint and fully-coupled
+inversions with flexible regularization.
 
-pyGIMLi is an open-source library for
-{ref}`modelling<sec:about_gimli_modelling>` and
-{ref}`inversion<sec:about_gimli_inversion>` and in geophysics. The
-object-oriented library provides management for structured and unstructured
-meshes in 2D and 3D, finite-element and finite-volume solvers, various
-geophysical forward operators, as well as Gauss-Newton based frameworks for
-constrained, joint and fully-coupled inversions with flexible regularization.
-
+## Main capabilities
 What is pyGIMLi suited for?
 
 - analyze, visualize and invert geophysical data in a reproducible manner
@@ -22,30 +22,8 @@ What is pyGIMLi **NOT** suited for?
 
 - for people that expect a ready-made GUI for interpreting their data
 
-(sec-authors)=
-
-## Authors
-
-```{raw} html
-<p style="height:22px">
-  <a href="https://github.com/gimli-org/gimli/graphs/contributors" >
-    <img src="https://img.shields.io/github/contributors/gimli-org/gimli.svg?style=flat-square"/>
-  </a>
-</p>
-```
-
-% .. image:: https://img.shields.io/github/contributors/gimli-org/gimli.svg?style=flat-square
-% :target: https://github.com/gimli-org/gimli/graphs/contributors
-
-We gratefully acknowledge all contributors to the pyGIMLi open-source project and look forward to [your contribution](https://pygimli.org/contrib.html)!
-
-```{eval-rst}
-.. include:: ../AUTHORS.rst
-```
-
-(sec-about-gimli-inversion)=
-
-## Inversion
+(inversion)=
+### Inversion
 
 One main task of pyGIMli is to carry out inversion, i.e. error-weighted
 minimization, for given forward routines and data. Various types of
@@ -56,9 +34,8 @@ inversion framework is based on the generalized Gauss-Newton method.
 Please see {ref}`tut:inversion` for examples and more
 details.
 
-(sec-about-gimli-modelling)=
-
-## Modelling
+(modelling)=
+### Modelling
 
 pyGIMLi comes with various geophysical forward operators, which can directly be
 used for a given problem. In addition, abstract finite-element and finite-volume
@@ -78,7 +55,7 @@ Please see {ref}`tut:modelling` for examples and more details.
 ## License
 
 pyGIMLi is distributed under the terms of the **Apache 2.0** license. Details on
-the license agreement can be found [here](https://www.pygimli.org/license.html).
+the license agreement can be found [here](#license).
 
 ## Credits
 
@@ -91,3 +68,11 @@ We use or link some third-party software (beside the usual tool stack: cmake, gc
 - suitesparse, umfpack: <https://people.engr.tamu.edu/davis/suitesparse.html>
 - Tetgen: <http://wias-berlin.de/software/index.jsp?id=TetGen&lang=1>
 - Triangle: <https://www.cs.cmu.edu/~quake/triangle.html>
+
+:::{toctree}
+:hidden:
+
+authors
+citation
+license
+:::

@@ -1,3 +1,9 @@
-{%- if show_copyright %}
-<a href="{{ pathto('about') }}#authors"><i class="far fa-copyright"></i> {{ copyright }} </a>
-{%- endif %}
+<h5>Additional links</h5>
+<ul class="nav flex-column">
+  <li class="nav-item mb-2">
+    <a href="{{ pathto('glossary') }}" class="nav-link p-0 text-body-secondary">Glossary</a>
+  </li>
+  <li class="nav-item mb-2">
+    <a href="{{ pathto('references') }}" class="nav-link p-0 text-body-secondary">References</a>
+  </li>
+</ul>

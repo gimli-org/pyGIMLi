@@ -10,9 +10,3 @@ inversion
 modelling
 advanced/index
 :::
-
-:::{toctree}
-:caption: Temp
-
-cheatsheet
-:::

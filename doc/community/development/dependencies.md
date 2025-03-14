@@ -1,6 +1,6 @@
 (sec-install-pre)=
 
-# Prerequisites
+# Dependencies
 
 To build pyGIMLi from source, the following tools are required:
 

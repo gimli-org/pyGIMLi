@@ -83,14 +83,10 @@ Documentation
 .. toctree::
     :hidden:
 
-    about/index
+    About <about/index>
     getting-started/index
     user-guide/index
     _examples_auto/index.rst
     _tutorials_auto/index.rst
     pygimliapi/index.rst
-    contrib.rst
-    license.rst
-    faq.rst
-    references
-    glossary.rst
+    Community <community/index>
