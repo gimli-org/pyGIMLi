@@ -1,12 +1,6 @@
 ---
-jupytext:
-  formats: ipynb,md:myst
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
+file_format: mystnb
 kernelspec:
-  language: python
   name: python3
 ---
 
@@ -22,7 +16,7 @@ This part of the user guide covers mesh-related topics, starting with a [general
 
 We start off by looking at the general anatomy of a pyGIMLi mesh. It is represented by a collection of nodes, cells and boundaries, i.e., geometrical entities:
 
-```{code-cell} ipython3
+```{code-cell}
 :tags: [hide-input]
 
 import matplotlib.pyplot as plt
@@ -140,7 +134,7 @@ A regularly spaced mesh consisting of rectangles or hexahedrons is usually calle
 
 **Unstructured** meshes, as the name suggests, are more general and can randomly form any geometry shape. Unlike structured meshes, the connectivity pattern is not fixed hence unstructured meshes do not follow a uniform pattern. However, unstructured meshes are more flexible and thus allow for more complex applications.
 
-```{code-cell} ipython3
+```{code-cell}
 ---
 jupyter:
   source_hidden: true
@@ -178,7 +172,7 @@ fig.tight_layout()
 
 To create a regular 2D grid, pyGIMLi offers a variety of tools that help with the task. To create a regular grid, we first of all have to create the extent of the mesh in x and z direction. For this example, we create a mesh of _20 x 10 m_ with a regular cell size of _1 x 1 m_. After defining the extent, we can simply call the pg.meshtools.createGrid() and get an overview of the number of nodes, cells and boundaries:
 
-```{code-cell} ipython3
+```{code-cell} 
 xmin, xmax = -10, 10.
 zmin, zmax = -10., 0.
 
@@ -190,7 +184,7 @@ m_reg
 
 To show the mesh, we can simply call the pg.show() function:
 
-```{code-cell} ipython3
+```{code-cell} 
 pg.show(m_reg)
 ```
 
@@ -212,7 +206,7 @@ After covering the basics of regular grids, we want to dive into the world of ir
 
 However, we first of all have to create a **geometry** that is used as underlying susurface model for the mesh creation.
 
-```{code-cell} ipython3
+```{code-cell}
 # dimensions of the world
 left = -30
 right = 30
@@ -258,7 +252,7 @@ pyGIMLi has different ways to create meshes. mt.createMesh creates a mesh using 
 
 The additional input parameters control the maximum triangle area and the mesh smoothness. The quality factor prescribes the minimum angles allowed in the final mesh. This can improve numerical accuracy, however, fine meshes lead to increased computational costs. Notice that we are now using showMesh which is convenient for 2D mesh visualization.
 
-```{code-cell} ipython3
+```{code-cell}
 from pygimli.viewer import showMesh
 
 mesh = mt.createMesh(world, 
@@ -280,7 +274,7 @@ When constructing complex geometries out of basic geometric shapes (e.g., circle
 
 Let's take a closer look at the region markers of the two-layer case presented above. Every region marker of a specific mesh region has a position, which it is assigned to.  By using ``, we can visualize the position in the PLC:
 
-```{code-cell} ipython3
+```{code-cell}
 
 fig, ax = plt.subplots(1,1)
 pg.show(world, ax=ax)
@@ -295,7 +289,7 @@ for nr, marker in enumerate(world.regionMarkers()):
 
 By default, pyGIMLi assigns unique markers to every region of the PLC, starting from 1. A marker value of 0 is assigned to a region if no region marker is found - but even if this happens, we could still manually add a marker to the specific region. For now, we want to add a polygon to the already existing 2-layer PLC. This is done using the `createPolygon()` function. Within this function, we have two adjusting variables for the region markers - *marker* and *markerPosition*. The first variable specifies the marker number and the second the position of the marker. Note, that the **position** of a region marker has to lie **within its region** to work! In this case, we specify the newly defined region to have the marker 3. The marker position is set to *[-10, -10]*.
 
-```{code-cell} ipython3
+```{code-cell}
 poly = mt.createPolygon([[left, -20], [right,-15],[right,-5],[left,-5]], isClosed=True, marker=3, markerPosition=[-10, -10])
 geometry = world + poly
 fig, ax = plt.subplots(1,1)
@@ -320,7 +314,7 @@ If we assume a simple rectangular world without additional layers, we have two d
 2) Set `createWorld(worldMarker=True)`, which leads to the top holding the boundary marker -1 and other outer boundaries -2. 
 
 
-```{code-cell} ipython3
+```{code-cell}
 start = [left,0]
 end = [right, -depth]
 world1 = mt.createWorld(start=start,
@@ -339,7 +333,7 @@ pg.show(world2, markers=True, ax=ax2)
 
 Let's assume that we want to add an additional feature to our PLC, such as a rectangle. Doing so, the circle is automatically assigned a boundary marker - in this case 1. However, assuming the case where we set `worldMarker=False`, this marker is already assigned to the left boundary of the PLC (which could cause problems in any modelling application later on). So we need to adapt the boundary marker of the circle, which is simply done as follows:
 
-```{code-cell} ipython3
+```{code-cell}
 
 c1 = plc.createRectangle(start=[-10,-5], end=[10,-10], marker=2)
 geom1 = world1+c1
@@ -413,7 +407,7 @@ In some cases, the modelling domain may require different degrees of flexibility
 
 pyGIMLi offers the possibility to merge two meshes by calling {py:class}`merge2Meshes <pygmli.meshtools.merge2Meshes()>`.
 
-```{code-cell} ipython3
+```{code-cell}
 xmin, xmax = -30, 30.
 zmin, zmax = -50, -25.
 
@@ -427,7 +421,7 @@ pg.show(mergedMesh, markers=True, showMesh=True)
 
 The merged meshes appear as a singular hybrid mesh now, so we can append a triangle boundary as for non-hybrid meshes:
 
-```{code-cell} ipython3
+```{code-cell}
 mesh_append = mt.appendTriangleBoundary(mergedMesh, xbound=50., ybound=50., quality=31, smooth=True,
                                  marker=4, isSubSurface=True, addNodes=10)
 
@@ -441,7 +435,7 @@ When merging more than two meshes, the function {py:class}`mergeMeshes() <pygmli
 
 To perform simple changes of the meshs x- and z-coordinates, we can make use of the {py:class}`translate <pygmli.meshtools.mesh().translate()>` function. The following lines of code move the mesh 500 m in x and 25 m in z direction:
 
-```{code-cell} ipython3
+```{code-cell}
 translated_mesh = pg.Mesh(mesh)
 translated_mesh.translate([500, 25])
 pg.show(translated_mesh)
@@ -451,7 +445,7 @@ pg.show(translated_mesh)
 
 Apart from moving the mesh along its axes, pyGIMLi also provides a tool to scale the mesh along specified axes - in this example, we scale along the z-axis with a factor of 2:
 
-```{code-cell} ipython3
+```{code-cell}
 scaled_mesh = pg.Mesh(mesh) 
 scaled_mesh.scale([1, 2])
 pg.show(scaled_mesh)
@@ -460,7 +454,7 @@ pg.show(scaled_mesh)
 ### Rotating meshes
 Another valuable mesh modification tool is the mesh.rotate function. By providing a rotation angle and the rotation plane, we can adjust the orientation angle of our mesh:
 
-```{code-cell} ipython3
+```{code-cell}
 import numpy as np
 rotated_mesh = pg.Mesh(mesh) 
 rotated_mesh.rotate([0, 0, np.deg2rad(-20)])
@@ -487,7 +481,7 @@ Suppose we want to continue working on our GIMLi mesh object in a different mesh
 | {py:class}`STL <pygimli.meshtools.mesh().exportVTK>`     |   Save mesh alongside properties as vtk   |
 :::
 
-```{code-cell} ipython3
+```{code-cell}
 # Save rotated mesh from above as vtk file
 
 rotated_mesh.exportVTK('rotated_mesh.vtk')

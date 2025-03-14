@@ -36,7 +36,7 @@ def show(obj=None, data=None, **kwargs):
     Syntactic sugar to show a obj with data. Forwards to
     a known visualization for obj. Typical is
     :py:mod:`pygimli.viewer.showMesh` or
-    :py:mod:`pygimli.viewer.mayaview.showMesh3D` to show most of the typical 2D
+    :py:mod:`pygimli.viewer.pv.showMesh3D` to show most of the typical 2D
     and 3D content.
     See tutorials and examples for usage hints. An empty show
     call creates an empty ax window.

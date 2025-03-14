@@ -38,8 +38,8 @@ solvers as well as reordering algorithms.
 
 pyGIMLi is organized in three different abstraction levels:
 
-::::{tab-set}
 
+::::{tab-set}
 :::{tab-item} **Application level**
 
 In the application level, ready-to-use method managers and frameworks are provided. Method managers (`pygimli.manager`) hold all relevant functionality related to a geophysical method. A method manager can be initialized with a data set and used to analyze and visualize this data set, create a corresponding mesh, and carry out an inversion. Various method managers are available in `pygimli.physics`. Frameworks (`pygimli.frameworks`) are generalized abstractions of standard and advanced inversions tasks such as time-lapse or joint inversion for example. Since frameworks communicate through a unified interface, they are method independent.
@@ -57,6 +57,7 @@ In the modelling level, users can set up customized forward operators that map d
 The underlying equation level allows to directly access the finite element (`pygimli.solver.solveFiniteElements()`) and finite volume (`pygimli.solver.solveFiniteVolume()`) solvers to solve various partial differential equations on unstructured meshes, i.e. to approach various physical problems with possibly complex 2D and 3D geometries.
 
 :::
+::::
 
 ## Module/method overview
 
@@ -121,6 +122,7 @@ Please add docstrings for abovementioned classes and then use autosummary functi
 | {py:class}`DataContainer <pygimli.DataContainer>`     |   Data container storing the individual data values as well as any description how they were obtained, e.g. the geometry of source and receivers.   |
 :::
 
+
 ## Viewer interface
 
 In pygimli we provide some basic post-processing routines using the matplotlib visualization framework. The main visualization call is `pygimli.viewer.show()` which is sufficient for most meshes, fields, models and streamline views. It forwards the object to be plotted to a known visualization function. `pygimli.viewer.showMesh()` is the typical call for the visualization of 2D data.
@@ -129,6 +131,7 @@ However, the underlying `show` functions only provide an input instance and are 
 
 | **Data type**              | **Draw function** |
 | :---------------- | :------: |
+| 2D meshes | {py:class}`drawMesh <pygimli.viewer.mpl.drawModel>` |
 | Value per mesh cell - *model patch* | {py:class}`drawModel <pygimli.viewer.mpl.drawModel>` |
 | Value per mesh node - *scalar field* | {py:class}`drawField <pygimli.viewer.mpl.drawField>` |
 | Iterable of type `[float,float]` - *vector field* | {py:class}`drawStreams <pygimli.viewer.mpl.drawStreams>` |
