@@ -311,7 +311,7 @@ for nr, marker in enumerate(geometry.regionMarkers()):
 Of course it is also possible to assign the same region marker to multiple parts of your PLC. This gets especially handy as soon as you start assigning physical parameters to your meshed geometry for modelling and/or inversion purposes. For more detailed information on this matter, please take a look at the [modelling section](modelling.md) of the user guide.
 
 ### Boundary markers
-If we talk about markers in a PLC, one often forgets about the boundary markers. If you create a geometry in pyGIMLi, no matter whether it is a circle, rectangle or layered world, you need to deal with boundaries of different kinds. pyGIMLi automatically assigns numbers to the boundaries and, doing so, follows a specific pattern.
+If we talk about markers in a PLC, one often forgets about the boundary markers. If you create a geometry in pyGIMLi, no matter whether it is a circle, rectangle or layered world, you need to deal with boundaries of different kinds. pyGIMLi automatically assigns numbers to the boundaries and, doing so, follows a specific pattern. In order to change the default boundary markers, please refer to the [modelling section](modelling.md) of the user guide.
 
 If we assume a simple rectangular world without additional layers, we have two different options on how to enumerate the boundaries:
 

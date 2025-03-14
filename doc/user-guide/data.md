@@ -106,21 +106,16 @@ The positions under the sensor indexes must be of the same size.
 
 If the sensor positions are given by another file (for example a GPS file), you can transform this to a NumPy array and set the sensor positions using [`.setSensorPositions()`](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a3c58caec5486d5390a2b6c2d8056724f) method of the DataContainer. 
 
-
-
 ## File export
-
 
 This data container can also be saved on local disk using the method `.save()` usually in a .dat format. It can then be read using `open('filename').read()`. This is also a useful way to see the data file in Python.
 
 ```{code-cell} ipython3
-data.save("data.dat")
-print(open("data.dat").read())
+data.save("data.data")
+print(open("data.data").read())
 ```
 
 ## File format import
-
-
 
 Now we will go over the case if you have your own data and want to first import it using pyGIMLi and assign it to a data container. You can manually do this by importing data via Python (data must be assigned as Numpy arrays) and assign the values to the different keys in the data container. 
 
@@ -128,18 +123,6 @@ pyGIMLi also uses {py:func}`pygimli.load` that loads meshes and data files. It s
 
 Most methods also have the `load` function to load common data types used for the method. Such as, {py:func}`pygimli.physics.ert.load`. Method specific load functions assign the sensors if specified in the file. For a more extensive list of data imports please refer to [pybert importer package](http://resistivity.net/bert/_api/pybert.importer.html#module-pybert.importer).
 
-
-
-## Visualization
-
-
-You can visualize the data in many ways depending on the physics manager. To simply view the data as a matrix you can use `pg.viewer.mpl.showDataContainerAsMatrix`. This visualizes a matrix of receivers and transmitters pairs with the associated data to plot : 'dist'. 
-
-```{code-cell} ipython3
-pg.viewer.mpl.showDataContainerAsMatrix(data, "Rx", "Tx", 'dist');
-```
-
-There are more formal ways of plotting different data containers depending on the method. As seen in [Fundamentals](fundamentals.md) here we can focus on showing the data container. Most of the method managers use `.show()` that is specific to their method, however, you can always use the main function {py:func}`pg.show`, and it will detect the data type and plot it accordingly.
 
 ## Processing
 
@@ -176,9 +159,13 @@ data.markInvalid(data["Rx"] == data["Tx"])
 data.checkDataValidity()
 ```
 
+then we can remove the invalid data and see the information of the remaining data. 
+
 ```{code-cell} ipython3
+data.removeInvalid()
 data.showInfos()
 ```
+
 
 Below there is a table with the most useful methods, for a full list of methods of data container, please refer to [DataContainer class reference](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html)
 
@@ -202,5 +189,23 @@ data represents a DataContainer
 | [data.registerSensorIndex()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a955c7c33ff8118ff9c3f5a7a78b75283) | Mark the data field entry as sensor index.
 | [data.removeUnusedSensor()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a017137847f635e56a0eb5f84cbc58f5d) |  Remove all unused sensors from this DataContainer and recount data sensor index entries.
 | [data.removeSensorIdx()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#ab0207d2be4491338818a6c67d1ed78e3) |  Remove all data that contains the sensor and the sensor itself. 
+
+
+
+## Visualization
+
+You can visualize the data in many ways depending on the physics manager. To simply view the data as a matrix you can use `pg.viewer.mpl.showDataContainerAsMatrix`. This visualizes a matrix of receivers and transmitters pairs with the associated data to plot : 'dist'. 
+
+```{code-cell} ipython3ç
+pg.viewer.mpl.showDataContainerAsMatrix(data, "Rx", "Tx", 'dist')
+```
+
+
+```{code-cell} ipython3
+data.markValid(data["Rx"] >= 0)
+print(data["valid"])
+print(len(data["Rx"]))
+```
+There are more formal ways of plotting different data containers depending on the method. As seen in [Fundamentals](fundamentals.md) here we can focus on showing the data container. Most of the method managers use `.show()` that is specific to their method, however, you can always use the main function {py:func}`pg.show`, and it will detect the data type and plot it accordingly. For more information on visualizing data please refer to [data visualization](visualization.md).
 
 
