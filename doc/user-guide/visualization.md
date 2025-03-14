@@ -61,6 +61,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pygimli as pg
 from pygimli.viewer import mpl
+import pygimli.meshtools as mt
 ```
 
 To visualize a grid or a triangular mesh in 2D, we can simply make use of the `pygimli.viewer.show()` function, which refers to `pygimli.viewer.mpl.drawMesh()`:
