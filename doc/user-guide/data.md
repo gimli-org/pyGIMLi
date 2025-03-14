@@ -177,7 +177,6 @@ data represents a DataContainer
 :widths: auto
 :align: center
 
-
 | Method | Description |
 | --- | --- |
 | [data.remove()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a3d07be3931623a5ebef2bf14d06d4f50) | Remove data from index vector. Remove all data that are covered by idx. Sensors are preserved. (Inplace - DataContainer is overwritten inplace)
@@ -189,6 +188,7 @@ data represents a DataContainer
 | [data.registerSensorIndex()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a955c7c33ff8118ff9c3f5a7a78b75283) | Mark the data field entry as sensor index.
 | [data.removeUnusedSensor()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a017137847f635e56a0eb5f84cbc58f5d) |  Remove all unused sensors from this DataContainer and recount data sensor index entries.
 | [data.removeSensorIdx()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#ab0207d2be4491338818a6c67d1ed78e3) |  Remove all data that contains the sensor and the sensor itself. 
+:::
 
 
 

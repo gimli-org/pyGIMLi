@@ -234,6 +234,8 @@ dirichletBC = {1: 1,                                           # left
 The boundary conditions are passed using the BC keyword dictionary `dirichletBC`.
 
 ```{code-cell} 
+grid = pg.createGrid(x=np.linspace(-1.0, 1.0, 21),
+                     y=np.linspace(-1.0, 1.0, 21))
 u = solve(grid, f=1., bc={'Dirichlet': dirichletBC})
 
 # Note that showMesh returns the created figure ax and the created colorBar.
@@ -264,8 +266,6 @@ dirichletBC = {3: 1.0}  # top
 u = solve(grid, f=0., bc={'Dirichlet': dirichletBC, 'Neumann': neumannBC})
 ```
 
-
-###############################################################################
 Note that on boundary 2 (right) has no BC explicitly applied leading to default (natural) BC that are of homogeneous Neumann type $\frac{\partial u}{\partial n}=0$
 
 
