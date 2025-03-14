@@ -156,7 +156,6 @@ You can also do some pre-processing using the validity option again. For example
 
 ```{code-cell} ipython3
 data.markInvalid(data["Rx"] == data["Tx"])
-data.checkDataValidity()
 ```
 
 then we can remove the invalid data and see the information of the remaining data. 
@@ -171,9 +170,7 @@ Below there is a table with the most useful methods, for a full list of methods 
 
 :::{admonition} Table of useful methods for DataContainer
 :class: tip
-
-:::{table} Methods to add, remove and sort information for a data container. 
-data represents a DataContainer
+:::{table}
 :widths: auto
 :align: center
 
@@ -196,16 +193,8 @@ data represents a DataContainer
 
 You can visualize the data in many ways depending on the physics manager. To simply view the data as a matrix you can use `pg.viewer.mpl.showDataContainerAsMatrix`. This visualizes a matrix of receivers and transmitters pairs with the associated data to plot : 'dist'. 
 
-```{code-cell} ipython3ç
+```{code-cell} ipython3
 pg.viewer.mpl.showDataContainerAsMatrix(data, "Rx", "Tx", 'dist')
 ```
 
-
-```{code-cell} ipython3
-data.markValid(data["Rx"] >= 0)
-print(data["valid"])
-print(len(data["Rx"]))
-```
-There are more formal ways of plotting different data containers depending on the method. As seen in [Fundamentals](fundamentals.md) here we can focus on showing the data container. Most of the method managers use `.show()` that is specific to their method, however, you can always use the main function {py:func}`pg.show`, and it will detect the data type and plot it accordingly. For more information on visualizing data please refer to [data visualization](visualization.md).
-
-
+There are various formal methods for plotting different data containers, depending on the approach used. As discussed in [Fundamentals](fundamentals.md), the primary focus here is on displaying the data container itself. Most method managers provide a .show() function specific to their method, but you can always use the main function {py:func}`pg.show`. This function automatically detects the data type and plots it accordingly. For further details on data visualization, please refer to [Data visualization](visualization.md).

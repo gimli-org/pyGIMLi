@@ -10,19 +10,21 @@ kernelspec:
 This tutorial covers the first steps into Finite Element computation
 referring the *M* (Modelling) in *pyGIMLi*.
 
-We will not dig into deep details about the theory of the Finite Elements Analysis (FEA) here, as this can be found in several books, e.g., {cite}Zienkiewicz1977.
+We will not dig into deep details about the theory of the Finite Elements Analysis (FEA) here, as this can be found in several books, e.g., {cite}`Zienkiewicz1977`.
 
 Anyhow, there is a little need for theory to understand what it means
 to use FEA for the solution of a boundary value problem.
 So we start with some basics.
 
 Assuming Poisson's equation as a simple partial differential problem
-to be solved for the sought scalar field $ `u(\mathbf{r})` $ within
+to be solved for the sought scalar field $ u(\mathbf{r}) $ within
 a modelling domain ${r}\in\Omega`$
-with a non-zero right-hand side function $ `f` $.
+with a non-zero right-hand side function $ f $.
 
-$$ - \Delta u = f \quad{\mathrm{in}}\quad~\Omega \\
-            u = g \quad{\mathrm{on}}\quad\partial\Omega\ $$
+$$ 
+- \Delta u = f \quad{\mathrm{in}}\quad~\Omega \\
+            u = g \quad{\mathrm{on}}\quad\partial\Omega\ 
+$$
 
 The Laplace operator $ `\Delta = \nabla\cdot\nabla` $ given by the divergence
 of the gradient, is the sum of the second partial derivatives of the field
@@ -71,22 +73,22 @@ Now we can set the unknown weighting functions to be the same as the basis
 functions $ w=N_j $ with $ j=0\ldots\mathcal{N} $ (Galerkin method)
 
 $$ \int_{\Omega} \sum_i \mathrm{u}_i \nabla N_i \nabla N_j = \int_{\Omega} f_j N_j + \int_{\partial \Omega} h N_j
-    \quad \text{with}\quad h  $$  
-    $$ = \frac{\partial u}{\partial \mathbf{n}} $$
+    \quad \text{with}\quad h  = \frac{\partial u}{\partial \mathbf{n}} 
+$$
 
 this can be rewritten with $h=0$ as:
 
 
 $$ \mathrm{A} \mathrm{u} = \mathrm{b} $$ 
-    $$  \text{with } 
-    \mathrm{A} = \{\mathrm{a}_{i,j}\} = \int_{\Omega}\nabla N_i \nabla N_j \quad\text{known as 'Stiffness matrix'} $$
+$$  \text{with } 
+\mathrm{A} = \{\mathrm{a}_{i,j}\} = \int_{\Omega}\nabla N_i \nabla N_j \quad\text{known as 'Stiffness matrix'} $$
 
-    $$  \mathrm{b}  = \{\mathrm{b}_j\} = \int_{\Omega} f_j N_j \quad\text{known as 'Load vector'}  $$
+$$  \mathrm{b}  = \{\mathrm{b}_j\} = \int_{\Omega} f_j N_j \quad\text{known as 'Load vector'}  $$
 
 
 The solution of this linear system of equations leads to the
 discrete solution $ \mathrm{u} = \{\mathrm{u}_i\} $ for all
-i=1\ldots\mathcal{N}` nodes inside the modelling domain.
+$ i=1\ldots\mathcal{N}`$ nodes inside the modelling domain.
 
 For the practical part, the choice of the nodes is crucial. If we choose too
 little, the accuracy of the sought solution might be too small. If we choose too
@@ -95,43 +97,37 @@ higher memory consumption and calculation times.
 
 To define the nodes, we discretize our modelling domain into cells, or the
 eponymous elements. Cells are basic geometric shapes like triangles or
-hexahedrons and are constructed from the nodes and collected in a mesh. See the
-tutorials about the mesh basics (:ref:`tut:basics`). In summary, the discrete
+hexahedrons and are constructed from the nodes and collected in a mesh. For more details, refer to the [Meshes](meshes.md) section of the user guide. In summary, the discrete
 solutions of the differential equation using FEA on a specific mesh are defined
 on the node positions of the mesh.
 
-The chosen mesh cells also define the base functions and the integration rules
-that are necessary to assemble the stiffness matrix and the load vector and will
-be discussed in a different tutorial (TOWRITE link here).
-
-To finally solve our little example we still need to handle the application of
-the boundary condition :math:`u=g` which is called Dirichlet condition. Setting
+To complete the solution for the small example, we still need to apply the boundary condition $u=g$ which is known as the Dirichlet condition. Setting
 explicit values for our solution is not covered by the general Galerkin weighted
 residuum method but we can solve it algebraically. We reduce the linear system
-of equations by the known solutions :math:`g={g_k}` for all :math:`k` nodes on
-the affected boundary elements: (maybe move this to the BC tutorial)
+of equations by the known solutions $g={g_k}$ for all $k$ nodes on
+the affected boundary elements: 
 
 $$  \mathrm{A_D}\cdot\mathrm{u} = \mathrm{b_D} \\
      \text{with } \mathrm{A_D} = \{\mathrm{a}_{i,j}\}\quad\forall i, j ~\notin~ k ~\text{and}~1~\text{for}~i,j \in k\\
     \mathrm{b_D}  = \{\mathrm{b}_j\} - \mathrm{A}\cdot\mathrm{g}\quad\forall j \notin k~\text{and}~g_k~\text{for}~j \in k  $$
 
-Now we have all parts together to assemble :math:`\mathrm{A_D}` and
-:math:`\mathrm{b_D}` and finally solve the given boundary value problem.
+Now we have all parts together to assemble $\mathrm{A_D}$ and
+$\mathrm{b_D}$ and finally solve the given boundary value problem.
 
 It is usually a good idea to test a numerical approach with known solutions.
 To keep things simple we create a modelling problem from the reverse direction.
 We choose a solution, calculate the right hand side function
 and select the domain geometry suitable for nice Dirichlet values.
 
-$$  u(x,y) = \operatorname{sin}(x)\operatorname{sin}(y)\\
-    - \Delta u = f(x,y) = 2 \operatorname{sin}(x)\operatorname{sin}(y)\\
-    \Omega \in I\!R^2  \quad \text{on}\quad 0 \leq x \leq 2\pi,~~  0 \leq y \leq 2\pi \\
-    u  = g = 0 \quad \text{on}\quad \partial \Omega  $$
+$$  u(x,y) = \operatorname{sin}(x)\operatorname{sin}(y) $$
+  $$ - \Delta u = f(x,y) = 2 \operatorname{sin}(x)\operatorname{sin}(y) $$
+   $$  \Omega \in I\!R^2  \quad \text{on}\quad 0 \leq x \leq 2\pi,~~  0 \leq y \leq 2\pi $$
+   $$ u  = g = 0 \quad \text{on}\quad \partial \Omega  $$
 
 We now can solve the Poison equation applying the FEA capabilities of pygimli
-and compare the resulting approximate solution :math:`\mathrm{u}`
-with our known exact solution :math:`u(x,y)`.
-"""
+and compare the resulting approximate solution $\mathrm{u}$
+with our known exact solution $u(x,y)$.
+
 ## Parameterizing a mesh with physical properties
 ```{code-cell} 
 :tags: [hide-cell]
