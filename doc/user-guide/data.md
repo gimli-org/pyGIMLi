@@ -178,16 +178,16 @@ data represents a DataContainer
 :align: center
 
 | Method | Description |
-| --- | --- |
-| [data.remove()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a3d07be3931623a5ebef2bf14d06d4f50) | Remove data from index vector. Remove all data that are covered by idx. Sensors are preserved. (Inplace - DataContainer is overwritten inplace)
-| [data.add()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#af550aeba4f21ba26fd04c9bd3a3800ac) | Add data to this DataContainer and snap new sensor positions by tolerance snap. Data fields from this data are preserved.  
+| :--- | :---: |
+| [data.remove()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a3d07be3931623a5ebef2bf14d06d4f50) | Remove data from index vector. Remove all data that are covered by idx. Sensors are preserved. (Inplace - DataContainer is overwritten inplace) |
+| [data.add()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#af550aeba4f21ba26fd04c9bd3a3800ac) | Add data to this DataContainer and snap new sensor positions by tolerance snap. Data fields from this data are preserved.  |
 | [data.clear()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#ad5aa50883c00a3989aed97401592f41b) | Clear the container, remove all sensor locations and data.|
-| [data.findSensorIndex()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#adeff1f8755b09ce80bb92b890fb0d837) | Translate a RVector into a valid IndexArray for the corresponding sensors. 
-| [data.sortSensorsIndex()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a3d07be3931623a5ebef2bf14d06d4f50) | Sort all data regarding there sensor indices and sensorIdxNames. Return the resulting permuation index array. 
-| [data.sortSensorsX()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a8d917f4e6049799bda190dfd42efef6b) | Sort all sensors regarding their increasing coordinates. Set inc flag to False to sort respective coordinate in decreasing direction.
-| [data.registerSensorIndex()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a955c7c33ff8118ff9c3f5a7a78b75283) | Mark the data field entry as sensor index.
-| [data.removeUnusedSensor()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a017137847f635e56a0eb5f84cbc58f5d) |  Remove all unused sensors from this DataContainer and recount data sensor index entries.
-| [data.removeSensorIdx()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#ab0207d2be4491338818a6c67d1ed78e3) |  Remove all data that contains the sensor and the sensor itself. 
+| [data.findSensorIndex()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#adeff1f8755b09ce80bb92b890fb0d837) | Translate a RVector into a valid IndexArray for the corresponding sensors. |
+| [data.sortSensorsIndex()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a3d07be3931623a5ebef2bf14d06d4f50) | Sort all data regarding there sensor indices and sensorIdxNames. Return the resulting permuation index array. |
+| [data.sortSensorsX()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a8d917f4e6049799bda190dfd42efef6b) | Sort all sensors regarding their increasing coordinates. Set inc flag to False to sort respective coordinate in decreasing direction.|
+| [data.registerSensorIndex()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a955c7c33ff8118ff9c3f5a7a78b75283) | Mark the data field entry as sensor index. |
+| [data.removeUnusedSensor()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a017137847f635e56a0eb5f84cbc58f5d) |  Remove all unused sensors from this DataContainer and recount data sensor index entries. |
+| [data.removeSensorIdx()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#ab0207d2be4491338818a6c67d1ed78e3) |  Remove all data that contains the sensor and the sensor itself. |
 :::
 
 
