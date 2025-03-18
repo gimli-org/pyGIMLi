@@ -8,5 +8,6 @@ data
 meshes
 inversion
 modelling
+visualization
 advanced/index
 :::
