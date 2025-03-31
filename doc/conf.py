@@ -103,7 +103,7 @@ extensions = [
     "sphinx.ext.imgconverter",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.napoleon",
-    "matplotlib.sphinxext.plot_directive",
+    # "matplotlib.sphinxext.plot_directive",
     "srclinks",
     "sphinxcontrib.doxylink",
     "sphinx_design",
@@ -239,7 +239,7 @@ source_suffix = ".rst"
 source_encoding = "utf-8-sig"
 
 # The master toctree document.
-master_doc = "user-guide/index"
+master_doc = "documentation"
 
 # General information about the project.
 project = "pyGIMLi"
@@ -324,13 +324,21 @@ html_theme_options = {
     "footer_end": ["footer_end"],
     "pygment_light_style": "friendly",
     "pygment_dark_style": "native",
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/gimli-org/gimli",
+            "icon": "fa-brands fa-square-github",
+            "type": "fontawesome",
+        }
+    ]
 }
 
 # Temp: SEG announcement
 import datetime
-today = datetime.datetime.now()
+current_day = datetime.datetime.now()
 webinar = datetime.datetime(2024, 3, 19)
-if today < webinar:
+if current_day < webinar:
     html_theme_options["announcement"] = "There will be a webinar on pyGIMLi hosted by SEG on March 19, 2024 at 4 pm CET. Register for free <a href='https://seg.org/calendar_events/open-source-software-webinar-pygimli/', target='_blank'>here</a>."
 
 html_css_files = [
@@ -680,5 +688,6 @@ myst_enable_extensions = [
     "smartquotes",
     "substitution",
 ]
-myst_dmath_allow_labels=True
+myst_dmath_allow_labels = True
+# myst_heading_anchors = 2
 nb_execution_excludepatterns = ["*Untitled*", "_examples_auto/**/*", "_tutorials_auto/**/*"]

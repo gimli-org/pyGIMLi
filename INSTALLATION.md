@@ -1,3 +1,4 @@
+(installation)=
 # Installation
 
 ```{raw} html
@@ -112,8 +113,8 @@ functionality.
 conda update -c gimli -c conda-forge pygimli
 ```
 
-If there something went wrong and you are running an old, not further
-supported python version, consider a fresh install in a new clean environment.
+If something went wrong and you are running an old, not further
+supported Python version, consider a fresh install in a new clean environment.
 The only drawback of using conda is that you are bound to the rhythm in which we
 update the conda packages. In order to work with the latest Python codes you
 should create an environment with the latest pyGIMLi C++ core only,
@@ -137,14 +138,14 @@ conda develop .
 
 or using pip
 
-.. code-block:: bash
+```bash
+pip install --no-build-isolation --no-deps -e .
+```
 
-    pip install --no-build-isolation --no-deps -e .
-
-Alternatively you could set the PYTHONPATH variable but you would have to care
+Alternatively you could set the `PYTHONPATH` variable, but you would have to care
 for dependencies by yourself.
 
-Later you can just update the pygimli code by
+Later you can just update the pyGIMLi code by
 
 ```bash
 git pull

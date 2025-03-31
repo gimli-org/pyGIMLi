@@ -83,6 +83,7 @@ Documentation
 .. toctree::
     :hidden:
 
+    getting-started/index
     user-guide/index
     _examples_auto/index.rst
     _tutorials_auto/index.rst
