@@ -103,7 +103,7 @@ extensions = [
     "sphinx.ext.imgconverter",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.napoleon",
-    # "matplotlib.sphinxext.plot_directive",
+    "matplotlib.sphinxext.plot_directive",
     "srclinks",
     "sphinxcontrib.doxylink",
     "sphinx_design",
@@ -136,13 +136,13 @@ try:
             join(SPHINXDOC_PATH, "tutorials"),
         ],
         "gallery_dirs": ["_examples_auto", "_tutorials_auto"],
-        # "reference_url": {
-        #     "pygimli": "https://pygimli.org",
-        #     "python": "https://docs.python.org/dev",
-        #     "numpy": "https://numpy.org/doc/stable",
-        #     "scipy": "https://docs.scipy.org/doc/scipy/reference",
-        #     "matplotlib": "https://matplotlib.org/stable",
-        # },
+        "reference_url": {
+            "pygimli": "https://pygimli.org",
+            "python": "https://docs.python.org/dev",
+            "numpy": "https://numpy.org/doc/stable",
+            "scipy": "https://docs.scipy.org/doc/scipy/reference",
+            "matplotlib": "https://matplotlib.org/stable",
+        },
         # Don"t report time of fast scripts (< 10 sec)
         "min_reported_time": 10,
         # path where to store your example linker templates
@@ -233,13 +233,13 @@ plot_html_show_source_link = False
 plot_apply_rcparams = True  # if context option is used
 
 # The suffix of source filenames.
-source_suffix = ".rst"
+source_suffix = {'.rst': 'restructuredtext'}
 
 # The encoding of source files.
 source_encoding = "utf-8-sig"
 
 # The master toctree document.
-master_doc = "documentation"
+master_doc = "index"
 
 # General information about the project.
 project = "pyGIMLi"
@@ -323,7 +323,7 @@ html_theme_options = {
     "footer_start": ["footer_start"],
     "footer_end": ["footer_end"],
     "pygment_light_style": "friendly",
-    "header_links_before_dropdown": 7,
+    "header_links_before_dropdown": 6,
     "pygment_dark_style": "native",
     "icon_links": [
         {
@@ -386,7 +386,7 @@ html_sidebars = {
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-html_additional_pages = {"index": "index.html", "publist": "publications.html"}
+html_additional_pages = {"index": "index.html", "community/publications": "publications.html"}
 
 # If false, no module index is generated.
 html_domain_indices = True
@@ -692,3 +692,5 @@ myst_enable_extensions = [
 myst_dmath_allow_labels = True
 # myst_heading_anchors = 2
 nb_execution_excludepatterns = ["*Untitled*", "_examples_auto/**/*", "_tutorials_auto/**/*"]
+# nb_execution_raise_on_error = True # Important for GitHub Action
+nb_execution_show_tb = True

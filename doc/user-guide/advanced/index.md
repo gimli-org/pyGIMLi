@@ -1,5 +1,5 @@
 
-# Advanced users
+# Advanced topics
 
 :::{toctree}
 

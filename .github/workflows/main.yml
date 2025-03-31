@@ -67,6 +67,7 @@ jobs:
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
       - name: Merge dev -> master
+        working-directory: source
         run: |
           git config user.name "GitHub Actions"
           git config user.email "mail@fwagner.info"

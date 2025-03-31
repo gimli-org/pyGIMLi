@@ -187,3 +187,7 @@ table.doc-index td, table th {
 [data-theme=dark] .bd-header-announcement {
     background: #7a7d16;
   }
+
+.xref.std.std-ref {
+    visibility: hidden;
+  }

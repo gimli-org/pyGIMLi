@@ -2,7 +2,7 @@
 :::{toctree}
 :hidden:
 
-Publications </publications.html>
 contribute
+publications
 development/index
 :::

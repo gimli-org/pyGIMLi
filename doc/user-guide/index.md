@@ -3,6 +3,7 @@
 :::{toctree}
 :numbered:
 
+getting-started/index
 fundamentals
 data
 meshes

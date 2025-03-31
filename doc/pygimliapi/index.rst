@@ -2,18 +2,9 @@
 
 .. _sec:pygimliapi:
 
-=============
-API Reference
-=============
-
-.. only:: latex
-
-  .. note::
-
-    In the following, all Python modules, functions and classes are documented.
-    For a reference of the C++ core library of the code, please visit:
-    http://pygimli.org/gimliapi/.
-
+=========
+Reference
+=========
 
 .. currentmodule:: pygimli
 

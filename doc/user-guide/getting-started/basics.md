@@ -1,17 +1,11 @@
 ---
-jupytext:
-  formats: md:myst
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
+file_format: mystnb
 kernelspec:
-  language: python
   name: python3
 ---
 
-(basics)=
-# Basics
+(first-steps)=
+# First steps
 
 The modelling as well as the inversion part of {term}`GIMLi` often requires a
 spatial discretization for the domain of interest, the so called
