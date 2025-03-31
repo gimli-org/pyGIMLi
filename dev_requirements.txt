@@ -27,17 +27,18 @@ pyvista[all]>=0.44 # for numpy 2
 pyqt5
 tqdm
 
-# needed to build docu
+# needed to build docu (after doc reworks)
 sphinx>=3.1
 sphinxcontrib-bibtex
 sphinxcontrib-programoutput
 sphinxcontrib-doxylink
 sphinx-gallery
 sphinx-design
-sphinx-tippy
 pydata-sphinx-theme
 bibtexparser
 jupytext
+myst-nb
+linkify-it-py
 
 # optional, but strongly recommended
 scooby

@@ -33,6 +33,3 @@ dependencies:
   - conda-build
   - linkify-it-py
   - jupytext
-  - pip
-pip:
-  - sphinx-tippy
