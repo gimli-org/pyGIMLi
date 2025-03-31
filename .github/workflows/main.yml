@@ -61,17 +61,12 @@ jobs:
           working-directory: build
           run: xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
   merging:
-    name: Merging dev into master
+    name: Automerging
     runs-on: self-hosted
     needs: docs
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
-      - uses: actions/checkout@v3
-        name: Git checkout
-        with:
-          token: ${{ secrets.PETER_GH_PERSONAL_TOKEN }}
-          fetch-depth: 0
-      - name: Merge master -> develop
+      - name: Merge dev -> master
         run: |
           git config user.name "GitHub Actions"
           git config user.email "mail@fwagner.info"
