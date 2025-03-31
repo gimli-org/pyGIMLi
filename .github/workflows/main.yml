@@ -18,6 +18,7 @@ jobs:
       - name: Getting pyGIMLi sources
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.SECRET }}
           fetch-depth: 0 # checks out all branches and tags
           path: source
       - name: Running cmake
@@ -65,12 +66,18 @@ jobs:
     needs: docs
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
-      - name: Merge into master
-        uses: devmasx/merge-branch@master
+      - uses: actions/checkout@v3
+        name: Git checkout
         with:
-          type: now
-          target_branch: master
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PETER_GH_PERSONAL_TOKEN }}
+          fetch-depth: 0
+      - name: Merge master -> develop
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "mail@fwagner.info"
+          git checkout master
+          git merge dev --no-commit --no-ff
+          git push origin master
   upload-html:
     name: Upload HTML to dev.pygimli.org
     runs-on: self-hosted
