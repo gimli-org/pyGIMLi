@@ -352,7 +352,8 @@ def createWorld(start, end, marker=1, area=0., layers=None, worldMarker=True,
 
         world = createCube(size=pg.Pos(end)-pg.Pos(start),
                            pos=(pg.Pos(end)+pg.Pos(start))/2.0,
-                           area=area, **kwargs)
+                           area=area,
+                           marker=marker,**kwargs)
 
         for i, b in enumerate(world.boundaries()):
             if worldMarker is True:
