@@ -217,7 +217,7 @@ int DataContainer::load(const std::string & fileName,
     //std::setlocale(LC_NUMERIC, "C");
     // __MS(std::locale(LC_NUMERIC, "C"));
     // __MS(std::localeconv()->decimal_point[0]));
-                            
+
     clear();
     setSensorIndexOnFileFromOne(sensorIndicesFromOne);
 
@@ -289,7 +289,7 @@ int DataContainer::load(const std::string & fileName,
         Index s = createSensor(RVector3(x[i], y[i], z[i]).round(1e-12));
 
         if (this->sensorCount() != oldCount+1){
-            duplicatedSensors.insert(duplicatedSensors.end(), 
+            duplicatedSensors.insert(duplicatedSensors.end(),
                                      std::pair< Index, Index >(this->sensorCount(), s));
             log(Warning, "Duplicated sensor position found at: " + str(RVector3(x[i], y[i], z[i])));
             //** we add them temporary and delete them later as unused
@@ -507,7 +507,7 @@ void DataContainer::checkDataValidity(bool remove){
 
     if (find(get("valid") < 1).size() > 0){
         std::cout << "Data validity check: found " << find(get("valid") < 1).size() << " invalid data. " << std::endl;
-        saveVec(RVector(find(get("valid") < 1)), "invalid.data");
+        GIMLI::save(RVector(find(get("valid") < 1)), "invalid.data");
         if (remove) {
             std::cout << "Data validity check: remove invalid data." << std::endl;
             this->removeInvalid();
@@ -662,13 +662,13 @@ void DataContainer::showInfos() const {
 }
 
 Index DataContainer::hash() const{
-    Index seed = GIMLI::hash(this->sensorPoints_, this->topoPoints_, 
+    Index seed = GIMLI::hash(this->sensorPoints_, this->topoPoints_,
                              this->dataMap_);
     return seed;
 }
 
 
-void DataContainer::add(const std::string & token, const RVector & data, 
+void DataContainer::add(const std::string & token, const RVector & data,
                         const std::string & description){
     this->set(token, data);
     this->setDataDescription(token, description);
@@ -901,7 +901,7 @@ IndexArray DataContainer::dataIndex(){
     }
     return ids;
 }
-    
+
 IndexArray DataContainer::sortSensorsIndex(){
 
     IndexArray ids(this->dataIndex());
@@ -909,7 +909,7 @@ IndexArray DataContainer::sortSensorsIndex(){
     // use IndexArray instead of std::vector would be nice but need some more advanced iterator definition -> TODO
     std::vector< Index > perm(this->size());
     std::iota(perm.begin(), perm.end(), 0);
-    
+
     auto idxComp = [&ids](Index i1, Index i2) { return ids[i1] < ids[i2]; };
     std::sort(perm.begin(), perm.end(), idxComp);
 

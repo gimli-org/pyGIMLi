@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """General mesh generation and maintenance."""
 
@@ -93,8 +94,8 @@ def createMesh(poly, quality=32, area=0.0, smooth=True, switches=None,
             pg.critical("No nodes in poly to create a valid mesh")
 
         if switches is None:
-            # -D Conforming delaunay
-            # -F Uses Steven Fortune's sweepline algorithm
+            # -D Conforming Delaunay
+            # -F Uses Steven Fortune's sweep line algorithm
             switches = 'pzeA'
 
             if area > 0:

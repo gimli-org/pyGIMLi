@@ -9,7 +9,7 @@
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=CVS
+ignore=.git, _version.py
 
 # Pickle collected data for later comparisons.
 persistent=yes
@@ -61,7 +61,27 @@ confidence=
 # --disable=W"
 # disable=R0204,C0413,E0401,W1609,W1626,W1617,E1604,W1610,W1606,W1637,W1619,W1615,W1639,W1638,W1612,E1606,W1618,W1630,W1632,I0020,W1622,W1634,W1633,W1640,I0021,E1603,W1635,E1605,W1602,W1614,W1625,W1611,W1604,E1607,W1629,E1602,W1628,W1605,W1608,W1601,W0704,W1607,W1627,W1603,W1624,W1616,W1621,W1623,W1620,E1608,E1601,W1636,W1613
 # disable=R0204,C0413,E0401,W1639,W1638,W1612,E1606,W1618,W1630,W1632,I0020,W1622,W1634,W1633,W1640,I0021,E1603,W1635,E1605,W1602,W1614,W1625,W1611,W1604,E1607,W1629,E1602,W1628,W1605,W1608,W1601,W0704,W1607,W1627,W1603,W1624,W1616,W1621,W1623,W1620,E1608,E1601,W1636,W1613,C0209,W0212,E1121,W0719,C0103
-disable=C0413,E0401,I0020,I0021,C0209,W0212,E1121,W0719,C0103
+#C0413,E0401,I0020,I0021,C0209,W0212,E1121,W0719,C0103
+#C -- convention
+#R -- refactor
+#W -- warning
+#E -- error
+disable=I1101, # c-extension-no-member (placeholder)
+        C0415, # Import outside toplevel
+        C3001, # unnecessary-lambda-assignment .. used for fast function gen
+        R0903, # too-few-public-methods
+        R0801, # Similar lines in 2 files
+        R0401, # Cyclic import
+        R1727, # condition-evals-to-constant (if 0 and for tmp deactivation)
+        W0104, # pointless-statement (for numpy pretty repr.)
+        W0125, # using-constant-test (if 1, if 0 for debugging)
+        W0212, # protected-access .. until we can exlucde pg._r, pg._g, etc.
+        W0401, # wildcard-import (from oscar import *)
+        W0614, # unused-wildcard-import (from oscar import *)
+        E1102, # not-callable -> lot false positives for f = parse(f='') -> f()
+        E1130, # invalid-unary-operand-type -> lot false positives for -FEAFunc
+        #C0301, # linetolong
+        #W0603, # Using the global statement (global-statement)
 
 
 [REPORTS]
@@ -77,7 +97,7 @@ output-format=text
 # files-output=no
 
 # Tells whether to display a full report or only the messages
-reports=yes
+reports=no
 
 # Python expression which should return a note less than 10 (10 is the highest
 # note). You have access to the variables errors warning, statement which
@@ -94,7 +114,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=80
 
 # Regexp for a line that is allowed to be longer than the limit.
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
@@ -106,9 +126,9 @@ single-line-if-stmt=no
 # List of optional constructs for which whitespace checking is disabled
 # no-space-check=trailing-comma,dict-separator
 
-# Unrecognized option found: optimize-ast, files-output, no-space-check, 
-# bad-functions, function-name-hint, method-name-hint, const-name-hint, 
-# argument-name-hint, class-attribute-name-hint, attr-name-hint, module-name-hint, 
+# Unrecognized option found: optimize-ast, files-output, no-space-check,
+# bad-functions, function-name-hint, method-name-hint, const-name-hint,
+# argument-name-hint, class-attribute-name-hint, attr-name-hint, module-name-hint,
 # class-name-hint, inlinevar-name-hint, variable-name-hint
 # PylintE0015:unrecognized-option
 
@@ -177,7 +197,7 @@ callbacks=cb_,_cb
 # bad-functions=map,filter
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_
+good-names=i,j,k,ex,Run,_,C,L,L2,_g,f,f0,I,S
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
@@ -193,61 +213,61 @@ include-naming-hint=no
 function-rgx=[a-z_][a-zA-Z0-9_]{2,40}$
 
 # Naming hint for function names
-function-name-hint=[a-z_][a-z0-9_]{2,30}$
+#function-name-hint=[a-z_][a-z0-9_]{2,30}$
 
 # Regular expression matching correct method names
 method-rgx=[a-z_][a-zA-Z0-9_]{2,30}$
 
 # Naming hint for method names
-method-name-hint=[a-z_][a-z0-9_]{2,30}$
+#method-name-hint=[a-z_][a-z0-9_]{2,30}$
 
 # Regular expression matching correct constant names
 const-rgx=(([a-z_][a-zA-Z0-9_]*)|(__.*__))$
 
 # Naming hint for constant names
-const-name-hint=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+#const-name-hint=(([A-Z_][A-Z0-9_]*)|(__.*__))$
 
 # Regular expression matching correct argument names
 argument-rgx=(([a-z_][a-zA-Z0-9_]*)|(__.*__))$
 
 # Naming hint for argument names
-argument-name-hint=[a-z_][a-z0-9_]{2,30}$
+#argument-name-hint=[a-z_][a-z0-9_]{2,30}$
 
 # Regular expression matching correct class attribute names
 class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
 
 # Naming hint for class attribute names
-class-attribute-name-hint=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
+#class-attribute-name-hint=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
 
 # Regular expression matching correct attribute names
 attr-rgx=[a-z_][a-zA-Z0-9_]{0,30}$
 
 # Naming hint for attribute names
-attr-name-hint=[a-z_][a-z0-9_]{2,30}$
+#attr-name-hint=[a-z_][a-z0-9_]{2,30}$
 
 # Regular expression matching correct module names
 module-rgx=(([a-z_][a-zA-Z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
 
 # Naming hint for module names
-module-name-hint=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
+#module-name-hint=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
 
 # Regular expression matching correct class names
 class-rgx=[A-Z_][a-zA-Z0-9]+$
 
 # Naming hint for class names
-class-name-hint=[A-Z_][a-zA-Z0-9]+$
+#class-name-hint=[A-Z_][a-zA-Z0-9]+$
 
 # Regular expression matching correct inline iteration names
 inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]*$
 
 # Naming hint for inline iteration names
-inlinevar-name-hint=[A-Za-z_][A-Za-z0-9_]*$
+#inlinevar-name-hint=[A-Za-z_][A-Za-z0-9_]*$
 
 # Regular expression matching correct variable names
 variable-rgx=(([a-zA-Z0-9_]*)|(__.*__))$
 
 # Naming hint for variable names
-variable-name-hint=[a-z_][a-z0-9_]{2,30}$
+#variable-name-hint=[a-z_][a-z0-9_]{2,30}$
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
@@ -369,4 +389,4 @@ int-import-graph=
 
 # Exceptions that will emit a warning when being caught. Defaults to
 # "Exception"
-overgeneral-exceptions=Exception
+overgeneral-exceptions=builtins.xception

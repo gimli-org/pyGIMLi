@@ -108,7 +108,6 @@ public:
     /*! Return maximal z length.*/
     inline double zSize() const { return abs(this->zMax()-this->zMin());}
 
-
 protected:
 
     void copy_(const BoundingBox & bbox){
@@ -502,13 +501,20 @@ public:
 
     //** end mesh modification stuff
     //** start I/O stuff
-    int save(const std::string & fileName, IOFormat format = Binary) const;
-    int saveAscii(const std::string & fileName) const;
 
-    /*! Be carefull with interchanging binary meshs between 32-64bit architecture.
-     * Atm we save fixed int for counter and idx.
-     * We have to replace and test it with uint32 or uint16 */
-    int saveBinary(const std::string & fileName) const;
+    /*! Save mesh to file.
+     * The file format is determined by the file suffix.
+     * Supported formats are: \ref Binary, \ref VTK, \ref VTU.
+     * Default is \ref Binary, the file becomes the suffix .bms.
+     * If the file name ends with .vtk or .vtu, the mesh will be saved in
+     * Visualization Toolkit format.
+     * The filename is returned. */
+    std::string save(const std::string & fileName) const;
+
+    /*! Load Mesh from file and try to import fileformat regarding file suffix.
+    * If createNeighborInfos is set, the mesh is checked for consistency and
+    * missing boundaries will be created. */
+    void load(const std::string & fileName, bool createNeighbors=true);
 
     /*! Serialize mesh into a string. Same structure like save.*/
     //std::string serialize() const;
@@ -520,14 +526,6 @@ public:
 
     void readFromStream(std::istream & in);
 
-    /*! Load Mesh from file and try to import fileformat regarding file suffix.
-     * If createNeighborInfos is set, the mesh is checked for consistency and
-     * missing boundaries will be created. */
-    void load(const std::string & fileName,
-              bool createNeighbors=true, IOFormat format=Binary);
-
-    void loadAscii(const std::string & fileName);
-
     void importMod(const std::string & fileName);
 
     void importVTK(const std::string & fbody);
@@ -538,20 +536,6 @@ public:
     Node positions can be snap to a tolerance.*/
     void importSTL(const std::string & fileName, bool isBinary=false,
                    double snap=1e-3);
-
-    /*! Be carefull with interchanging binary meshs between 32-64bit architecture. Atm we save fixed int for counter and idx.
-    We have to replace and test it with uint32 or uint16 */
-    void loadBinary(const std::string & fileName);
-
-    /*! Save mesh in binary format v.2.0. should be possible to interchange on all little endian platforms. Contains all export data, marker an attribute.
-        If something goes wrong while writing, an exception is thrown.
-    sizes uint8 (1 byte), uint16 (2 byte), uint32 (4 byte), uint64 (8 byte)
-    Format: */
-    void saveBinaryV2(const std::string & fbody) const;
-
-    /*! Load mesh in binary format v.2.0. should be possible to interchange on all little endian platforms. Format see \ref saveBinaryV2.
-        If something goes wrong while reading, an exception is thrown. */
-    void loadBinaryV2(const std::string & fbody);
 
     int exportSimple(const std::string & fbody, const RVector & data) const ;
 

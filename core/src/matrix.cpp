@@ -181,7 +181,7 @@ DenseMatrix< Complex >::round(const Complex & tol){
 
 /*! Generic fall back implementation for c = alpha*(A*b) + beta*c. */
 template < class ValueType, class Mat >
-void mult_MV_fallback_T(const Mat & A, 
+void mult_MV_fallback_T(const Mat & A,
                  const Vector < ValueType > & b, Vector < ValueType > & c,
                  const ValueType & alpha, const ValueType & beta,
                  Index bOff, Index cOff, bool trans=false){
@@ -197,18 +197,18 @@ void mult_MV_fallback_T(const Mat & A,
 
     Stopwatch sw;
     ValueType _c = 0.0;
-    
+
     for (Index i = 0, iMax = c.size()-cOff; i < iMax; i ++){
         if (trans){
             _c = A.col(i).mult(b, bOff);
         } else {
             _c = A.row(i).mult(b, bOff);
         }
-    
+
         if (alpha != 1.0){
             _c *= alpha;
         }
-    
+
         if (beta == 0.0){
             c[i + cOff] = _c;
         } else if (beta == 1.0){
@@ -225,17 +225,17 @@ void mult_MV_fallback_T(const Mat & A,
 /*! Generic fall back implementation for C = a*(A*B) + b*C*/
 template <class ValueType, class Mat >
 void mult_MM_fallback_T(const Mat & A, const Mat & B, Mat & C,
-                        const ValueType & alpha, const ValueType & beta, 
+                        const ValueType & alpha, const ValueType & beta,
                         bool bIsTrans, Index n){
 
     if (bIsTrans){
-        ASSERT_EQUAL(A.cols(), B.cols())                 
+        ASSERT_EQUAL(A.cols(), B.cols())
         C.resize(A.rows(), B.rows());
     } else {
-        ASSERT_EQUAL(A.cols(), B.rows())                 
+        ASSERT_EQUAL(A.cols(), B.rows())
         C.resize(A.rows(), B.cols());
     }
-    
+
     Stopwatch sw;
     double c = 0;
     for (Index i = 0; i < A.rows(); i ++){
@@ -273,15 +273,15 @@ void mult_MM_fallback_T(const Mat & A, const Mat & B, Mat & C,
 }
 
 template <class ValueType, class Mat >
-void transMult_MM_fallback_T(const Mat & A, const Mat & B, Mat & C, 
-                             const ValueType & alpha, const ValueType & beta, 
+void transMult_MM_fallback_T(const Mat & A, const Mat & B, Mat & C,
+                             const ValueType & alpha, const ValueType & beta,
                              bool bIsTrans, Index n){
 
     if (bIsTrans){
-        ASSERT_EQUAL(A.rows(), B.cols())                 
+        ASSERT_EQUAL(A.rows(), B.cols())
         C.resize(A.cols(), B.rows());
     } else {
-        ASSERT_EQUAL(A.rows(), B.rows())                 
+        ASSERT_EQUAL(A.rows(), B.rows())
         C.resize(A.cols(), B.cols());
     }
 
@@ -353,11 +353,11 @@ void mult_MM_T(const Mat & A, const Mat & B,
     if (bIsTrans) bTrans = CblasTrans;
 
     // not threadsafe at all for using Buffer for RMatrix
-    
+
     double * bA = A.toData(&_wsA[0], _MATRIX_WS_SIZE);
     double * bB = B.toData(&_wsB[0], _MATRIX_WS_SIZE);
     double * bC = C.toData(&_wsC[0], _MATRIX_WS_SIZE);
-    
+
     // lda ## leading dimension for a, means column for CblasRowMajor
     Stopwatch sw;
     cblas_dgemm(CblasRowMajor, aTrans, bTrans,
@@ -445,13 +445,13 @@ void transMult_MM_T(const Mat & A, const Mat & B,
     double * bA = A.toData(&_wsA[0], _MATRIX_WS_SIZE);
     double * bB = B.toData(&_wsB[0], _MATRIX_WS_SIZE);
     double * bC = C.toData(&_wsC[0], _MATRIX_WS_SIZE);
-    
+
     Stopwatch sw;
     cblas_dgemm(CblasRowMajor, aTrans, bTrans, m, n, k,
                 a, bA, m, bB, bRows,
                 b, bC, n);
     _updateCblasTime_(sw.duration());
-    
+
     C.fromData(bC, m, n);
 
     if (bA != _wsA && A.rtti() == GIMLI_MATRIX_RTTI){
@@ -459,7 +459,7 @@ void transMult_MM_T(const Mat & A, const Mat & B,
         delete [] bB;
         delete [] bC;
     }
-    
+
 #else
     mult_MV_fallback_T(A, B, C, a, b, bIsTrans, n);
 #endif
@@ -473,8 +473,8 @@ void transMult_MM_T(const Mat & A, const Mat & B,
 }
 
 /*! Special blas implementation of c = alpha*(A.T*b) + beta*c. */
-void mult(const RDenseMatrix & A, 
-          const RVector & b, RVector & c, 
+void mult(const RDenseMatrix & A,
+          const RVector & b, RVector & c,
           const double & alpha, const double & beta,
           Index bOff, Index cOff){
 
@@ -483,7 +483,7 @@ void mult(const RDenseMatrix & A,
     if (noCBlas()){
         mult_MV_fallback_T(A, b, c, alpha, beta, bOff, cOff);
     } else {
-        
+
         Index m = A.rows();
         Index n = A.cols();
         ASSERT_VEC_SIZE(b, n)
@@ -499,7 +499,7 @@ void mult(const RDenseMatrix & A,
     mult_MV_fallback_T(A, b, c, alpha, beta, bOff, cOff);
 #endif
 }
-void mult(const CDenseMatrix & A, 
+void mult(const CDenseMatrix & A,
           const CVector & b, CVector & c,
           const Complex & alpha, const Complex & beta,
           Index bOff, Index cOff){
@@ -526,8 +526,8 @@ void mult(const CDenseMatrix & A,
 }
 
 /*! Special blas implementation of c = alpha*(A.T*b) + beta*c. */
-void transMult(const RDenseMatrix & A, 
-               const RVector & b, RVector & c, 
+void transMult(const RDenseMatrix & A,
+               const RVector & b, RVector & c,
                const double & alpha, const double & beta,
                Index bOff, Index cOff){
 
@@ -552,8 +552,8 @@ void transMult(const RDenseMatrix & A,
 }
 
 /*! Special blas implementation of c = alpha*(A.T*b) + beta*c. */
-void transMult(const CDenseMatrix & A, 
-               const CVector & b, CVector & c, 
+void transMult(const CDenseMatrix & A,
+               const CVector & b, CVector & c,
                const Complex & alpha, const Complex & beta,
                Index bOff, Index cOff){
 
@@ -599,29 +599,29 @@ void transMult(const CDenseMatrix & A, const CDenseMatrix & B,
 //##############################################################################
 // Matrix related implementations
 //##############################################################################
-void mult(const RMatrix & A, 
+void mult(const RMatrix & A,
           const RVector & b, RVector & c,
-          const double & alpha, const double & beta, 
+          const double & alpha, const double & beta,
           Index bOff, Index cOff){
     return mult_MV_fallback_T(A, b, c, alpha, beta, bOff, cOff);
     // Bufferalloc for OPENBLAS to xpensive
 }
-void mult(const CMatrix & A, 
-          const CVector & b, CVector & c, 
+void mult(const CMatrix & A,
+          const CVector & b, CVector & c,
           const Complex & alpha, const Complex & beta,
           Index bOff, Index cOff){
     return mult_MV_fallback_T(A, b, c, alpha, beta, bOff, cOff);
     // Bufferalloc for OPENBLAS to xpensive
 }
-void transMult(const RMatrix & A, 
+void transMult(const RMatrix & A,
           const RVector & b, RVector & c,
-          const double & alpha, const double & beta, 
+          const double & alpha, const double & beta,
           Index bOff, Index cOff){
     return mult_MV_fallback_T(A, b, c, alpha, beta, bOff, cOff, true);
     // Bufferalloc for OPENBLAS to xpensive
 }
-void transMult(const CMatrix & A, 
-          const CVector & b, CVector & c, 
+void transMult(const CMatrix & A,
+          const CVector & b, CVector & c,
           const Complex & alpha, const Complex & beta,
           Index bOff, Index cOff){
     return mult_MV_fallback_T(A, b, c, alpha, beta, bOff, cOff, true);
@@ -704,7 +704,7 @@ void matMultABA(const RDenseMatrix & A, const RDenseMatrix & B,
     return matMultABA_T(A, B, C, AtB, a, b);
 }
 void matMultABA(const RMatrix & A, const RMatrix & B,
-                RMatrix & C, RMatrix & AtB, 
+                RMatrix & C, RMatrix & AtB,
                 const double & a, const double & b){
 
     return matMultABA_T(A, B, C, AtB, a, b);
@@ -899,7 +899,7 @@ bool loadMatrixVectorsBin_T(Matrix < ValueType > & A,
                     break;
                 }
             }
-            if (loadVec(tmp, filename, Binary )) A.push_back(tmp);
+            if (GIMLI::load(tmp, filename, Binary)) A.push_back(tmp);
             count ++;
         } // while files exist
     } // for each k count

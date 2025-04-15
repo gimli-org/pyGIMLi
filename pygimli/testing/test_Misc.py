@@ -221,40 +221,93 @@ class TestMisc(unittest.TestCase):
         c_ = c1(10)
 
 
+    def test_BinaryIO(self):
+        """Test binary IO of some selected classes.
+        """
+        import tempfile as tmp
+
+        def _tst(a):
+            """Generic binary IO tester."""
+            _, fn = tmp.mkstemp()
+
+            if isinstance(a, pg.Mesh):
+                fname = a.save(fn)
+            else:
+                fname = a.save(fn, pg.core.Binary)
+
+            b = pg.load(fname)
+
+            self.assertEqual(a.hash(), b.hash())
+
+
+        a = pg.IVector(np.asarray(np.random.random(42)*100, dtype='int64'))
+        fname = a.save('tmp', pg.core.Binary)
+        b = pg.load(fname)
+
+        print(a)
+        print(b)
+        self.assertEqual(a.hash(), b.hash())
+
+
+        for a in [pg.meshtools.createGrid(3),
+                  pg.RVector(np.random.randn(42)),
+                  pg.IVector(np.asarray(np.random.randn(42), dtype='int')),
+                ]:
+            _tst(a)
+
+
     def test_Pickle(self):
         """ Test pickling of some selected classes.
         """
         import pickle
+
+        def _tst(a):
+            """Generic pickle tester."""
+            p = pickle.dumps(a)
+            b = pickle.loads(p)
+
+            self.assertEqual(a.hash(), b.hash())
+            import tempfile as tmp
+
+            _, fn = tmp.mkstemp()
+            with open(fn + '.pkl', 'wb') as f:
+                pickle.dump(a, f)
+            with open(fn + '.pkl', 'rb') as f:
+                c = pickle.load(f)
+
+            self.assertEqual(a.hash(), c.hash())
 
         a = pg.core.FEAFunction(1, 3)
         p = pickle.dumps(a)
         b = pickle.loads(p)
         self.assertEqual(a.getEvalOrder(), a.getEvalOrder())
 
-        a = pg.meshtools.createGrid(3)
-        p = pickle.dumps(a)
-        b = pickle.loads(p)
-        self.assertEqual(a.hash(), b.hash())
-
         a = pg.Pos(1, 2, 3)
         p = pickle.dumps(a)
         b = pickle.loads(p)
         self.assertEqual(a.z(), b.z())
 
-        d1 = dict(mesh=pg.meshtools.createGrid(3), pos=pg.Pos(1,2,3))
-        p = pickle.dumps(d1)
-        d2 = pickle.loads(p)
-        self.assertEqual(d1['mesh'].hash(), hash(d2['mesh']))
+        a = dict(mesh=pg.meshtools.createGrid(3), pos=pg.Pos(1,2,3))
+        p = pickle.dumps(a)
+        b = pickle.loads(p)
+        self.assertEqual(a['mesh'].hash(), hash(b['mesh']))
 
-        import tempfile as tmp
-        _, fn = tmp.mkstemp()
+        # BVector does not yet work with pickle .. needed?
+        # a = pg.BVector(np.asarray(np.random.random(42)*100, dtype='int')<50),
+        # print(a)
+        # p = pickle.dumps(a)
+        # b = pickle.loads(p)
+        # print(b)
 
-        with open(fn + '.pkl', 'wb') as f:
-            pickle.dump(d1, f)
-        with open(fn + '.pkl', 'rb') as f:
-            d3 = pickle.load(f)
+        for a in [pg.meshtools.createGrid(3),
+                  pg.RVector(np.random.randn(42)),
+                  pg.IVector(np.asarray(np.random.random(42)*100, dtype='int')),
+                  pg.core.IndexArray(np.asarray(np.random.random(42)*100, dtype='int')),
+                  #pg.BVector(np.asarray(np.random.random(42)*100, dtype='int')<50),
+                ]:
+            _tst(a)
 
-        self.assertEqual(d1['mesh'].hash(), hash(d3['mesh']))
+
 
     # does not work .. need time to implement
     # def test_DataContainerWrite(self):
@@ -265,10 +318,14 @@ class TestMisc(unittest.TestCase):
     #     fi.close()
 
     def test_DataTypes(self):
+        """Test data types.
+        """
         pg.core.showSizes()
 
 
     def test_Table(self):
+        """Test Table creation and printing.
+        """
 
         r1 = [1, 2, 3]
         r2 = [4, 5, 6]

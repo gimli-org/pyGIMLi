@@ -499,7 +499,9 @@ DEFINE_XVECTOR_STUFF__(RVector) //RVector last since auto rhs conversion will fa
     extern template void sort(const RVector & a, RVector & b, IndexArray & idx);
     extern template IndexArray sortIdx(const RVector & a);
 
-    extern template bool save(const RVector &v, const std::string & fname, IOFormat format = Ascii);
+    extern template std::string save(const RVector &v,
+                                     const std::string & fname,
+                                     IOFormat format=Ascii);
     extern template bool load(RVector &v, const std::string & fname, IOFormat format = Ascii,
                         bool verbose = true);
     extern template bool load(RMatrix & A, const std::string & filename);

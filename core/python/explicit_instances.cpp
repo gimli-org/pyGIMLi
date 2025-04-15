@@ -236,7 +236,9 @@ DEFINE_XVECTOR_STUFF__(RVector) //RVector last since auto rhs conversion will fa
     template void sort(const RVector & a, RVector & b, IndexArray & idx);
     template IndexArray sortIdx(const RVector & a);
 
-    template bool save(const RVector &v, const std::string & fname, IOFormat format = Ascii);
+    template std::string save(const RVector &v,
+                              const std::string & fname,
+                              IOFormat format=Ascii);
     template bool load(RVector &v, const std::string & fname, IOFormat format = Ascii,
                         bool verbose = true);
     template bool load(RMatrix & A, const std::string & filename);

@@ -137,6 +137,7 @@ def load(fname, verbose=False, testAll=True, realName=None):
         # ".dat": pg.Vector,
         ".vector": pg.Vector,
         ".vec": pg.Vector,
+        ".bvec": pg.Vector,
         ".idx": pg.IVector,
         # Matrices
         ".bmat": pg.Matrix,

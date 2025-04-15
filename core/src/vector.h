@@ -39,6 +39,7 @@
 
 #include "gimli.h"
 #include "expressions.h"
+#include "utils.h"
 
 #include <string>
 #include <vector>
@@ -98,17 +99,17 @@ public:
     #endif
 
     VectorIterator()
-        : val_(0), maxSize_(0), end_(0), data_(0), _haveBorrowedData(false){
+        : val_(0), maxSize_(0), end_(0), data_(0), _hasBorrowedData(false){
     }
 
     VectorIterator(ValueType * v, Index size, const Vector < ValueType > * owner)
         : val_(v), maxSize_(size), end_(v + size),
-        data_(owner->data_), _haveBorrowedData(owner->_haveBorrowedData){
+        data_(owner->data_), _hasBorrowedData(owner->_hasBorrowedData){
     }
 
     VectorIterator(const VectorIterator < ValueType > & iter)
         : val_(iter.val_), maxSize_(iter.maxSize_), end_(iter.val_ + iter.maxSize_), data_(iter.data_),
-        _haveBorrowedData(iter._haveBorrowedData){
+        _hasBorrowedData(iter._hasBorrowedData){
     }
 
     VectorIterator < ValueType > & operator = (const VectorIterator < ValueType > & iter){
@@ -118,7 +119,7 @@ public:
             maxSize_ = iter.maxSize_ ;
             end_ = iter.end_;
             data_ = iter.data_;
-            _haveBorrowedData = iter._haveBorrowedData;
+            _hasBorrowedData = iter._hasBorrowedData;
         }
         return *this;
     }
@@ -185,14 +186,14 @@ public:
     Index maxSize_;
     ValueType * end_;
     ValueType * data_; // begin()
-    bool _haveBorrowedData;
+    bool _hasBorrowedData;
 
 };
 
 
 template < class VEC1, class VEC2 > void _assertDifferentBorrowedView(const VEC1 & a,
                                                          const VEC2 & b){
-//    if (a._haveBorrowedData && a.data_ == b.data_) {
+//    if (a._hasBorrowedData && a.data_ == b.data_) {
 //        log(Error, "vector a and b have same borrowed data and are the same single rowview of RDensematrix. This is probably not what you want." );
 //    }
 }
@@ -214,14 +215,14 @@ public:
 // this constructor is dangerous for IndexArray in pygimli ..
 // there is an autocast from int -> IndexArray(int)
     Vector()
-        : _haveBorrowedData(false), size_(0), data_(0), capacity_(0){
+        : _hasBorrowedData(false), size_(0), data_(0), capacity_(0){
         __DDS("vec(0)", this);
     // explicit Vector(Index n = 0) : data_(NULL), begin_(NULL), end_(NULL) {
         resize(0);
         clean();
     }
     Vector(Index n)
-        : _haveBorrowedData(false), size_(0), data_(0), capacity_(0){
+        : _hasBorrowedData(false), size_(0), data_(0), capacity_(0){
         __DDS("vec(int)", this);
     // explicit Vector(Index n = 0) : data_(NULL), begin_(NULL), end_(NULL) {
         resize(n);
@@ -232,19 +233,19 @@ public:
      * Construct one-dimensional array of size n, and fill it with val
      */
     Vector(Index n, const ValueType & val)
-        : _haveBorrowedData(false), size_(0), data_(0), capacity_(0){
+        : _hasBorrowedData(false), size_(0), data_(0), capacity_(0){
         __DDS("vec(int, float)", this);
         resize(n);
         fill(val);
     }
     Vector(std::initializer_list< ValueType > l):
-        _haveBorrowedData(false), size_(0), data_(0), capacity_(0){
+        _hasBorrowedData(false), size_(0), data_(0), capacity_(0){
         __DDS("vec([])", this);
         resize(l.size());
         std::copy(l.begin(), l.end(), data_);
     }
     Vector(ValueType * buf, Index n):
-        _haveBorrowedData(false), size_(0), data_(0), capacity_(0){
+        _hasBorrowedData(false), size_(0), data_(0), capacity_(0){
         __DDS("vec(*, n)", this);
         reserve(n);
         size_ = n;
@@ -255,20 +256,20 @@ public:
      * Construct vector from file. Shortcut for Vector::load
      */
     Vector(const std::string & filename, IOFormat format=Ascii)
-        : _haveBorrowedData(false), size_(0), data_(0), capacity_(0){
+        : _hasBorrowedData(false), size_(0), data_(0), capacity_(0){
         this->load(filename, format);
     }
     /*!
      * Copy constructor. Create new vector as a deep copy of v.
      */
     Vector(const Vector< ValueType > & v)
-        : _haveBorrowedData(false), size_(0), data_(0), capacity_(0){
+        : _hasBorrowedData(false), size_(0), data_(0), capacity_(0){
         __DDS("vec(copy)", this, &v)
-        // this->_haveBorrowedData = v._haveBorrowedData;
+        // this->_hasBorrowedData = v._hasBorrowedData;
         // no shallow copy
         copy_(v);
 
-        // if (v._haveBorrowedData){
+        // if (v._hasBorrowedData){
             // // __MS(v.size(), v._borrowedDataOffset)
             // size_ = v.size();
             // this->_borrowedData = v._borrowedData;
@@ -282,7 +283,7 @@ public:
      * Copy constructor. Create new vector as a deep copy of the slice v[start, end)
      */
     Vector(const Vector< ValueType > & v, Index start, Index end)
-        : _haveBorrowedData(false), size_(0), data_(0), capacity_(0){
+        : _hasBorrowedData(false), size_(0), data_(0), capacity_(0){
         __DDS("vec(copy, start, end)", this);
         resize(end - start);
         std::copy(&v[start], &v[end], data_);
@@ -291,7 +292,7 @@ public:
      * Copy constructor. Create new vector from expression
      */
     template < class A > Vector(const __VectorExpr< ValueType, A > & v)
-        : _haveBorrowedData(false), size_(0), data_(0), capacity_(0){
+        : _hasBorrowedData(false), size_(0), data_(0), capacity_(0){
         __DDS("vec(expr)", this);
         resize(v.size());
         assign_(v);
@@ -302,7 +303,7 @@ public:
      * Copy constructor. Create new vector as a deep copy of std::vector(Valuetype)
      */
     Vector(const std::vector< ValueType > & v)
-        : _haveBorrowedData(false), size_(0), data_(0), capacity_(0){
+        : _hasBorrowedData(false), size_(0), data_(0), capacity_(0){
         __DDS("std::vec()", this);
         resize(v.size());
         for (Index i = 0; i < v.size(); i ++) data_[i] = v[i];
@@ -310,7 +311,7 @@ public:
     }
     /*! Create Vector from borrowed data. */
     Vector(Index n, const std::shared_ptr< ValueType [] > & d, Index offset=0)
-        : _haveBorrowedData(true), size_(n), data_(0), capacity_(0){
+        : _hasBorrowedData(true), size_(n), data_(0), capacity_(0){
         __DDS("vec(boorowed)", this, n, d)
         this->_borrowedData = d;
 
@@ -323,7 +324,7 @@ public:
     }
 
     template < class ValueType2 > Vector(const Vector< ValueType2 > & v)
-        : _haveBorrowedData(false), size_(0), data_(0), capacity_(0){
+        : _hasBorrowedData(false), size_(0), data_(0), capacity_(0){
         __DDS("vec(vec2)", this)
         resize(v.size());
         for (Index i = 0; i < v.size(); i ++) data_[i] = ValueType(v[i]);
@@ -844,7 +845,7 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
     /*! Resize if n differs size() and fill new with val. Old data are preserved. */
     void resize(Index n, ValueType fill){
         if (n != size_){
-            if (this->_haveBorrowedData){
+            if (this->_hasBorrowedData){
                 throwError("Vector with borrowed data can't be resized.");
             }
             reserve(n);
@@ -860,7 +861,7 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
     /*! Reserve memory. Old data are preserved*/
     void reserve(Index n){
 
-        if (this->_haveBorrowedData){
+        if (this->_hasBorrowedData){
             throwError("Vector with borrowed data can't be resized.");
         }
 
@@ -874,7 +875,7 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
 
         if (newCapacity != capacity_) {
 
-            if (this->_haveBorrowedData){
+            if (this->_hasBorrowedData){
                 log(Error, "Cannot resize Vector with borrowed data");
                 return;
             }
@@ -955,6 +956,36 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
 
     ValueType * data() { return data_; }
 
+    /*! Serialize vector into a byte buffer.
+    Same structure like save a vector.*/
+    ByteBuffer serialize() const {
+        return GIMLI::serialize(*this);
+    }
+
+    /*! Deserialize the vector from a byte buffer.
+    Same structure like loading a vector.*/
+    void deserialize(const ByteBuffer & m) {
+        return GIMLI::deserialize(m, *this);
+    }
+
+    void writeToStream(std::ostream & out) const {
+        if (_hasBorrowedData){
+            log(Error, "Vector with borrowed data can't "
+                        "yet be written to stream.");
+        }
+        writeStream(out, (int64)size_);
+        writeStream(out, data_[0], size_);
+    }
+
+    void readFromStream(std::istream & in) {
+        this->clear();
+
+        int64 size; readStream(in, size, 1);
+        this->resize(size);
+
+        readStream(in, data_[0], size);
+    }
+
     /*! Save the object to file. Returns true on success and in case of trouble an exception is thrown.
      * The IOFormat flag will be overwritten if the filename have a proper file suffix. Ascii format is forced if \ref VECTORASCSUFFIX is given.
      * Binary format is forced if \ref VECTORBINSUFFIX is set. If no suffix is provided \ref VECTORASCSUFFIX or \ref VECTORBINSUFFIX will be append. \n\n
@@ -967,14 +998,19 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
     \param filename string of the file name
     \param IOFormat enum, either Ascii for human readable format, or Binary for fast save and load.
     */
-    bool save(const std::string & filename, IOFormat format = Ascii) const {
+    std::string save(const std::string & filename, IOFormat format=Ascii) const {
 
-        if (filename.rfind(VECTORASCSUFFIX) != std::string::npos) format = Ascii;
-        else if (filename.rfind(VECTORBINSUFFIX) != std::string::npos) format = Binary;
+        if (filename.rfind(VECTORASCSUFFIX) != std::string::npos) {
+            format = Ascii;
+        } else if (filename.rfind(VECTORBINSUFFIX) != std::string::npos) {
+            format = Binary;
+        }
         std::string fname(filename);
 
         if (format == Ascii){
-            if (fname.rfind(".") == std::string::npos) fname += VECTORASCSUFFIX;
+            if (fname.rfind(".") == std::string::npos) {
+                fname += VECTORASCSUFFIX;
+            }
 
             std::ofstream file; file.open(fname.c_str());
             if (!file) {
@@ -987,35 +1023,19 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
             for (Index i = 0, imax = size_; i < imax; i ++) file << data_[i] << std::endl;
             file.close();
         } else {
-            if (fname.rfind(".") == std::string::npos) fname += VECTORBINSUFFIX;
-        // so haett ich das gern //
-    //     std::ofstream file(filename.c_str(), std::ofstream::binary);
-    //     std::copy(&a[0], &a[a.size()-1], ostream_iterator< double >(&file));
-    //     file.close();
-            FILE *file; file = fopen(fname.c_str(), "w+b");
-            if (!file) {
-                throwError(filename + ": " + strerror(errno));
-            }
-
-            int64 count = (int64)size_;
-            Index ret = 0; ret = fwrite((char*)&count, sizeof(int64), 1, file);
-            if (ret == 0) {
-                fclose(file);
-                return false;
-            }
-            for (Index i = 0; i < size_; i++) ret = fwrite((char*)&data_[i], sizeof(ValueType), 1, file);
-            fclose(file);
+            return GIMLI::saveBinary(filename, *this, VECTORBINSUFFIX);
         }
-        return true;
+        return fname;
     }
 
     /*!
      * Load the object from file. Returns true on success and in case of trouble an exception is thrown.
-     * The IOFormat flag will be overwritten if the filename have a proper file suffix. Ascii format is forced if \ref VECTORASCSUFFIX is given.
+     * The IOFormat flag will be overwritten if the filename have a proper file suffix.
+     * Ascii format is forced if \ref VECTORASCSUFFIX is given.
      * Binary format is forced if \ref VECTORBINSUFFIX is set.
      * See Vector< ValueType >::save for file format.
      */
-    bool load(const std::string & filename, IOFormat format = Ascii){
+    bool load(const std::string & filename, IOFormat format=Ascii){
 
         if (filename.rfind(VECTORASCSUFFIX) != std::string::npos) format = Ascii;
         else if (filename.rfind(VECTORBINSUFFIX) != std::string::npos) format = Binary;
@@ -1035,39 +1055,25 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
                 tmp.push_back(val);
             }
 
-//     std::ifstream file(filename.c_str());
-//     std::copy( std::istream_iterator<double>(file),
-//                 std::istream_iterator<double>(),
-//                 std::back_inserter(tmp));
-
-//std::back_inserter< double > (tmp));
-    //std::copy(file.begin(), file.end(), back_inserter< double >(& tmp[0]));
-
             this->resize(tmp.size());
             std::copy(tmp.begin(), tmp.end(), &data_[0]);
             file.close();
 
         } else {
-            FILE *file;
-            file = fopen(filename.c_str(), "r+b");
-            if (!file) {
-                throwError(filename +  ": " + strerror(errno));
-            }
-            Index ret = 0;
-            int64 size; ret = fread(&size, sizeof(int64), 1, file);
-            if (ret) this->resize(size);
-
-            ret = fread(&data_[0], sizeof(ValueType), size, file);
-            if (!ret) {
-            }
-            fclose(file);
+            GIMLI::loadBinary(filename, *this, VECTORBINSUFFIX);
         }
         return true;
     }
 
-    VectorIterator< ValueType > beginPyIter() const { return VectorIterator< ValueType >(data_, size_, this); }
-    VectorIterator< ValueType > begin() const { return VectorIterator< ValueType >(data_, size_, this); }
-    VectorIterator< ValueType > end() const { return VectorIterator< ValueType >(data_ + size_, 0, this); }
+    VectorIterator< ValueType > beginPyIter() const {
+        return VectorIterator< ValueType >(data_, size_, this);
+    }
+    VectorIterator< ValueType > begin() const {
+        return VectorIterator< ValueType >(data_, size_, this);
+    }
+    VectorIterator< ValueType > end() const {
+        return VectorIterator< ValueType >(data_ + size_, 0, this);
+    }
 
     Index hash() const {
         Index seed = 0;
@@ -1083,7 +1089,7 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
     inline void setBorrowedDataOffset(Index offset){
         data_ = &_borrowedData.get()[offset];
     }
-    bool _haveBorrowedData; // we need a flag if borrowedData are used, it cannot be read from the shared_ptr in case an empty pointer was set.
+    bool _hasBorrowedData; // we need a flag if borrowedData are used, it cannot be read from the shared_ptr in case an empty pointer was set.
     std::shared_ptr< ValueType [] > _borrowedData;
 
     Index size_;
@@ -1093,7 +1099,7 @@ protected:
     void free_(){
         size_ = 0;
         capacity_ = 0;
-        if (this->_haveBorrowedData){
+        if (this->_hasBorrowedData){
             // delete [] this->_borrowedData;
         } else {
             if (data_)  delete [] data_;
@@ -1253,8 +1259,8 @@ template< class ValueType, class A > class __VectorExpr {
 public:
     __VectorExpr(const A & a) : iter_(a) {
         this->data_ = a.data_;
-        this->_haveBorrowedData = a._haveBorrowedData;
-        // __MS("Expr", this->data_, this->_haveBorrowedData)
+        this->_hasBorrowedData = a._hasBorrowedData;
+        // __MS("Expr", this->data_, this->_hasBorrowedData)
     }
 
     inline ValueType operator [] (Index i) const { return iter_[i]; }
@@ -1273,15 +1279,15 @@ public:
 // private:
     A iter_;
     ValueType * data_;
-    bool _haveBorrowedData;
+    bool _hasBorrowedData;
 };
 
 template< class ValueType, class A, class Op > class __VectorUnaryExprOp {
 public:
     __VectorUnaryExprOp(const A & a) : iter_(a) {
         this->data_ = a.data_;
-        this->_haveBorrowedData = a._haveBorrowedData;
-        // __MS("V", this->data_, this->_haveBorrowedData)
+        this->_hasBorrowedData = a._hasBorrowedData;
+        // __MS("V", this->data_, this->_hasBorrowedData)
     }
 
     inline ValueType operator [] (Index i) const { return Op()(iter_[i]); }
@@ -1295,7 +1301,7 @@ public:
 // private:
     A iter_;
     ValueType * data_;
-    bool _haveBorrowedData;
+    bool _hasBorrowedData;
 };
 
 template< class ValueType, class A, class B, class Op > class __VectorBinaryExprOp {
@@ -1303,8 +1309,8 @@ public:
     __VectorBinaryExprOp(const A & a, const B & b) : iter1_(a), iter2_(b) {
         _assertDifferentBorrowedView(a, b);
         this->data_ = a.data_;
-        this->_haveBorrowedData = a._haveBorrowedData;
-        // __MS("V*W", this->data_, this->_haveBorrowedData)
+        this->_hasBorrowedData = a._hasBorrowedData;
+        // __MS("V*W", this->data_, this->_hasBorrowedData)
     }
 
     inline ValueType operator [] (Index i) const { return Op()(iter1_[i], iter2_[i]); }
@@ -1319,15 +1325,15 @@ public:
     A iter1_;
     B iter2_;
     ValueType * data_;
-    bool _haveBorrowedData;
+    bool _hasBorrowedData;
 };
 
 template< class ValueType, class A, class Op > class __VectorValExprOp {
 public:
     __VectorValExprOp(const A & a, const ValueType & val) : iter_(a), val_(val) {
         this->data_ = a.data_;
-        this->_haveBorrowedData = a._haveBorrowedData;
-        // __MS("V*a", this->data_, this->_haveBorrowedData)
+        this->_hasBorrowedData = a._hasBorrowedData;
+        // __MS("V*a", this->data_, this->_hasBorrowedData)
     }
 
     inline ValueType operator [] (Index i) const { return Op()(iter_[i], val_); }
@@ -1342,7 +1348,7 @@ public:
     A iter_;
     ValueType val_;
     ValueType * data_;
-    bool _haveBorrowedData;
+    bool _hasBorrowedData;
 };
 
 template< class ValueType, class A, class Op > class __ValVectorExprOp {
@@ -1350,8 +1356,8 @@ public:
     __ValVectorExprOp(const ValueType & val, const A & a) : iter_(a), val_(val)
     {
         this->data_ = a.data_;
-        this->_haveBorrowedData = a._haveBorrowedData;
-        // __MS("a*V", this->data_, this->_haveBorrowedData)
+        this->_hasBorrowedData = a._hasBorrowedData;
+        // __MS("a*V", this->data_, this->_hasBorrowedData)
     }
 
     inline ValueType operator [] (Index i) const { return Op()(val_, iter_[i]); }
@@ -1366,7 +1372,7 @@ public:
     A iter_;
     ValueType val_;
     ValueType * data_;
-    bool _haveBorrowedData;
+    bool _hasBorrowedData;
 };
 
 #define DEFINE_UNARY_EXPR_OPERATOR__(OP, FUNCT)\
@@ -2167,36 +2173,37 @@ inline IVector toIVector(const RVector & v){
 }
 
 template < class ValueType >
-bool save(const Vector< ValueType > & a, const std::string & filename,
-          IOFormat format=Ascii){
-    return saveVec(a, filename, format);
+std::string save(const Vector< ValueType > & a,
+                 const std::string & filename,
+                 IOFormat format=Ascii){
+    return a.save(filename, format);
 }
 
 template < class ValueType >
 bool load(Vector< ValueType > & a, const std::string & filename,
           IOFormat format = Ascii,
           bool verbose=true){
-    return loadVec(a, filename, format, verbose);
-}
-
-/*!
- Save vector to file. See Vector< ValueType >::save.
-*/
-template < class ValueType >
-bool saveVec(const Vector< ValueType > & a, const std::string & filename,
-             IOFormat format=Ascii){
-    return a.save(filename, format);
-}
-
-/*!
- Load vector from file. See Vector< ValueType >::load.
-*/
-template < class ValueType >
-bool loadVec(Vector < ValueType > & a,
-             const std::string & filename,
-             IOFormat format = Ascii){
     return a.load(filename, format);
 }
+
+// /*!
+//  Save vector to file. See Vector< ValueType >::save.
+// */
+// template < class ValueType >
+// std::string saveVec(const Vector< ValueType > & a, const std::string & filename,
+//              IOFormat format=Ascii){
+//     return a.save(filename, format);
+// }
+
+// /*!
+//  Load vector from file. See Vector< ValueType >::load.
+// */
+// template < class ValueType >
+// bool loadVec(Vector < ValueType > & a,
+//              const std::string & filename,
+//              IOFormat format = Ascii){
+//     return a.load(filename, format);
+// }
 
 } // namespace GIMLI
 

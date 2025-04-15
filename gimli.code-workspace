@@ -90,7 +90,11 @@
             "typeindex": "cpp",
             "typeinfo": "cpp",
             "valarray": "cpp",
-            "variant": "cpp"
-        }
+            "variant": "cpp",
+            "text_encoding": "cpp"
+        },
+        "cSpell.words": [
+            "dxyz"
+        ]
     }
 }
