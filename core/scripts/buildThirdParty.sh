@@ -28,14 +28,15 @@ CASTXML_URL=https://github.com/CastXML/CastXML.git
 # Check for updates https://data.kitware.com/#search/results?query=castxml&mode=text
 CASTXML_BIN_LINUX=https://data.kitware.com/api/v1/item/63bed74d6d3fc641a02d7e98/download # 0.5.0
 #CASTXML_BIN_WIN=https://data.kitware.com/api/v1/file/63bed83a6d3fc641a02d7ea3/download # 0.5.0
-CASTXML_BIN_WIN=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/castxml-windows.zip 
+CASTXML_BIN_WIN=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/castxml-windows.zip
 
 if [[ $(uname -m) == 'arm64' ]]; then
-    CASTXML_BIN_MAC=https://data.kitware.com/api/v1/item/63c469666d3fc641a02d80ca/download
-    # ARM (M1, M2 chips)
+    # ARM means new Apple M chips
+    CASTXML_BIN_MAC_NAME="castxml-macos-arm.tar.gz"
 else
-    CASTXML_BIN_MAC=https://data.kitware.com/api/v1/item/63bed7726d3fc641a02d7e9e/download # Intel chips
+    CASTXML_BIN_MAC_NAME="castxml-macosx.tar.gz"
 fi
+CASTXML_BIN_MAC=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/$CASTXML_BIN_MAC_NAME
 
 #.. needs testing
 # Check for updates https://github.com/CastXML/CastXMLSuperbuild/releases/tag/v0.6.5
@@ -430,7 +431,7 @@ prepBOOST(){
     BOOST_DIST_NAME=$BOOST_VER-$TOOLSET-$ADDRESSMODEL-'py'$PYTHONMAJOR$PYTHONMINOR
     BOOST_DIST=$DIST_DIR/$BOOST_DIST_NAME
     BOOST_BUILD=$BUILD_DIR/$BOOST_VER-'py'$PYTHONMAJOR$PYTHONMINOR
-    
+
     BOOST_ROOT_WIN=${BOOST_ROOT/\/c\//C:\/}
     BOOST_ROOT_WIN=${BOOST_ROOT_WIN/\/d\//D:\/}
     BOOST_ROOT_WIN=${BOOST_ROOT_WIN/\/e\//E:\/}
@@ -440,7 +441,7 @@ buildBOOST(){
     prepBOOST
     echo "*** building boost ... $BOOST_VER $BOOST_URL/$BOOST_VERSION/$BOOST_VER'.tar.gz'"
     getWITH_WGET $BOOST_URL/$BOOST_VERSION $BOOST_SRC $BOOST_VER'.tar.gz'
-    
+
     if [ ! -d $BOOST_BUILD ]; then
         echo "copying sourcetree into build: $BOOST_BUILD"
         cp -r $BOOST_SRC $BOOST_BUILD
@@ -465,7 +466,7 @@ buildBOOST(){
             B2="./b2.exe"
         elif [ "$SYSTEM" == "UNIX" ]; then
             B2="./b2"
-            
+
             if [ -f "b2" ]; then
                 echo "*** using existing $B2"
             else
@@ -494,7 +495,7 @@ buildBOOST(){
         PY_CONFIG_DIR=/opt/python/$PY_PLATFORM-$PY_PLATFORM/include/python3.$PYTHONMINOR
 
         if [ -f $PY_CONFIG_DIR/pyconfig.h ]; then
-            # special includes for manylinux, since venv does not copy python 
+            # special includes for manylinux, since venv does not copy python
             # config on alamlinux docker container
             echo "Setting extra include to pyconfig for manylinux_$PY_PLATFORM-$PY_PLATFORM"
             export CPLUS_INCLUDE_PATH=$PY_CONFIG_DIR
@@ -549,9 +550,9 @@ buildCASTXMLBIN(){
         CASTXMLBIN=castxml.exe
     elif [ "$SYSTEM" == "MAC" ]; then
         if [ -n "$CLEAN" ]; then
-            rm -f $SRC_DIR/castxml-macosx.tar.gz
+            rm -f $SRC_DIR/$CASTXML_BIN_MAC_NAME
         fi
-        getWITH_WGET $CASTXML_BIN_MAC $CASTXML_SRC castxml-macosx.tar.gz
+        getWITH_WGET $CASTXML_BIN_MAC $CASTXML_SRC $CASTXML_BIN_MAC_NAME
         cp -r $CASTXML_SRC/* $CASTXML_DIST
         CASTXMLBIN=castxml
     else

@@ -668,17 +668,6 @@ if (SPHINX_FOUND AND NOT SKIP_SPHINX)
     add_subdirectory(doc EXCLUDE_FROM_ALL)
     message(STATUS "Search recursive for related doc files from here: " ${CMAKE_SOURCE_DIR})
 
-    file(GLOB DOCFILES LIST_DIRECTORIES false
-            RELATIVE "${CMAKE_SOURCE_DIR}"
-        "*.rst")
-    message(STATUS "DOCFILES: " ${DOCFILES})
-
-    file(GLOB DFILES LIST_DIRECTORIES false
-            RELATIVE "${CMAKE_SOURCE_DIR}"
-        "*.md")
-    message(STATUS "MDFILES: " ${DFILES})
-    list(APPEND DOCFILES ${DFILES})
-
     set (RECDOCTYPES "*.rst" "*.md" "*.png" "*.svg" "*.bib" "paper/*.py")
 
     foreach (DTYPE ${RECDOCTYPES})
@@ -689,27 +678,6 @@ if (SPHINX_FOUND AND NOT SKIP_SPHINX)
         message(STATUS "Append DOC files: (${DTYPE}) " ${DFILES})
         list(APPEND DOCFILES ${DFILES})
     endforeach()
-    # message(STATUS "RSTFILES: " ${DFILES})
-
-    # file(GLOB_RECURSE DFILES LIST_DIRECTORIES false
-    # RELATIVE "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}" "./doc/*.md")
-    # message(STATUS "MDFILES: " ${DFILES})
-    # list(APPEND DOCFILES ${DFILES})
-
-    # file(GLOB_RECURSE DFILES LIST_DIRECTORIES false
-    # RELATIVE "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}" "./doc/*.png")
-    # message(STATUS "PNGFILES: " ${DFILES})
-    # list(APPEND DOCFILES ${DFILES})
-
-    # file(GLOB_RECURSE DFILES LIST_DIRECTORIES false
-    # RELATIVE "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}" "./doc/*.bib")
-    # message(STATUS "BIBFILES: " ${DFILES})
-    # list(APPEND DOCFILES ${DFILES})
-
-    # file(GLOB_RECURSE PYFILES LIST_DIRECTORIES false
-    #     RELATIVE "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}" "doc/paper/*.py")
-    # message(STATUS "PYFILES: " ${PYFILES})
-    # list(APPEND DOCFILES ${PYFILES})
 
     set(RSTFILES ${DOCFILES} CACHE INTERNAL "RST source file that we need to copy")
 

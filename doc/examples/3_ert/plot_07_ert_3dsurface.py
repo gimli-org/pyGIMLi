@@ -25,7 +25,7 @@ from pygimli.viewer import pv
 #
 
 data = pg.getExampleData("ert/gallery3d.dat")
-data["k"] = ert.geometricFactors(data, dim=3)
+data["k"] = ert.createGeometricFactors(data, dim=3)
 print(data)
 
 # %%%

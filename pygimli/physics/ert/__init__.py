@@ -43,8 +43,15 @@ def createERTData(*args, **kwargs):
 showData = showERTData
 show = showERTData  # better create a function that can also handle mgr
 pg.core.DataContainerERT.show.__doc__ = showERTData.__doc__
-geometricFactor = pg.core.geometricFactors
-geometricFactors = geometricFactor
+geometricFactor = pg.core.geometricFactors  # even more to be removed
+geometricFactors = geometricFactor  # to be removed
+
+# def __DataContainerERT_createGeometricFactors(self, *args, **kwargs):
+#     self['k'] = createGeometricFactors(self, *args, **kwargs)
+#     return self['k']
+
+# __DataContainerERT_createGeometricFactors.__doc__ = createGeometricFactors.__doc__
+# pg.core.DataContainerERT.createGeometricFactors = __DataContainerERT_createGeometricFactors
 
 # Module prototypes
 DataContainer = pg.core.DataContainerERT

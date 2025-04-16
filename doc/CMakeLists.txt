@@ -95,7 +95,7 @@ add_custom_target(sphinxhtml ALL
         ${SPHINX_EXECUTABLE} -v
         -D abort_on_example_error=1
         -T
-        -b html
+        -b dirhtml
         -c "${SPHINX_BUILD_DIR}/doc"
         -d "${SPHINX_CACHE_DIR}/html"
         "${SPHINX_BUILD_DIR}/doc"
@@ -116,7 +116,7 @@ add_custom_target(sphinxhtml-nogallery ALL
         -D abort_on_example_error=1
         -D plot_gallery=0
         -T
-        -b html
+        -b dirhtml
         -c "${SPHINX_BUILD_DIR}/doc"
         -d "${SPHINX_CACHE_DIR}/html"
         "${SPHINX_BUILD_DIR}/doc"

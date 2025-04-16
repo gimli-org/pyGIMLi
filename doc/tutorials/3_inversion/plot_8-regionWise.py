@@ -41,10 +41,11 @@ plt.grid()
 
 # %%%
 # On both sides, two electrodes are on shore, but the others are on the bottom
-# of a shallow lake with a maximum depth of 2.5m.
+# of a shallow lake with a maximum depth of 2.5m. We first compute a geometric factor using
+# the analytical formula, thereby treating the electrodes as subsurface electrodes.
 #
 
-data["k"] = ert.geometricFactors(data)
+data["k"] = ert.createGeometricFactors(data, numerical=False, dim=2)
 data["rhoa"] = data["u"] / data["i"] * data["k"]
 ax, cb = data.show()
 

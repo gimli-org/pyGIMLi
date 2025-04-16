@@ -792,16 +792,21 @@ def __Mesh__submesh__(self, relation="=", **kwargs):
     """
     istrue = np.ones(self.cellCount(), dtype=bool)
     for key, val in kwargs.items():
-        if key not in self.dataKeys():
-            raise IndexError("Property not in mesh: ", key)
-        if relation == ">":
-            isk = self[key] > val
-        elif relation == "<":
-            isk = self[key] < val
-        elif relation == "!=":
-            isk = self[key] != val
+        if key in ["marker", "cellMarker"]:
+            prop = self.cellMarkers()
+        elif key in self.dataKeys():
+            prop = self[key]
         else:
-            isk = self[key] == val
+            raise IndexError("Property not in mesh: ", key)
+        
+        if relation == ">":
+            isk = prop > val
+        elif relation == "<":
+            isk = prop < val
+        elif relation == "!=":
+            isk = prop != val
+        else:
+            isk = prop == val
 
         istrue = np.bitwise_and(istrue, isk)
 

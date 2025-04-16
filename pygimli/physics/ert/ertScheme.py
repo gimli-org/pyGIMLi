@@ -50,7 +50,7 @@ def createData(elecs, schemeName='none', **kwargs):
     >>>
     >>> for i, schemeName in enumerate(schemes):
     ...     s = ert.createData(elecs=41, schemeName=schemeName)
-    ...     k = ert.geometricFactors(s)
+    ...     k = ert.createGeometricFactors(s)
     ...     _ = ert.show(s, vals=k, ax=ax.flat[i], label='k - ' + schemeName)
     >>>
     >>> plt.show()
@@ -92,7 +92,7 @@ def createData(elecs, schemeName='none', **kwargs):
         print(elecs)
         pg.critical("Can't interpret elecs")
 
-    data['k'] = ert.geometricFactors(data)
+    data['k'] = ert.createGeometricFactors(data)
     return data
 
 
@@ -721,7 +721,7 @@ if __name__ == '__main__':
     for it, scheme in enumerate(schemes):
         shm = ert.createData(elecs=41, schemeName=scheme)
         print(scheme, shm)
-        k = ert.geometricFactors(shm)
+        k = ert.createGeometricFactors(shm)
         mgr = DataSchemeManager()
         longname = mgr.scheme(scheme).name
         ert.show(shm, vals=np.abs(k), ax=ax.flat[it], colorBar=1, logScale=0,

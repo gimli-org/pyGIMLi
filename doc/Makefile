@@ -44,7 +44,7 @@ help:
 	@echo "  xml        to make Docutils-native XML files"
 	@echo "  pseudoxml  to make pseudoxml-XML files for display purposes"
 
-auto: api
+auto:
 	# Used to auto-update website in local build. Requires sphinx-autobuild.
 	sphinx-autobuild --delay 2 --ignore "pygimliapi/*" --ignore "pygimliapi/_generated/*" --ignore "*gallery.html" --ignore "*.examples" --ignore "*.ipynb" --ignore "*.zip" --ignore "*.pickle" . _build/html -D plot_gallery=0
 
@@ -68,12 +68,12 @@ gallery:
 	python ./sidebar_gallery.py
 
 html-nogallery: api
-	$(SPHINXBUILD) -D plot_gallery=0 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	$(SPHINXBUILD) -D plot_gallery=0 -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished without gallery. The HTML pages are in $(BUILDDIR)/html."
 
 html: api
-	$(SPHINXBUILD) -v -D abort_on_example_error=True -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	$(SPHINXBUILD) -v -D abort_on_example_error=True -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
@@ -81,11 +81,6 @@ spelling: api
 	$(SPHINXBUILD) -v -D abort_on_example_error=True -b spelling $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Spellcheck finished."
-
-dirhtml:
-	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
-	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
 
 singlehtml:
 	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
@@ -103,7 +98,7 @@ json:
 	@echo "Build finished; now you can process the JSON files."
 
 htmlhelp:
-	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
+	$(SPHINXBUILD) -b dirhtmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
 	@echo
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
 	      ".hhp project file in $(BUILDDIR)/htmlhelp."
@@ -180,3 +175,7 @@ pseudoxml:
 	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
+
+serve:
+	cd $(BUILDDIR)/html
+	python -m http.server
