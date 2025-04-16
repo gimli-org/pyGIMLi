@@ -1,8 +1,9 @@
-.. _sec:references:
+(sec-references)=
 
-References
-----------
+# References
 
+```{eval-rst}
 .. bibliography:: references.bib
     :style: mystyle
     :all:
+```

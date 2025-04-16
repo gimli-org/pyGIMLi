@@ -2,15 +2,13 @@
 """General mesh generation and maintenance."""
 
 import os
-
 import numpy as np
-
 import pygimli as pg
 
 
 def createMesh(poly, quality=32, area=0.0, smooth=None, switches=None,
                verbose=False, **kwargs):
-    """Create a mesh for a given PLC or point list.
+    r"""Create a mesh for a given PLC or point list.
 
     The mesh is created by :term:`triangle` or :term:`tetgen` if the
     pgGIMLi support for these mesh generators is installed.
@@ -24,7 +22,7 @@ def createMesh(poly, quality=32, area=0.0, smooth=None, switches=None,
     Parameters
     ----------
     poly: :gimliapi:`GIMLI::Mesh` or list or ndarray
-        * 2D or 3D gimli mesh that contains the PLC.
+        * 2D or 3D GIMli mesh that contains the PLC.
         * 2D mesh needs edges
         * 3D mesh needs a plc and tetgen as system component
         * List of x y pairs [[x0, y0], ... ,[xN, yN]]
@@ -46,7 +44,7 @@ def createMesh(poly, quality=32, area=0.0, smooth=None, switches=None,
         1: node center
         2: weighted node center
 
-        If smooth is just set to True then [1, 4] is choosen.
+        If smooth is just set to True then [1, 4] is chosen.
 
     switches: str
         Set additional triangle command switches.
@@ -96,8 +94,8 @@ def createMesh(poly, quality=32, area=0.0, smooth=None, switches=None,
             pg.critical("No nodes in poly to create a valid mesh")
 
         if switches is None:
-            # -D Conforming delaunay
-            # -F Uses Steven Fortune's sweepline algorithm
+            # -D Conforming Delaunay
+            # -F Uses Steven Fortune's sweep line algorithm
             switches = 'pzeA'
 
             if area > 0:

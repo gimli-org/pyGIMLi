@@ -10,7 +10,7 @@ dependencies:
   - sphinx >= 3.1
   - pytest
   - numpy
-  - scipy
+  - scipy >= 1.14
   - pytest-cov
   - pytest-html
   - sphinx-gallery
@@ -18,11 +18,16 @@ dependencies:
   - sphinxcontrib-programoutput
   - sphinxcontrib-spelling
   - sphinxcontrib-doxylink
+  - sphinx-autobuild
   - bibtexparser
-  - pyvista[all,trame]>=0.42
+  - pyvista[all,trame]>=0.44
   - meshio
-  - tetgen
   - scooby
+  - tdqm
   - sphinx-design
   - pydata-sphinx-theme
-
+  - myst-nb
+  - jupytext
+  - trame-vtk
+  - conda-build
+  - linkify-it-py

@@ -25,29 +25,32 @@ import json
 import time
 
 import numpy as np
-
 import pygimli as pg
 
 
 __NO_CACHE__ = False
 
 def noCache(c):
+    """Set the cache to noCache mode."""
     global __NO_CACHE__
     __NO_CACHE__ = c
 
+
 def strHash(string):
+    """Create a hash value for the given string."""
     return int(hashlib.sha224(string.encode()).hexdigest()[:16], 16)
 
+
 def valHash(a):
-    
+    """Create a hash value for the given value."""
     if isinstance(a, str):
         return strHash(a)
     elif isinstance(a, int):
         return a
     elif isinstance(a, list):
         hsh = 0
-        for item in a:
-            hsh = hsh ^ valHash(item)
+        for i, item in enumerate(a):
+            hsh = hsh ^ valHash(str(i)+str(item))
         return hsh
     elif isinstance(a, np.ndarray):
         if a.ndim == 1:
@@ -61,7 +64,13 @@ def valHash(a):
 
     return hash(a)
 
+
 class Cache(object):
+    """Cache class to store and restore data.
+
+    This class is used to store and restore data in a cache.
+    It is used to store and restore data in a cache.
+    """
     def __init__(self, hashValue):
         self._value = None
         self._hash = hashValue
@@ -144,7 +153,7 @@ class Cache(object):
                 #     pg.error('only single return caches supported for now.')
 
                 #pg._y(pg.pf(self.info))
-                
+
                 if self.info['type'] == 'DataContainerERT':
                     self._value = pg.DataContainerERT(self.info['file'],
                                                       removeInvalid=False)
@@ -240,7 +249,7 @@ class CacheManager(object):
                 argHash = argHash ^ (valHash(k + str(v)))
             else:
                 argHash = argHash ^ valHash(k) ^ valHash(v)
-                            
+
         pg.debug("Hashing took:", pg.dur(), "s")
         return funcHash ^ versionHash ^ codeHash ^ argHash
 
@@ -262,7 +271,7 @@ def cache(funct):
     def wrapper(*args, **kwargs):
 
         nc = kwargs.pop('skipCache', False)
-        
+
         if any(('--noCache' in sys.argv,
                 '-N' in sys.argv, nc is True, __NO_CACHE__)):
 
