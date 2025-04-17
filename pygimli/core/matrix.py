@@ -17,7 +17,6 @@ from .logger import critical, warn, error
 from .base import isArray
 
 
-
 def warn(*a):
     import pygimli as pg
     pg.warn(*a)
@@ -120,18 +119,18 @@ def __ElementMatrix_str(self):
 
     maxRowID = int(np.log10(max(self.rowIDs())))+2
 
-    if hasattr(self, 'multR') and self.multR is not None:
-        if (pg.isScalar(self.multR) and self.multR != 1.0) or \
-            pg.isPos(self.multR) or \
-            pg.isArray(self.multR) or\
-            pg.isMatrix(self.multR):
-            s = '\n ' + f' multR = {self.multR} (applied)' + '\n ' + ' ' * maxRowID
-        elif pg.isScalar(self.multR, 1.0):
+    if hasattr(self, 'mulR') and self.mulR is not None:
+        if (pg.isScalar(self.mulR) and self.mulR != 1.0) or \
+            pg.isPos(self.mulR) or \
+            pg.isArray(self.mulR) or\
+            pg.isMatrix(self.mulR):
+            s = '\n ' + f' multR = {self.mulR} (applied)' + '\n ' + ' ' * maxRowID
+        elif pg.isScalar(self.mulR, 1.0):
             s = '\n ' + ' ' * maxRowID
         else:
-            s = '\n ' + f' multR = {self.multR} (unknown how to apply)' + '\n ' + ' ' * maxRowID
+            s = '\n ' + f' multR = {self.mulR} (unknown how to apply)' + '\n ' + ' ' * maxRowID
     else:
-        self.multR = 1
+        self.mulR = 1
         s = '\n ' + ' ' * maxRowID
 
     # print(self.mat())
@@ -145,47 +144,47 @@ def __ElementMatrix_str(self):
 
     for i in range(self.mat().rows()):
         s += str(self.rowIDs()[i]).rjust(maxRowID) + " :"
-        if isinstance(self.multR, (int, float)):
+        if isinstance(self.mulR, (int, float)):
             for v in self.row_RM(i):
-                s += pg.pf(v*self.multR).rjust(9)
-        elif pg.isPos(self.multR):
-            if self.mat().cols() <= len(self.multR):
-                for v in self.row_RM(i) * self.multR[0:self.mat().cols()]:
+                s += pg.pf(v*self.mulR).rjust(9)
+        elif pg.isPos(self.mulR):
+            if self.mat().cols() <= len(self.mulR):
+                for v in self.row_RM(i) * self.mulR[0:self.mat().cols()]:
                     s += pg.pf(v).rjust(9)
             else:
                 print(self.mat())
                 print(self.row_RM(i))
-                print(self.multR)
+                print(self.mulR)
                 pg.critical('invalid element multR.')
-        elif pg.isArray(self.multR, self.mat().cols()):
-            for v in self.row_RM(i)*self.multR:
+        elif pg.isArray(self.mulR, self.mat().cols()):
+            for v in self.row_RM(i)*self.mulR:
                 s += pg.pf(v).rjust(9)
 
-        elif pg.isMatrix(self.multR):
-            if pg.isArray(self.multR.flatten(), self.mat().cols()):
-                for v in self.row(i)*self.multR.flatten():
+        elif pg.isMatrix(self.mulR):
+            if pg.isArray(self.mulR.flatten(), self.mat().cols()):
+                for v in self.row(i)*self.mulR.flatten():
                     s += pg.pf(v).rjust(9)
             else:
                 print(self.mat())
                 print(self.row)
-                print(self.multR)
-                pg.critical('invalid matrix element multR.')
+                print(self.mulR)
+                pg.critical('invalid matrix element mulR.')
 
-        elif pg.isArray(self.multR):
+        elif pg.isArray(self.mulR):
             # per node vals
             # print(i, self.row_RM(i))
             # print(self.rowIDs())
-            for v in (self.row_RM(i) * self.multR[self.rowIDs()[i]]):
+            for v in (self.row_RM(i) * self.mulR[self.rowIDs()[i]]):
                 s += pg.pf(v).rjust(9)
 
-        elif self.multR is not None:
+        elif self.mulR is not None:
             print('mat:', self.mat())
-            print('multR:', self.multR)
+            print('multR:', self.mulR)
             try:
-                print(multE(self, f=self.multR))
+                print(mulE(self, f=self.mulR))
             except:
                 pass
-            warn('invalid element multR. should be evaluated with multE?')
+            warn('invalid element mulR. should be evaluated with mulE?')
             return ''
 
 
