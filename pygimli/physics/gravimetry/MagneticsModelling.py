@@ -21,9 +21,9 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
         igrf : list|array of size 3 or 7
             international geomagnetic reference field, either
             [D, I, H, X, Y, Z, F] - declination, inclination, horizontal field,
-                                   X/Y/Z components, total field OR
-            [X, Y, Z] - X/Y/Z components
-            [lat, lon] - latitude, longitude (automatic IGRF)
+                                    X/Y/Z components, total field OR
+            [X, Y, Z] - X/Y/Z components OR
+            [lat, lon] - latitude, longitude (automatic by pyIGRF)
         """
         # check if components do not contain g!
         super().__init__()
@@ -38,8 +38,9 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
             if len(igrf) == 2: # lat lon
                 import pyIGRF
                 self.igrf = pyIGRF.igrf_value(*igrf)
-            else:
+            else: # 3 (x,y,z) or 7 (T,H,X,Y,Z,D,I)
                 self.igrf = igrf
+
         self.kernel = None
         self.J = pg.matrix.BlockMatrix()
         if self.mesh_ is not None:
