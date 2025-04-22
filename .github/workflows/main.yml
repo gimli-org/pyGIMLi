@@ -1,8 +1,8 @@
 name: pyGIMLi CI
 
-env: 
+env:
     SOURCE_DIR: source
-    
+
 on:
   push:
     branches:
@@ -10,7 +10,7 @@ on:
   pull_request:
     branches:
       - dev
-    
+
 jobs:
   pgcore:
     name: Building pgcore & bindings
@@ -87,7 +87,7 @@ jobs:
           git push origin HEAD:main --force-with-lease
   upload-html:
     name: Upload HTML to dev.pygimli.org
-    runs-on: [self-hosted, test-runner]
+    runs-on: [pgserver]
     needs: docs
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
