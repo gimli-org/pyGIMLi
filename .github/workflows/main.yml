@@ -68,9 +68,9 @@ jobs:
     steps:
       - name: Merge dev -> master
         working-directory: source
-        run: |
-          git config user.name "florian-wagner"
-          git config user.email "mail@fwagner.info"
+        run: |   
+          git config --global user.name 'Florian Wagner'
+          git config --global user.email 'florian-wagner@users.noreply.github.com'
           git checkout master
           git merge dev --no-commit
           git push origin master
