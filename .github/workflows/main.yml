@@ -69,7 +69,7 @@ jobs:
       - name: Merge dev -> master
         working-directory: source
         run: |
-          git config user.name "GitHub Actions"
+          git config user.name "florian-wagner"
           git config user.email "mail@fwagner.info"
           git checkout master
           git merge dev --no-commit
