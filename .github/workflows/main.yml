@@ -68,11 +68,11 @@ jobs:
     steps:
       - name: Merge dev -> master
         working-directory: source
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "mail@fwagner.info"
+        run: |   
+          git config user.name 'Florian Wagner'
+          git config user.email 'florian-wagner@users.noreply.github.com'
           git checkout master
-          git merge dev --no-commit --no-ff
+          git merge dev --no-commit
           git push origin master
   upload-html:
     name: Upload HTML to dev.pygimli.org
@@ -80,8 +80,8 @@ jobs:
     needs: docs
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
-      - name: Merge into master
+      - name: Uploading built html files
         working-directory: build
         run: rsync -avP --delete doc/html/ /var/www/html
-        
-  
+
+
