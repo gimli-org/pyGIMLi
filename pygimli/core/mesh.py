@@ -772,6 +772,8 @@ def __Mesh__populate__(self, prop:str, value):
             self[prop] =  parseMapToCellArray(value, self)
         elif len(value) == self.cellCount():
             self[prop] = value
+        elif len(value) > max(self.cellMarkers()):  # cell marker indexing 
+            self[prop] = np.array(value)[self.cellMarkers()]
         else:
             raise Exception("Length mismatch!")
 
