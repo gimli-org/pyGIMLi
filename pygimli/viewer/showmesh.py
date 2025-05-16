@@ -355,9 +355,16 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
 
         if hasattr(data[0], '__len__') and not \
                 isinstance(data, np.ma.core.MaskedArray) and not \
-                isinstance(data[0], str):
+                isinstance(data[0], str) and not \
+                (len(data) == 1 or len(data[0] == 0)):
+
             if len(data) == 2:  # [u,v] x N
                 data = np.array(data).T
+
+            if len(data) == 1: # 1xM matrix
+                return showMesh(np.ravel(data), **kwargs)
+            if data.shape[1] == 1:  # Mx1 matrix
+                return showMesh(np.ravel(data), **kwargs)
             if data.shape[1] == 2:  # N x [u,v]
                 drawStreams(ax, mesh, data, **kwargs)
             elif data.shape[1] == 3:  # N x [u,v,w]
