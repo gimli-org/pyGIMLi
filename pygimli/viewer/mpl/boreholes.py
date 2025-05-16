@@ -148,8 +148,19 @@ class BoreHoles(object):
         self.cmin = min(self.class_id)
         self.cmax = max(self.class_id)
 
-    def plot(self, ax, plot_thickness=1.0, do_legend=True, **legend_kwargs):
-        """Plot the boreholes on the specified axis."""
+    def plot(self, ax, plot_thickness=1.0, do_legend=True, **kwargs):
+        """Plot the boreholes on the specified axis.
+        
+        Parameters
+        ----------
+        ax : matplotlib.Axes
+        plot_thickness : float [1.0]
+            width (in m) for borehole columns
+        do_legend : bool
+            draw a legend for the geological units
+        **kwargs : keyword arguments passed to legend
+            fontsize, markerscale, (s. matplotlib.legend)
+        """
         self._build_common_colormap()
 
         for b in self.boreholes:
@@ -157,10 +168,19 @@ class BoreHoles(object):
                    cmin=self.cmin, cmax=self.cmax, cm=self.cm)
 
         if do_legend:
-            self.add_legend(ax, self.cm, **legend_kwargs)
+            self.add_legend(ax, self.cm, **kwargs)
 
     def add_legend(self, ax, cmap, **legend_kwargs):
-        """Add a legend to the plot."""
+        """Add a legend to the plot.
+        
+        Parameters
+        ----------
+        ax : matplotlib.axes
+        cmap : matplotlib.colormap
+        
+        Keyword arguments passed to ax.legend:
+        fontsize, markerscale
+        """
         leg = create_legend(ax, cmap, np.arange(cmap.N), self.common_unique)
 
         extra = dict(bbox_to_anchor=(0.9, 0.05, 0.1, 0.1), ncol=cmap.N / 2,
@@ -168,6 +188,7 @@ class BoreHoles(object):
                      columnspacing=1.0, loc='center right', markerscale=0.7,
                      framealpha=1.0, borderpad=0.5, handleheight=0.5,
                      frameon=True)
-        legend_kwargs.update(extra)
+        
+        extra.update(legend_kwargs)
+        ax.legend(handles=leg, **extra)
 
-        ax.legend(handles=leg, **legend_kwargs)
