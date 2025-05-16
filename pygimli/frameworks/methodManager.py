@@ -770,8 +770,7 @@ class MeshMethodManager(MethodManager):
         self.fop.setMesh(mesh, ignoreRegionManager=ignoreRegionManager)
 
 
-    def invert(self, data=None, mesh=None, startModel=None,
-               **kwargs):
+    def invert(self, data=None, mesh=None, startModel=None, **kwargs):
         """Run the full inversion.
 
         Parameters
