@@ -130,20 +130,29 @@ def importRes2dInv(filename, verbose=False, return_header=False):
             header['ipDT'] = np.array(ipline[2:-2], dtype=float)
             header['ipGateT'] = np.cumsum(np.hstack((header['ipDelay'],
                                                      header['ipDT'])))
-
     data = pg.DataContainerERT()
     data.resize(nData)
 
     if typ == 9 or typ == 10:
         raise Exception("Don't know how to read:" + str(typ))
 
+    row = getNonEmptyRow(it, comment=';')
     if typ in [11, 12, 13]:  # mixed array
         res = pg.Vector(nData, 0.0)
         ip = pg.Vector(nData, 0.0)
+        err = pg.Vector(nData, 0.0)
+        iperr = pg.Vector(nData, 0.0)
         specIP = []
 
+        hasErr = False
+        if row.startswith("Error"):
+            hasErr = True
+            row = getNonEmptyRow(it, comment=';')
+            header['ipErrType'] = getNonEmptyRow(it, comment=';')
+
         for i in range(nData):
-            vals = getNonEmptyRow(it, comment=';').replace(',', ' ').split()
+            row = getNonEmptyRow(it, comment=';')
+            vals = row.replace(',', ' ').split()
 
             # row starts with 4
             if int(vals[0]) == 4:
@@ -179,6 +188,12 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                 ip[i] = float(vals[ipCol])
                 if 'ipNumGates' in header:
                     specIP.append(vals[ipCol:])
+            if hasErr:
+                ipCol = int(vals[0])*2+3
+                err[i] = float(vals[ipCol])
+                if hasIP:
+                    ipErrCol = int(vals[0])*2+4
+                    iperr[i] = float(vals[ipCol])
 
             data.createFourPointData(i, eaID, ebID, emID, enID)
 
@@ -195,6 +210,12 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                 A[A < -1000] = -999
                 for i in range(header['ipNumGates']):
                     data.set('ip'+str(i+1), A[:, i])
+        
+        if hasErr:
+            data["err"] = err
+            if hasIP:
+                data["iperr"] = iperr
+
     else:  # not type 11-13
         # amount of values per column per typ
         nntyp = [0, 3, 3, 4, 3, 3, 4, 4, 3, 0, 0, 8, 10]
@@ -284,19 +305,24 @@ def importRes2dInv(filename, verbose=False, return_header=False):
         if hasIP:
             data.set('ip', dataBody[nn - 1])
 
-    row = getNonEmptyRow(it, comment=';')
-    if row.lower().startswith('topography'):
+    try:
         row = getNonEmptyRow(it, comment=';')
+        if row.lower().startswith('topography'):
+            row = getNonEmptyRow(it, comment=';')
 
-    istopo = int(row)
-    if istopo:
-        ntopo = int(getNonEmptyRow(it, comment=';'))
-        ap = data.additionalPoints()
-        for i in range(ntopo):
-            strs = getNonEmptyRow(it, comment=';').replace(',', ' ').split()
-            ap.push_back(pg.Pos([float(s) for s in strs]))
+        istopo = int(row)
+        if istopo:
+            header["foundTopo"] = 1
+            ntopo = int(getNonEmptyRow(it, comment=';'))
+            ap = data.additionalPoints()
+            for i in range(ntopo):
+                strs = getNonEmptyRow(it, comment=';').replace(',', ' ').split()
+                ap.push_back(pg.Pos([float(s) for s in strs]))
 
-        data.setAdditionalPoints(ap)
+            data.setAdditionalPoints(ap)
+
+    except StopIteration:
+        header["foundTopo"] = 0
 
     data.sortSensorsX()
     data.sortSensorsIndex()
