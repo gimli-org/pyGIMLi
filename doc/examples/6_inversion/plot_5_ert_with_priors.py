@@ -59,7 +59,6 @@ ax, cb = ert.show(data)
 #
 
 data.estimateError(relativeError=0.025, absoluteUError=100e-6)
-# data["k"] = ert.geometricFactors(data)
 # data["err"] = ert.estimateError(data, relativeError=0.025, absoluteUError=100e-6)
 
 # %%%

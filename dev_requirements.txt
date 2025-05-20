@@ -18,10 +18,6 @@ pygccxml==2.5.0
 # needed to run
 matplotlib>=3.7,<3.9
 
-# useful to run
-ipython
-jupytext
-
 # optional, but strongly recommended
 #scipy<1.14  # for numpy 1
 scipy>=1.14 # for numpy 2
@@ -32,7 +28,7 @@ pyqt5
 tabulate
 tqdm
 
-# needed to build docu
+# needed to build docu (after doc reworks)
 sphinx>=3.1
 sphinxcontrib-bibtex
 sphinxcontrib-programoutput
@@ -41,10 +37,15 @@ sphinx-gallery
 sphinx-design
 pydata-sphinx-theme
 bibtexparser
-pyvista[all,trame]>=0.42
 breathe
 
 # useful
+jupytext
+myst-nb
+linkify-it-py
+
+# optional, but strongly recommended
+scooby
 ipython
 
 # for testing

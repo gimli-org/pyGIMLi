@@ -113,7 +113,6 @@ else:
 #     except ImportError:
 #         pass
 ###############################################################################
-__version__ = "0"
 
 
 def findVersion(cache=True):  # careful: cache is already imported!
@@ -207,9 +206,6 @@ def findVersion(cache=True):  # careful: cache is already imported!
 
     return __version__
 
-
-# call once to get version from cache, setup or _version.py
-findVersion(cache=False)
 
 
 def version(cache=True):  # imported cach will be overwritten
@@ -524,3 +520,9 @@ def _plt():
         __MPL_PLT__ = plt
 
     return __MPL_PLT__
+    return plt
+
+
+# call once to get version from cache, setup or _version.py
+__version__ = "0"
+findVersion(cache=False)

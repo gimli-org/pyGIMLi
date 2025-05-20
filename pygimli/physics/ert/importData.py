@@ -130,20 +130,29 @@ def importRes2dInv(filename, verbose=False, return_header=False):
             header['ipDT'] = np.array(ipline[2:-2], dtype=float)
             header['ipGateT'] = np.cumsum(np.hstack((header['ipDelay'],
                                                      header['ipDT'])))
-
     data = pg.DataContainerERT()
     data.resize(nData)
 
     if typ == 9 or typ == 10:
         raise Exception("Don't know how to read:" + str(typ))
 
+    row = getNonEmptyRow(it, comment=';')
     if typ in [11, 12, 13]:  # mixed array
         res = pg.Vector(nData, 0.0)
         ip = pg.Vector(nData, 0.0)
+        err = pg.Vector(nData, 0.0)
+        iperr = pg.Vector(nData, 0.0)
         specIP = []
 
+        hasErr = False
+        if row.startswith("Error"):
+            hasErr = True
+            row = getNonEmptyRow(it, comment=';')
+            header['ipErrType'] = getNonEmptyRow(it, comment=';')
+
         for i in range(nData):
-            vals = getNonEmptyRow(it, comment=';').replace(',', ' ').split()
+            row = getNonEmptyRow(it, comment=';')
+            vals = row.replace(',', ' ').split()
 
             # row starts with 4
             if int(vals[0]) == 4:
@@ -179,6 +188,12 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                 ip[i] = float(vals[ipCol])
                 if 'ipNumGates' in header:
                     specIP.append(vals[ipCol:])
+            if hasErr:
+                ipCol = int(vals[0])*2+3
+                err[i] = float(vals[ipCol])
+                if hasIP:
+                    ipErrCol = int(vals[0])*2+4
+                    iperr[i] = float(vals[ipCol])
 
             data.createFourPointData(i, eaID, ebID, emID, enID)
 
@@ -195,6 +210,12 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                 A[A < -1000] = -999
                 for i in range(header['ipNumGates']):
                     data.set('ip'+str(i+1), A[:, i])
+        
+        if hasErr:
+            data["err"] = err
+            if hasIP:
+                data["iperr"] = iperr
+
     else:  # not type 11-13
         # amount of values per column per typ
         nntyp = [0, 3, 3, 4, 3, 3, 4, 4, 3, 0, 0, 8, 10]
@@ -284,19 +305,24 @@ def importRes2dInv(filename, verbose=False, return_header=False):
         if hasIP:
             data.set('ip', dataBody[nn - 1])
 
-    row = getNonEmptyRow(it, comment=';')
-    if row.lower().startswith('topography'):
+    try:
         row = getNonEmptyRow(it, comment=';')
+        if row.lower().startswith('topography'):
+            row = getNonEmptyRow(it, comment=';')
 
-    istopo = int(row)
-    if istopo:
-        ntopo = int(getNonEmptyRow(it, comment=';'))
-        ap = data.additionalPoints()
-        for i in range(ntopo):
-            strs = getNonEmptyRow(it, comment=';').replace(',', ' ').split()
-            ap.push_back(pg.Pos([float(s) for s in strs]))
+        istopo = int(row)
+        if istopo:
+            header["foundTopo"] = 1
+            ntopo = int(getNonEmptyRow(it, comment=';'))
+            ap = data.additionalPoints()
+            for i in range(ntopo):
+                strs = getNonEmptyRow(it, comment=';').replace(',', ' ').split()
+                ap.push_back(pg.Pos([float(s) for s in strs]))
 
-        data.setAdditionalPoints(ap)
+            data.setAdditionalPoints(ap)
+
+    except StopIteration:
+        header["foundTopo"] = 0
 
     data.sortSensorsX()
     data.sortSensorsIndex()
@@ -343,24 +369,32 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
                     tok = sp[0].lstrip("\t").lstrip("- ")
                     header[tok] = sp[1].rstrip("\n").rstrip("\r")
 
-            for last in range(len(content)-1, -1, -1):
+            for last in range(n+1, len(content)):
                 if content[last].find("---") == 0:
-                    print(content[last])
                     last -= 1
-                    print(content[last])
-                    while len(content[last]) < 3:
-                        last -= 1
-
-                    last += 1
                     break
+            # for last in range(len(content)-1, -1, -1):
+            #     if content[last].find("---") == 0:
+            #         last -= 1
+            #         while len(content[last]) < 3:
+            #             last -= 1
+
+            #         last += 1
+            #         break
+
             if last <= 1:
                 last = len(content)
 
             content = content[n:last]
 
+        for i, line in enumerate(content):
+            if "/" in line:
+                content[i] = line.replace(' / non conventional', '')
+        
         d = readAsDictionary(content, sep='\t')
         if len(d) < 2:
             d = readAsDictionary(content)
+
         nData = len(next(iter(d.values())))
         data.resize(nData)
         if 'Spa.1' in d:  # Syscal Pro
@@ -384,6 +418,7 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
             pg.debug("Keys are:", d.keys())
             raise Exception("No electrode positions found!")
         for i in range(nData):
+            # print(i, d['A(x)'][i])
             if abmn[0]+'(z)' in d:
                 eID = [data.createSensor([d[se+'(x)'][i], d[se+'(y)'][i],
                                           d[se+'(z)'][i]]) for se in abmn]
@@ -410,9 +445,10 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
         # data.save('tmp.shm', 'a b m n')
         tokenmap = {'I(mA)': 'i', 'I': 'i', 'In': 'i', 'Vp': 'u',
                     'VoltageV': 'u', 'U': 'u', 'U(V)': 'u', 'UV': 'u',
+                    'Voltage(V)': 'u',
                     'R(Ohm)': 'r', 'RO': 'r', 'R(O)': 'r', 'Res': 'r',
                     'Rho': 'rhoa', 'AppROhmm': 'rhoa', 'Rho-a(Ohm-m)': 'rhoa',
-                    'Rho-a(Om)': 'rhoa',
+                    'Rho-a(Om)': 'rhoa', 'App.R(Ohmm)': 'rhoa',
                     'Var(%)': 'err', 'D': 'err', 'Dev.': 'err', 'Dev': 'err',
                     'M': 'ma', 'P': 'ip', 'IP sum window': 'ip',
                     'Time': 't'}

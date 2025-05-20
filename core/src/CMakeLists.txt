@@ -9,18 +9,10 @@ if (NOT MSVC)
 	list(REMOVE_ITEM SOURCE_FILES wingetopt.cpp)
 endif(NOT MSVC)
 
-
 ###########################################################################
 #                       SHARED LIBRARY SET UP
 ###########################################################################
 add_library(${libgimli_TARGET_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
-
-# target_precompile_headers(${libgimli_TARGET_NAME}
-# PUBLIC
-# ${HEADER_FILES}
-# )
-#INTERFACE
-#       gimli.h
 
 include (GenerateExportHeader)
 
@@ -46,21 +38,18 @@ if (UMFPACK_FOUND)
     target_link_libraries(${libgimli_TARGET_NAME} ${UMFPACK_LIBRARIES})
 endif (UMFPACK_FOUND)
 
-if (EIGEN3_FOUND)
-    include_directories(${EIGEN3_INCLUDE_DIRS})
-endif (EIGEN3_FOUND)
-
 if (PYTHON_FOUND)
     include_directories(${Python_INCLUDE_DIRS})
 
-    # needed since the later doesnt seems to work
-    target_link_libraries(${libgimli_TARGET_NAME} ${Python_LIBRARIES})
-
-    if (Python_Development.Module_FOUND)
-        target_link_libraries(${libgimli_TARGET_NAME} Python::Module)
-    else()
+    if (NOT APPLE)
+        # needed since the later doesnt seems to work
         target_link_libraries(${libgimli_TARGET_NAME} ${Python_LIBRARIES})
+
+        if (Python_Development.Module_FOUND)
+            target_link_libraries(${libgimli_TARGET_NAME} Python::Module)
+        endif()
     endif()
+
 endif (PYTHON_FOUND)
 
 if (Boost_INCLUDE_DIR)

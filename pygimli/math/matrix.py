@@ -938,6 +938,18 @@ def matrixColumn(A, n):
     one[n] = 1.0
     return A.mult(one)
 
+def complexMatrix(R, I, scaleR=1.0, scaleI=1.0):
+    """Create a complex-valued matrix from two real-valued ones."""
+    assert R.cols() == I.cols(), "Number of columns need to match"
+    assert R.rows() == I.rows(), "Number of columns need to match"
+    if isinstance(R, SparseMapMatrix) and isinstance(I, SparseMapMatrix):
+        assert R.vecColPtr() == I.vecColPtr(), "sparsity structure differs"
+        assert R.vecRowIdx() == I.vecRowIdx(), "sparsity structure differs"
+        C = pg.core.CSparseMatrix(R.vecColPtr(), R.vecRowIdx(), 
+                          pg.core.toComplex(R.vecVals()*scaleR, 
+                                            I.vecVals()*scaleI))
+
+
 
 def concatenateAsCOO(A):
     """Concatenate a list of sparse matrices into sparse.COO format.

@@ -30,7 +30,7 @@ print(data)
 # the apparent resistivities, of which we plot the last few values.
 #
 
-data["k"] = ert.geometricFactors(data, dim=3)
+data["k"] = ert.createGeometricFactors(data, dim=3)
 data["rhoa"] = data["r"] * data["k"]
 print(np.sort(data["rhoa"])[-5:])
 

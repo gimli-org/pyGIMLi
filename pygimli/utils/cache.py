@@ -32,14 +32,18 @@ import pickle
 __NO_CACHE__ = False
 
 def noCache(c):
+    """Set the cache to noCache mode."""
     global __NO_CACHE__
     __NO_CACHE__ = c
 
+
 def strHash(string):
+    """Create a hash value for the given string."""
     return int(hashlib.sha224(string.encode()).hexdigest()[:16], 16)
 
-def valHash(a):
 
+def valHash(a):
+    """Create a hash value for the given value."""
     if isinstance(a, str):
         return strHash(a)
     elif isinstance(a, int):
@@ -54,8 +58,8 @@ def valHash(a):
         return hsh
     elif isinstance(a, list):
         hsh = 0
-        for item in a:
-            hsh = hsh ^ valHash(item)
+        for i, item in enumerate(a):
+            hsh = hsh ^ valHash(str(i)+str(item))
         return hsh
     elif isinstance(a, pg.core.stdVectorNodes):
         ### cheap hash .. we assume the nodes are part of a mesh which is hashed anyways
@@ -93,6 +97,11 @@ def valHash(a):
 
 
 class Cache(object):
+    """Cache class to store and restore data.
+
+    This class is used to store and restore data in a cache.
+    It is used to store and restore data in a cache.
+    """
     def __init__(self, hashValue):
         self._value = None
         self._hash = hashValue
@@ -293,7 +302,10 @@ class CacheManager(object):
             else:
                 argHash = argHash ^ valHash(k) ^ valHash(v)
 
+<<<<<<< HEAD
         #pg._g(funcHash, versionHash, codeHash, argHash)
+=======
+>>>>>>> dev
         pg.debug("Hashing took:", pg.dur(), "s")
         return funcHash ^ versionHash ^ codeHash ^ argHash
 
@@ -322,8 +334,12 @@ def cache(funct):
 
         nc = kwargs.pop('skipCache', False)
 
+<<<<<<< HEAD
         if any(('--noCache' in sys.argv, '--skipCache' in sys.argv,
                 os.getenv('SKIP_CACHE'),
+=======
+        if any(('--noCache' in sys.argv,
+>>>>>>> dev
                 '-N' in sys.argv, nc is True, __NO_CACHE__)):
 
             return funct(*args, **kwargs)

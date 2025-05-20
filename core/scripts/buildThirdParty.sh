@@ -2,11 +2,13 @@
 
 #BOOST_VERSION_DEFAULT=1.68.0
 #BOOST_VERSION_DEFAULT=1.76.0
-BOOST_VERSION_DEFAULT=1.83.0
+#BOOST_VERSION_DEFAULT=1.83.0
+BOOST_VERSION_DEFAULT=1.86.0
 #since 63 libboost_numpy
 #since 64 python build broken
 
 BOOST_URL=http://sourceforge.net/projects/boost/files/boost/
+#https://archives.boost.io/release/1.86.0/source/boost_1_86_0.tar.gz
 
 LAPACK_VERSION=3.4.2
 LAPACK_URL=http://www.netlib.org/lapack/
@@ -25,14 +27,16 @@ CASTXML_URL=https://github.com/CastXML/CastXML.git
 
 # Check for updates https://data.kitware.com/#search/results?query=castxml&mode=text
 CASTXML_BIN_LINUX=https://data.kitware.com/api/v1/item/63bed74d6d3fc641a02d7e98/download # 0.5.0
-CASTXML_BIN_WIN=https://data.kitware.com/api/v1/file/63bed83a6d3fc641a02d7ea3/download # 0.5.0
+#CASTXML_BIN_WIN=https://data.kitware.com/api/v1/file/63bed83a6d3fc641a02d7ea3/download # 0.5.0
+CASTXML_BIN_WIN=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/castxml-windows.zip
 
 if [[ $(uname -m) == 'arm64' ]]; then
-    CASTXML_BIN_MAC=https://data.kitware.com/api/v1/item/63c469666d3fc641a02d80ca/download
-    # ARM (M1, M2 chips)
+    # ARM means new Apple M chips
+    CASTXML_BIN_MAC_NAME="castxml-macos-arm.tar.gz"
 else
-    CASTXML_BIN_MAC=https://data.kitware.com/api/v1/item/63bed7726d3fc641a02d7e9e/download # Intel chips
+    CASTXML_BIN_MAC_NAME="castxml-macosx.tar.gz"
 fi
+CASTXML_BIN_MAC=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/$CASTXML_BIN_MAC_NAME
 
 #.. needs testing
 # Check for updates https://github.com/CastXML/CastXMLSuperbuild/releases/tag/v0.6.5
@@ -99,7 +103,7 @@ SetMSVC_TOOLSET(){
 }
 SetGCC_TOOLSET(){
     needGCC
-    TOOLSET=gcc-`gcc -dumpversion`
+    TOOLSET=GNU-`gcc -dumpversion`
     B2TOOLSET=''
     MAKE=make
 
@@ -427,17 +431,15 @@ prepBOOST(){
     BOOST_DIST_NAME=$BOOST_VER-$TOOLSET-$ADDRESSMODEL-'py'$PYTHONMAJOR$PYTHONMINOR
     BOOST_DIST=$DIST_DIR/$BOOST_DIST_NAME
     BOOST_BUILD=$BUILD_DIR/$BOOST_VER-'py'$PYTHONMAJOR$PYTHONMINOR
-    
+
     BOOST_ROOT_WIN=${BOOST_ROOT/\/c\//C:\/}
     BOOST_ROOT_WIN=${BOOST_ROOT_WIN/\/d\//D:\/}
     BOOST_ROOT_WIN=${BOOST_ROOT_WIN/\/e\//E:\/}
 }
 buildBOOST(){
-    echo "*** building boost ... "
-
     checkTOOLSET
     prepBOOST
-
+    echo "*** building boost ... $BOOST_VER $BOOST_URL/$BOOST_VERSION/$BOOST_VER'.tar.gz'"
     getWITH_WGET $BOOST_URL/$BOOST_VERSION $BOOST_SRC $BOOST_VER'.tar.gz'
 
     if [ ! -d $BOOST_BUILD ]; then
@@ -449,19 +451,22 @@ buildBOOST(){
 
         if [ "$SYSTEM" == "WIN" ]; then
             if [ ! -f ./b2.exe ]; then
-                echo "Try with cmd /c \"bootstrap.bat $B2TOOLSET\""
-                cmd.exe /c "bootstrap.bat $B2TOOLSET" # try this first .. works for 54 with mingw
+                ./bootstrap.sh  ## works with 1.86.0
+                # need to escape the python binary path
+                sed -i -s 's/\\/\\\\/g' project-config.jam
+                #echo "Try with cmd /c \"bootstrap.bat $B2TOOLSET\""
+                #cmd.exe /c "bootstrap.bat $B2TOOLSET" # try this first .. works for 54 with mingw
 
-                if [ ! -f ./b2.exe ]; then
-                    echo "Try with ./bootstrap.sh --with-toolset=$B2TOOLSET"
-                    ./bootstrap.sh --with-toolset=$B2TOOLSET # only mingw does not work either
-                fi
+                #if [ ! -f ./b2.exe ]; then
+                #    echo "Try with ./bootstrap.sh --with-toolset=$B2TOOLSET"
+                #    ./bootstrap.sh --with-toolset=$B2TOOLSET # only mingw does not work either
+                #fi
                 #sed -e s/gcc/mingw/ project-config.jam > project-config.jam
             fi
             B2="./b2.exe"
         elif [ "$SYSTEM" == "UNIX" ]; then
             B2="./b2"
-            
+
             if [ -f "b2" ]; then
                 echo "*** using existing $B2"
             else
@@ -477,32 +482,43 @@ buildBOOST(){
         if [ $SYSTEM == 'WIN' -a $ADDRESSMODEL == '64' ]; then
             EXTRADEFINES='define=BOOST_USE_WINDOWS_H define=MS_WIN64'
             echo "+++++++++++++++++++ :$EXTRADEFINES"
+
+            #linkflags="-L C:\Users\carsten\anaconda311\libs" \
+            # venv does not have pyconfig.h so we add the base config to the build system
+            export PYTHON_BASE_LIB=`python -c 'import sys; import re; print(re.escape(sys.base_prefix))'`
+            export CPLUS_INCLUDE_PATH=$PYTHON_BASE_LIB/include
+            echo "$CPLUS_INCLUDE_PATH"
         fi
         echo "*** Building boost in $PWD"
 
         PY_PLATFORM=cp$PYTHONMAJOR$PYTHONMINOR
         PY_CONFIG_DIR=/opt/python/$PY_PLATFORM-$PY_PLATFORM/include/python3.$PYTHONMINOR
+
         if [ -f $PY_CONFIG_DIR/pyconfig.h ]; then
-            # special includes for manylinux, since venv does not copy python 
+            # special includes for manylinux, since venv does not copy python
             # config on alamlinux docker container
             echo "Setting extra include to pyconfig for manylinux_$PY_PLATFORM-$PY_PLATFORM"
             export CPLUS_INCLUDE_PATH=$PY_CONFIG_DIR
         fi
+        #python3.7-config --includes --libs
 
         "$B2" \
             toolset=$COMPILER \
             variant=release \
             link=static,shared \
             threading=multi \
+            cxxflags='-Wno-strict-aliasing -Wno-deprecated-declarations -Wno-attributes' \
+            linkflags="-L $PYTHON_BASE_LIB\libs" \
             address-model=$ADDRESSMODEL $EXTRADEFINES install \
             --platform=msys \
             -j 8 \
-            -d 0 \
+            -d 1 \
             -a \
             --prefix=$BOOST_DIST \
             --layout=tagged \
             --debug-configuration \
             $WITHPYTHON
+            #address-model=$ADDRESSMODEL $EXTRADEFINES install \
     popd
 
     if [ -n "$(find $BOOST_DIST/lib -maxdepth 1 -type f -name "libboost_python*" -print -quit)" ]; then
@@ -534,9 +550,9 @@ buildCASTXMLBIN(){
         CASTXMLBIN=castxml.exe
     elif [ "$SYSTEM" == "MAC" ]; then
         if [ -n "$CLEAN" ]; then
-            rm -f $SRC_DIR/castxml-macosx.tar.gz
+            rm -f $SRC_DIR/$CASTXML_BIN_MAC_NAME
         fi
-        getWITH_WGET $CASTXML_BIN_MAC $CASTXML_SRC castxml-macosx.tar.gz
+        getWITH_WGET $CASTXML_BIN_MAC $CASTXML_SRC $CASTXML_BIN_MAC_NAME
         cp -r $CASTXML_SRC/* $CASTXML_DIST
         CASTXMLBIN=castxml
     else

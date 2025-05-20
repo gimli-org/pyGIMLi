@@ -29,7 +29,7 @@ def show(obj=None, data=None, **kwargs):
     Syntactic sugar to show a obj with data. Forwards to
     a known visualization for obj. Typical is
     :py:mod:`pygimli.viewer.showMesh` or
-    :py:mod:`pygimli.viewer.mayaview.showMesh3D` to show most of the typical 2D
+    :py:mod:`pygimli.viewer.pv.showMesh3D` to show most of the typical 2D
     and 3D content.
     See tutorials and examples for usage hints. An empty show
     call creates an empty ax window.
@@ -127,7 +127,19 @@ def show(obj=None, data=None, **kwargs):
         from pygimli.physics.ert import showERTData
         return showERTData(obj, vals=kwargs.pop('vals', data), **kwargs)
 
+<<<<<<< HEAD
     ### try to interpret obj as matrices
+=======
+    if isinstance(obj, pg.DataContainer):  # some other
+        if obj.isSensorIndex("s") and obj.isSensorIndex("g"):
+            from pygimli.viewer.mpl import showDataContainerAsMatrix
+            if data is None and obj.haveData("t"):
+                data = "t"
+
+            return showDataContainerAsMatrix(obj, "s", "g", data)
+
+    # try to interpret obj as matrices
+>>>>>>> dev
     if isinstance(obj, pg.core.MatrixBase) or (isinstance(obj, np.ndarray) and
                                                obj.ndim == 2):
         return showMatrix(obj, **kwargs)
@@ -421,13 +433,18 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
 
         if hasattr(data[0], '__len__') and not \
                 isinstance(data, np.ma.core.MaskedArray) and not \
-                isinstance(data[0], str):
+                isinstance(data[0], str) and not \
+                (len(data) == 1 or len(data[0] == 0)):
 
-            data = np.asarray(data)
+            data = np.array(data)
 
-            ### [u,v] x N
-            if len(data) == 2:
+            if len(data) == 2:  # [u,v] x N
                 data = np.array(data).T
+
+            if len(data) == 1: # 1xM matrix
+                return showMesh(np.ravel(data), **kwargs)
+            if data.shape[1] == 1:  # Mx1 matrix
+                return showMesh(np.ravel(data), **kwargs)
             if data.shape[1] == 2:  # N x [u,v]
                 drawStreams(ax, mesh, data, label=label, **kwargs)
             elif data.shape[1] == 3:  # N x [u,v,w]

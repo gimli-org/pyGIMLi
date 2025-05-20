@@ -555,7 +555,7 @@ def showDataContainerAsMatrix(data, x=None, y=None, v=None, **kwargs):
     yToken = ''
     mul = kwargs.pop('mul', 10**int(np.ceil(np.log10(data.sensorCount()))))
     plus = kwargs.pop('plus', 1)  # add 1 to count
-    verbose = kwargs.get('verbose', True)
+    verbose = kwargs.get('verbose', False)
     if isinstance(x, str):
         xToken = x
         x = data(x)

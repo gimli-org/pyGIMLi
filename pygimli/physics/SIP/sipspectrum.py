@@ -853,7 +853,9 @@ class SIPSpectrum(object):
 
         self.invDD = IDD
         if new:
-            print("ARMS=", IDD.absrms(), "RRMS=", IDD.absrms()/max(Znorm)*100)
+            if verbose:
+                pg.info("ARMS=", IDD.absrms(), "RRMS=", IDD.absrms()/max(Znorm)*100)
+            
             resp = np.array(IDD.response)
             respRe = resp[:nf]
             respIm = resp[nf:]
@@ -886,6 +888,14 @@ class SIPSpectrum(object):
     def logMeanTau(self):
         """Mean logarithmic relaxation time (50% cumulative log curve)."""
         return exp(np.sum(np.log(self.tau) * self.mDD) / sum(self.mDD))
+
+    def createDecay(self, t=None):
+        """Create decay from Debye decomposition."""
+        v = np.zeros(len(t))
+        for tau, m in zip(self.tau, self.mDD):
+            v += np.exp(-t/tau) * m
+        
+        return v
 
     def showAll(self, save=False, ax=None):
         """Plot spectrum, Cole-Cole fit and Debye distribution."""

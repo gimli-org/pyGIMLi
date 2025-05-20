@@ -69,8 +69,7 @@ needs_sphinx = "1.8"  # due to napoleon
 deps = [
     "sphinxcontrib-programoutput",
     "sphinxcontrib-bibtex",
-    "sphinxcontrib-doxylink",
-    "bibtexparser",
+    "sphinxcontrib-doxylink"
 ]
 
 # check for p.version too
@@ -95,11 +94,11 @@ if req:
 # They can be extensions coming with Sphinx (named "sphinx.ext.*")
 # or your custom ones.
 extensions = [
+    "myst_nb",
     "sphinx.ext.autodoc",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.autosummary",
-    "sphinx.ext.mathjax",
     "sphinx.ext.intersphinx",
     "sphinx.ext.imgconverter",
     "sphinx.ext.autosectionlabel",
@@ -108,6 +107,7 @@ extensions = [
     "srclinks",
     "sphinxcontrib.doxylink",
     "sphinx_design",
+    # "sphinx_tippy"
     # "sphinxcontrib.spelling"
     #'sphinx.ext.pngmath',   # for breath
     #'sphinx.ext.todo',      # for breath
@@ -136,13 +136,13 @@ try:
             join(SPHINXDOC_PATH, "tutorials"),
         ],
         "gallery_dirs": ["_examples_auto", "_tutorials_auto"],
-        # "reference_url": {
-        #     "pygimli": "https://pygimli.org",
-        #     "python": "https://docs.python.org/dev",
-        #     "numpy": "https://numpy.org/doc/stable",
-        #     "scipy": "https://docs.scipy.org/doc/scipy/reference",
-        #     "matplotlib": "https://matplotlib.org/stable",
-        # },
+        "reference_url": {
+            "pygimli": "https://pygimli.org",
+            "python": "https://docs.python.org/dev",
+            "numpy": "https://numpy.org/doc/stable",
+            "scipy": "https://docs.scipy.org/doc/scipy/reference",
+            "matplotlib": "https://matplotlib.org/stable",
+        },
         # Don"t report time of fast scripts (< 10 sec)
         "min_reported_time": 10,
         # path where to store your example linker templates
@@ -153,7 +153,7 @@ try:
         "within_subsection_order": FileNameSortKey,
         "remove_config_comments": True,
         # Only parse filenames starting with plot_
-        "filename_pattern": "plot_",
+        "filename_pattern": "/plot_",
         "first_notebook_cell": ("# Checkout www.pygimli.org for more examples"),
         "reset_modules": (reset_mpl),
         # Avoid representation of mpl axis, LineCollections, etc.
@@ -221,15 +221,6 @@ autodoc_default_options = {
     "show-inheritance": True,
 }
 
-# Get mathjax
-# Formulas disappear after scrolling
-# mathjax_path = "https://www.pygimli.org/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-# Slow, but works
-mathjax_path = (
-    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js"
-    + "?config=TeX-AMS-MML_HTMLorMML"
-)
-
 # Add any paths that contain templates here, relative to this directory.
 templates_path = [join(SPHINXDOC_PATH, "_templates"), join(DOC_BUILD_DIR, "_templates")]
 
@@ -242,13 +233,13 @@ plot_html_show_source_link = False
 plot_apply_rcparams = True  # if context option is used
 
 # The suffix of source filenames.
-source_suffix = ".rst"
+source_suffix = {'.rst': 'restructuredtext'}
 
 # The encoding of source files.
 source_encoding = "utf-8-sig"
 
 # The master toctree document.
-master_doc = "documentation"
+master_doc = "index"
 
 # General information about the project.
 project = "pyGIMLi"
@@ -332,14 +323,23 @@ html_theme_options = {
     "footer_start": ["footer_start"],
     "footer_end": ["footer_end"],
     "pygment_light_style": "friendly",
+    "header_links_before_dropdown": 6,
     "pygment_dark_style": "native",
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/gimli-org/gimli",
+            "icon": "fa-brands fa-square-github",
+            "type": "fontawesome",
+        }
+    ]
 }
 
 # Temp: SEG announcement
 import datetime
-today = datetime.datetime.now()
+current_day = datetime.datetime.now()
 webinar = datetime.datetime(2024, 3, 19)
-if today < webinar:
+if current_day < webinar:
     html_theme_options["announcement"] = "There will be a webinar on pyGIMLi hosted by SEG on March 19, 2024 at 4 pm CET. Register for free <a href='https://seg.org/calendar_events/open-source-software-webinar-pygimli/', target='_blank'>here</a>."
 
 html_css_files = [
@@ -386,7 +386,7 @@ html_sidebars = {
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-html_additional_pages = {"index": "index.html", "publist": "publications.html"}
+html_additional_pages = {"index": "index.html", "community/publications": "publications.html"}
 
 # If false, no module index is generated.
 html_domain_indices = True
@@ -673,5 +673,26 @@ bibtex_reference_style = "author_year"
 breathe_projects = {"gimli":
                         os.path.abspath(join(DOC_BUILD_DIR, "../../doxygen/xml")),
                     }
-
 breathe_default_project = "gimli"
+
+################################################################################
+# -- Options for myst-md
+################################################################################
+myst_enable_extensions = [
+    "amsmath",
+    "attrs_inline",
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "html_admonition",
+    "html_image",
+    "linkify",
+    "replacements",
+    "smartquotes",
+    "substitution",
+]
+myst_dmath_allow_labels = True
+# myst_heading_anchors = 2
+nb_execution_excludepatterns = ["*Untitled*", "_examples_auto/**/*", "_tutorials_auto/**/*"]
+# nb_execution_raise_on_error = True # Important for GitHub Action
+nb_execution_show_tb = True

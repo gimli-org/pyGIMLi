@@ -11,7 +11,7 @@ from pygimli.viewer.mpl.dataview import showValMapPatches
 from pygimli.viewer.mpl import showDataContainerAsMatrix
 
 
-def generateDataPDF(data, filename="data.pdf"):
+def generateDataPDF(data, filename="data.pdf", **kwargs):
     """Generate a multi-page pdf showing all data properties."""
     if isinstance(data, str):
         filename = data.replace('.txt', '-data.pdf')
@@ -26,7 +26,7 @@ def generateDataPDF(data, filename="data.pdf"):
                 vals = data[tok]
                 logScale = min(vals) > 0 and tok in logToks
                 ax = fig.add_subplot()
-                pg.show(data, vals, ax=ax, label=tok, logScale=logScale)
+                pg.show(data, vals, ax=ax, label=tok, logScale=logScale, **kwargs)
                 fig.savefig(pdf, format='pdf')
                 fig.clf()
 
@@ -207,6 +207,7 @@ def drawERTData(ax, data, vals=None, **kwargs):
             indices to limit display
         * circular : bool
             Plot in polar coordinates when plotting via patchValMap
+    
     Returns
     -------
     ax:
@@ -229,10 +230,9 @@ def drawERTData(ax, data, vals=None, **kwargs):
         mid, sep = midconfERT(data, circular=kwargs.get('circular', False),
                               switch=sw)
 
-    # var = kwargs.pop('var', 0)  # not used anymore
     cbar = None
-
-    dx = kwargs.pop('dx', np.median(np.diff(np.unique(mid))))*2
+    # dx = kwargs.pop('dx', np.median(np.diff(np.unique(mid))))
+    dx = kwargs.pop('dx', np.median(np.diff(pg.x(data))))
     ax, cbar, ymap = showValMapPatches(vals, xVec=mid, yVec=sep,
                                        dx=dx, ax=ax, **kwargs)
 

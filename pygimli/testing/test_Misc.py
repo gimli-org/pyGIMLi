@@ -151,6 +151,7 @@ class TestMisc(unittest.TestCase):
         self.assertEqual(sum(data['n']), 9*3)
 
 
+
     def test_PosConstMember(self):
         p1 = pg.Pos(1.0, 0.0, 0.0)
         p2 = pg.Pos(0.0, 1.0, 0.0)
@@ -172,6 +173,9 @@ class TestMisc(unittest.TestCase):
         v2[2] = 2.
         self.assertTrue(v1.hash() == v2.hash())
         self.assertEqual(v1.hash(), pg.Vector(10, 2.).hash())
+
+        self.assertEqual(pg.utils.valHash([1, 0, 0])==
+                         pg.utils.valHash([0, 1, 0]), False)
 
 
     def test_HashData(self):

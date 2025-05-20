@@ -179,10 +179,17 @@ class CrossholeERT(TimelapseERT):
                                 marker=2, area=area)
             if quality is None:
                 quality = 1.3
-        else:
-            world = mt.createWorld(start=[xmin-obound, zmin-obound],
+        else:  # 2D
+            zodown = zmin - obound
+            zidown = zmin - ibound
+            if zmin == zmax:  # z coordinate already in y
+                ztop = np.minimum(0, ymax+ibound)
+                zodown = ymin - obound
+                zidown = ymin - ibound
+
+            world = mt.createWorld(start=[xmin-obound, zodown],
                                    end=[xmax+obound, 0.], marker=1)
-            box = mt.createRectangle(start=[xmin-ibound, zmin-ibound],
+            box = mt.createRectangle(start=[xmin-ibound, zidown],
                                      end=[xmax+ibound, ztop], marker=2,
                                      area=area)
             if quality is None:
@@ -194,8 +201,12 @@ class CrossholeERT(TimelapseERT):
                 geo.createNode(pos, marker=-99)
                 geo.createNodeWithCheck(pos - pg.Pos(0, 0, ref))  # refinement
             else:
-                geo.createNode([pos.x(), pos.z()], marker=-99)
-                geo.createNode([pos.x(), pos.z()-ref])
+                if zmin == zmax:
+                    geo.createNode([pos.x(), pos.y()], marker=-99)
+                    geo.createNode([pos.x(), pos.y()-ref])
+                else:
+                    geo.createNode([pos.x(), pos.z()], marker=-99)
+                    geo.createNode([pos.x(), pos.z()-ref])
 
         self.mesh = mt.createMesh(geo, quality=quality)
         self.mgr.setMesh(self.mesh)

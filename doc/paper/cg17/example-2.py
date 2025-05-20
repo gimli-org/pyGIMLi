@@ -112,7 +112,7 @@ def solveERT(mesh, concentration, verbose=0):
     for i, rbI in enumerate(rArchie):
         resis[i] = 1. / ((1./rbI) + 1./rho0)
 
-    ertScheme['k'] = ert.geometricFactors(ertScheme)
+    ertScheme['k'] = ert.createGeometricFactors(ertScheme)
 
     errPerc = 0.01
     errVolt = 1e-5

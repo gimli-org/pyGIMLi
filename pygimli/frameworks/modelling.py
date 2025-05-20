@@ -751,6 +751,7 @@ class MeshModelling(Modelling):
         self.regionManager().setMesh(mesh)
         self.setDefaultBackground()
 
+
     def setDefaultBackground(self):
         """Set the lowest region to background if several exist."""
         regionIds = self.regionManager().regionIdxs()
@@ -760,6 +761,7 @@ class MeshModelling(Modelling):
             pg.info("Region with smallest marker set to background "
                     "(marker={0})".format(bk))
             self.setRegionProperties(bk, background=True)
+
 
     def drawModel(self, ax, model, **kwargs):
         """Draw the model as mesh-based distribution."""

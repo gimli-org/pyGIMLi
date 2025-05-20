@@ -910,6 +910,8 @@ def __Mesh__populate__(self, prop:str, value):
             self[prop] =  parseMapToCellArray(value, self)
         elif len(value) == self.cellCount():
             self[prop] = value
+        elif len(value) > max(self.cellMarkers()):  # cell marker indexing 
+            self[prop] = np.array(value)[self.cellMarkers()]
         else:
             raise Exception("Length mismatch!")
 
@@ -932,16 +934,21 @@ def __Mesh__submesh__(self, relation="=", **kwargs):
     """
     isTrue = np.ones(self.cellCount(), dtype=bool)
     for key, val in kwargs.items():
-        if key not in self.dataKeys():
-            raise IndexError("Property not in mesh: ", key)
-        if relation == ">":
-            isk = self[key] > val
-        elif relation == "<":
-            isk = self[key] < val
-        elif relation == "!=":
-            isk = self[key] != val
+        if key in ["marker", "cellMarker"]:
+            prop = self.cellMarkers()
+        elif key in self.dataKeys():
+            prop = self[key]
         else:
-            isk = self[key] == val
+            raise IndexError("Property not in mesh: ", key)
+        
+        if relation == ">":
+            isk = prop > val
+        elif relation == "<":
+            isk = prop < val
+        elif relation == "!=":
+            isk = prop != val
+        else:
+            isk = prop == val
 
         isTrue = np.bitwise_and(isTrue, isk)
 

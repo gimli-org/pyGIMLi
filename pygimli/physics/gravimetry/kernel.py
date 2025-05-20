@@ -38,7 +38,7 @@ def SolveGravMagHolstein(mesh, pnts, cmp, igrf=None):  # , foot=np.inf):
     B_tens = None
 
     kernel = np.zeros((mesh.cellCount(), len(pnts), len(cmp)))
-    if igrf:
+    if np.any(igrf):
         if len(igrf) == 3:  # an X, Y, Z vector
             F = np.linalg.norm(igrf)
             fakt = F / (4*np.pi)

@@ -9,7 +9,7 @@ import pygimli as pg
 
 def createMesh(poly, quality=32, area=0.0, smooth=True, switches=None,
                verbose=False, **kwargs):
-    """Create a mesh for a given PLC or point list.
+    r"""Create a mesh for a given PLC or point list.
 
     The mesh is created by :term:`triangle` or :term:`tetgen` if the
     pgGIMLi support for these mesh generators is installed.
@@ -23,7 +23,7 @@ def createMesh(poly, quality=32, area=0.0, smooth=True, switches=None,
     Parameters
     ----------
     poly: :gimliapi:`GIMLI::Mesh` or list or ndarray
-        * 2D or 3D gimli mesh that contains the PLC.
+        * 2D or 3D GIMli mesh that contains the PLC.
         * 2D mesh needs edges
         * 3D mesh needs a plc and tetgen as system component
         * List of x y pairs [[x0, y0], ... ,[xN, yN]]
@@ -45,7 +45,7 @@ def createMesh(poly, quality=32, area=0.0, smooth=True, switches=None,
         1: node center
         2: weighted node center
 
-        If smooth is just set to True then `smooth=[1, 2]` is chosen [Default].
+        If smooth is just set to True then [1, 4] is chosen.
 
     switches: str
         Set additional triangle command switches.

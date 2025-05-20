@@ -267,8 +267,10 @@ class TimelapseERT():
             return pg.viewer.mpl.showDataContainerAsMatrix(
                 self.data, x, y, v, **kwargs)
         else:
-            kwargs.setdefault("x", "a")
-            kwargs.setdefault("y", "m")
+            if not "style" in kwargs:
+                kwargs.setdefault("x", "a")
+                kwargs.setdefault("y", "m")
+
             return self.data.show(v, **kwargs)
 
     def showTimeline(self, ax=None, **kwargs):
