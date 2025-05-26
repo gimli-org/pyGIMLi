@@ -590,17 +590,22 @@ def interpolate(*args, **kwargs):
 
         if len(args) == 3 and pg.isPosList(args[2]):
             # args: (inMesh, inData(dim==1), posList)
-            if args[1].ndim == 2:
+            if isinstance(args[1], list):
+                inMat = np.asarray(args[1])
+            else:
+                inMat = args[1]
+
+            if inMat.ndim == 2:
                 outMat = pg.Matrix()
                 pg.core.interpolate(args[0],
-                                    inMat=args[1],
+                                    inMat=inMat,
                                     destPos=args[2],
                                     outMat=outMat,
                                     fillValue=fallback,
                                     verbose=verbose)
                 return outMat
             else:
-                return pg.core.interpolate(args[0], args[1], destPos=args[2],
+                return pg.core.interpolate(args[0], inMat, destPos=args[2],
                                            fillValue=fallback,
                                            verbose=verbose)
 

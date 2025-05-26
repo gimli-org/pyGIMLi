@@ -127,9 +127,6 @@ def show(obj=None, data=None, **kwargs):
         from pygimli.physics.ert import showERTData
         return showERTData(obj, vals=kwargs.pop('vals', data), **kwargs)
 
-<<<<<<< HEAD
-    ### try to interpret obj as matrices
-=======
     if isinstance(obj, pg.DataContainer):  # some other
         if obj.isSensorIndex("s") and obj.isSensorIndex("g"):
             from pygimli.viewer.mpl import showDataContainerAsMatrix
@@ -139,7 +136,6 @@ def show(obj=None, data=None, **kwargs):
             return showDataContainerAsMatrix(obj, "s", "g", data)
 
     # try to interpret obj as matrices
->>>>>>> dev
     if isinstance(obj, pg.core.MatrixBase) or (isinstance(obj, np.ndarray) and
                                                obj.ndim == 2):
         return showMatrix(obj, **kwargs)

@@ -302,10 +302,6 @@ class CacheManager(object):
             else:
                 argHash = argHash ^ valHash(k) ^ valHash(v)
 
-<<<<<<< HEAD
-        #pg._g(funcHash, versionHash, codeHash, argHash)
-=======
->>>>>>> dev
         pg.debug("Hashing took:", pg.dur(), "s")
         return funcHash ^ versionHash ^ codeHash ^ argHash
 
@@ -334,12 +330,8 @@ def cache(funct):
 
         nc = kwargs.pop('skipCache', False)
 
-<<<<<<< HEAD
         if any(('--noCache' in sys.argv, '--skipCache' in sys.argv,
                 os.getenv('SKIP_CACHE'),
-=======
-        if any(('--noCache' in sys.argv,
->>>>>>> dev
                 '-N' in sys.argv, nc is True, __NO_CACHE__)):
 
             return funct(*args, **kwargs)
