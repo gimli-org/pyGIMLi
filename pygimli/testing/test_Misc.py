@@ -161,6 +161,9 @@ class TestMisc(unittest.TestCase):
 
 
     def test_Hash(self):
+        """ Test hash functionality of some selected classes.
+        """
+        ### pg.Vector
         v1 = pg.Vector(10, 2.)
         v2 = pg.Vector(10, 2.)
 
@@ -174,11 +177,18 @@ class TestMisc(unittest.TestCase):
         self.assertTrue(v1.hash() == v2.hash())
         self.assertEqual(v1.hash(), pg.Vector(10, 2.).hash())
 
+        ### Lists:
         self.assertEqual(pg.utils.valHash([1, 0, 0])==
                          pg.utils.valHash([0, 1, 0]), False)
 
+        ### Dicts
+        self.assertEqual(pg.utils.valHash({'A':{'b':[0,None]}}) ==
+                         pg.utils.valHash({'A':{'b':[0,None]}}), True)
+
 
     def test_HashData(self):
+        """ Test hash functionality of DataContainer
+        """
         d1 = pg.DataContainerERT()
         d2 = pg.DataContainerERT()
 
@@ -204,6 +214,8 @@ class TestMisc(unittest.TestCase):
 
 
     def test_HashMesh(self):
+        """ Test hash functionality of Mesh.
+        """
         m1 = pg.Mesh()
         m2 = pg.Mesh()
 
@@ -217,7 +229,8 @@ class TestMisc(unittest.TestCase):
 
 
     def test_Cache(self):
-
+        """ Test caching of functions.
+        """
         @pg.cache
         def c1(N):
             return np.linspace(0, 1, N)
@@ -226,7 +239,7 @@ class TestMisc(unittest.TestCase):
 
 
     def test_BinaryIO(self):
-        """Test binary IO of some selected classes.
+        """ Test binary IO of some selected classes.
         """
         import tempfile as tmp
 
@@ -244,18 +257,28 @@ class TestMisc(unittest.TestCase):
             self.assertEqual(a.hash(), b.hash())
 
 
-        a = pg.IVector(np.asarray(np.random.random(42)*100, dtype='int64'))
-        fname = a.save('tmp', pg.core.Binary)
-        b = pg.load(fname)
+        def _tst2(a):
+            """Generic binary IO tester."""
+            _, fn = tmp.mkstemp()
 
-        print(a)
-        print(b)
-        self.assertEqual(a.hash(), b.hash())
+            fname = a.save(fn, pg.core.Binary)
+            vecTye = type(a)
+            b = vecTye(fname, pg.core.Binary)
+            self.assertEqual(a.hash(), b.hash())
 
+        for v in [pg.RVector(np.random.randn(42)),
+                  pg.IVector(np.asarray(np.random.randn(42)*100,
+                                        dtype='int')),
+                  pg.core.IndexArray(np.asarray(abs(np.random.rand(42)*100),
+                                                dtype='uint')),
+                  pg.core.BVector(np.asarray(abs(np.random.rand(42)*100)>50,
+                                             dtype='bool')),
+            ]:
+            _tst2(v)
 
+        ## test bg.load() .. will only work for mesh and RVector
         for a in [pg.meshtools.createGrid(3),
                   pg.RVector(np.random.randn(42)),
-                  pg.IVector(np.asarray(np.random.randn(42), dtype='int')),
                 ]:
             _tst(a)
 

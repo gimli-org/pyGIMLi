@@ -128,8 +128,8 @@ template < class ValueType > void readStream(std::istream & in,
 The object need have a method `writeToStream`.
 Returns the name of the filename. */
 template < class T > std::string saveBinary(const std::string & fbody,
-           const T & obj,
-           const std::string & suffix="") {
+                                            const T & obj,
+                                            const std::string & suffix="") {
     std::string fileName(fbody.substr(0, fbody.rfind(suffix)) + suffix);
 
     std::ofstream out(fileName, std::ios::binary | std::ios::out);

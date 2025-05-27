@@ -181,6 +181,8 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
 
     np.set_printoptions(**printopt)
 
-    if exitcode == pytest.ExitCode.OK and verbose:
-        print("Exiting with exitcode", exitcode)
-        sys.exit(exitcode)
+    if abort is True:
+        if verbose:
+            print("Exiting with exitcode", exitcode)
+        if exitcode != 0:
+            pg.critical("some tests failed, exiting with exitcode", exitcode)

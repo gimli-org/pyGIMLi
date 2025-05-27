@@ -250,6 +250,8 @@ class Cache(object):
 
 #@pg.singleton
 class CacheManager(object):
+    """ Cache manager to handle caching of functions.
+    """
     __instance = None
     __has_init = False
 
@@ -265,10 +267,14 @@ class CacheManager(object):
 
     @staticmethod
     def instance(cls):
+        """ Return the singleton instance of CacheManager.
+        """
         return cls.__instance__
 
+
     def cachingPath(self, fName):
-        """Create a path name for the cache"""
+        """ Create a path name for the cache
+        """
         if pg.rc["globalCache"]:
             path = pg.getCachePath()
         else:
@@ -277,36 +283,48 @@ class CacheManager(object):
             os.mkdir(path)
         return os.path.join(path, fName)
 
+
     def functInfo(self, funct):
-        """Return unique info string about the called function."""
+        """ Return unique info string about the called function.
+        """
         return funct.__code__.co_filename + ":" + funct.__qualname__
 
+
     def hash(self, funct, *args, **kwargs):
-        """"Create a hash value"""
+        """ Create a hash value.
+        """
         pg.tic()
         funcInfo = self.functInfo(funct)
         funcHash = strHash(funcInfo)
         versionHash = strHash(pg.versionStr())
         codeHash = strHash(inspect.getsource(funct))
 
+        #pg._b('fun:', funcHash, 'ver:', versionHash, 'code:', codeHash)
+        #argHash = valHash(args) ^ valHash(kwargs) # wannehave
         argHash = 0
         for i, a in enumerate(args):
             if pg.isScalar(a):
                 argHash = argHash ^ valHash(str(i) + str(a))
             else:
                 argHash = argHash ^ (valHash(i) ^ valHash(a))
+            #pg._b(f'\targ:{i}: {a}', argHash)
 
+        argHash = argHash ^ valHash(kwargs)
         for k, v in kwargs.items():
             if pg.isScalar(v):
                 argHash = argHash ^ (valHash(k + str(v)))
             else:
+                #pg._b(f'\tkwarg:{k}: {v}', valHash(k), valHash(v), argHash)
                 argHash = argHash ^ valHash(k) ^ valHash(v)
 
+        #pg._b('argHash:', argHash)
         pg.debug("Hashing took:", pg.dur(), "s")
         return funcHash ^ versionHash ^ codeHash ^ argHash
 
+
     def cache(self, funct, *args, **kwargs):
-        """ Create a unique cache """
+        """ Create a unique cache.
+        """
         hashVal = self.hash(funct, *args, **kwargs)
 
         cached = Cache(hashVal)
@@ -330,7 +348,8 @@ def cache(funct):
 
         nc = kwargs.pop('skipCache', False)
 
-        if any(('--noCache' in sys.argv, '--skipCache' in sys.argv,
+        if any(('--noCache' in sys.argv,
+                '--skipCache' in sys.argv,
                 os.getenv('SKIP_CACHE'),
                 '-N' in sys.argv, nc is True, __NO_CACHE__)):
 

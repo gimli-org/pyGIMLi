@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2007-2024 by the GIMLi development team                    *
+ *   Copyright (C) 2007-2025 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -968,11 +968,20 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
         return GIMLI::deserialize(m, *this);
     }
 
-    void writeToStream(std::ostream & out) const {
+    /*! Write the vector to a stream.
+    * Version =  0: [size(8), size*(valueType)]\n
+    * Version = -1: [version(8), typeinfo(8), size(8), size*(valueType)]
+    */
+    void writeToStream(std::ostream & out, int version=-1) const {
         if (_hasBorrowedData){
             log(Error, "Vector with borrowed data can't "
                         "yet be written to stream.");
         }
+        if (version == -1){
+            writeStream(out, (int64)-1); // version info
+            writeStream(out, (char)typeid(ValueType).name()[0]);
+        }
+
         writeStream(out, (int64)size_);
         writeStream(out, data_[0], size_);
     }
@@ -980,10 +989,23 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
     void readFromStream(std::istream & in) {
         this->clear();
 
-        int64 size; readStream(in, size, 1);
-        this->resize(size);
+        int64 version; readStream(in, version, 1);
+        int64 size;
+        if (version < 0) {
+            // has version info for pg>=2
+            char type; readStream(in, type, 1);
+            if (type != typeid(ValueType).name()[0]) {
+                throwError(WHERE_AM_I + " Type mismatch in readFromStream. "
+                    "Expected: " + std::string(typeid(ValueType).name()) +
+                    " but got: " + type);
+            }
+            readStream(in, size, 1);
+        } else {
+            size = version;
+        }
 
-        readStream(in, data_[0], size);
+        this->resize(size);
+        readStream<ValType>(in, data_[0], size);
     }
 
     /*! Save the object to file. Returns true on success and in case of trouble an exception is thrown.
@@ -1094,6 +1116,7 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
 
     Index size_;
     ValueType * data_;
+
 protected:
 
     void free_(){
@@ -1133,7 +1156,6 @@ protected:
     }
 
     Index capacity_;
-
 
     static const Index minSizePerThread = 10000;
     static const int maxThreads = 8;
@@ -2172,6 +2194,7 @@ inline IVector toIVector(const RVector & v){
     return ret;
 }
 
+
 template < class ValueType >
 std::string save(const Vector< ValueType > & a,
                  const std::string & filename,
@@ -2185,25 +2208,6 @@ bool load(Vector< ValueType > & a, const std::string & filename,
           bool verbose=true){
     return a.load(filename, format);
 }
-
-// /*!
-//  Save vector to file. See Vector< ValueType >::save.
-// */
-// template < class ValueType >
-// std::string saveVec(const Vector< ValueType > & a, const std::string & filename,
-//              IOFormat format=Ascii){
-//     return a.save(filename, format);
-// }
-
-// /*!
-//  Load vector from file. See Vector< ValueType >::load.
-// */
-// template < class ValueType >
-// bool loadVec(Vector < ValueType > & a,
-//              const std::string & filename,
-//              IOFormat format = Ascii){
-//     return a.load(filename, format);
-// }
 
 } // namespace GIMLI
 
