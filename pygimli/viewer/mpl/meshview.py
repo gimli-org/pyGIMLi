@@ -30,17 +30,6 @@ class CellBrowserCacheSingleton(object):
 # We only want one instance of this global cache so its a singleton class
 __CBCache__ = CellBrowserCacheSingleton()
 
-# is this needed?
-# def _setCMap(pp, cMap):
-#     """Set colormap to mpl object pp
-#         Ensure kwargs have argument with correct naming conventions.
-#     """
-#     if cMap is not None:
-#         if isinstance(cMap, str):
-#             pp.set_cmap(cmapFromName(cMap))
-#         else:
-#             pp.set_cmap(cMap)
-
 
 class CellBrowser(object):
     """Interactive cell browser on current or specified ax for a given mesh.
@@ -73,7 +62,8 @@ class CellBrowser(object):
     """
 
     def __init__(self, mesh, data=None, ax=None):
-        """Construct CellBrowser on a specific `mesh`."""
+        """ Construct CellBrowser on a specific `mesh`.
+        """
         if ax:
             self.ax = ax
         else:
@@ -99,11 +89,13 @@ class CellBrowser(object):
         self.connect()
 
     def __del__(self):
-        """Deregister if the cellBrowser has been deleted."""
+        """ Deregister if the cellBrowser has been deleted.
+        """
         self.disconnect()
 
     def connect(self):
-        """Connect to matplotlib figure canvas."""
+        """ Connect to matplotlib figure canvas.
+        """
         if not self._connected:
             self.pid = self.fig.canvas.mpl_connect('pick_event', self.onPick)
             self.kid = self.fig.canvas.mpl_connect('key_press_event',
@@ -112,7 +104,8 @@ class CellBrowser(object):
             self._connected = True
 
     def disconnect(self):
-        """Disconnect from matplotlib figure canvas."""
+        """ Disconnect from matplotlib figure canvas.
+        """
         if self._connected:
             __CBCache__.remove(self)
             self.fig.canvas.mpl_disconnect(self.pid)
@@ -120,7 +113,8 @@ class CellBrowser(object):
             self._connected = False
 
     def initText(self):
-        """Initialize hint text properties."""
+        """ Initialize hint text properties.
+        """
         import matplotlib as mpl
         bbox = dict(boxstyle='round, pad=0.5', fc='w', alpha=0.5)
         arrowprops = dict(arrowstyle='->', connectionstyle='arc3,rad=0.5')
@@ -132,11 +126,13 @@ class CellBrowser(object):
         self.text = self.ax.annotate(None, xy=(0, 0), **kwargs)
 
     def setMesh(self, mesh):
-        """Set mesh."""
+        """ Set mesh.
+        """
         self.mesh = mesh
 
     def setData(self, data=None):
-        """Set data, if not set look for the artist array data."""
+        """ Set data, if not set look for the artist array data.
+        """
         self.hide()
         if data is not None:
             if len(data) == self.mesh.cellCount():
@@ -150,7 +146,8 @@ class CellBrowser(object):
                 self.data = data[self.mesh.cellMarkers()]
 
     def hide(self):
-        """Hide info window."""
+        """ Hide info window.
+        """
         self.cellID = -1
 
         if self.text is not None:
@@ -161,14 +158,16 @@ class CellBrowser(object):
         self.fig.canvas.draw()
 
     def removeHighlightCell(self):
-        """Remove cell highlights."""
+        """ Remove cell highlights.
+        """
         if self.highLight is not None:
             if self.highLight in self.ax.collections:
                 self.highLight.remove()
             self.highLight = None
 
     def highlightCell(self, cell):
-        """Highlight selected cell."""
+        """ Highlight selected cell.
+        """
         import matplotlib as mpl
         self.removeHighlightCell()
         self.highLight = mpl.collections.PolyCollection(
@@ -179,7 +178,8 @@ class CellBrowser(object):
         self.ax.add_collection(self.highLight)
 
     def onPick(self, event):
-        """Call `self.update()` on mouse pick event."""
+        """ Call `self.update()` on mouse pick event.
+        """
         self.event = event
         self.artist = event.artist
 
@@ -205,7 +205,8 @@ class CellBrowser(object):
             self.cellID = event.ind[0]
 
     def onPress(self, event):
-        """Call `self.update()` if up, down, or escape keys are pressed."""
+        """ Call `self.update()` if up, down, or escape keys are pressed.
+        """
         # print(event, event.key)
         if self.data is None:
             return
@@ -227,7 +228,8 @@ class CellBrowser(object):
             self.update()
 
     def update(self):
-        """Update the information window.
+        """ Update the information window.
+
         Hide the information window for self.cellID == -1
         """
         try:
@@ -259,7 +261,7 @@ class CellBrowser(object):
 
 
 def drawMesh(ax, mesh, fitView=True, **kwargs):
-    """Draw a 2d mesh into a given ax.
+    """ Draw a 2d mesh into a given ax.
 
     Set the limits of the ax tor the mesh extent.
 
@@ -309,7 +311,7 @@ def drawModel(ax, mesh, data=None, tri=False, rasterized=False,
               cMin=None, cMax=None, logScale=False,
               xlabel=None, ylabel=None, fitView=True, verbose=False,
               **kwargs):
-    """Draw a 2d mesh and color the cell by the data.
+    """ Draw a 2d mesh and color the cell by the data.
 
     Parameters
     ----------

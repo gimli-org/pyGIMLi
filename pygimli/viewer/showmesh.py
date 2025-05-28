@@ -24,7 +24,7 @@ from .mpl.colorbar import cmapFromName
 
 
 def show(obj=None, data=None, **kwargs):
-    """Mesh and model visualization.
+    """ Mesh and model visualization.
 
     Syntactic sugar to show a obj with data. Forwards to
     a known visualization for obj. Typical is
@@ -74,7 +74,8 @@ def show(obj=None, data=None, **kwargs):
         ax.figure.canvas.header_visible = False
 
     if "axes" in kwargs:  # remove me in 1.2 #20200515
-        pg.critical("Deprecation Warning: Please use keyword `ax` instead of `axes`")
+        pg.critical("Deprecation Warning: Please use "
+                    "keyword `ax` instead of `axes`")
         kwargs['ax'] = kwargs.pop('axes', None)
 
     ax = None
@@ -427,15 +428,17 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                 isinstance(data[0], list) and isinstance(data[0][0], int):
             data = pg.solver.parseMapToCellArray(data, mesh)
 
-        if hasattr(data[0], '__len__') and not \
+        # check for lists: [ndArray, ] or [val,] 
+        if (hasattr(data[0], '__len__') and pg.isArray(data[0])) or \
+            hasattr(data[0], '__len__') and not \
                 isinstance(data, np.ma.core.MaskedArray) and not \
                 isinstance(data[0], str) and not \
                 (len(data) == 1 or len(data[0] == 0)):
 
-            data = np.array(data)
+            data = np.asarray(data)
 
             if len(data) == 2:  # [u,v] x N
-                data = np.array(data).T
+                data = np.asarray(data).T
 
             if len(data) == 1: # 1xM matrix
                 return showMesh(np.ravel(data), **kwargs)
