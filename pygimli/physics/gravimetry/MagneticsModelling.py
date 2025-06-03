@@ -5,25 +5,32 @@ from .kernel import SolveGravMagHolstein
 
 
 class MagneticsModelling(pg.frameworks.MeshModelling):
-    """Magnetics modelling operator using Holstein (2007)."""
-
+    """ Magnetics modelling operator using Holstein (2007).
+    """
     def __init__(self, mesh=None, points=None, cmp=["TFA"], igrf=[50, 13]):
-        """Setup forward operator.
+        """ Setup forward operator.
 
         Parameters
         ----------
-        mesh : pygimli:mesh
-            tetrahedral or hexahedral mesh
-        points : list|array of (x, y, z)
-            measuring points
-        cmp : list of str
-            component of: gx, gy, gz, TFA, Bx, By, Bz, Bxy, Bxz, Byy, Byz, Bzz
-        igrf : list|array of size 3 or 7
-            international geomagnetic reference field, either
-            [D, I, H, X, Y, Z, F] - declination, inclination, horizontal field,
-                                    X/Y/Z components, total field OR
-            [X, Y, Z] - X/Y/Z components OR
-            [lat, lon] - latitude, longitude (automatic by pyIGRF)
+        mesh: pygimli:mesh
+            Tetrahedral or hexahedral mesh.
+
+        points: list|array of (x, y, z)
+            Measuring points.
+
+        cmp: [str,]
+            Component of: gx, gy, gz, TFA, Bx, By, Bz, Bxy, Bxz, Byy, Byz, Bzz
+
+        igrf: list|array of size 3 or 7
+            International geomagnetic reference field.
+            either:
+
+            * [D, I, H, X, Y, Z, F] - declination,
+                inclination, horizontal field, X/Y/Z components, total field OR
+            * [X, Y, Z] - X/Y/Z
+                components OR
+            * [lat, lon] - latitude,
+                longitude (automatic by pyIGRF)
         """
         # check if components do not contain g!
         super().__init__()
@@ -34,9 +41,13 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
 
         self.components = cmp
         self.igrf = None
+
         if hasattr(igrf, "__iter__"):
             if len(igrf) == 2: # lat lon
-                import pyIGRF
+                pyIGRF = pg.optImport('pyIGRF', requiredFor="use igrf support"
+                                      f" for {self.__class__.__name__}. "
+                            "Please install pyIGRF with: pip install pyIGRF")
+
                 self.igrf = pyIGRF.igrf_value(*igrf)
             else: # 3 (x,y,z) or 7 (T,H,X,Y,Z,D,I)
                 self.igrf = igrf
@@ -46,8 +57,10 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
         if self.mesh_ is not None:
             self.setMesh(self.mesh_)
 
+
     def computeKernel(self):
-        """Compute the kernel."""
+        """ Compute the kernel.
+        """
         points = np.column_stack([self.sensorPositions[:, 1],
                                   self.sensorPositions[:, 0],
                                   -np.abs(self.sensorPositions[:, 2])])
@@ -66,19 +79,30 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
         self.J.recalcMatrixSize()
         self.setJacobian(self.J)
 
-    # better move the latter to
-    # self.createKernel
-
-    # def setMesh(self, mesh):
-        # self.createKernel(mesh)
 
     def response(self, model):
-        """Compute forward response."""
+        """ Compute forward response.
+
+        Arguments
+        ---------
+        model: array-like
+            Model parameters.
+        """
         if self.kernel is None:
             self.computeKernel()
 
         return self.J.dot(model)
 
+
     def createJacobian(self, model):
-        """Do nothing as this is a linear problem."""
-        pass
+        """ Do nothing as this is a linear problem.
+
+        Abstract method to create the Jacobian matrix.
+        Need to be implemented in derived classes.
+
+        Arguments
+        ---------
+        model: array-like
+            Model parameters.
+        """
+        # any defaults possible?

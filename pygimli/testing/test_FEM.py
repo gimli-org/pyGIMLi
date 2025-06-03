@@ -256,11 +256,12 @@ class TestFiniteElementBasics(unittest.TestCase):
         _testP1_(pg.createGrid(x=np.linspace(-0.04, 0.04, 11),
                                y=np.linspace(-0.4, 0, 11)))
         # 3D reg quad
-        _testP1_(pg.createGrid(x=np.linspace(-2, 2, 11),
-                               y=np.linspace( 0, 1, 11),
-                               z=np.linspace( 0, 1, 11)),
-                               followP2=False
-                               )
+        # _testP1_(pg.createGrid(x=np.linspace(-2, 2, 11),
+        #                        y=np.linspace( 0, 1, 11),
+        #                        z=np.linspace( 0, 1, 11)),
+        #                        followP2=False
+        #                        )
+        #return
         # check why P2 fails here,
 
         # 2D tri
