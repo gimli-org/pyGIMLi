@@ -51,6 +51,7 @@ tweaking**
 
 Curl installer
 ..............
+(Probably outdated.)
 
 If you are not using Anaconda, you can build pyGIMLi from source in the current
 directory via:
