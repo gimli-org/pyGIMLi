@@ -14,11 +14,13 @@ from .linesearch import lineSearch
 
 
 class InversionBase(object):
-    """Inversion base class for all inversions.
+    """ Inversion base class for all inversions.
 
     New inversion frame not using RInversion anymore.
     """
     def __init__(self, fop=None, **kwargs):
+        """ Initialize inversion base class.
+        """
         self._debug = kwargs.pop('debug', False)
         self._verbose = kwargs.pop('verbose', False)
         self._preStep = None
@@ -49,66 +51,85 @@ class InversionBase(object):
         self.lineSearchMethod = None  # auto inter-quad
         # self.minTau/maxTau
 
+
     @property
     def fop(self):
-        """Forward operator."""
+        """ Forward operator.
+        """
         return self._fop
+
 
     @fop.setter
     def fop(self, f):
-        """Set forward operator."""
+        """ Set forward operator.
+        """
         self.setForwardOperator(f)
 
+
     def setForwardOperator(self, fop):
-        """Set forward operator."""
+        """ Set forward operator.
+        """
         self._fop = fop
         # we need to initialize the regionmanager by calling it once
         self._fop.regionManager()
 
+
     @property
     def verbose(self):
-        """Verbosity level."""
+        """ Verbosity level.
+        """
         return self._verbose
+
 
     @verbose.setter
     def verbose(self, v):
-        """Set verbosity level for both forward operator and inversion."""
+        """ Set verbosity level for both forward operator and inversion.
+        """
         self._verbose = v
         self.fop.setVerbose(self._verbose)
 
+
     @property
     def dataTrans(self):
-        """Data transformation."""
+        """ Data transformation.
+        """
         return self._dataTrans
+
 
     @dataTrans.setter
     def dataTrans(self, dt):
-        """Set data transformation."""
+        """ Set data transformation.
+        """
         if isinstance(dt, str):
             dt = str2Trans(dt)
 
         self._dataTrans = dt
 
+
     @property
     def modelTrans(self):
-        """Model transformation."""
+        """ Model transformation.
+        """
         return self.fop.modelTrans
+
 
     @modelTrans.setter
     def modelTrans(self, mt):
-        """Set model transformation."""
+        """ Set model transformation.
+        """
         if isinstance(mt, str):
             mt = str2Trans(mt)
 
         self.fop.modelTrans = mt  # self._modelTrans # ????
 
+
     def convertStartModel(self, model):
-        """Convert scalar or array into startmodel vector.
+        """ Convert scalar or array into startmodel vector.
 
         Use valid range or self.fop.parameterCount, if possible.
 
-        Attributes
-        ----------
+        Arguments
+        ---------
         model: float|int|array|None
             starting model value or array
         """
@@ -126,13 +147,23 @@ class InversionBase(object):
                          format(len(model), self.fop.parameterCount))
         return None
 
+
     @property
     def model(self):
-        """The last active (i.e. current) model."""
+        """ The last active, i.e., current model.
+        """
         return self._model
+
 
     @model.setter
     def model(self, m):
+        """ Set model.
+
+        Arguments
+        ---------
+        m: [float,]
+            Model used as current model.
+        """
         if self._model is not None:
             assert len(self._model) == len(m), "Model size mismatch!"
 
@@ -141,48 +172,64 @@ class InversionBase(object):
             self._jacobianOutdated = True
             self._response = None  # not known
 
+
     @property  # not sure if we need it
     def response(self):
-        """Return last forward response."""
+        """ Return last forward response.
+        """
         if self._response is None:
             self._response = self.fop.response(self.model)
 
         return self._response
 
+
     @response.setter
     def response(self, v):
-        """Set response vector from outside (e.g. postprocessing)."""
+        """ Set response vector from outside (e.g. postprocessing).
+        """
+        # does this even make sense? visualization is Manager's job
         assert len(self.dataVals) == len(v), "Response size not matching."
         self._response = v
 
+
     @property
     def dataVals(self):
-        """Data vector (deprecated)."""
+        """ Data vector (deprecated).
+        """
+        # why deprecated? whats the alternative?
+        if self._dataVals is None:
+            pg.critical("No data. Inversion framework needs data values to run")
+
         return self._dataVals
+
 
     @dataVals.setter
     def dataVals(self, d):
-        """Set mandatory data values.
+        """ Set mandatory data values.
 
         Values == 0.0 will be set to tolerance
         """
+        # also deprecated? whats the alternative?
+        if d is None:
+            pg.critical("Data values can't be set to None")
         self._dataVals = d
 
-        if self._dataVals is None:
-            pg._y(d)
-            pg.critical("Inversion framework needs data values to run")
 
     @property
     def errorVals(self):
-        """Errors vector (deprecated)."""
+        """ Errors vector (deprecated).
+        """
+        # why deprecated? whats the alternative?
         return self._errorVals
+
 
     @errorVals.setter
     def errorVals(self, d):
-        """Set mandatory error values.
+        """ Set mandatory error values.
 
-        Values == 0.0. Will be set to Tolerance
+        Values == 0.0 will be set to tolerance.
         """
+        # also deprecated? whats the alternative?
         self._errorVals = d
 
         if self._errorVals is None:
@@ -195,22 +242,42 @@ class InversionBase(object):
                 "Found zero error values. Setting them to fallback value of 1")
             pg.core.fixZero(self._errorVals, 1)
 
+
     def echoStatus(self):
-        """Echo inversion status (model, response, rms, chi^2, phi)."""
-        pass
+        """ Echo inversion status (model, response, rms, chi^2, phi).
+        """
+        # implementation?
 
-    def setPostStep(self, p):
-        """Set a function to be called after each iteration.
 
-        The function is called with p(IterationNumber, self)."""
+    def setPostStep(self, p:callable):
+        """ Set a function to be called after each iteration.
+
+        Arguments
+        ---------
+        p: callable
+            Function to be called after each iteration.
+            called with `p(IterationNumber:int, self:InversionBase)`
+
+        """
         self._postStep = p
 
-    def setPreStep(self, p):
-        """Set a function to be called before each iteration."""
+
+    def setPreStep(self, p:callable):
+        """ Set a function to be called before each iteration.
+
+        Arguments
+        ---------
+        p: callable
+            Function to be called before each iteration.
+            called with `p(IterationNumber:int, self:InversionBase)`
+        """
         self._preStep = p
 
+
+
     def setData(self, data):
-        """Set data."""
+        """ Set data.
+        """
         # QUESTION_ISNEEDED
         if isinstance(data, pg.DataContainer):
             raise Exception("should not be here .. its Managers job")
@@ -218,12 +285,16 @@ class InversionBase(object):
         else:
             self.dataVals = data
 
+
     def chi2(self, response=None):
-        """Chi-squared misfit (mean of squared error-weighted misfit)."""
+        """ Chi-squared misfit (mean of squared error-weighted misfit).
+        """
         return self.phiData(response) / len(self.dataVals)
 
+
     def phiData(self, response=None):
-        """Data objective function (sum of suqred error-weighted misfit)."""
+        """ Data objective function (sum of squared error-weighted misfit).
+        """
         if response is None:
             response = self.response
 
@@ -233,8 +304,10 @@ class InversionBase(object):
 
         return pg.math.dot(dData, dData)
 
+
     def roughness(self, model=None, weighted=True):
-        """Return (weighted) roughness vector."""
+        """ Return (weighted) roughness vector.
+        """
         if model is None:
             model or self.model
 
@@ -245,16 +318,20 @@ class InversionBase(object):
         else:
             return pureRoughness
 
+
     def phiModel(self, model=None):
-        """Model objective function (norm of regularization term)."""
+        """ Model objective function (norm of regularization term).
+        """
         if model is None:
             model = self.model
 
         rough = self.roughness(model, weighted=True)
         return pg.math.dot(rough, rough)
 
+
     def phi(self, model=None, response=None):
-        """Total objective function (phiD + lambda * phiM)."""
+        """ Total objective function (phiD + lambda * phiM).
+        """
         if response is None:
             response = self.response
 
@@ -264,16 +341,20 @@ class InversionBase(object):
         else:
             return phiD + self.phiModel(model) * self.lam
 
+
     def relrms(self):
-        """Relative root-mean-square misfit of the last run."""
+        """ Relative root-mean-square misfit of the last run.
+        """
         return pg.math.rrms(self.data, self.response)
 
+
     def absrms(self):
-        """Absolute root-mean-square misfit of the last run."""
+        """ Absolute root-mean-square misfit of the last run.
+        """
         return pg.math.rms(self.data, self.response)
 
     def setRegularization(self, *args, **kwargs):
-        """Set regularization properties for the inverse problem.
+        """ Set regularization properties for the inverse problem.
 
         This can be for specific regions (args) or all regions (no args).
 
@@ -316,8 +397,9 @@ class InversionBase(object):
         if len(kwargs) > 0:
             self.fop.setRegionProperties(*args, **kwargs)
 
+
     def setInterRegionConstraint(self, region1, region2, strength):
-        """Set constraints between neighboring regions.
+        """ Set constraints between neighboring regions.
 
         Parameters
         ----------
@@ -329,8 +411,9 @@ class InversionBase(object):
         self.fop.regionManager().setInterRegionConstraint(
             region1, region2, strength)
 
+
     def setInterfaceConstraint(self, marker, strength):
-        """Set regularization strength on specific interface.
+        """ Set regularization strength on specific interface.
 
         Parameters
         ----------
@@ -342,12 +425,16 @@ class InversionBase(object):
         self.fop.regionManager().setInterfaceConstraint(
             marker, strength)
 
+
     def setConstraintWeights(self, cWeight):
-        """Set weighting factors for the invidual rows of the C matrix."""
+        """ Set weighting factors for the individual rows of the C matrix.
+        """
         self.cWeight = cWeight
 
+
     def reset(self):
-        """Reset function currently called at beginning of every inversion."""
+        """ Reset function currently called at beginning of every inversion.
+        """
         # FW: Note that this is called at the beginning of run. I therefore
         # removed the startingModel here to allow explicitly set starting
         # models by the user.
@@ -358,12 +445,18 @@ class InversionBase(object):
         self._dataVals = None
         self._errorVals = None
 
+
     def oneStep(self):
-        """Carry out one iteration step (e.g. good for coupling etc.)."""
+        """ Carry out one iteration step (e.g. good for coupling etc.).
+        """
         dModel = self.modelUpdate()
-        print("dM: ", dModel)
+        if self.verbose is True:
+            print("dM: ", dModel)
         tau, responseLS = lineSearch(self, dModel)
-        print("tau: ", tau)
+
+        if self.verbose is True:
+            print("tau: ", tau)
+
         pg.debug(f"tau={tau}")
         if tau >= 0.95:  # practically 1
             tau = 1
@@ -374,8 +467,9 @@ class InversionBase(object):
         else:  # compute new response
             self.response = self.fop.response(self.model)
 
+
     def run(self, dataVals, errorVals=None, **kwargs):
-        """Run inversion.
+        """ Run inversion.
 
         The inversion will always start from the starting model taken from
         the forward operator.
@@ -581,11 +675,11 @@ class InversionBase(object):
 
 
     def jacobianMatrix(self, error_weighted=False, numpy_matrix=False):
-        """Jacobian matrix of the inverse (data/model-transformed) problem.
+        """ Jacobian matrix of the inverse (data/model-transformed) problem.
 
-        Whereas the forward operator holds the jacobian matrix of the forward,
+        Whereas the forward operator holds the Jacobian matrix of the forward,
         i.e. the intrinsic (untransformed) problem, this function returns the
-        jacobian of the (transformed) inverse problem, i.e. taking model and
+        Jacobian of the (transformed) inverse problem, i.e. taking model and
         data transformations into account by using their inner derivatives.
 
         Parameters
@@ -609,19 +703,24 @@ class InversionBase(object):
             return pg.matrix.MultLeftRightMatrix(self.fop.jacobian(),
                                                 tData, tModel)
 
+
     def residual(self):
-        """Residual vector (data-reponse)/error using data transform."""
+        """ Residual vector (data-reponse)/error using data transform.
+        """
         return (self.dataTrans.fwd(self.dataVals) -
                 self.dataTrans.fwd(self.response)) / \
             self.dataTrans.error(self.response, self.errorVals)
 
     def dataGradientFormal(self):  # formal but restricted to existent J
-        """Data gradient from jacobian and residual, i.e. J^T * dData."""
+        """ Data gradient from Jacobian and residual, i.e. J^T * dData.
+        """
         return -self.jacobianMatrix(error_weighted=True).transMult(
             self.residual())
 
+
     def dataGradient(self, error_weighted=True):  # also works for fop.STy
-        """Data gradient from jacobian and residual, i.e. J^T * dData."""
+        """ Data gradient from jacobian and residual, i.e. J^T * dData.
+        """
         tData = self.dataTrans.deriv(self.response)
         if error_weighted:
             tData /= self.dataTrans.error(self.response, self.errorVals)
@@ -629,8 +728,10 @@ class InversionBase(object):
         return self.fop.STy(-self.residual()*tData) / \
             self.modelTrans.deriv(self.model)
 
+
     def modelGradient(self):
-        """Model gradient, i.e. C^T * C * (m - m0)."""
+        """ Model gradient, i.e. C^T * C * (m - m0).
+        """
         # self.inv.checkConstraints() # not necessary?
         if isinstance(self.cWeight, (float, int)):
             C = pg.matrix.ScaledMatrix(self.fop.constraints(), self.cWeight)
@@ -639,18 +740,30 @@ class InversionBase(object):
 
         return C.transMult(C.mult(self.modelTrans(self.model)))
 
+
     def gradient(self):
-        """Gradient of the objective function."""
+        """ Gradient of the objective function.
+        """
         return self.dataGradient() + self.modelGradient() * self.lam
 
 
 class GaussNewtonInversion(InversionBase):
-    """Gauss-Newton based inversion."""
+    """ Gauss-Newton based inversion.
+    """
     def __init__(self, fop=None, **kwargs):
+        """ Initialize Gauss-Newton inversion.
+
+        Arguments
+        ---------
+        fop : ForwardOperator
+            Forward operator to be used for the inversion.
+        """
         super().__init__(fop=fop, **kwargs)
 
+
     def modelUpdate(self):
-        """Compute (full) model update from inverse ."""
+        """ Compute (full) model update from inverse.
+        """
         pg.verbose("Running LSQR inversion step!")
         model = self.model
         if len(self.response) != len(self.dataVals):
@@ -662,11 +775,13 @@ class GaussNewtonInversion(InversionBase):
         tM = self.modelTrans
         nData = len(self.dataVals)
         self.A = pg.BlockMatrix()  # to be filled with scaled J and C matrices
-        # part 1: data part
+
+        ### part 1: data part
         self.JJ = self.jacobianMatrix(error_weighted=True)
         self.mat1 = self.A.addMatrix(self.JJ)
         self.A.addMatrixEntry(self.mat1, 0, 0)
-        # part 2: normal constraints
+
+        ### part 2: normal constraints
         # self.checkConstraints()
         self.C = self.fop.constraints()
         self.leftC = pg.Vector(self.C.rows(), 1.0)
@@ -675,7 +790,8 @@ class GaussNewtonInversion(InversionBase):
                                                 self.leftC, self.rightC)
         self.mat2 = self.A.addMatrix(self.CC)
         self.A.addMatrixEntry(self.mat2, nData, 0, sqrt(self.lam))
-        # % part 3: parameter constraints
+
+        ### part 3: parameter constraints
         if self.G is not None:
             self.rightG = 1.0 / tM.deriv(model)
             self.GG = pg.matrix.MultRightMatrix(self.G, self.rightG)
@@ -701,6 +817,7 @@ class GaussNewtonInversion(InversionBase):
 class DescentInversion(InversionBase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
 
     def modelUpdate(self):
         """The negative gradient of  objective function as search direction."""
@@ -1110,40 +1227,48 @@ class ClassicInversion(object):
 
     @property
     def lam(self):
-        """Return regularization strength."""
+        """ Return regularization strength.
+        """
         return self._lam
 
     @lam.setter
     def lam(self, lam):
-        """Set regularization strength."""
+        """ Set regularization strength.
+        """
         self._lam = lam
         self.inv.setLambda(lam)
 
     def setDeltaPhiStop(self, it):
-        """Define minimum relative decrease in objective function to stop."""
+        """ Define minimum relative decrease in objective function to stop.
+        """
         self.inv.setDeltaPhiAbortPercent(it)
 
     @pg.renamed(setDeltaPhiStop)
     def setDeltaChiStop(self, it):
-        """Set data fit change level (deprecated)."""
+        """ Set data fit change level (deprecated).
+        """
         self.setDeltaPhiStop(it)
 
     def echoStatus(self):
-        """Echo inversion status (model, response, rms, chi^2, phi)."""
+        """ Echo inversion status (model, response, rms, chi^2, phi).
+        """
         self.inv.echoStatus()
 
     def setPostStep(self, p):
-        """Set a function to be called after each iteration.
+        """ Set a function to be called after each iteration.
 
-        The function is called with p(IterationNumber, self)."""
+        The function is called with p(IterationNumber, self).
+        """
         self._postStep = p
 
     def setPreStep(self, p):
-        """Set a function to be called before each iteration."""
+        """ Set a function to be called before each iteration.
+        """
         self._preStep = p
 
     def setData(self, data):
-        """Set data."""
+        """ Set data.
+        """
         # QUESTION_ISNEEDED
         if isinstance(data, pg.DataContainer):
             raise Exception("should not be here .. its Managers job")
@@ -1152,11 +1277,13 @@ class ClassicInversion(object):
             self.dataVals = data
 
     def chi2(self, response=None):
-        """Chi-squared misfit (mean of squared error-weighted misfit)."""
+        """ Chi-squared misfit (mean of squared error-weighted misfit).
+        """
         return self.phiData(response) / len(self.dataVals)
 
     def phiData(self, response=None):
-        """Data objective function (sum of suqred error-weighted misfit)."""
+        """ Data objective function (sum of suqred error-weighted misfit).
+        """
         if response is None:
             response = self.response
 
@@ -1167,7 +1294,8 @@ class ClassicInversion(object):
         return pg.math.dot(dData, dData)
 
     def phiModel(self, model=None):
-        """Model objective function (norm of regularization term)."""
+        """ Model objective function (norm of regularization term).
+        """
         if model is None:
             model = self.model
 
@@ -1175,7 +1303,8 @@ class ClassicInversion(object):
         return pg.math.dot(rough, rough)
 
     def phi(self, model=None, response=None):
-        """Total objective function (phiD + lambda * phiM)."""
+        """ Total objective function (phiD + lambda * phiM).
+        """
         phiD = self.phiData(response)
         if self.inv.localRegularization():
             return phiD
@@ -1183,15 +1312,17 @@ class ClassicInversion(object):
             return phiD + self.phiModel(model) * self.inv.getLambda()
 
     def relrms(self):
-        """Relative root-mean-square misfit of the last run."""
+        """ Relative root-mean-square misfit of the last run.
+        """
         return self.inv.relrms()
 
     def absrms(self):
-        """Absolute root-mean-square misfit of the last run."""
+        """ Absolute root-mean-square misfit of the last run.
+        """
         return self.inv.absrms()
 
     def setRegularization(self, *args, **kwargs):
-        """Set regularization properties for the inverse problem.
+        """ Set regularization properties for the inverse problem.
 
         This can be for specific regions (args) or all regions (no args).
 
@@ -1235,7 +1366,7 @@ class ClassicInversion(object):
             self.fop.setRegionProperties(*args, **kwargs)
 
     def setInterRegionConstraint(self, region1, region2, strength):
-        """Set constraints between neighboring regions.
+        """ Set constraints between neighboring regions.
 
         Parameters
         ----------
@@ -1248,7 +1379,7 @@ class ClassicInversion(object):
             region1, region2, strength)
 
     def setInterfaceConstraint(self, marker, strength):
-        """Set regularization strength on specific interface.
+        """ Set regularization strength on specific interface.
 
         Parameters
         ----------
@@ -1261,11 +1392,12 @@ class ClassicInversion(object):
             marker, strength)
 
     def setConstraintWeights(self, cWeight):
-        """Set weighting factors for the invidual rows of the C matrix."""
+        """ Set weighting factors for the invidual rows of the C matrix.
+        """
         self.inv.setCWeight(cWeight)
 
     def run(self, dataVals, errorVals=None, **kwargs):
-        """Run inversion.
+        """ Run inversion.
 
         The inversion will always start from the starting model taken from
         the forward operator.
@@ -1511,7 +1643,7 @@ class ClassicInversion(object):
         return self.model
 
     def showProgress(self, style='all'):
-        r"""Show inversion progress after every iteration.
+        r""" Show inversion progress after every iteration.
 
         Can show models if `drawModel` method exists. The default fallback is
         plotting the :math:`\chi^2` fit as a function of iterations. Called if
@@ -1533,7 +1665,7 @@ class ClassicInversion(object):
             for other_ax in ax.figure.axes:
                 # pg._y(type(other_ax).mro())
                 if type(other_ax).mro()[0] == type(ax):
-                    # only clear Axes not Colorbars
+                    # only clear axes not the colorbars
                     other_ax.clear()
 
             self.fop.drawModel(ax, self.inv.model())
@@ -1576,11 +1708,11 @@ class ClassicInversion(object):
         pg.plt.pause(0.05)
 
     def jacobianMatrix(self, error_weighted=False, numpy_matrix=False):
-        """Jacobian matrix of the inverse (data/model-transformed) problem.
+        """ Jacobian matrix of the inverse (data/model-transformed) problem.
 
-        Whereas the forward operator holds the jacobian matrix of the forward,
+        Whereas the forward operator holds the Jacobian matrix of the forward,
         i.e. the intrinsic (untransformed) problem, this function returns the
-        jacobian of the (transformed) inverse problem, i.e. taking model and
+        Jacobian of the (transformed) inverse problem, i.e. taking model and
         data transformations into account by using their inner derivatives.
 
         Parameters
@@ -1609,23 +1741,27 @@ class ClassicInversion(object):
                                                 tData, tModel)
 
     def residual(self):
-        """Residual vector (data-reponse)/error using data transform."""
+        """ Residual vector (data-reponse)/error using data transform.
+        """
         return (self.dataTrans(self.dataVals) - self.dataTrans(self.response)) / \
             self.dataTrans.error(self.response, self.errorVals)
 
     def dataGradient(self):
-        """Data gradient from jacobian and residual, i.e. J^T * dData."""
+        """ Data gradient from jacobian and residual, i.e. J^T * dData.
+        """
         return -self.jacobianMatrix(error_weighted=True).transMult(self.residual())
 
     def modelGradient(self):
-        """Model gradient, i.e. C^T * C * (m - m0)."""
+        """ Model gradient, i.e. C^T * C * (m - m0).
+        """
         # self.inv.checkConstraints() # not necessary?
         C = pg.matrix.MultLeftMatrix(self.fop.constraints(),
                                      self.inv.cWeight())
         return C.transMult(C.mult(self.modelTrans(self.model)))
 
     def gradient(self):
-        """Gradient of the objective function."""
+        """ Gradient of the objective function.
+        """
         return self.dataGradient() + self.modelGradient() * self.lam
 
 # END OF REMOVAL upon pg 1.6
@@ -1636,7 +1772,8 @@ Inversion = ClassicInversion  # pg<1.6
 
 
 class MarquardtInversion(Inversion):
-    """Marquardt scheme, i.e. local damping with decreasing strength."""
+    """ Marquardt scheme, i.e. local damping with decreasing strength.
+    """
 
     def __init__(self, fop=None, **kwargs):
         super().__init__(fop, **kwargs)
