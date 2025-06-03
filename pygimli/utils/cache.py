@@ -255,7 +255,7 @@ class Cache(object):
                 else:
                     # default try numpy
                     pg.warn('Could not restore cache of type '
-                            f'{self.info['type']}.')
+                            f'{self.info["type"]}.')
 
                 pg.debug("Restoring cache took:", pg.dur(), "s")
             except BaseException as e:
