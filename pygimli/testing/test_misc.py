@@ -53,6 +53,7 @@ class TestMisc(unittest.TestCase):
 
         #fop._modelTrans = pg.trans.TransLog()
 
+
     def test_DataContainerFilter(self):
         """
         """
@@ -85,6 +86,7 @@ class TestMisc(unittest.TestCase):
         data.markInvalid(x < 1.0)
         self.assertEqual(data('valid'), [0.0, 1.0, 0.0, 1.0, 0.0])
 
+
     def test_DataContainerSensors(self):
         data = pg.DataContainer()
 
@@ -94,6 +96,7 @@ class TestMisc(unittest.TestCase):
 
         self.assertEqual(data.sensor(0), [4., 0.0, 0.0])
         self.assertEqual(data.sensor(4), [0., 0.0, 0.0])
+
 
     def test_DataContainerIndex(self):
         data = pg.DataContainer()
@@ -116,10 +119,12 @@ class TestMisc(unittest.TestCase):
         self.assertEqual(type(data['a']), type(np.array(1)))
         self.assertEqual(data['a'].dtype, 'int')
 
+
     def test_Operators(self):
         t = pg.Vector(10, 1.0)
         self.assertEqual(len(t == 1.0), len(t > 0))
         self.assertEqual(len(t == 1.0), len(t == 1))
+
 
     def test_Int64Problem(self):
         data = pg.DataContainerERT()
