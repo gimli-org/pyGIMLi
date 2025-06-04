@@ -13,6 +13,25 @@ def tauVector(taumin=0.01, taumax=1, logScale=False, n=21):
     else:
         return np.linspace(taumin, taumax, n)
 
+def lineSearchArmijo(inv, dM, tau=100, c=1e-4, tauFactor=0.8):
+    """Line search using Armijos rule, typical for Steepest Descent.
+
+    Start with a "largish" value alpha and decrease it by a factor until the
+    Armijo rul is fulfilled (c is a small constant between 0 and 1):
+
+    Phi(m+tau*m) <= Phi(m) + c alpha v^T dM
+    
+    where n is the negative normed gradient, i.e. -dM/norm(dM)
+    """
+    v = -dM / np.linalg.norm(dM)
+    Elim = inv.phi() + sum(v*dM) * c * tau
+    while Enew > Elim:
+        newModel = inv.modelTrans.update(inv.model, v*tau)
+        newResponse = inv.fop.response(newModel)
+        Enew = inv.phi(newModel, newResponse)
+        tau *= tauFactor
+
+    return tau/tauFactor, newResponse
 
 def lineSearchExact(inv, dM, taus=None, show=False, **kwargs):
     """Line search by exact forward response.
