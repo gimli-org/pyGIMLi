@@ -58,14 +58,15 @@ def generateDataFromUniqueIndex(ind, data=None, nI=None):
     scheme.resize(0)  # make sure all data are deleted
     scheme.resize(len(ind))
     nmba = np.zeros([len(ind), 4], dtype=int)
+    ind1 = ind.copy()
     for i in range(4):
-        col = ind % nI
-        ind -= col
-        ind = ind // nI
+        col = ind1 % nI
+        ind1 -= col
+        ind1 = ind1 // nI
         nmba[:, i] = col
 
     for i, tok in enumerate("nmba"):
-        scheme[tok] = nmba[:, i] - 1
+        scheme[tok] = pg.IVector(nmba[:, i]) - 1
 
     scheme["valid"] = 1
     return scheme
