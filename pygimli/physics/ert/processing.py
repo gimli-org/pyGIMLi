@@ -332,6 +332,10 @@ def combineMultipleData(DATA):
         apparent resistivity data matrix
     ERR : np.array (same size)
         relative error matrix
+    IP : np.array(same size)
+        induced polarization data matrix
+    IPERR : np.array(same size)
+        induced polarization error matrix
     """
     assert hasattr(DATA, '__iter__'), "DATA should be DataContainers or str!"
     if isinstance(DATA[0], str):  # read in if strings given
@@ -344,8 +348,9 @@ def combineMultipleData(DATA):
     scheme = generateDataFromUniqueIndex(uI, DATA[0])
     uI = uniqueERTIndex(scheme)   #, unify=False)
     R = np.ones([scheme.size(), len(DATA)]) * np.nan
-    R = np.ones([scheme.size(), len(DATA)]) * np.nan
+    IP = R.copy()
     ERR = np.zeros_like(R)
+    IPERR = R.copy()
     if not scheme.haveData('k'):  # just do that only once
         scheme['k'] = createGeometricFactors(scheme)  # check numerical
 
@@ -359,6 +364,8 @@ def combineMultipleData(DATA):
 
         R[ii, i] = di['r']
         ERR[ii, i] = di['err']
+        IP[ii, i] = di['ip']
+        IPERR[ii, i] = di['iperr']
 
     RHOA = np.abs(np.reshape(scheme['k'], [-1, 1]) * R)
-    return scheme, RHOA, ERR
+    return scheme, RHOA, ERR, IP, IPERR
