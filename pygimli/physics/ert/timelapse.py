@@ -15,6 +15,27 @@ from .processing import combineMultipleData
 # class TimelapseERT(Timelapse)
 
 
+def guessDateTime(fname, delimiter="_", fmt="%Y%m%d-%H%M%S"):
+    """Guess date and time from filename."""
+    parts = fname.split(delimiter)
+    dtstr = None
+    for part in parts:
+        if len(part) == 8 and part.startswith("20"):
+            dstr = part
+        elif len(part) == 6:
+            tstr = part
+        elif len(part) == 15:
+            dtstr = part.copy()
+
+    if dtstr is None:
+        if dstr is not None and tstr is not None:
+            dtstr = "-".join([dstr, tstr])
+        else:
+            return None
+    
+    mydate = datetime.strptime(dtstr, fmt)
+    return mydate
+
 class TimelapseERT():
     """Class for crosshole ERT data manipulation.
 
@@ -108,7 +129,11 @@ class TimelapseERT():
                 self.times = np.array(
                     [datetime.fromisoformat(s) for s in timestr])
         elif "*" in filename:
-            DATA = [ert.load(fname) for fname in glob(filename)]
+            fnames = glob(filename)
+            DATA = [ert.load(fname) for fname in fnames]
+            if guessDateTime(fnames[0]) is not None:
+                self.times = [guessDateTime(fname) for fname in fnames]
+            
             self.data, self.DATA, self.ERR = combineMultipleData(DATA)
 
         self.name = filename[:-4].replace("*", "All")
