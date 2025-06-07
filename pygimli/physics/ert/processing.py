@@ -314,7 +314,25 @@ def extractReciprocals(fwd, bwd):
     return rec, both
 
 def combineMultipleData(DATA):
-    """Combine multiple data containers into data/err matrices."""
+    """Combine multiple data containers into data/err matrices.
+
+    Generates a unified data container and a data matrices
+    Non-existing data are filled with NaN values.
+    
+    Parameters
+    ----------
+    DATA : list of DataContainerERT
+        data contea
+
+    Returns
+    -------
+    data : pg.DataContainerERT
+        ERT data container with quadrupols from all input data
+    RHOA : np.array of size data.size() x len(DATA)
+        apparent resistivity data matrix
+    ERR : np.array (same size)
+        relative error matrix
+    """
     assert hasattr(DATA, '__iter__'), "DATA should be DataContainers or str!"
     if isinstance(DATA[0], str):  # read in if strings given
         DATA = [pg.DataContainerERT(data) for data in DATA]
@@ -325,6 +343,7 @@ def combineMultipleData(DATA):
     uI = np.unique(np.hstack(uIs))
     scheme = generateDataFromUniqueIndex(uI, DATA[0])
     uI = uniqueERTIndex(scheme)   #, unify=False)
+    R = np.ones([scheme.size(), len(DATA)]) * np.nan
     R = np.ones([scheme.size(), len(DATA)]) * np.nan
     ERR = np.zeros_like(R)
     if not scheme.haveData('k'):  # just do that only once
