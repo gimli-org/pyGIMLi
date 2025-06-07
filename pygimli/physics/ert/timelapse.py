@@ -134,7 +134,8 @@ class TimelapseERT():
             if guessDateTime(fnames[0]) is not None:
                 self.times = [guessDateTime(fname) for fname in fnames]
             
-            self.data, self.DATA, self.ERR = combineMultipleData(DATA)
+            self.data, self.DATA, self.ERR, self.IP, self.IPERR = \
+                combineMultipleData(DATA)
 
         self.name = filename[:-4].replace("*", "All")
 
@@ -298,13 +299,15 @@ class TimelapseERT():
 
             return self.data.show(v, **kwargs)
 
-    def showTimeline(self, ax=None, **kwargs):
+    def showTimeline(self, what="rho", ax=None, **kwargs):
         """Show data timeline.
 
         Parameters
         ----------
         ax : mpl.Axes|None
             matplotlib axes to plot (otherwise new)
+        what : str ["rhoa"]
+            define what to plot 
         a, b, m, n : int
             tokens to extract data from
         """
@@ -322,14 +325,26 @@ class TimelapseERT():
             kwargs.pop(k)
 
         abmn = [self.data[tok] for tok in "abmn"]
+        DATA = self.DATA
+        ylabel = "resistivity (Ohmm)"
+        if what.lower() == "ip":
+            DATA = self.IP
+            ylabel = "IP"
+        elif what.lower() == "err":
+            DATA = self.ERR * 100
+            ylabel = "error (%)"
+        elif what.lower() == "iperr":
+            DATA = self.IPERR
+            ylabel = "IP error"
+
         for i in np.nonzero(good)[0]:
             lab1 = lab + " ".join([str(tt[i]) for tt in abmn])
-            ax.semilogy(self.times, self.DATA[i, :], "x-", label=lab1, **kwargs)
+            ax.semilogy(self.times, DATA[i, :], "x-", label=lab1, **kwargs)
 
         ax.grid(True)
         ax.legend()
         ax.set_xlabel("time")
-        ax.set_ylabel("resistivity (Ohmm)")
+        ax.set_ylabel(ylabel)
         return ax
 
     def fitReciprocalErrorModel(self, **kwargs):
