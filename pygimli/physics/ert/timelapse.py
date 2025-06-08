@@ -645,8 +645,9 @@ class TimelapseERT():
             for i, model in enumerate(self.models[1:]):
                 ax = fig.subplots()
                 pg.show(self.pd, model/basemodel, ax=ax, **kwargs)
-                ax.set_title(str(i)+": " + self.times[i+1].isoformat(" ", "minutes") + "/" +
-                             self.times[i].isoformat(" ", "minutes"))
+                cmpi = i if creep else 0
+                ax.set_title(str(i+1)+": " + self.times[i+1].isoformat(" ", "minutes") + "/" +
+                             self.times[cmpi].isoformat(" ", "minutes"))
                 fig.savefig(pdf, format='pdf')
                 fig.clf()
                 if creep:
