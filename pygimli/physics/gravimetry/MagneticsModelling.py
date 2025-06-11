@@ -10,6 +10,11 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
     def __init__(self, mesh=None, points=None, cmp=["TFA"], igrf=[50, 13]):
         """ Setup forward operator.
 
+        TODO
+        ----
+            * need better defaults for igrf, the current drops a missing file
+            error in pyIGRF.
+
         Parameters
         ----------
         mesh: pygimli:mesh
@@ -54,6 +59,7 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
 
         self.kernel = None
         self.J = pg.matrix.BlockMatrix()
+
         if self.mesh_ is not None:
             self.setMesh(self.mesh_)
 
