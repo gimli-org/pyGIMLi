@@ -11,23 +11,27 @@ class VESModelling(Block1DModelling):
 
     Attributes
     ----------
-    ab2 :
+    ab2 : array-like
         Half distance between the current electrodes A and B.
-    mn2 :
+    mn2 : array-like
         Half distance between the potential electrodes M and N.
         Only used for input (feeding am etc.) or plotting.
-    am :
+    am : array-like
         Part of data basis. Distances between A and M electrodes.
         A is first current, M is first potential electrode.
-    bm :
+    bm : array-like
         Part of data basis. Distances between B and M electrodes.
         B is second current, M is first potential electrode.
-    an :
+    an : array-like
         Part of data basis. Distances between A and N electrodes.
         A is first current, N is second potential electrode.
-    bn :
+    bn : array-like
         Part of data basis. Distances between B and N electrodes.
         B is second current, N is second potential electrode.
+    nLayers : int [4]
+        number of layers, i.e. the parameter number is nLayers*2-1
+    nPara : int []
+        number of parameters per layer
     """
 
     def __init__(self, ab2=None, mn2=None, **kwargs):
