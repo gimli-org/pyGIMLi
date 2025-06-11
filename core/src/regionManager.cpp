@@ -494,7 +494,7 @@ void Region::fillBoundarySize(RVector & vec, Index boundStart){
 void Region::setTransModel(Trans< RVector > & tM){
 
     if (isBackground_){
-        // log(Warning, "Region Nr:", marker_, " is background and should not get a model transformation."); 
+        // log(Warning, "Region Nr:", marker_, " is background and should not get a model transformation.");
         return;
     }
 
@@ -506,7 +506,7 @@ void Region::setTransModel(Trans< RVector > & tM){
 
 void Region::setModelTransStr_(const std::string & val){
     if (isBackground_){
-        // log(Warning, "Region Nr:", marker_, " is background and should not get a model transformation."); 
+        // log(Warning, "Region Nr:", marker_, " is background and should not get a model transformation.");
         return;
     }
     transString_ = val;
@@ -613,6 +613,7 @@ void RegionManager::clear(){
     if (mesh_) { delete mesh_; mesh_ = NULL; }
 }
 
+
 void RegionManager::setMesh(const Mesh & mesh, bool holdRegionInfos){
 
     if (!holdRegionInfos){
@@ -633,7 +634,7 @@ void RegionManager::setMesh(const Mesh & mesh, bool holdRegionInfos){
     mesh_->createNeighborInfos();
     if (verbose_) {
         std::cout << swatch.duration(true) << " s " << std::endl;
-        std::cout << "analysing mesh ... ";
+        std::cout << "analyzing mesh ... ";
     }
 
     //** looking for and create regions
@@ -644,7 +645,7 @@ void RegionManager::setMesh(const Mesh & mesh, bool holdRegionInfos){
     bool singleOnly = false;
     if (regions.size() > 50){
         singleOnly = true;
-        log(Info,"More than 50 regions, so we assume single regions only.");
+        log(Info, "More than 50 regions, so we assume single regions only.");
     }
 
     std::map < int, std::vector< Cell * > > markerCellVectorMap;
@@ -707,6 +708,7 @@ Region * RegionManager::createRegion_(SIndex marker, const Mesh & mesh, SIndex c
     Region * region = NULL;
 
     if (regionMap_.count(marker) == 0){
+        __MS(marker)
         region = new Region(marker, mesh, cellMarker, this);
         regionMap_.insert(std::make_pair(marker, region));
     } else {
@@ -946,7 +948,7 @@ void RegionManager::fillConstraints(RSparseMapMatrix & C){
         cID += x.second->constraintCount();
         // __MS(cID)
     }
-    
+
     // __MS(interRegionConstraints_.size())
     if (interRegionConstraints_.size() > 0){
         if (verbose_) std::cout << "Creating inter region constraints." << std::endl;
@@ -955,9 +957,9 @@ void RegionManager::fillConstraints(RSparseMapMatrix & C){
         for (auto & it : this->interRegionConstraints_){
 
             std::pair< SIndex, SIndex > ab = it.first;
-            
+
             double cWeight = it.second;
-            
+
             // if (verbose_) {
                 // std::cout << "\t" << i << ": "
                 //                     << ab.first << "< (" << cWeight << ") >"
