@@ -1,3 +1,9 @@
 name: Feature Request
 description: Please use this form to propose a new feature for pyGIMLi.
 labels: ["feature request"]
+body:
+- type: textarea
+  id: feature-request
+  attributes:
+    label: Feature Request
+    description: Please provide details on the feature request here.
