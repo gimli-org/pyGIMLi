@@ -1,0 +1,3 @@
+name: Question
+description: Please use this form if you expect that your issue is rather a question than a problem with the code.
+labels: ["question"]
