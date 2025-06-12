@@ -1,0 +1,107 @@
+name: Bug Report
+description: Please use this issue form to file a bug report.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this bug report! To facilitate efficient support, please fill out all the information applicable to your issue.
+  - type: markdown
+    attributes:
+      value: "### Problem description"
+  - type: textarea
+    id: problem-description
+    attributes:
+      label: Problem description
+      description: Please provide a general description of the issue here.
+  - type: markdown
+    attributes:
+      value: "### Your environment"
+  - type: textarea
+    id: environment-report
+    attributes:
+      label: Your environment
+      description: Please provide the output of `print(pygimli.Report())` here. If that does not work, please fill out the information on operating system, Python version and pyGIMLi version below.
+      render: shell
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: Which operating system are you using?
+      options:
+        - Windows
+        - Mac
+        - Linux
+  - type: dropdown
+    id: python-version
+    attributes:
+      label: Which Python version are you using?
+      options:
+        - 3.15
+        - 3.14
+        - 3.13
+        - 3.12
+        - 3.11
+        - 3.10
+        - 3.9
+  - type: input
+    id: way-of-installation
+    attributes:
+      label: Way of installation
+      description: Please describe your way of installing pyGIMLi, e.g. Conda package, manual compilation from source etc.
+  - type: dropdown
+    id: pygimli-version
+    attributes:
+      label: Which version of PyGIMLI are you using?
+      description: Output of `print(pygimli.__version__)`
+      options:
+        - 1.5.4
+        - 1.5.3
+        - 1.5.2
+        - 1.5.1
+        - 1.5.0
+  - type: textarea
+    id: environment-additional
+    attributes:
+      label: Additional information on the environment
+      description: If you have additional information on the environment or installation that did not fit the forms above, please enter it here.
+  - type: markdown
+    attributes:
+      value: "### Reproducing the issue"
+  - type: textarea
+    id: reproduce-steps
+    attributes:
+      label: Steps to reproduce the issue
+      description: If there are specific steps necessary to reproduce the issue, please describe them here.
+  - type: textarea
+    id: reproduce-code
+    attributes:
+      label: Code to reproduce the issue
+      description: Please provide the code that produces the error in the form of a minimal reproducible example. Alternatively, you can also attach the code as a file in the field below.
+      render: shell
+  - type: textarea
+    id: reproduce-data
+    attributes:
+      label: Additional data to reproduce the issue
+      description: Please provide additional data that is necessary to reproduce the error, e.g. data files, additional code or Python dependencies.
+  - type: markdown
+    attributes:
+      value: "### Expected behavior"
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Tell us what should happen or what you want to achieve.
+  - type: markdown
+    attributes:
+      value: "### Actual behavior"
+  - type: textarea
+    id: actual-text
+    attributes:
+      label: Actual behavior
+      description: Please tell us what happens instead of the expected behavior.
+  - type: textarea
+    id: actual-output
+    attributes:
+      label: Output of your script
+      description: If applicable, please provide the output of your script that shows the actual behavior.
+      render: shell
