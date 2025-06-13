@@ -24,7 +24,7 @@ from .mpl.colorbar import cmapFromName
 
 
 def show(obj=None, data=None, **kwargs):
-    """Mesh and model visualization.
+    """ Mesh and model visualization.
 
     Syntactic sugar to show a obj with data. Forwards to
     a known visualization for obj. Typical is
@@ -74,7 +74,8 @@ def show(obj=None, data=None, **kwargs):
         ax.figure.canvas.header_visible = False
 
     if "axes" in kwargs:  # remove me in 1.2 #20200515
-        pg.critical("Deprecation Warning: Please use keyword `ax` instead of `axes`")
+        pg.critical("Deprecation Warning: Please use "
+                    "keyword `ax` instead of `axes`")
         kwargs['ax'] = kwargs.pop('axes', None)
 
     ax = None
@@ -428,11 +429,11 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
             data = pg.solver.parseMapToCellArray(data, mesh)
 
         #pg._g(data)
-        if hasattr(data[0], '__len__'):
-            print(hasattr(data[0], '__len__'),
-              isinstance(data, np.ma.core.MaskedArray),
-              isinstance(data[0], str),
-              len(data), len(data[0]))
+        # if hasattr(data[0], '__len__'):
+        #     print(hasattr(data[0], '__len__'),
+        #       isinstance(data, np.ma.core.MaskedArray),
+        #       isinstance(data[0], str),
+        #       len(data), len(data[0]))
 
         if hasattr(data[0], '__len__') and not \
                 isinstance(data, np.ma.core.MaskedArray) and not \
