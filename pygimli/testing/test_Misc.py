@@ -151,7 +151,6 @@ class TestMisc(unittest.TestCase):
         self.assertEqual(sum(data['n']), 9*3)
 
 
-
     def test_PosConstMember(self):
         p1 = pg.Pos(1.0, 0.0, 0.0)
         p2 = pg.Pos(0.0, 1.0, 0.0)

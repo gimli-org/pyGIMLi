@@ -427,15 +427,23 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                 isinstance(data[0], list) and isinstance(data[0][0], int):
             data = pg.solver.parseMapToCellArray(data, mesh)
 
+        #pg._g(data)
+        if hasattr(data[0], '__len__'):
+            print(hasattr(data[0], '__len__'),
+              isinstance(data, np.ma.core.MaskedArray),
+              isinstance(data[0], str),
+              len(data), len(data[0]))
+
         if hasattr(data[0], '__len__') and not \
                 isinstance(data, np.ma.core.MaskedArray) and not \
                 isinstance(data[0], str) and not \
                 (len(data) == 1 or len(data[0] == 0)):
 
-            data = np.array(data)
+            #pg._y(data)
+            data = np.asarray(data)
 
             if len(data) == 2:  # [u,v] x N
-                data = np.array(data).T
+                data = np.asarray(data).T
 
             if len(data) == 1: # 1xM matrix
                 return showMesh(np.ravel(data), **kwargs)
@@ -459,11 +467,9 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
 
                 pg.warn("No valid stream data:", data.shape, data.ndim)
                 showMesh = True
-        # elif min(data) == max(data):  # or pg.core.haveInfNaN(data):
-        #     pg.warn("No valid data: ", min(data), max(data),
-        #             pg.core.haveInfNaN(data))
-        #     showMesh = True
+
         else:
+            data = np.asarray(data)
             if bool(colorBar) is not False:
                 colorBar = True
 
@@ -491,6 +497,7 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                                     **kwargs)
                 else:
                     pg.error("Data size invalid")
+                    print("Data: ", data.shape)
                     print("Data: ", len(data), min(data), max(data),
                           pg.core.haveInfNaN(data))
                     print("Mesh: ", mesh)

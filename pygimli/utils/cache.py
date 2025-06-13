@@ -44,10 +44,17 @@ def strHash(string):
 
 def valHash(a):
     """Create a hash value for the given value."""
-    if isinstance(a, str):
+    if isinstance(a, (list, tuple)):
+        hsh = 0
+        for i, item in enumerate(a):
+            hsh = hsh ^ valHash(str(i)+str(item))
+        return hsh
+    elif isinstance(a, str):
         return strHash(a)
     elif isinstance(a, int):
         return a
+    elif pg.isScalar(a):
+        return valHash(str(a))
     elif isinstance(a, dict):
         hsh = 0
         for k, v in a.items():
@@ -55,11 +62,6 @@ def valHash(a):
             # pg._y(v, valHash(v))
             hsh = hsh ^ valHash(k) ^ valHash(v)
 
-        return hsh
-    elif isinstance(a, list):
-        hsh = 0
-        for i, item in enumerate(a):
-            hsh = hsh ^ valHash(str(i)+str(item))
         return hsh
     elif isinstance(a, pg.core.stdVectorNodes):
         ### cheap hash .. we assume the nodes are part of a mesh which is hashed anyways
@@ -75,7 +77,8 @@ def valHash(a):
             print(a)
             pg.error('no hash for numpy array')
     elif hasattr(a, '__hash__') and not callable(a):
-        # pg._r('has hash: ', a, hash(a))
+        # pg._r('has hash: ', a, type(a))
+        # pg._r(hash(a))
         return hash(a)
     elif isinstance(a, pg.DataContainer):
         return hash(a)
@@ -300,23 +303,7 @@ class CacheManager(object):
         codeHash = strHash(inspect.getsource(funct))
 
         #pg._b('fun:', funcHash, 'ver:', versionHash, 'code:', codeHash)
-        #argHash = valHash(args) ^ valHash(kwargs) # wannehave
-        argHash = 0
-        for i, a in enumerate(args):
-            if pg.isScalar(a):
-                argHash = argHash ^ valHash(str(i) + str(a))
-            else:
-                argHash = argHash ^ (valHash(i) ^ valHash(a))
-            #pg._b(f'\targ:{i}: {a}', argHash)
-
-        argHash = argHash ^ valHash(kwargs)
-        for k, v in kwargs.items():
-            if pg.isScalar(v):
-                argHash = argHash ^ (valHash(k + str(v)))
-            else:
-                #pg._b(f'\tkwarg:{k}: {v}', valHash(k), valHash(v), argHash)
-                argHash = argHash ^ valHash(k) ^ valHash(v)
-
+        argHash = valHash(args) ^ valHash(kwargs) # wannehave
         #pg._b('argHash:', argHash)
         pg.debug("Hashing took:", pg.dur(), "s")
         return funcHash ^ versionHash ^ codeHash ^ argHash

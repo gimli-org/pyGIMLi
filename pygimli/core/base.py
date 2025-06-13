@@ -49,7 +49,7 @@ def isScalar(v, val=None):
     if val is None:
         return isinstance(v, (int, float, complex, np.integer, np.complex128))
     # maybe add some tolerance check
-    return isinstance(v, (int, float, complex, np.integer, np.complex128)) and v == val
+    return isScalar(v) and v == val
 
 
 def isIterable(v, N=None):
