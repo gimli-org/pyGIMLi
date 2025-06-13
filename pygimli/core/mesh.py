@@ -13,8 +13,16 @@ from .base import isR3Array
 
 from ..meshtools import mergePLC, exportPLC, interpolateAlongCurve, interpolate
 
-# for compatibility
+
+### for compatibility
 Mesh.createNeighbourInfos = Mesh.createNeighborInfos
+
+Mesh.xmin = Mesh.xMin
+Mesh.ymin = Mesh.yMin
+Mesh.zmin = Mesh.zMin
+Mesh.xmax = Mesh.xMax
+Mesh.ymax = Mesh.yMax
+Mesh.zmax = Mesh.zMax
 
 
 def __Mesh__show__(self, *args, **kwargs):
@@ -910,7 +918,7 @@ def __Mesh__populate__(self, prop:str, value):
             self[prop] =  parseMapToCellArray(value, self)
         elif len(value) == self.cellCount():
             self[prop] = value
-        elif len(value) > max(self.cellMarkers()):  # cell marker indexing 
+        elif len(value) > max(self.cellMarkers()):  # cell marker indexing
             self[prop] = np.array(value)[self.cellMarkers()]
         else:
             raise Exception("Length mismatch!")
@@ -940,7 +948,7 @@ def __Mesh__submesh__(self, relation="=", **kwargs):
             prop = self[key]
         else:
             raise IndexError("Property not in mesh: ", key)
-        
+
         if relation == ">":
             isk = prop > val
         elif relation == "<":

@@ -214,7 +214,7 @@ class Test3DMerge(unittest.TestCase):
         n = [-D/6, D/2, -H/2]
         m.createNode(n)
         self.assertEqual(m.boundary(0).nodeCount(), 5)
-        
+
     def test_cubeBasics(self):
         plc = mt.createCube()
         for i, b in enumerate(plc.boundaries()):
@@ -238,32 +238,32 @@ class Test3DMerge(unittest.TestCase):
     def test_cube_cube_equalface(self):
         w = mt.createCube(marker=1)
         c = mt.createCube(marker=2)
-        c.translate([c.xmax()-w.xmin(), 0.0])
+        c.translate([c.xMax()-w.xMin(), 0.0])
 
         w = mt.mergePLC3D([w, c])
         self.assertEqual(w.nodeCount(), 8+4)
         self.assertEqual(w.boundaryCount(), 6+5)
 
         c = mt.createCube(marker=3)
-        c.translate([0.0, w.ymax()-c.ymin(), 0.0])
+        c.translate([0.0, w.yMax()-c.yMin(), 0.0])
         w = mt.mergePLC3D([w, c])
         self.assertEqual(w.nodeCount(), 8+4+4)
         self.assertEqual(w.boundaryCount(), 6+5+5)
 
         c = mt.createCube(marker=4)
-        c.translate([0.0, 0.0, c.zmax()-w.zmin()])
+        c.translate([0.0, 0.0, c.zMax()-w.zMin()])
         w = mt.mergePLC3D([c, w])
         self.assertEqual(w.nodeCount(), 8+4+4+4)
         self.assertEqual(w.boundaryCount(), 6+5+5+5)
 
         c = mt.createCube(marker=5)
-        c.translate([0.0, w.ymax()-c.ymin(), c.zmax()-w.zmin()])
+        c.translate([0.0, w.yMax()-c.yMin(), c.zMax()-w.zMin()])
         w = mt.mergePLC3D([c, w])
         self.assertEqual(w.nodeCount(), 8+4+4+4+6)
         self.assertEqual(w.boundaryCount(), 6+5+5+5+6)
 
         c = mt.createCube(marker=6)
-        c.translate([0.0, c.ymax()-w.ymin(), c.zmax()-w.zmin()])
+        c.translate([0.0, c.yMax()-w.yMin(), c.zMax()-w.zMin()])
         w = mt.mergePLC3D([w, c])
         self.assertEqual(w.nodeCount(), 8+4+4+4+6+0)
         self.assertEqual(w.boundaryCount(), 6+5+5+5+6+3)

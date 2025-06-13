@@ -293,9 +293,9 @@ class Cache(object):
                 if self.value is not None:
                     self.info['restored'] = self.info['restored'] + 1
                     self.updateCacheInfo()
-                    pg.info(f'Cache {self.info['codeinfo']} restored '
-                            f'({round(self.info['dur'], 1)}s x '
-                            f'{self.info['restored']}): {self._name}')
+                    pg.info(f'Cache {self.info["codeinfo"]} restored '
+                            f'({round(self.info["dur"], 1)}s x '
+                            f'{self.info["restored"]}): {self._name}')
                 else:
                     # default try numpy
                     pg.warn('Could not restore cache of type '

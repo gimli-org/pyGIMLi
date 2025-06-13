@@ -62,11 +62,11 @@ class TestMeshGenerator(unittest.TestCase):
 
     def test_createGrid(self):
         mesh = pg.createGrid(3)
-        self.assertEqual(mesh.xmax(), 2.0)
+        self.assertEqual(mesh.xMax(), 2.0)
         mesh = pg.createGrid(3, 3)
-        self.assertEqual(mesh.ymax(), 2.0)
+        self.assertEqual(mesh.yMax(), 2.0)
         mesh = pg.createGrid(3, 3, 3)
-        self.assertEqual(mesh.zmax(), 2.0)
+        self.assertEqual(mesh.zMax(), 2.0)
         # mesh = pg.meshtools.createMesh1D(10, 1)
         # print(mesh)
         # self.assertEqual(mesh.cellCount(), 10.0)
@@ -82,7 +82,7 @@ class TestMeshGenerator(unittest.TestCase):
 
         mesh = pg.meshtools.createMesh1D(10, 1)
         self.assertEqual(mesh.cellCount(), 10.0)
-        self.assertEqual(mesh.xmax(), 10.0)
+        self.assertEqual(mesh.xMax(), 10.0)
 
         mesh = pg.meshtools.createMesh1D(nCells=10)
         self.assertEqual(mesh.cellCount(), 10.0)
