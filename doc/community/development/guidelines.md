@@ -250,46 +250,55 @@ We use: (exceptions in .landscape.yml and .pylintrc)
 - pylint
 - pyflakes
 
+We encurage to add 2 BLANKLINE between classes and methods and never use 2 BLANKLINES in the code itself.
+
+
 ### Behaviour by name for global functions:
 
 ```python
 createFOO(...)
-    """Always needs to return an instance of FOO.""
+    """ Always needs to return an instance of FOO.
+    ""
 ```
 
 ```python
 showFOO(Bar, ...)
-    """Always open a window or optionally use a given Axes to show Bar as Foo."""
+    """ Always open a window or optionally use a given Axes to show Bar as Foo."""
     return ax, cbar
 ```
 
 ```python
 drawFOO(ax, Bar...)
-    """Always needs an Axes ax to draw Bar as Foo""
+    """ Always needs an Axes ax to draw Bar as Foo.
+    """
     return graphics_object
 ```
 
 ```python
 readFOO(fileName, *args):
-    """Read object from disc."""
+    """ Read object from disc.
+    """
     return obj
 ```
 
 ```python
 importFOO(fileName, obj, *args):
-    """Import object from disc into an existing object."""
+    """ Import object from disc into an existing object.
+    """
     return obj
 ```
 
 ```python
 exportFOO(obj, fileName):
-    """Export object to disc in foreign (FOOs) format."""
+    """ Export object to disc in foreign (FOOs) format.
+    """
     return true
 ```
 
 ```python
 convertFOO(fooObj):
-    """Convert Foo obj into gimli Obj"""
+    """ Convert Foo obj into gimli Obj.
+    """
     return gimliObj
 ```
 
@@ -299,22 +308,25 @@ Use the following documentation syntax or see:
 <https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html>
 
 ```python
-def foo(arg1, arg2):
-"""Short description, i.e., one line to explain what foo does. [DOT_AT_END]
+def foo(arg1:type, arg2:type=Default, *args, **kwargs) -> ReturnType:
+""" Short description, i.e., one line to explain what foo does. [DOT_AT_END]
   [ONE BLANKLINE]
   Explain a little more verbose was foo does. Use references :cite:`Archie1942`
   Use links to pygimli api :gimliapi:`GIMLI::Mesh`, `:py:mod:pygimli.manager`
   for modules, `:py:func:pygimli.solver.solveFiniteElements` for functions
 
+  Type hints can be used for arguments and return values.
+
   Use math.
+
   .. math :
       a + \sigma \cdot \rho
 
   Explain all parameters.
 
-  Args
-  ----
-  arg1: type | use links to :gimliapi:`GIMLI::Mesh`
+  Arguments
+  ---------
+  arg1: type=Default | use links to :gimliapi:`GIMLI::Mesh`
       Describe arg1.
   arg2: type
       Describe arg2.
@@ -331,21 +343,26 @@ def foo(arg1, arg2):
   Returns
   -------
   type:
+      Describe the return value. If it is a class instance, use links to
+      :gimliapi:`GIMLI::Mesh` or `:py:class:pygimli.core.Mesh`.
 
   Examples
   --------
   >>> import foo
-  >>>
-  >>>
+  >>> ...
+  >>> ...
+  expected output  # for doctest to pass
+
 
   See Also
   --------
-      average : Weighted average,
+      average: Weighted average,
       e.g., Link to tutorials :ref:`tut:Modelling_BC` assuming there
       has been set an appropriate label in the tutorial.
 
   References
   ----------
-  if not in global bib file
+  If not in global bib file.
   """
 ```
+

@@ -15,6 +15,27 @@ from .processing import combineMultipleData
 # class TimelapseERT(Timelapse)
 
 
+def guessDateTime(fname, delimiter="_", fmt="%Y%m%d-%H%M%S"):
+    """Guess date and time from filename."""
+    parts = fname.split(delimiter)
+    dtstr = None
+    for part in parts:
+        if len(part) == 8 and part.startswith("20"):
+            dstr = part
+        elif len(part) == 6:
+            tstr = part
+        elif len(part) == 15:
+            dtstr = part.copy()
+
+    if dtstr is None:
+        if dstr is not None and tstr is not None:
+            dtstr = "-".join([dstr, tstr])
+        else:
+            return None
+    
+    mydate = datetime.strptime(dtstr, fmt)
+    return mydate
+
 class TimelapseERT():
     """Class for crosshole ERT data manipulation.
 
@@ -108,8 +129,13 @@ class TimelapseERT():
                 self.times = np.array(
                     [datetime.fromisoformat(s) for s in timestr])
         elif "*" in filename:
-            DATA = [ert.load(fname) for fname in glob(filename)]
-            self.data, self.DATA, self.ERR = combineMultipleData(DATA)
+            fnames = glob(filename)
+            DATA = [ert.load(fname) for fname in fnames]
+            if guessDateTime(fnames[0]) is not None:
+                self.times = [guessDateTime(fname) for fname in fnames]
+            
+            self.data, self.DATA, self.ERR, self.IP, self.IPERR = \
+                combineMultipleData(DATA)
 
         self.name = filename[:-4].replace("*", "All")
 
@@ -273,13 +299,15 @@ class TimelapseERT():
 
             return self.data.show(v, **kwargs)
 
-    def showTimeline(self, ax=None, **kwargs):
+    def showTimeline(self, what="rho", ax=None, **kwargs):
         """Show data timeline.
 
         Parameters
         ----------
         ax : mpl.Axes|None
             matplotlib axes to plot (otherwise new)
+        what : str ["rhoa"]
+            define what to plot 
         a, b, m, n : int
             tokens to extract data from
         """
@@ -297,14 +325,26 @@ class TimelapseERT():
             kwargs.pop(k)
 
         abmn = [self.data[tok] for tok in "abmn"]
+        DATA = self.DATA
+        ylabel = "resistivity (Ohmm)"
+        if what.lower() == "ip":
+            DATA = self.IP
+            ylabel = "IP"
+        elif what.lower() == "err":
+            DATA = self.ERR * 100
+            ylabel = "error (%)"
+        elif what.lower() == "iperr":
+            DATA = self.IPERR
+            ylabel = "IP error"
+
         for i in np.nonzero(good)[0]:
             lab1 = lab + " ".join([str(tt[i]) for tt in abmn])
-            ax.semilogy(self.times, self.DATA[i, :], "x-", label=lab1, **kwargs)
+            ax.semilogy(self.times, DATA[i, :], "x-", label=lab1, **kwargs)
 
         ax.grid(True)
         ax.legend()
         ax.set_xlabel("time")
-        ax.set_ylabel("resistivity (Ohmm)")
+        ax.set_ylabel(ylabel)
         return ax
 
     def fitReciprocalErrorModel(self, **kwargs):
@@ -605,8 +645,9 @@ class TimelapseERT():
             for i, model in enumerate(self.models[1:]):
                 ax = fig.subplots()
                 pg.show(self.pd, model/basemodel, ax=ax, **kwargs)
-                ax.set_title(str(i)+": " + self.times[i+1].isoformat(" ", "minutes") + "/" +
-                             self.times[i].isoformat(" ", "minutes"))
+                cmpi = i if creep else 0
+                ax.set_title(str(i+1)+": " + self.times[i+1].isoformat(" ", "minutes") + "/" +
+                             self.times[cmpi].isoformat(" ", "minutes"))
                 fig.savefig(pdf, format='pdf')
                 fig.clf()
                 if creep:

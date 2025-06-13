@@ -111,32 +111,40 @@ class ERTModelling(ERTModellingBase):
 
         self._conjImag = False  # the imaginary parts are flipped for log trans
 
+
     def setVerbose(self, v):
-        """Set verbosity."""
+        """ Set verbosity.
+        """
         super().setVerbose(v)
         self._core.setVerbose(v)
 
+
     def setDefaultBackground(self):
-        """Set the default background behaviour."""
+        """ Set the default background behavior.
+        """
         # if self.complex(): # deactivated, do it by hand
         #     self.regionManager().addRegion(3, self._baseMesh, 2)
+        super().setDefaultBackground()
+        # regionIds = self.regionManager().regionIdxs()
+        # pg.info("Found {} regions.".format(len(regionIds)))
 
-        regionIds = self.regionManager().regionIdxs()
-        pg.info("Found {} regions.".format(len(regionIds)))
+        # if len(regionIds) > 1:
+        #     bk = pg.sort(regionIds)[0]
+        #     pg.info(f"(ERTModelling) Region with smallest marker ({bk}) "
+        #             "set to background.")
+        #     self.setRegionProperties(bk, background=True)
 
-        if len(regionIds) > 1:
-            bk = pg.sort(regionIds)[0]
-            pg.info(f"(ERTModelling) Region with smallest marker ({bk}) "
-                    "set to background.")
-            self.setRegionProperties(bk, background=True)
 
     @property
     def parameterCount(self):
-        """Return number of parameters."""
+        """ Return number of parameters.
+        """
         return self.regionManager().parameterCount() * (1 + self.complex())
 
+
     def createConstraints(self, C=None):
-        """Create constraint matrix (special type for this)."""
+        """ Create constraint matrix (special type for this).
+        """
         super().createConstraints()  # standard C
         if self.complex():
             if C is not None:
@@ -150,8 +158,10 @@ class ERTModelling(ERTModellingBase):
             self.C = pg.matrix.RepeatDMatrix(self.C1, 2)
             self.setConstraints(self.C)
 
+
     def createStartModel(self, dataVals):
-        """Create Starting model for ERT inversion."""
+        """ Create Starting model for ERT inversion.
+        """
         if self.complex():
             dataC = pg.utils.toComplex(dataVals)
             nModel = self.parameterCount // 2

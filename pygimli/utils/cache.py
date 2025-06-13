@@ -5,20 +5,22 @@
 Input supports python base types and all pg.core objects with .hash() method.
 Output supports DataContainerERT, ...
 
-TODO:
-
-  *   Output types:
-        numpy.ndarray, pg.Mesh. pg.Vector, pg.Matrix
-
 To use just add the decorator.
 
+```
 @pg.cache
 def myLongRunningStuff(*args, **kwargs):
     #...
     return results
+```
+
+To use the cache without the decorator, you can call it also like this:
+`pg.cache(myLongRunningStuff)(*args, **kwargs)`
+
 """
 import sys
 import os
+import traceback
 import inspect
 import hashlib
 import json
@@ -30,19 +32,46 @@ import pygimli as pg
 
 __NO_CACHE__ = False
 
-def noCache(c):
-    """Set the cache to noCache mode."""
+def noCache(c:bool=True):
+    """ Set the caching to noCache mode.
+
+    This will disable the caching mechanism and all decorated functions
+    """
     global __NO_CACHE__
     __NO_CACHE__ = c
 
 
-def strHash(string):
-    """Create a hash value for the given string."""
-    return int(hashlib.sha224(string.encode()).hexdigest()[:16], 16)
+def strHash(s: str) -> int:
+    """ Create a hash value for the given string.
+
+    Uses sha224 to create a 16 byte hash value.
+
+    Arguments
+    ---------
+    s: str
+        The string to hash.
+
+    Returns
+    -------
+    hash: int
+        The hash value of the string.
+    """
+    return int(hashlib.sha224(s.encode()).hexdigest()[:16], 16)
 
 
-def valHash(a):
-    """Create a hash value for the given value."""
+def valHash(a:any)-> int:
+    """ Create a hash value for the given value.
+
+    Arguments
+    ---------
+    a: any
+        The value to hash. Can be a string, int, list, numpy array or any
+        other object. Logs an error if the type is not supported.
+    Returns
+    -------
+    hash: int
+        The hash value of the value.
+    """
     if isinstance(a, str):
         return strHash(a)
     elif isinstance(a, int):
@@ -56,7 +85,7 @@ def valHash(a):
         if a.ndim == 1:
             return hash(pg.Vector(a))
         elif a.ndim == 2:
-            # convert to RVector to use memcopy
+            # convert to RVector to use mem copy
             return hash(pg.Vector(a.reshape((1,a.shape[0]*a.shape[1]))[0]))
         else:
             print(a)
@@ -66,20 +95,32 @@ def valHash(a):
 
 
 class Cache(object):
-    """Cache class to store and restore data.
+    """ Cache class to store and restore data.
 
     This class is used to store and restore data in a cache.
-    It is used to store and restore data in a cache.
     """
-    def __init__(self, hashValue):
+    def __init__(self, hashValue:int):
+        """ Initialize the cache with a hash value.
+
+        Arguments
+        ---------
+        hashValue: int
+            The hash value of the function and its arguments.
+        """
         self._value = None
         self._hash = hashValue
         self._name = CacheManager().cachingPath(str(self._hash))
         self._info = None
         self.restore()
 
+
     @property
     def info(self):
+        """ Return the cache info dictionary.
+
+        This dictionary contains information about the cache like type, file,
+        date, duration, restored count, code info, version, args and kwargs.
+        """
         if self._info is None:
             self._info = {'type': '',
                           'file': '',
@@ -93,16 +134,37 @@ class Cache(object):
                           }
         return self._info
 
+
     @info.setter
     def info(self, i):
+        """ Set the cache info dictionary.
+
+        Arguments
+        ---------
+        i: dict
+            The cache info dictionary to set.
+        """
         self._info = i
+
 
     @property
     def value(self):
+        """ Return the cached value.
+        """
         return self._value
+
 
     @value.setter
     def value(self, v):
+        """ Set the cached value and store it in the cache.
+
+        Arguments
+        ---------
+        v: any
+            The value to cache. Can be a DataContainerERT, Mesh, RVector,
+            ndarray or any other object with either a save method or can be
+            pickled.
+        """
         self.info['type'] = str(type(v).__name__)
 
         # if len(self.info['type']) != 1:
@@ -126,19 +188,24 @@ class Cache(object):
             v.save(self._name)
         else:
             np.save(self._name, v, allow_pickle=True)
-            # pg.warn('ascii save of type', self.info['type'], 'might by dangerous')
+            # pg.warn('ascii save of type', self.info['type'],
+            # 'might by dangerous')
             # v.save(self._name)
 
         self._value = v
         pg.info('Cache stored:', self._name)
 
+
     def updateCacheInfo(self):
+        """ Update the cache info dictionary and save it to a json file.
+        """
         with open(self._name + '.json', 'w') as of:
             json.dump(self.info, of, sort_keys=False,
                       indent=4, separators=(',', ': '))
 
     def restore(self):
-        """Read data from json infos"""
+        """ Restore cache from json infos.
+        """
         if os.path.exists(self._name + '.json'):
 
             # Fricking mpl kills locale setting to system default .. this went
@@ -187,36 +254,66 @@ class Cache(object):
                                self._name, self.info['codeinfo']))
                 else:
                     # default try numpy
-                    pg.warn('Could not restore cache of type {0}.'.format(self.info['type']))
+                    pg.warn('Could not restore cache of type '
+                            f'{self.info["type"]}.')
 
                 pg.debug("Restoring cache took:", pg.dur(), "s")
-            except Exception as e:
-                import traceback
+            except BaseException as e:
                 traceback.print_exc(file=sys.stdout)
                 print(self.info)
-                pg.error('Cache restoring failed.')
+                pg.error('Cache restoring failed:', e)
 
-#@pg.singleton
+
 class CacheManager(object):
+    """ Cache manager to handle caching of functions and data.
+
+    This class is a singleton and should be accessed via the instance method.
+    It provides methods to create unique cache paths, hash functions and
+    cache function calls.
+
+    TODO
+    ----
+        * Unify singleton handling
+    """
     __instance = None
     __has_init = False
 
     def __new__(cls):
+        """ Create a new instance of the CacheManager.
+        """
         if cls.__instance is None:
             cls.__instance = object.__new__(cls)
         return cls.__instance
 
+
     def __init__(self):
+        """ Initialize the CacheManager just once.
+        """
         if not self.__has_init:
             self._caches = {}
             self.__has_init = True
 
+
     @staticmethod
     def instance(cls):
+        """ Get the singleton instance of the CacheManager.
+        """
         return cls.__instance__
 
-    def cachingPath(self, fName):
-        """Create a path name for the cache"""
+
+    def cachingPath(self, fName:str):
+        """ Create a full path name for the cache.
+
+        Arguments
+        ---------
+        fName: str
+            The name of the file to cache.
+
+        Returns
+        -------
+        path: str
+            The full path to the cache file.
+        """
         if pg.rc["globalCache"]:
             path = pg.getCachePath()
         else:
@@ -225,17 +322,46 @@ class CacheManager(object):
             os.mkdir(path)
         return os.path.join(path, fName)
 
-    def functInfo(self, funct):
-        """Return unique info string about the called function."""
-        return funct.__code__.co_filename + ":" + funct.__qualname__
 
-    def hash(self, funct, *args, **kwargs):
-        """"Create a hash value"""
+    def funcInfo(self, func):
+        """ Return unique info string about the called function.
+
+        Arguments
+        ---------
+        func: function
+            The function to get the info from.
+
+        Returns
+        -------
+        info: str
+            A string containing the file name and the qualified name of the
+            function.
+        """
+        return func.__code__.co_filename + ":" + func.__qualname__
+
+
+    def hash(self, func, *args, **kwargs):
+        """ Create a hash value.
+
+        Arguments
+        ---------
+        func: function
+            The function to hash.
+        *args: any
+            The positional arguments of the function.
+        **kwargs: any
+            The keyword arguments of the function.
+
+        Returns
+        -------
+        hash: int
+            A unique hash value for the function and its arguments.
+        """
         pg.tic()
-        functInfo = self.functInfo(funct)
-        funcHash = strHash(functInfo)
+        funcInfo = self.funcInfo(func)
+        funcHash = strHash(funcInfo)
         versionHash = strHash(pg.versionStr())
-        codeHash = strHash(inspect.getsource(funct))
+        codeHash = strHash(inspect.getsource(func))
 
         argHash = 0
         for i, a in enumerate(args):
@@ -253,21 +379,57 @@ class CacheManager(object):
         pg.debug("Hashing took:", pg.dur(), "s")
         return funcHash ^ versionHash ^ codeHash ^ argHash
 
-    def cache(self, funct, *args, **kwargs):
-        """ Create a unique cache """
-        hashVal = self.hash(funct, *args, **kwargs)
 
-        cached = Cache(hashVal)
-        cached.info['codeinfo'] = self.functInfo(funct)
-        cached.info['version'] = pg.versionStr()
-        cached.info['args'] = str(args)
-        cached.info['kwargs'] = str(kwargs)
+    def cache(self, func, *args, **kwargs):
+        """ Create a unique cache.
 
-        return cached
+        Arguments
+        ---------
+        func: function
+            The function to cache.
+        *args: any
+            The positional arguments of the function.
+        **kwargs: any
+            The keyword arguments of the function.
+
+        Returns
+        -------
+        c: Cache
+            A Cache object containing the cached value, info and hash value.
+        """
+        hashVal = self.hash(func, *args, **kwargs)
+
+        c = Cache(hashVal)
+        c.info['codeinfo'] = self.funcInfo(func)
+        c.info['version'] = pg.versionStr()
+        c.info['args'] = str(args)
+        c.info['kwargs'] = str(kwargs)
+
+        return c
 
 
-def cache(funct):
-    """Cache decorator."""
+def cache(func):
+    """ Cache decorator.
+
+    This decorator caches the return value of the function and stores it in a
+    Cache object. If the function is called again with the same arguments,
+    the cached value is returned instead of calling the function again.
+    If the cache is not found, the function is called and the result is stored
+    in the cache.
+
+    This can be used without using the decorator by calling:
+    `pg.cache(func)(*args, **kwargs)`
+
+    Arguments
+    ---------
+    func: function
+        The function to cache.
+
+    Returns
+    -------
+    wrapper: function
+        A wrapper function that caches the return value of the function.
+    """
     def wrapper(*args, **kwargs):
 
         nc = kwargs.pop('skipCache', False)
@@ -275,21 +437,24 @@ def cache(funct):
         if any(('--noCache' in sys.argv,
                 '-N' in sys.argv, nc is True, __NO_CACHE__)):
 
-            return funct(*args, **kwargs)
+            return func(*args, **kwargs)
 
-        cache = CacheManager().cache(funct, *args, **kwargs)
-        if cache.value is not None:
-            return cache.value
-        else:
-            # pg.tic will not work because there is only one global __swatch__
-            sw = pg.Stopwatch(True)
-            rv = funct(*args, **kwargs)
-            cache.info['date'] = time.time()
-            cache.info['dur'] = sw.duration()
-            try:
-                cache.value = rv
-            except Exception as e:
-                print(e)
-                pg.warn("Can't cache:", rv)
-            return rv
+        c = CacheManager().cache(func, *args, **kwargs)
+        if c.value is not None:
+            return c.value
+
+        # pg.tic will not work because there is only one global __swatch__
+        sw = pg.Stopwatch(True)
+        rv = func(*args, **kwargs)
+        c.info['date'] = time.time()
+        c.info['dur'] = sw.duration()
+        try:
+            c.value = rv
+        except Exception as e:
+            print(e)
+            pg.warn("Can't cache:", rv)
+        return rv
+
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
     return wrapper

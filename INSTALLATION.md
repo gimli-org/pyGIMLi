@@ -59,6 +59,47 @@ conda activate pg
 
 After that you can use pyGIMLi with your text editor of choice and a terminal.
 
+
+## Using pip
+
+*Currently only available for linux and windows.*
+
+pyGIMLi can be also installed using the default python installer using `pip`. If you don't use a conda environment we encurage the use of a virtual environment.
+
+```bash
+python -m venv .venv --promp=pg
+.venv/bin/activate     # for linux
+#or for windows
+.venv/Scripts/activate
+```
+Its maybe not a bad idea to keep evironments if you have a working toolchain and test new pygimli version in a new virtual environment first.
+
+
+To install pygimli using `pip`:
+
+```bash
+pip install pygimli
+```
+
+To update pygimli using `pip`:
+
+```bash
+pip install -U pygimli
+```
+
+Find available version:
+
+```bash
+pip index versions pygimli
+```
+
+To install a specific version using `pip`:
+
+```bash
+pip install pygimli==$version
+```
+
+
 ## Usage with Spyder or JupyterLab
 
 Depending on your preferences, you can also install third-party software such as
