@@ -41,7 +41,7 @@ breathe
 
 # useful
 jupytext
-myst-nb
+myst_nb
 linkify-it-py
 
 # optional, but strongly recommended

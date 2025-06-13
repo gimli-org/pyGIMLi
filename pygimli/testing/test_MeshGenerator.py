@@ -71,6 +71,12 @@ class TestMeshGenerator(unittest.TestCase):
         # print(mesh)
         # self.assertEqual(mesh.cellCount(), 10.0)
 
+        # test also RValue conversion to correct arrays signed arrays
+        x = np.arange(-10, 11)
+        self.assertEqual(pg.createGrid(x,x,x).bb(),
+                         [pg.Pos(-10.0, -10.0, -10.0),
+                          pg.Pos(10.0, 10.0, 10.0)])
+
 
     def test_createMesh1D(self):
 

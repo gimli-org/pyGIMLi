@@ -53,6 +53,7 @@ class TestMisc(unittest.TestCase):
 
         #fop._modelTrans = pg.trans.TransLog()
 
+
     def test_DataContainerFilter(self):
         """
         """
@@ -84,6 +85,7 @@ class TestMisc(unittest.TestCase):
 
         data.markInvalid(x < 1.0)
         self.assertEqual(data['valid'], [0.0, 1.0, 0.0, 1.0, 0.0])
+
 
 
     def test_DataContainerSensors(self):
