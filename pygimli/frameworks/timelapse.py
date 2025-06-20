@@ -19,6 +19,7 @@ class MultiFrameModelling(MeshModelling):
         self.nf = 0
         self.nm = 0
 
+
     def setData(self, data, modellingOperator=None, **ini):
         """Distribute the data containers amongst the fops."""
         modellingOperator = modellingOperator or self.modellingOperator
@@ -30,6 +31,7 @@ class MultiFrameModelling(MeshModelling):
             # fopi.setData(pg.Vector(datai))
             self.fops.append(fopi)
 
+
     def setMeshPost(self, mesh):
         """Set mesh to all forward operators."""
         for fop in self.fops:
@@ -37,15 +39,19 @@ class MultiFrameModelling(MeshModelling):
 
         self.prepareJacobian()
 
+
+
     def setDefaultBackground(self):
         """Set the default background behaviour."""
-        regionIds = self.regionManager().regionIdxs()
-        pg.info("Found {} regions.".format(len(regionIds)))
-        if len(regionIds) > 1:
-            bk = pg.sort(regionIds)[0]
-            pg.info("Region with smallest marker ({0}) "
-                    "set to background".format(bk))
-            self.setRegionProperties(bk, background=True)
+        super().setDefaultBackground()
+        # regionIds = self.regionManager().regionIdxs()
+        # pg.info("Found {} regions.".format(len(regionIds)))
+        # if len(regionIds) > 1:
+        #     bk = pg.sort(regionIds)[0]
+        #     pg.info("Region with smallest marker ({0}) "
+        #             "set to background".format(bk))
+        #     self.setRegionProperties(bk, background=True)
+
 
     @property
     def parameterCount(self):
