@@ -107,3 +107,36 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
             Model parameters.
         """
         # any defaults possible?
+
+
+class RemanentMagneticsModelling(MagneticsModelling):
+    def __init__(self, mesh, points):
+        self.mesh_ = mesh
+        self.mesh_["marker"] = 0
+        super().__init__(mesh=self.mesh_, points=points, igrf=[0, 0, 0])
+        self.magX = MagneticsModelling(self.mesh_, points, igrf=[1, 0, 0])
+        self.magX.computeKernel()
+        self.magY = MagneticsModelling(self.mesh_, points, igrf=[0, 1, 0])
+        self.magY.computeKernel()
+        self.magZ = MagneticsModelling(self.mesh_, points, igrf=[0, 0, 1])
+        self.magZ.computeKernel()
+        self.m1 = pg.Mesh(self._baseMesh)
+        self.m2 = pg.Mesh(self._baseMesh)
+        self.regionManager().addRegion(1, self.m1, 0)
+        self.regionManager().addRegion(2, self.m2, 0)
+        self.J = pg.matrix.hstack([self.magX.jacobian(),
+                                   self.magY.jacobian(),
+                                   self.magZ.jacobian()])
+        self.J.recalcMatrixSize()
+        self.setJacobian(self.J)
+    
+    def createJacobian(self, model):
+        """Do nothing."""
+        pass
+
+    def response(self, model):
+        """Add together all three responses."""
+        modelXYZ = np.reshape(model, [3, -1])
+        return self.magX.response(modelXYZ[0]) + \
+               self.magY.response(modelXYZ[1]) + \
+               self.magZ.response(modelXYZ[2])
