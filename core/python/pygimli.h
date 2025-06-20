@@ -1,3 +1,21 @@
+/******************************************************************************
+ *   Copyright (C) 2006-2025 by the GIMLi development team                    *
+ *   Carsten Rücker carsten@gimli.org
+ *                                                                            *
+ *   Licensed under the Apache License, Version 2.0 (the "License");          *
+ *   you may not use this file except in compliance with the License.         *
+ *   You may obtain a copy of the License at                                  *
+ *                                                                            *
+ *       http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                            *
+ *   Unless required by applicable law or agreed to in writing, software      *
+ *   distributed under the License is distributed on an "AS IS" BASIS,        *
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *   See the License for the specific language governing permissions and      *
+ *   limitations under the License.                                           *
+ *                                                                            *
+ ******************************************************************************/
+
 #ifndef PYTHON_PYGIMLI__H
 #define PYTHON_PYGIMLI__H
 
@@ -677,10 +695,12 @@ namespace pyplusplus{ namespace aliases{
     typedef std::vector< GIMLI::Vector< double > >      stdVectorRVector;
     typedef std::vector< GIMLI::Vector< bool > >        stdVectorBVector;
     typedef std::vector< GIMLI::Vector< GIMLI::SIndex > >      stdVectorSIndexVector;
-    typedef std::vector< GIMLI::RMatrix >      stdVectorRMatrix;
-    typedef std::vector< GIMLI::MatrixBase * >          stdpMatrixBase;
     typedef std::vector< GIMLI::R3Vector >              stdVectorR3Vector;
-    typedef std::vector< GIMLI::RMatrix3 >              stdVectorMatrix3;
+    typedef std::vector< GIMLI::MatrixBase * >          stdpMatrixBase;
+    typedef std::vector< GIMLI::RMatrix >               stdVectorRMatrix;
+
+    typedef std::vector< GIMLI::RDenseMatrix >          stdVectorRDenseMatrix;
+    typedef std::vector< GIMLI::RMatrix3 >              stdVectorMatrix3; // check if needed
     typedef std::vector< RBlockMatrixEntry >         stdVectorRBlockMatrixEntry;
     typedef std::vector< CBlockMatrixEntry >         stdVectorCBlockMatrixEntry;
     typedef std::vector< GIMLI::RSparseMapMatrix >   stdVectorRSparseMapMatrix;
@@ -692,6 +712,7 @@ namespace pyplusplus{ namespace aliases{
     typedef std::vector< GIMLI::Vector< std::complex< double > > > stdVectorCVector;
     typedef std::vector< GIMLI::Vector< std::complex< double > > > stdVectorCVector;
     typedef std::vector< std::vector< GIMLI::RMatrix > > stdVectorMatrixVector;
+    typedef std::vector< std::vector< GIMLI::RDenseMatrix > >stdVectorRDenseMatrixVector;
 
     typedef std::vector< GIMLI::Boundary * >         stdVectorBounds;
     typedef std::vector< GIMLI::Cell * >             stdVectorCells;
@@ -713,6 +734,8 @@ namespace pyplusplus{ namespace aliases{
     typedef std::map< std::string, std::string >        stdMapS_S;
 
     typedef std::pair<unsigned long, unsigned long>     stdPairUL_UL;
+    typedef std::vector< std::pair< std::string, GIMLI::Stopwatch * > > stdVecStringStopwatch;
+
 
 #ifdef WIN32
     typedef std::map< long long, double > stdMapL_D;

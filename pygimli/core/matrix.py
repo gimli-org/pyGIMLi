@@ -112,6 +112,7 @@ def __CMatrix_str(self):
 def __ElementMatrix_str(self):
     """Show entries of an ElementMatrix."""
     import pygimli as pg
+
     self.integrate()
 
     if self.mat().cols() == 0 and self.mat().rows() == 0:
@@ -160,13 +161,17 @@ def __ElementMatrix_str(self):
             for v in self.row_RM(i)*self.mulR:
                 s += pg.pf(v).rjust(9)
 
+        elif isinstance(self.mulR, pg.solver.utils.ConstitutiveMatrix):
+            for v in self.row_RM(i)@self.mulR:
+                s += pg.pf(v).rjust(9)
+
         elif pg.isMatrix(self.mulR):
             if pg.isArray(self.mulR.flatten(), self.mat().cols()):
                 for v in self.row(i)*self.mulR.flatten():
                     s += pg.pf(v).rjust(9)
             else:
                 print(self.mat())
-                print(self.row)
+                print(self.rows())
                 print(self.mulR)
                 pg.critical('invalid matrix element mulR.')
 

@@ -163,6 +163,7 @@ protected:
     bool valid_;
 };
 
+
 template < class ValueType >
 std::ostream & operator << (std::ostream & str, const Matrix3 < ValueType > & vec){
     for (Index i = 0; i < 3; i ++)

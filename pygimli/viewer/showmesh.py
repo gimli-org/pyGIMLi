@@ -428,17 +428,16 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                 isinstance(data[0], list) and isinstance(data[0][0], int):
             data = pg.solver.parseMapToCellArray(data, mesh)
 
-        #pg._g(data)
-        # if hasattr(data[0], '__len__'):
-        #     print(hasattr(data[0], '__len__'),
-        #       isinstance(data, np.ma.core.MaskedArray),
-        #       isinstance(data[0], str),
-        #       len(data), len(data[0]))
+        if isinstance(data, list):
+            data = np.asarray(data)
+
+        # if isinstance(data, np.ndarray) and data.ndim == 1:
+        #     pg._g(data.shape)
 
         if hasattr(data[0], '__len__') and not \
                 isinstance(data, np.ma.core.MaskedArray) and not \
                 isinstance(data[0], str) and not \
-                (len(data) == 1 or len(data[0] == 0)):
+                (len(data) == 1 or len(data[0]) == 0):
 
             #pg._y(data)
             data = np.asarray(data)
@@ -448,14 +447,18 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
 
             if len(data) == 1: # 1xM matrix
                 return showMesh(np.ravel(data), **kwargs)
+
             if data.shape[1] == 1:  # Mx1 matrix
                 return showMesh(np.ravel(data), **kwargs)
+
             if data.shape[1] == 2:  # N x [u,v]
                 drawStreams(ax, mesh, data, label=label, **kwargs)
+
             elif data.shape[1] == 3:  # N x [u,v,w]
                 # if sum(data[:, 0]) != sum(data[:, 1]):
                 # drawStreams(ax, mesh, data, **kwargs)
                 drawStreams(ax, mesh, data[:, :2], label=label, **kwargs)
+
             else:
 
                 ### Try animation frames x N
@@ -466,11 +469,13 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                         return showAnimation(mesh, data, cMap=cMap,
                                              ax=ax, **kwargs)
 
-                pg.warn("No valid stream data:", data.shape, data.ndim)
+                pg.warn("No valid stream data or animation:",
+                        data.shape, data.ndim)
                 showMesh = True
 
         else:
             data = np.asarray(data)
+
             if bool(colorBar) is not False:
                 colorBar = True
 
