@@ -7,13 +7,8 @@ from .kernel import SolveGravMagHolstein
 class MagneticsModelling(pg.frameworks.MeshModelling):
     """ Magnetics modelling operator using Holstein (2007).
     """
-    def __init__(self, mesh=None, points=None, cmp=["TFA"], igrf=[50, 13]):
+    def __init__(self, mesh=None, points=None, cmp=["TFA"], igrf=[0, 0, 50000]):
         """ Setup forward operator.
-
-        TODO
-        ----
-            * need better defaults for igrf, the current drops a missing file
-            error in pyIGRF.
 
         Parameters
         ----------
