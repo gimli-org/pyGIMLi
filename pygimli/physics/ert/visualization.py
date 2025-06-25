@@ -218,7 +218,7 @@ def drawERTData(ax, data, vals=None, **kwargs):
     if vals is None:
         vals = data['rhoa']
 
-    valid = data.get("valid").array().astype("bool")
+    valid = data.get("valid").array().astype(bool)
     vals = ma.array(vals, mask=~valid)
 
     ind = kwargs.pop('ind', None)
