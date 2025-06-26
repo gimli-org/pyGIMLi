@@ -216,9 +216,12 @@ def drawERTData(ax, data, vals=None, **kwargs):
         The used Colorbar or None
     """
     if vals is None:
-        vals = data['rhoa']
+        vals = 'rhoa'
+    
+    if isinstance(vals, str):
+        vals = data[vals].array()
 
-    valid = data.get("valid").array().astype("bool")
+    valid = data.get("valid").array().astype(bool)
     vals = ma.array(vals, mask=~valid)
 
     ind = kwargs.pop('ind', None)
