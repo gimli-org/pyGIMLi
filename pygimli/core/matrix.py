@@ -702,7 +702,6 @@ def sparseMatrix2coo(A, rowOffset=0, colOffset=0):
     mat: scipy.coo_matrix
         Matrix to convert into.
     """
-
     vals = Vector()
     rows = IndexArray([0])
     cols = IndexArray([0])
@@ -768,12 +767,12 @@ def sparseMatrix2Array(matrix, indices=True, getInCRS=True):
 
     """
     if getInCRS is True:
-        mat = toCSR(matrix)
+        mat = asCSR(matrix)
         rows = mat.indices
         cols = mat.indptr
         vals = mat.data
     else:
-        mat = toCOO(matrix)
+        mat = asCOO(matrix)
         rows = mat.row
         cols = mat.col
         vals = mat.data

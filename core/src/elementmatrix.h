@@ -429,6 +429,9 @@ public:
     bool valid() const { return _valid; }
     void setValid(bool v) { _valid = v; }
 
+    /*! Set the elastic flag. Only for internal use. Don't set it manually. */
+    void setElastic(bool elastic){ _elastic = elastic; }
+    /*! Elastic flag, indicates the gradients are build in mapped order. */
     bool elastic() const { return _elastic;}
 
     bool oldStyle() const { return !this->_newStyle; }

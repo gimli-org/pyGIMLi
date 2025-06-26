@@ -2352,16 +2352,21 @@ void mult(const ElementMatrix < double > & A,
 void mult(const ElementMatrix < double > & A,
           const RVector & b,
           ElementMatrix < double > & C){
-    // __MS("** mult(A, rv)")
+    // __MS("** mult(A, rv)", b.size(), A.cols(), A.nCoeff(), A.elastic())
     // __MS(b)
 
+    // if ((b.size() == A.cols() && A.cols() == A.nCoeff()) ||
+    //     (b.size() == A.cols() && A.elastic())){
+    // scale per component only for non gradients
+    // only else case would be grad(v)* E0(ndarray(dim x dim)) -> ambiguous
+    // if (b.size() == A.cols() && A.cols() == A.nCoeff()){
     if (b.size() == A.cols()){
+        //** const scalar scale of matrix components
+        // __MS("** mult(A, rv) with b.size() == A.cols()")
         C.copyFrom(A, false);
         //const PosVector &x = *A.x();
         Index nRules(C.w()->size());
         // __MS(A.rows(), A.cols(), b.size())
-
-        //** const scalar scale of matrix components
 
         for (Index r = 0; r < nRules; r++){
             RSmallMatrix & iC = (*C.pMatX())[r];
@@ -2586,6 +2591,7 @@ DEFINE_DOT_MULT(const std::vector < std::vector < RSmallMatrix  > > &)
 
 void mult_n(const ElementMatrix < double > & A, \
             const RVector & b, ElementMatrix < double > & C){
+    // __MS("** mult_n(A, rv)")
     mult_s_n(A, b, C);
 }
 // this *= scalar per node
@@ -2593,7 +2599,7 @@ void mult_s_n(const ElementMatrix < double > & A,
               const RVector & b,
               ElementMatrix < double > & C){
 
-
+    // __MS("** mult_s_n(A, rv)")
     C.copyFrom(A, false);
     Index nRules(C.w()->size());
 
@@ -2670,12 +2676,11 @@ void mult_s_n(const ElementMatrix < double > & A,
 void mult_s_q(const ElementMatrix < double > & A,
               const RVector & b,
               ElementMatrix < double > & C){
-
+    //** scalar per quadrature
     // __MS("** mult_s_q(A, rv)")
     C.copyFrom(A, false);
     Index nRules(C.w()->size());
 
-    //** scalar per quadrature
 
     ASSERT_VEC_SIZE(b, nRules)
     ASSERT_VEC_SIZE(C.matX(), nRules)
@@ -2704,18 +2709,19 @@ void mult_s_q(const ElementMatrix < double > & A,
     ASSERT_VEC_SIZE(this->matX(), nRules)                  \
     RVector rt(this->rows());                              \
     Index rowStep = 1;                                     \
+    Index maxRows = this->cols();                          \
     if (this->nCoeff() == 2 and this->cols() == 4){        \
         rowStep = 3;                                       \
     } else if (this->nCoeff() == 2 and this->cols() == 3){ \
-        THROW_TO_IMPL                                      \
+        maxRows = entity()->dim();  /*elastic mapping */   \
     } else if (this->nCoeff() == 3 and this->cols() == 9){ \
         rowStep = 4;                                       \
     } else if (this->nCoeff() == 3 and this->cols() == 6){ \
-        THROW_TO_IMPL                                      \
+        maxRows = entity()->dim(); /*elastic mapping */    \
     }                                                      \
     for (Index q = 0; q < nRules; q++){                    \
         const RSmallMatrix &mr(this->_matX[q]);            \
-        for (Index k = 0; k < mr.rows(); k += rowStep){    \
+        for (Index k = 0; k < maxRows; k += rowStep){      \
             if (q == 0 and k == 0){                        \
                 rt = mr.row(k) * w[q] _F;                  \
             } else {                                       \

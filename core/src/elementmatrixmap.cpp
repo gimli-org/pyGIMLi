@@ -323,13 +323,15 @@ void ElementMatrixMap::mult(const A_TYPE & f, ElementMatrixMap & ret) const {  \
     ret.resize(this->size()); \
     ret.setDof(this->dofA(), this->dofB()); \
     if (f.size() == this->dofA()){ \
+        /*__MS('a', this->size(), f.size())*/ \
         Index i = 0; \
         for (auto const &m : this->mats_){ \
             GIMLI::mult_n(m, f, *ret.pMat(i)); \
             i++; \
         } \
     } else if (f.size() == this->size()) { \
-    \
+        /* f per cell */ \
+        /*__MS('b', this->size(), f.size())*/ \
         Index i = 0; \
         for (auto const &m : this->mats_){ \
             GIMLI::mult(m, f[m.entity()->id()], *ret.pMat(i)); \
@@ -343,10 +345,36 @@ void ElementMatrixMap::mult(const A_TYPE & f, ElementMatrixMap & ret) const {  \
 DEFINE_INTEGRATE_ELEMENTMAP_LF_PER_CELL_IMPL(RVector)
 DEFINE_INTEGRATE_ELEMENTMAP_LF_PER_CELL_IMPL(PosVector)
 DEFINE_INTEGRATE_ELEMENTMAP_LF_PER_CELL_IMPL(std::vector< RSmallMatrix >)
-DEFINE_INTEGRATE_ELEMENTMAP_LF_PER_CELL_IMPL(std::vector< RVector >)
+//DEFINE_INTEGRATE_ELEMENTMAP_LF_PER_CELL_IMPL(std::vector< RVector >)
 DEFINE_INTEGRATE_ELEMENTMAP_LF_PER_CELL_IMPL(std::vector< PosVector >)
 DEFINE_INTEGRATE_ELEMENTMAP_LF_PER_CELL_IMPL(std::vector< std::vector< RSmallMatrix > >)
 #undef DEFINE_INTEGRATE_ELEMENTMAP_LF_PER_CELL_IMPL
+
+void ElementMatrixMap::integrate(const std::vector< RVector > & vrv,                             \
+    RVector & R, const double & alpha) const {    \
+_T_integrate_LF_PerCell(this, vrv, R, alpha);                                \
+}                                                                              \
+void ElementMatrixMap::integrate(const std::vector< RVector > & vrv,                             \
+    RVector & R, const RVector & alpha) const {   \
+_T_integrate_LF_PerCell(this, vrv, R, alpha);                                \
+}                                                                              \
+
+void ElementMatrixMap::mult(const std::vector< RVector > & vrv, ElementMatrixMap & ret) const {
+    ret.resize(this->size()); \
+    ret.setDof(this->dofA(), this->dofB()); \
+    if (vrv.size() == this->size()) { \
+        /* f per cell */ \
+        /*__MS('b', this->size(), f.size())*/ \
+        Index i = 0; \
+        for (auto const &m : this->mats_){ \
+            GIMLI::mult_s_q(m, vrv[m.entity()->id()], *ret.pMat(i)); \
+            i++; \
+        } \
+    } else { \
+        __MS(this->size(), vrv.size()) \
+        THROW_TO_IMPL \
+    } \
+}
 
 
 #define DEFINE_INTEGRATE_ELEMENTMAP_LF_PER_NODE_IMPL(A_TYPE)                   \
