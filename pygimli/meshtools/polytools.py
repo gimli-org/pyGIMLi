@@ -44,6 +44,14 @@ def _polyCreateDefaultEdges(poly, boundaryMarker=1, isClosed=True, **kwargs):
     if isClosed:
         poly.createEdge(poly.node(poly.nodeCount() - 1), poly.node(0), bm[-1])
 
+    rotate = kwargs.pop('rotate', 0)
+    if rotate != 0:
+        center = pg.center(poly.positions())
+        poly.translate(-center)  # move to origin
+        poly.rotate((0,0,rotate))
+        poly.translate(center)  # move back to pos
+
+
 
 def setPolyRegionMarker(poly, marker=1, area=0.0, markerPosition=None,
                         isHole=False, **kwargs):
@@ -456,7 +464,6 @@ def createCircle(pos=None, radius=1, nSegments=12, start=0, end=2.*math.pi,
         Starting angle in radians
     end : double [2*pi]
         Ending angle in radians
-
     **kwargs:
 
         marker: int [1]
@@ -473,6 +480,8 @@ def createCircle(pos=None, radius=1, nSegments=12, start=0, end=2.*math.pi,
             Rotational direction
         isClosed: bool [True]
             Add closing edge between last and first node.
+        rotate: double [0]
+            Rotation angle in radians to rotate the circle around its center.
 
     Returns
     -------
@@ -714,7 +723,8 @@ def createPolygon(pnts, isClosed=False, addNodes=0, interpolate='linear',
                 poly.createNodeWithCheck(v, warn=True)
 
     _polyCreateDefaultEdges(poly, isClosed=isClosed,
-                            boundaryMarker=kwargs.pop('boundaryMarker', 1))
+                            boundaryMarker=kwargs.pop('boundaryMarker', 1),
+                            **kwargs)
 
     if isClosed:
         setPolyRegionMarker(poly, **kwargs)
