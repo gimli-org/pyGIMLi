@@ -137,6 +137,6 @@ class RemanentMagneticsModelling(MagneticsModelling):
     def response(self, model):
         """Add together all three responses."""
         modelXYZ = np.reshape(model, [3, -1])
-        return self.magX.response(modelXYZ[0]) + \
-               self.magY.response(modelXYZ[1]) + \
-               self.magZ.response(modelXYZ[2])
+        return (self.magX.response(modelXYZ[0]) +
+               self.magY.response(modelXYZ[1]) +
+               self.magZ.response(modelXYZ[2])) * 4e-7 * np.pi * 1e9
