@@ -110,15 +110,15 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
 
 
 class RemanentMagneticsModelling(MagneticsModelling):
-    def __init__(self, mesh, points):
+    def __init__(self, mesh, points, cmp=["Bx", "By", "Bz"], igrf=[0, 0, 50000]):
         self.mesh_ = mesh
         self.mesh_["marker"] = 0
-        super().__init__(mesh=self.mesh_, points=points, igrf=[0, 0, 0])
-        self.magX = MagneticsModelling(self.mesh_, points, igrf=[1, 0, 0])
+        super().__init__(mesh=self.mesh_, points=points, igrf=igrf, cmp=cmp)
+        self.magX = MagneticsModelling(self.mesh_, points, igrf=[1, 0, 0], cmp=cmp)
         self.magX.computeKernel()
-        self.magY = MagneticsModelling(self.mesh_, points, igrf=[0, 1, 0])
+        self.magY = MagneticsModelling(self.mesh_, points, igrf=[0, 1, 0], cmp=cmp)
         self.magY.computeKernel()
-        self.magZ = MagneticsModelling(self.mesh_, points, igrf=[0, 0, 1])
+        self.magZ = MagneticsModelling(self.mesh_, points, igrf=[0, 0, 1], cmp=cmp)
         self.magZ.computeKernel()
         self.m1 = pg.Mesh(self._baseMesh)
         self.m2 = pg.Mesh(self._baseMesh)
