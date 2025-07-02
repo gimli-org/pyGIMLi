@@ -773,7 +773,7 @@ class MeshModelling(Modelling):
     def setMesh(self, mesh, ignoreRegionManager=False):
         """ Set mesh and specify whether region manager can be ignored.
         """
-        pg._b('setMesh', id(mesh), mesh, ignoreRegionManager)
+        # pg._b('setMesh', id(mesh), mesh, ignoreRegionManager)
         # keep a copy, just in case
         self._baseMesh = mesh
 
