@@ -429,6 +429,9 @@ def drawSelectedMeshBoundaries(ax, boundaries, color=None, linewidth=1.0,
     drawAA = True
     lines = []
 
+    linewidth = kwargs.pop('lw', linewidth)
+    linestyle = kwargs.pop('ls', linestyle)
+
     if hasattr(boundaries, '__len__'):
         if len(boundaries) == 0:
             return
