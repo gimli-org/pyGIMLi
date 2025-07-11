@@ -1566,7 +1566,7 @@ void ElementMatrix < double >::integrate() const {
 
             // __MS(this->mat_)
         }
-        // __MS(this->mat_)
+
         this->_integrated = true;
     }
 }
@@ -2180,13 +2180,22 @@ void dot(const ElementMatrix < double > & A,
 // __M
     _prepDot(A, B, C);
 
+    bool reduceCe = false;
     if (c.rows() != A.cols() || c.cols() != B.cols()){
-        __MS(c.rows(), c.cols())
-        log(Critical, "Parameter matrix need to match Elementmatrix shapes: "
-            "A:(", A.rows(), ",", A.cols(), ")",
-            "B:(", B.rows(), ",", B.cols(), ")");
+        if (A.elastic() and B.elastic() and A.entity()->dim() == 2 and c.cols()== 6){
+            reduceCe = true;
+            //## special case for 2D elastic with 3D elasticity tensor
+            // __MS("special case for 2D elastic with 3D elasticity tensor")
 
-        return;
+        } else {
+
+            __MS(c.rows(), c.cols())
+            log(Critical, "Parameter matrix need to match Elementmatrix shapes: "
+                "A:(", A.rows(), ",", A.cols(), ")",
+                "B:(", B.rows(), ",", B.cols(), ")");
+
+            return;
+        }
     }
 
     const RVector &w = *A.w();
@@ -2201,7 +2210,7 @@ void dot(const ElementMatrix < double > & A,
 //     RSmallMatrix ce;
 //     toEigenMatrix(c, ce);
 // #else
-    const RSmallMatrix &ce = c;
+
 // #endif
 
     // double beta = 0.0;
@@ -2223,7 +2232,21 @@ void dot(const ElementMatrix < double > & A,
     // #else
     //     matTransMult(Ai, c, AtC, 1.0, 0.0);
     // #endif
-        Ai.transMult(ce, AtC, 1.0, 0.0);
+        if (reduceCe){
+            RSmallMatrix ce(3,3);
+            for (Index i = 0; i < 2; i ++){
+                for (Index j = 0; j < 2; j ++){
+                    ce(i,j) = c(i,j);
+                }
+            }
+            ce(2,2) = c(4,4);
+
+            Ai.transMult(ce, AtC, 1.0, 0.0);
+        } else {
+            Ai.transMult(c, AtC, 1.0, 0.0);
+        }
+
+
         AtC.mult(Bi, Ci, 1.0, 0.0);
 
         *C.pMat() += Ci * wS;
@@ -2380,7 +2403,7 @@ void mult(const ElementMatrix < double > & A,
         return;
     }
 
-    mult_s_q(A, b, C);
+    mult_d_q(A, b, C);
 }
 // vector per quadrature
 void mult(const ElementMatrix < double > & A,
@@ -2490,7 +2513,8 @@ void mult(const ElementMatrix < double > & A,
 void mult(const ElementMatrix < double > & A,
           const std::vector < RSmallMatrix  > & b,
           ElementMatrix < double > & C){
-    // __MS("** mult(A, vrm)")
+    // __MS("** mult(A, vmd)")
+    // __MS("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
     C.copyFrom(A, false);
     const PosVector &x = *A.x();
 
@@ -2501,21 +2525,28 @@ void mult(const ElementMatrix < double > & A,
 
     double beta = 0.0;
     for (Index i = 0; i < nRules; i++){
-        if (i > 0) beta = 1.0;
+        // if (i > 0) beta = 1.0; ## would be C +=
 
         RSmallMatrix & Ci = (*C.pMatX())[i];
         const RSmallMatrix & Ai = A.matX()[i];
         // A.T * C
         Ci *= 0.0; // test and optimize me with C creation
-// #if USE_EIGEN3
-//         __MS("EIGENNEEDFIX")
-// #else
-        Ai.transMult(b[i], Ci, 1.0, beta);
+
+        // __MS(i, "/", nRules)
+        // __MS("Ai:\n", Ai)
+        // __MS("b[i]:\n", b[i])
+
+        // Ai.transMult(b[i], Ci, 1.0, beta);
+        b[i].mult(Ai, Ci, 1.0, beta);
 // #endif
+        // __MS(Ci)
     }
 
     C.setValid(true);
-    C.integrate();
+
+    //C.integrate();
+    // __MS(C)
+    // __MS("------------------------------------------------------------")
 }
 
 void mult(const ElementMatrix < double > & A, const FEAFunction & b,
@@ -2592,10 +2623,10 @@ DEFINE_DOT_MULT(const std::vector < std::vector < RSmallMatrix  > > &)
 void mult_n(const ElementMatrix < double > & A, \
             const RVector & b, ElementMatrix < double > & C){
     // __MS("** mult_n(A, rv)")
-    mult_s_n(A, b, C);
+    mult_d_n(A, b, C);
 }
 // this *= scalar per node
-void mult_s_n(const ElementMatrix < double > & A,
+void mult_d_n(const ElementMatrix < double > & A,
               const RVector & b,
               ElementMatrix < double > & C){
 
@@ -2635,7 +2666,7 @@ void mult_s_n(const ElementMatrix < double > & A,
     } else if (b.size() == A.nCoeff()*A.dofPerCoeff()){
         //## b is chained for all nodes and dims
         // optimize me!!
-        return mult_s_n(A, b[A.rowIDs()], C);
+        return mult_d_n(A, b[A.rowIDs()], C);
         // //** b is whole b
         // for (Index r = 0; r < nRules; r++){
         //     RSmallMatrix & iC = (*C.pMatX())[r];
@@ -2673,7 +2704,7 @@ void mult_s_n(const ElementMatrix < double > & A,
 }
 
 
-void mult_s_q(const ElementMatrix < double > & A,
+void mult_d_q(const ElementMatrix < double > & A,
               const RVector & b,
               ElementMatrix < double > & C){
     //** scalar per quadrature
@@ -2779,6 +2810,19 @@ void ElementMatrix < double >::integrate(const PosVector & f,
     R.addVal(rt, this->rowIDs());
 }
 //******************************************************************************
+// LINEAR-FORM -- integration -- DensMatrix per QUADRATURE -- f in R^n evalOnQuads
+//******************************************************************************
+template < > void
+ElementMatrix < double >::integrate(const std::vector< RSmallMatrix > & f,
+                                    RVector & R, double scale) const {
+    ASSERT_VEC_SIZE(f, this->_w->size())
+
+    INTEGRATE_LINFORM(*sum(f[q][k])) // #orig
+    rt *= this->_ent->size() * scale;
+    R.addVal(rt, this->rowIDs());
+}
+
+//******************************************************************************
 // LINEAR-FORM -- integration -- FALLBACK per CELL || QUADRATURE
 //******************************************************************************
 #define DEFINE_INTEGRATOR_LF(A_TYPE) \
@@ -2788,7 +2832,6 @@ void ElementMatrix < double >::integrate(A_TYPE f, \
     THROW_TO_IMPL \
 }
 DEFINE_INTEGRATOR_LF(const RSmallMatrix & )  // const Matrix
-DEFINE_INTEGRATOR_LF(const std::vector< RSmallMatrix  > &)// matrix for each quadrs
 DEFINE_INTEGRATOR_LF(const FEAFunction &)
 #undef DEFINE_INTEGRATOR_LF
 

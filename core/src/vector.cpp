@@ -83,21 +83,20 @@ Index _getColSTep(const ElementMatrix < double > & A){
 
 template<>
 void Vector< double >::add(const ElementMatrix < double > & A, bool neg){
-    return this->add(A, 1.0, neg);
+    if (neg == true)
+        return this->add(A, -1.0);
+    return this->add(A, 1.0);
 }
 template <>
 void Vector< double >::add(const ElementMatrix < double > & A,
-                           const double & scale, bool neg){
-    // inuse?
-    if (neg == true) THROW_TO_IMPL
+                           const double & f, const double & scale){
     A.integrate();
-
     //__MS(A.oldStyle(), scale, A)
     if (A.oldStyle()){
         if (A.cols() == 1){
-            addVal(A.col(0) * scale, A.rowIDs());
+            addVal(A.col(0) * f*scale, A.rowIDs());
         } else {
-            addVal(A.mat().row(0) * scale, A.ids());
+            addVal(A.mat().row(0) * f *scale, A.ids());
         }
     } else {
         // __MS("A.cols()", A.cols(), "A.rows()", A.rows(), "A.nCoeff()", A.nCoeff(), "A.dofPerCoeff()", A.dofPerCoeff())
@@ -112,18 +111,15 @@ void Vector< double >::add(const ElementMatrix < double > & A,
         for (Index i = 0; i < maxCols; i+= colStep){
             for (Index j = 0; j < A.rows(); j++){
                 // __MS(i, j, A.rowIDs()[j])
-                data_[A.rowIDs()[j]] += A.mat()(j,i) * scale;
+                data_[A.rowIDs()[j]] += A.mat()(j,i) * f * scale;
             }
         }
     }
 }
 template <>
 void Vector< double >::add(const ElementMatrix < double > & A,
-                           const RVector3 & scale, bool neg){
-    // inuse?
-    if (neg == true) THROW_TO_IMPL
+                           const RVector3 & f, const double & scale){
 
-    // __MS("inuse?")
     if (A.oldStyle()){
         THROW_TO_IMPL
     } else {
@@ -137,16 +133,15 @@ void Vector< double >::add(const ElementMatrix < double > & A,
         Index colStep = _getColSTep(A);
         for (Index i = 0; i < A.cols(); i+=colStep){
             for (Index j = 0; j < A.rows(); j++){
-                data_[A.rowIDs()[j]] += A.mat()(j,i) * scale[i/colStep];
+                data_[A.rowIDs()[j]] += A.mat()(j,i) * f[i/colStep] * scale;
             }
         }
     }
 }
 template <>
 void Vector< double >::add(const ElementMatrix < double > & A,
-                           const RVector & scale){
-    // inuse?
-    // if (neg == true) THROW_TO_IMPL
+                           const RVector & f, const double & scale){
+
     A.integrate();
 
     if (A.oldStyle()){
@@ -155,12 +150,12 @@ void Vector< double >::add(const ElementMatrix < double > & A,
         // __M
         if (A.cols() == 1){
             // addVal(A.mat().col(0) * scale.get_(A.rowIDs()), A.rowIDs());
-            addVal(A.mat().col(0), A.rowIDs(), scale);
+            addVal(A.mat().col(0), A.rowIDs(), f*scale);
         } else {
             //** This[ids] += vals[:] * scale[ids]
             // __MS(A.mat().row(0))
             // addVal(A.mat().row(0) * scale.get_(A.ids()), A.ids());
-            addVal(A.mat().row(0), A.ids(), scale);
+            addVal(A.mat().row(0), A.ids(), f*scale);
         }
     } else {
         Index jID = 0;
@@ -173,17 +168,17 @@ void Vector< double >::add(const ElementMatrix < double > & A,
         for (Index j = 0; j < A.rows(); j++){
             jID = A.rowIDs()[j];
 
-            if (A.nCoeff() == 1 or scale.size() == A.dofPerCoeff()*A.nCoeff()){
+            if (A.nCoeff() == 1 or f.size() == A.dofPerCoeff()*A.nCoeff()){
                 // scale unsqueezed PosList
                 for (Index i = 0; i < A.cols(); i+= colStep){
                     // __MS(i, j, jID, scale[jID], A.mat()(j, i))
-                    data_[jID] += A.mat()(j, i) * scale[jID];
+                    data_[jID] += A.mat()(j, i) * f[jID]*scale;
                 }
-            } else if (scale.size() == A.dofPerCoeff()){
+            } else if (f.size() == A.dofPerCoeff()){
                 // scale is RVector(nodeCount()) and nCoeff > 1
 
                 for (Index i = 0; i < A.cols(); i+= colStep){
-                    data_[jID] += A.mat()(j, i) * scale[jID%A.dofPerCoeff()];
+                    data_[jID] += A.mat()(j, i) * f[jID%A.dofPerCoeff()]*scale;
                 }
             }
         }
@@ -192,10 +187,57 @@ void Vector< double >::add(const ElementMatrix < double > & A,
 }
 template <>
 void Vector< double >::add(const ElementMatrix < double > & A,
-                           const RSmallMatrix & scale, bool neg){
-    if (A.oldStyle()){
-        THROW_TO_IMPL
+                           const RSmallMatrix & f, const double & scale){
+    //** grad(v) * (C*I) for elasticity
+    //** R += grad(v) * MAT
+    A.integrate();
+
+    if (A.elastic()) {
+
+        if (A.cols() == f.cols() and A.rows() == f.rows()) {
+
+            for (Index j = 0; j < A.rows(); j++){
+                Index jID = A.rowIDs()[j];
+                for (Index i = 0; i < A.cols(); i++){
+                    data_[jID] += A.mat()(j, i) * f(j,i) * scale;
+                }
+            }
+        } else if (f.cols() == f.rows()) {
+            // ** scale is probably and elasticity tensor
+            // scaleI = f@I(v) * scale
+            RVector3 scaleI(3, 0);
+            if (f.cols() == 3){
+                //## is 2D elasticity tensor
+                //TODO:check if f.row(0)[0:dim] is correct. depends on definition of I(v)
+                scaleI[0] = sum(f.row(0))*scale;
+                scaleI[1] = sum(f.row(1))*scale;
+            }
+            if (f.cols() == 6){
+                //## is 3D elasticity tensor
+                scaleI[0] = sum(f.row(0))*scale;
+                scaleI[1] = sum(f.row(1))*scale;
+                scaleI[2] = sum(f.row(2))*scale;
+            }
+            Index maxCols = A.entity()->dim();
+
+            //__MS("maxCols", maxCols, "scaleI", scaleI)
+            for (Index j = 0; j < A.rows(); j++){
+                Index jID = A.rowIDs()[j];
+                for (Index i = 0; i < maxCols; i++){
+                    data_[jID] += A.mat()(j, i) * scaleI[i];
+                }
+            }
+        } else {
+            __MS("A", A,
+                "f", f,
+                 "scale", scale)
+            THROW_TO_IMPL
+        }
+
     } else {
+        __MS("A", A,
+            "f", f,
+             "scale", scale)
         THROW_TO_IMPL
     }
 }

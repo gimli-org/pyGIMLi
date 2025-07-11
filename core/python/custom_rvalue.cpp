@@ -1008,7 +1008,7 @@ void register_numpy_to_rmatrix_conversion(){
 }
 void register_numpy_to_rdensematrix_conversion(){
     bp::converter::registry::push_back(
-                            & r_values_impl::Numpy2RMatrix::convertible,
+                            & r_values_impl::Numpy2RDenseMatrix::convertible,
                             & r_values_impl::Numpy2RDenseMatrix::construct,
                             bp::type_id< GIMLI::DenseMatrix< double > >());
 }

@@ -367,7 +367,7 @@ void ElementMatrixMap::mult(const std::vector< RVector > & vrv, ElementMatrixMap
         /*__MS('b', this->size(), f.size())*/ \
         Index i = 0; \
         for (auto const &m : this->mats_){ \
-            GIMLI::mult_s_q(m, vrv[m.entity()->id()], *ret.pMat(i)); \
+            GIMLI::mult_d_q(m, vrv[m.entity()->id()], *ret.pMat(i)); \
             i++; \
         } \
     } else { \
@@ -549,7 +549,7 @@ void ElementMatrixMap::dot(const ElementMatrixMap & B,
 
 template < class ValueType, class RetType >
 void _T_assembleFConst(const ElementMatrixMap * self, const ValueType & f,
-                     RetType & R, const double & scale){
+                       RetType & R, const double & scale){
     ASSERT_NON_EMPTY(R)
 
     // R.clean(); dont clean
@@ -560,7 +560,7 @@ void _T_assembleFConst(const ElementMatrixMap * self, const ValueType & f,
 
 template < >
 void _T_assembleFConst(const ElementMatrixMap * self, const double & f,
-                     SparseMatrixBase & R, const double & scale){
+                       SparseMatrixBase & R, const double & scale){
     if (R.size() == 0) R.resize(self->dof(), 0);
     ASSERT_NON_EMPTY(R)
 
@@ -602,8 +602,6 @@ void _T_assembleFConst(const ElementMatrixMap * self, const double & f,
     // }
     // __MS(s.duration(), s.cycles());
 }
-
-
 
 template < class ValueType, class RetType >
 void assembleFPerCellT_(const ElementMatrixMap * self, const ValueType & f,

@@ -4,7 +4,7 @@ Misc stuff also needed for core imports and monkey patching
 """
 import numpy as np
 
-from .core import (Pos, R3Vector, RMatrix)
+from .core import (Pos, R3Vector, RMatrix, RDenseMatrix)
 
 
 def isInt(v, val=None):
@@ -159,7 +159,7 @@ def isMatrix(v, shape=None):
     """Check is v has ndim=2 or is comparable list"""
     try:
         if shape is None:
-            return isinstance(v, RMatrix) or \
+            return isinstance(v, (RMatrix, RDenseMatrix)) or \
                     hasattr(v, 'ndim') and v.ndim == 2 or \
                     isinstance(v, list) and isArray(v[0])
         return isMatrix(v) and (hasattr(v, 'shape') and v.shape == shape)

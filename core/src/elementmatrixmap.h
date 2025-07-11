@@ -43,31 +43,33 @@ public:
 
     void clear();
 
-    #define DEFINE_INTEGRATOR_LF(A_TYPE, varname) \
+    #define DEFINE_INTEGRATOR_LF(VAR_NAME, A_TYPE) \
         /*! R = \int_mesh this * f \d d mesh and R = RVector(dof) and \
             f = A_TYPE \
         */ \
-        void integrate(const A_TYPE & varname, RVector & R, const double & alpha=1.0) const; \
+        void integrate(const A_TYPE & VAR_NAME, RVector & R, const double & alpha=1.0) const; \
         /*! Integrate into linear form R = alpha * \int_mesh this * f * R \d d mesh and \
         R = RVector(dof) and f = A_TYPE \
         */ \
-        void integrate(const A_TYPE & varname, RVector & R, const RVector & alpha) const; \
+        void integrate(const A_TYPE & VAR_NAME, RVector & R, const RVector & alpha) const; \
         /*! Integrate into linear form R = alpha[cellID]*\int_mesh this * f * R \d d mesh and \
         R = RVector(dof) and f = A_TYPE \
         */ \
-        RVector integrate(const A_TYPE & varname, const double & alpha=1.0) const; \
+        RVector integrate(const A_TYPE & VAR_NAME, const double & alpha=1.0) const; \
         /*! R = this * f */ \
-        void mult(const A_TYPE & varname, ElementMatrixMap & ret) const;
-    DEFINE_INTEGRATOR_LF(double, d)   // const scalar for all cells
-    DEFINE_INTEGRATOR_LF(RSmallMatrix, rm)  // const Matrix for all cells
-    DEFINE_INTEGRATOR_LF(RVector, rv)      // const scalar for each cells | nodes
-    DEFINE_INTEGRATOR_LF(Pos, p)      // const vector for all cells //!calling order!
-    DEFINE_INTEGRATOR_LF(PosVector, pv)    // const vector for each cells
-    DEFINE_INTEGRATOR_LF(std::vector< RSmallMatrix >, vrm)// const matrix for each cells
-    DEFINE_INTEGRATOR_LF(std::vector< RVector >, vrv)// scalar for quadr. on each cells
-    DEFINE_INTEGRATOR_LF(std::vector< PosVector >, vpv)// vector for quadr. on each cells
-    DEFINE_INTEGRATOR_LF(std::vector< std::vector< RSmallMatrix > >, vvrm)// mat for quadr. on each cells
+        void mult(const A_TYPE & VAR_NAME, ElementMatrixMap & ret) const;
+    DEFINE_INTEGRATOR_LF(d, double)   // const scalar for all cells
+    DEFINE_INTEGRATOR_LF(rm, RSmallMatrix)  // const Matrix for all cells
+    DEFINE_INTEGRATOR_LF(rv, RVector)      // const scalar for each cells | nodes
+    DEFINE_INTEGRATOR_LF(p, Pos)      // const vector for all cells //!calling order!
+    DEFINE_INTEGRATOR_LF(pv, PosVector)    // const vector for each cells
+    DEFINE_INTEGRATOR_LF(vmd, std::vector< RSmallMatrix >) // const matrix for each cells
+    DEFINE_INTEGRATOR_LF(vrv, std::vector< RVector >) // scalar for quadr. on each cells
+    DEFINE_INTEGRATOR_LF(vpv, std::vector< PosVector >) // vector for quadr. on each cells
+    DEFINE_INTEGRATOR_LF(vvmd, std::vector< std::vector< RSmallMatrix > >) // mat for quadr. on each cells
     #undef DEFINE_INTEGRATOR_LF
+
+    //TODO new VAR_NAME scheme, d, vd, md, p, vp, vvp, vvd, vmd, vvmd
 
     #define DEFINE_INTEGRATOR_LF_NODE(A_TYPE, varname)                         \
         /*! R = \int_mesh this * f \d d mesh and R = RVector(dof) and          \
@@ -111,7 +113,7 @@ public:
 
     #undef DEFINE_INTEGRATOR
 
-    // To avoid ambiguity between Pos|RVector and PosVector|Matrix we define a slightly different interface with differnt keyword names and python have to be decide what is called
+    // To avoid ambiguity between Pos|RVector and PosVector|Matrix we define a slightly different interface with different keyword names and python have to be decide what is called
     #define DEFINE_INTEGRATOR(A_TYPE) \
         /*! Integrate into bilinear form R = \int_mesh this * f * R \d mesh an\
         R = RSparseMapMatrix(dof, dof) and \
@@ -129,31 +131,31 @@ public:
     /*! Create generic bilinear form */
     void dot(const ElementMatrixMap & B, ElementMatrixMap & ret) const;
 
-    #define DEFINE_ASSEMBLER(A_TYPE) \
+    #define DEFINE_ASSEMBLER(varname, A_TYPE) \
         /*! Assemble linear form with non continuous properties. */ \
-        void assemble(const A_TYPE & f, RVector & R, \
+        void assemble(const A_TYPE & varname, RVector & R, \
                       const double & scale=1.0) const; \
         /*! Assemble bilinear form with non continuous properties. */ \
-        void assemble(const A_TYPE & f, SparseMatrixBase & A, \
+        void assemble(const A_TYPE & varname, SparseMatrixBase & A, \
                       const double & scale=1.0) const; \
 
-    DEFINE_ASSEMBLER(double)   // const scalar for all cells
-    DEFINE_ASSEMBLER(RSmallMatrix)  // const Matrix for all cells
-    DEFINE_ASSEMBLER(RVector)  // const scalar for each cell
-    DEFINE_ASSEMBLER(std::vector< RSmallMatrix >)// const matrix for each cell
+    DEFINE_ASSEMBLER(sd, double)   // const scalar for all cells
+    DEFINE_ASSEMBLER(md, RSmallMatrix)  // const Matrix for all cells
+    DEFINE_ASSEMBLER(vd, RVector)  // const scalar for each cell
+    DEFINE_ASSEMBLER(vmd, std::vector< RSmallMatrix >)// const matrix for each cell
     #undef DEFINE_ASSEMBLER
 
-    // To avoid ambiguity between Pos|RVector and PosVector|Matrix we define a slightly different interface with differnt keyword names and python have to be decide what is called
-    #define DEFINE_ASSEMBLER(A_TYPE) \
+    // To avoid ambiguity between Pos|RVector and PosVector|Matrix we define a slightly different interface with different keyword names and python have to be decide what is called
+    #define DEFINE_ASSEMBLER(VAR_NAME, A_TYPE) \
         /*! Assemble linear form with non continuous properties. */ \
         /*! Assemble bilinear form with non continuous properties. */ \
-        void assemble(const A_TYPE & v, RVector & R, \
+        void assemble(const A_TYPE & VAR_NAME, RVector & R, \
                       const double & scale=1.0) const; \
-        void assemble(const A_TYPE & v, SparseMatrixBase & A, \
+        void assemble(const A_TYPE & VAR_NAME, SparseMatrixBase & A, \
                       const double & scale=1.0) const; \
 
-    DEFINE_ASSEMBLER(Pos)  // const Pos for all cells
-    DEFINE_ASSEMBLER(std::vector< Pos >)  // const Pos for each cell
+    DEFINE_ASSEMBLER(p, Pos)  // const Pos for all cells
+    DEFINE_ASSEMBLER(vp, std::vector< Pos >)  // const Pos for each cell
 
     #undef DEFINE_ASSEMBLER
 

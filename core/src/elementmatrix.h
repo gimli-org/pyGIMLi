@@ -621,12 +621,12 @@ DEFINE_DOT_MULT(const FEAFunction &)  // aribrary function
 DLLEXPORT void mult_n(const ElementMatrix < double > & A, \
                       A_TYPE b, \
                       ElementMatrix < double > & C);
-DEFINE_DOT_MULT(const RVector &)    // scalar per quad
-DEFINE_DOT_MULT(const PosVector &)    // scalar per quad
-DEFINE_DOT_MULT(const std::vector < RVector > &)    // scalar per quad
-DEFINE_DOT_MULT(const std::vector < PosVector > &)  // vector per quad
-DEFINE_DOT_MULT(const std::vector < RSmallMatrix  > &) // matrix per quad
-DEFINE_DOT_MULT(const std::vector < std::vector < RSmallMatrix  > > &) // matrix per quad
+DEFINE_DOT_MULT(const RVector &)    // scalar per node
+DEFINE_DOT_MULT(const PosVector &)    // scalar per node
+DEFINE_DOT_MULT(const std::vector < RVector > &)    // scalar per node
+DEFINE_DOT_MULT(const std::vector < PosVector > &)  // vector per node
+DEFINE_DOT_MULT(const std::vector < RSmallMatrix  > &) // matrix per node
+DEFINE_DOT_MULT(const std::vector < std::vector < RSmallMatrix  > > &) // matrix per node
 #undef DEFINE_DOT_MULT
 
 #define DEFINE_INTEGRATOR_LF_N(A_TYPE) \
@@ -643,18 +643,25 @@ DEFINE_INTEGRATOR_LF_N(const std::vector< std::vector< RSmallMatrix > > &)
 
 // Special declares to handle ambiguities for the python binding
 /*! scalar per quadrature point */
-DLLEXPORT void mult_s_q(const ElementMatrix < double > & A,
+DLLEXPORT void mult_d_q(const ElementMatrix < double > & A,
                         const RVector & b,
                         ElementMatrix < double > & C);
 
 /*! vector per quadrature */
-DLLEXPORT inline void mult_v_q(const ElementMatrix < double > & A,
+DLLEXPORT inline void mult_p_q(const ElementMatrix < double > & A,
                                const PosVector & b,
                                ElementMatrix < double > & C){
     mult(A, b, C);
 }
+/*! Matrix per quadrature */
+DLLEXPORT inline void mult_m_q(const ElementMatrix < double > & A,
+                               const std::vector< RSmallMatrix >& b,
+                               ElementMatrix < double > & C){
+    mult(A, b, C);
+}
+
 /*! scalar per node */
-DLLEXPORT void mult_s_n(const ElementMatrix < double > & A,
+DLLEXPORT void mult_d_n(const ElementMatrix < double > & A,
                         const RVector & b,
                         ElementMatrix < double > & C);
 

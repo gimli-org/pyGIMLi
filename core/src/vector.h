@@ -699,23 +699,24 @@ public:
         return *this;
     }
 
-    /*! Add Values from an ElementMatrix.*/
+    /*! Add values from an ElementMatrix.*/
     void add(const ElementMatrix < double > & A, bool neg=false);
 
-    /*! Add Values from an ElementMatrix. Optional scale with constant scalar. */
-    void add(const ElementMatrix < double > & A, const double & scale, bool neg=false);
+    /*! Add values from an ElementMatrix. Optional scale with constant scalar. */
+    void add(const ElementMatrix < double > & A, const double & f,
+             const double & scale=1.0);
 
-    /*! Add Values from an ElementMatrix. Optional scale constant Pos. */
-    void add(const ElementMatrix < double > & A, const Pos & scale,
-             bool neg=false);
+    /*! Add values from an ElementMatrix. Optional scale constant Pos. */
+    void add(const ElementMatrix < double > & A, const Pos & f,
+             const double & scale=1.0);
 
-    /*! Add Values from an ElementMatrix. Optional scale constant RMatrix. */
-    void add(const ElementMatrix < double > & A, const RSmallMatrix & scale,
-             bool neg=false);
+    /*! Add values from an ElementMatrix. Optional scale constant RMatrix. */
+    void add(const ElementMatrix < double > & A, const RSmallMatrix & f,
+             const double & scale=1.0);
 
     /*! DEPRECATED Bad design (Per node values need to be interpolated to quadrature points first.)*/
     void add(const ElementMatrix < double > & A,
-             const Vector < double > & scale);
+             const Vector < double > & f, const double & scale=1.0);
 
     /*! Get value for index i.
      * Throws out of range exception if index check fails. */
@@ -1169,30 +1170,41 @@ template <> DLLEXPORT void Vector< Pos >::clean();
 template <> DLLEXPORT void
 Vector<double>::add(const ElementMatrix < double >& A, bool neg);
 template <> DLLEXPORT void
-Vector<double>::add(const ElementMatrix < double >& A, const double & a, bool neg);
+Vector<double>::add(const ElementMatrix < double >& A,
+                    const double & f, const double & scale);
 template <> DLLEXPORT void
-Vector<double>::add(const ElementMatrix < double >& A, const Pos & a, bool neg);
+Vector<double>::add(const ElementMatrix < double >& A,
+                    const Pos & f, const double & scale);
 template <> DLLEXPORT void
-Vector<double>::add(const ElementMatrix < double >& A, const RSmallMatrix & a,
-                    bool neg);
+Vector<double>::add(const ElementMatrix < double > & A,
+                    const Vector < double > & f, const double & scale);
+
+template <> DLLEXPORT void
+Vector<double>::add(const ElementMatrix < double >& A,
+                    const RSmallMatrix & f, const double & scale);
 
 template< typename ValueType > void
-Vector< ValueType >::add(const ElementMatrix < double >& A,  bool neg){ THROW_TO_IMPL}
-template< typename ValueType > void
-Vector< ValueType >::add(const ElementMatrix < double >& A, const double & a, bool neg){THROW_TO_IMPL}
-template< typename ValueType > void
-Vector< ValueType >::add(const ElementMatrix < double >& A, const Pos & a, bool neg){THROW_TO_IMPL}
+Vector< ValueType >::add(const ElementMatrix < double >& A, bool neg){ THROW_TO_IMPL}
 template< typename ValueType > void
 Vector< ValueType >::add(const ElementMatrix < double >& A,
-                         const RSmallMatrix & a,
-                         bool neg){ THROW_TO_IMPL }
+                         const double & f, const double & scale ){THROW_TO_IMPL}
+template< typename ValueType > void
+Vector< ValueType >::add(const ElementMatrix < double >& A,
+                        const Vector < double > & f, const double & scale  ){THROW_TO_IMPL}
+template< typename ValueType > void
+Vector< ValueType >::add(const ElementMatrix < double >& A,
+                         const Pos & f, const double & scale  ){THROW_TO_IMPL}
+template< typename ValueType > void
+Vector< ValueType >::add(const ElementMatrix < double >& A,
+                         const RSmallMatrix & f, const double & scale){
+                            THROW_TO_IMPL }
 
-// removeme in V1.2, 20200727
-template <> DLLEXPORT void Vector<double>::add(
-    const ElementMatrix < double > & A, const RVector & a);
-// removeme in V1.2, 20200727
-template< typename ValueType > void Vector< ValueType >::add(
-    const ElementMatrix < double >& A, const Vector< double> & a){THROW_TO_IMPL}
+// // removeme in V1.2, 20200727
+// template <> DLLEXPORT void Vector<double>::add(
+//     const ElementMatrix < double > & A, const RVector & a);
+// // removeme in V1.2, 20200727
+// template< typename ValueType > void Vector< ValueType >::add(
+//     const ElementMatrix < double >& A, const Vector< double> & a){THROW_TO_IMPL}
 
 
 template < > inline

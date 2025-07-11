@@ -77,13 +77,15 @@ for m in __Matrices:
 
 
 pgcore.RMatrix.dtype = float
-pgcore.CMatrix.dtype = complex
+pgcore.CMatrix.dtype = complex#
+pgcore.RDenseMatrix.dtype = float
 pgcore.RSparseMapMatrix.dtype = float
 pgcore.CSparseMapMatrix.dtype = complex
 pgcore.RSparseMatrix.dtype = float
 pgcore.CSparseMatrix.dtype = complex
 pgcore.RBlockMatrix.dtype = float
 pgcore.CBlockMatrix.dtype = complex
+
 
 
 def __RMatrix_str(self):
@@ -161,7 +163,9 @@ def __ElementMatrix_str(self):
             for v in self.row_RM(i)*self.mulR:
                 s += pg.pf(v).rjust(9)
 
-        elif isinstance(self.mulR, pg.solver.utils.ConstitutiveMatrix):
+        elif isinstance(self.mulR, pg.solver.utils.ConstitutiveMatrix) \
+            or self.mulR.shape[0] == self.mat().shape[1]:
+            ## or ElasticityMatrix, or any other matrix with same cols as self.mat()
             for v in self.row_RM(i)@self.mulR:
                 s += pg.pf(v).rjust(9)
 
@@ -170,10 +174,16 @@ def __ElementMatrix_str(self):
                 for v in self.row(i)*self.mulR.flatten():
                     s += pg.pf(v).rjust(9)
             else:
-                print(self.mat())
-                print(self.rows())
-                print(self.mulR)
-                pg.critical('invalid matrix element mulR.')
+                for v in self.row(i):
+                    s += pg.pf(v).rjust(9)
+                s+= '\n'
+                s += f'mulR = {self.mulR} (unknown how to apply)\n'
+                # print('mat:', self.mat())
+
+                # pg._r(self.mat())
+                # pg._r(self.rows())
+                # print(self.mulR)
+                # pg.critical('invalid matrix element mulR.')
 
         elif pg.isArray(self.mulR):
             # per node vals
