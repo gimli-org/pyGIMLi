@@ -300,7 +300,7 @@ def removeDuplicates(data, mode:str="average"):
         - "minerr"
         - "weighted"
     """
-    ind = ert.uniqueERTIndex(dimi)
+    ind = uniqueERTIndex(data)
     tokens = ["u", "i", "r", "rhoa", "err", "ip", "iperr"]
     for i in np.unique(ind):
         fi = np.nonzero(ind == i)[0]
