@@ -285,6 +285,46 @@ def getReciprocals(data, change=False, remove=False):
         data.removeInvalid()
 
 
+def removeDuplicates(data, mode:str="average"):
+    """Remove duplicate rows from an ERT datacontainer.
+    
+    Parameters
+    ----------
+    data : ERTDataContainer
+        The data container from which duplicates should be removed.
+    mode : str, optional
+        The method to handle duplicates, choose between
+        - "average"
+        - "first"
+        - "last"
+        - "minerr"
+        - "weighted"
+    """
+    ind = ert.uniqueERTIndex(dimi)
+    tokens = ["u", "i", "r", "rhoa", "err", "ip", "iperr"]
+    for i in np.unique(ind):
+        fi = np.nonzero(ind == i)[0]
+        if len(fi) > 1:
+            f0 = fi[0]
+            data["valid"][f0] = True
+            for ff in fi[1:]:
+                data["valid"][ff] = False
+
+            if mode == "average":
+                for tok in tokens:
+                    data[tok][f0] = np.mean(data[tok][fi])
+            else:
+                ff = f0
+                if mode == "last":
+                    ff = fi[-1]
+                elif mode == "minerr":
+                    ff = fi[np.argmin(data["err"][fi])]
+                for tok in tokens:
+                    data[tok][f0] = data[tok][ff]
+    
+    data.removeInvalid()  
+
+
 def extractReciprocals(fwd, bwd):
     """Extract reciprocal data from forward/backward DataContainers."""
     nMax = max(fwd.sensorCount(), bwd.sensorCount())
