@@ -7,13 +7,8 @@ from .kernel import SolveGravMagHolstein
 class MagneticsModelling(pg.frameworks.MeshModelling):
     """ Magnetics modelling operator using Holstein (2007).
     """
-    def __init__(self, mesh=None, points=None, cmp=["TFA"], igrf=[50, 13]):
+    def __init__(self, mesh=None, points=None, cmp=["TFA"], igrf=[0, 0, 50000]):
         """ Setup forward operator.
-
-        TODO
-        ----
-            * need better defaults for igrf, the current drops a missing file
-            error in pyIGRF.
 
         Parameters
         ----------
@@ -112,3 +107,36 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
             Model parameters.
         """
         # any defaults possible?
+
+
+class RemanentMagneticsModelling(MagneticsModelling):
+    def __init__(self, mesh, points, cmp=["Bx", "By", "Bz"], igrf=[0, 0, 50000]):
+        self.mesh_ = mesh
+        self.mesh_["marker"] = 0
+        super().__init__(mesh=self.mesh_, points=points, igrf=igrf, cmp=cmp)
+        self.magX = MagneticsModelling(self.mesh_, points, igrf=[1, 0, 0], cmp=cmp)
+        self.magX.computeKernel()
+        self.magY = MagneticsModelling(self.mesh_, points, igrf=[0, 1, 0], cmp=cmp)
+        self.magY.computeKernel()
+        self.magZ = MagneticsModelling(self.mesh_, points, igrf=[0, 0, 1], cmp=cmp)
+        self.magZ.computeKernel()
+        self.m1 = pg.Mesh(self._baseMesh)
+        self.m2 = pg.Mesh(self._baseMesh)
+        self.regionManager().addRegion(1, self.m1, 0)
+        self.regionManager().addRegion(2, self.m2, 0)
+        self.J = pg.matrix.hstack([self.magX.jacobian(),
+                                   self.magY.jacobian(),
+                                   self.magZ.jacobian()])
+        self.J.recalcMatrixSize()
+        self.setJacobian(self.J)
+    
+    def createJacobian(self, model):
+        """Do nothing."""
+        pass
+
+    def response(self, model):
+        """Add together all three responses."""
+        modelXYZ = np.reshape(model, [3, -1])
+        return (self.magX.response(modelXYZ[0]) +
+               self.magY.response(modelXYZ[1]) +
+               self.magZ.response(modelXYZ[2])) * 4e-7 * np.pi * 1e9

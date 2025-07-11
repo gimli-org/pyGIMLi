@@ -52,3 +52,6 @@ def show(data, **kwargs):
     else:
         drawFirstPicks(ax, data, tt=kwargs.pop("t", None), **kwargs)
         # drawTravelTimeData(ax, data, **kwargs)
+        cBar = None
+
+    return ax, cBar
