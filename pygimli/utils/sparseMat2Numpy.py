@@ -102,27 +102,29 @@ def sparseMatrix2csr(A):
         Matrix to convert into.
     """
     #optImport(scipy.sparse, requiredFor="toCRS_matrix")
+    shape=(A.rows(), A.cols())
+
     from scipy.sparse import csr_matrix
     if isinstance(A, pg.matrix.CSparseMapMatrix):
         C = pg.matrix.CSparseMatrix(A)
         return csr_matrix((C.vecVals().array(),
                            C.vecRowIdx(),
-                           C.vecColPtr()), dtype=complex)
+                           C.vecColPtr()), shape=shape, dtype=complex)
     if isinstance(A, pg.matrix.SparseMapMatrix):
         C = pg.matrix.SparseMatrix(A)
         return csr_matrix((C.vecVals().array(),
                            C.vecRowIdx(),
-                           C.vecColPtr()))
-    elif isinstance(A, pg.matrix.SparseMatrix):
+                           C.vecColPtr()), shape=shape)
+    if isinstance(A, pg.matrix.SparseMatrix):
         return csr_matrix((A.vecVals().array(),
                            A.vecRowIdx(),
-                           A.vecColPtr()))
-    elif isinstance(A, pg.matrix.CSparseMatrix):
+                           A.vecColPtr()), shape=shape)
+    if isinstance(A, pg.matrix.CSparseMatrix):
         csr = csr_matrix((A.vecVals().array(),
                            A.vecRowIdx(),
-                           A.vecColPtr()), dtype=complex)
+                           A.vecColPtr()), shape=shape, dtype=complex)
         return csr
-    elif isinstance(A, pg.matrix.BlockMatrix):
+    if isinstance(A, pg.matrix.BlockMatrix):
         M = A.sparseMapMatrix()
         return sparseMatrix2csr(M)
 
