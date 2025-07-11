@@ -1,4 +1,3 @@
-## PRE Build
 set(TARGET_NAME pygimli)
 
 CONFIGURE_FILE(getwheelname.py.in

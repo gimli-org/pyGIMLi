@@ -18,8 +18,8 @@ if (DOXYGEN_FOUND)
             ${DOXYGEN_BUILD_DIR}
         COMMENT
             "Generating gimli html API documentation with doxygen"
-        DEPENDS
-            gimli ${DOXYFILE} ${DOXYFILE_IN}
+        #DEPENDS
+        #    gimli ${DOXYFILE} ${DOXYFILE_IN}
     )
 
     add_custom_target(doxygen ALL
@@ -54,6 +54,7 @@ foreach(file ${RSTFILES})
             VERBATIM
             COMMENT
                 "Updating documentation sources files into build path: ${file}"
+            POST_BUILD
     )
 endforeach()
 
@@ -68,6 +69,7 @@ foreach(file ${PYFILES})
         VERBATIM
             COMMENT
             "Updating documentation sources files into build path: conf.py"
+        POST_BUILD
     )
 endforeach()
 

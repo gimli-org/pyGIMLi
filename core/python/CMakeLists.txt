@@ -12,7 +12,8 @@ ADD_CUSTOM_COMMAND(
 --caster=${CASTER_EXECUTABLE} --clang=${CLANG_EXECUTABLE}
     TARGET
         pggen
-    DEPENDS
+    POST_BUILD
+    #DEPENDS
         #set(ENV{PYTHONPATH} $ENV{PYTHONPATH}${PYGCCXML_PATH})
         #${CMAKE_CURRENT_SOURCE_DIR}/generate_pygimli_code.py
         #${CMAKE_CURRENT_SOURCE_DIR}/pygimli.h
@@ -26,6 +27,7 @@ ADD_CUSTOM_COMMAND(
         ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt
     TARGET
         fixpygimlisrc
+    POST_BUILD
    )
 
 ADD_CUSTOM_TARGET(pgbuild ALL)
@@ -35,6 +37,7 @@ ADD_CUSTOM_COMMAND(
         if [ -z $J ]; then ${CMAKE_MAKE_PROGRAM} -j 1 -C ${CMAKE_BINARY_DIR} pg \; else ${CMAKE_MAKE_PROGRAM} -j $J -C ${CMAKE_BINARY_DIR} pg \; fi
     TARGET
         pgbuild
+    POST_BUILD
    )
 
 find_file (HAVE_DUMMY dummy.cpp PATHS ${CMAKE_CURRENT_BINARY_DIR}/generated/)
@@ -78,7 +81,7 @@ add_custom_target(pg ALL)
 add_dependencies(pg _pygimli_)
 
 ADD_CUSTOM_TARGET(pgtest
-    COMMAND ${Python_EXECUTABLE} -c 'import pygimli\; pygimli.test(show=False, abort=True) ' 
+    COMMAND ${Python_EXECUTABLE} -c 'import pygimli\; pygimli.test(show=False, abort=True) '
 )
 
 #add_dependencies(check pgtest)

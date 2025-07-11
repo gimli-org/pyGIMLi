@@ -144,6 +144,9 @@ elseif(MSVC)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
+######
+## Version information
+######
 find_package(Git)
 if (GIT_FOUND)
     message(STATUS ${GIT_FOUND})

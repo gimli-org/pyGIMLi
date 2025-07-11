@@ -1,4 +1,3 @@
-## PRE Build
 set(TARGET_NAME pgcore)
 
 CONFIGURE_FILE(getwheelname.py.in
@@ -41,7 +40,7 @@ else()
     add_custom_target(whl${TARGET_NAME}CopyLibs)
     set(WHEEL_LIBRARIES_DIR ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}/libs/ )
 
-    add_custom_command(TARGET whl${TARGET_NAME}CopyLibs
+    add_custom_command(TARGET whl${TARGET_NAME}CopyLibs POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${WHEEL_LIBRARIES_DIR}
         COMMENT "Create target dir to copy libraries: ${WHEEL_LIBRARIES_DIR}"
     )
@@ -56,9 +55,9 @@ else()
                 $<TARGET_FILE:_pygimli_>)
     endif()
     foreach(file ${BINDEPS_LIBS})
-        add_custom_command(TARGET whl${TARGET_NAME}CopyLibs
+        add_custom_command(TARGET whl${TARGET_NAME}CopyLibs POST_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${file} ${WHEEL_LIBRARIES_DIR}
-                    DEPENDS ${file}
+                    #DEPENDS ${file}
                     COMMENT "Copy libraries: ${file} ${WHEEL_LIBRARIES_DIR}"
         )
     endforeach(file)
