@@ -492,9 +492,11 @@ class TravelTimeManager(MeshMethodManager):
 
         np.savetxt(os.path.join(path, 'chi.txt'), self.inv.chi2History)
 
-        fig, ax = pg.plt.subplots()
-        self.showResult(ax=ax, cov=self.standardizedCoverage(), **kwargs)
-        fig.set_size_inches(size)
-        fig.savefig(os.path.join(path, 'velocity.pdf'), bbox_inches='tight')
-        pg.plt.close(fig)
+        if m.dim() == 2:
+            fig, ax = pg.plt.subplots()
+            self.showResult(ax=ax, cov=self.standardizedCoverage(), **kwargs)
+            fig.set_size_inches(size)
+            fig.savefig(os.path.join(path, 'velocity.pdf'), bbox_inches='tight')
+            pg.plt.close(fig)
+
         return path
