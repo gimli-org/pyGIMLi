@@ -1203,7 +1203,11 @@ def createParaMeshSurface(sensors, paraBoundary=None, boundary=-1,
         paraRect.node(i).setMarker((i % 4 + 5) * 10)
 
     # create surface mesh of sensors and with maximal and parameter extent
-    surfacePLC = boundaryRect + paraRect + sensors[:, 0:2]
+    if boundary > 0:
+        surfacePLC = boundaryRect + paraRect + sensors[:, 0:2]
+    else:
+        surfacePLC = paraRect + sensors[:, 0:2]
+
     surface = pg.meshtools.createMesh(surfacePLC, quality=surfaceMeshQuality)
 
     # interpolate topography to surface
