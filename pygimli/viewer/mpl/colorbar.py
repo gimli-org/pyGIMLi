@@ -175,9 +175,9 @@ def updateColorBar(cbar, gci=None, cMin=None, cMax=None, cMap=None,
     #        logScale, ', nCols:', nCols, nLevs, ', label:', label, levels)
 
     if gci is not None:
-        if min(gci.get_array()) < 1e12:
-            norm = mpl.colors.Normalize(vmin=min(gci.get_array()),
-                                        vmax=max(gci.get_array()))
+        if np.min(gci.get_array().any()) < 1e12:
+            norm = mpl.colors.Normalize(vmin=np.min(gci.get_array()),
+                                        vmax=np.max(gci.get_array()))
             gci.set_norm(norm)
 
         if cbar is not None:
