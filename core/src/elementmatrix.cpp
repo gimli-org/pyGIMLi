@@ -2437,10 +2437,14 @@ void mult(const ElementMatrix < double > & A,
     C.setValid(true);
     C.integrate();
 }
-// constant Matrix
+
+//******************************************************************************
+// MULT -- const Matrix per cell
+//******************************************************************************
 void mult(const ElementMatrix < double > & A,
           const RSmallMatrix  &  b,
           ElementMatrix < double > & C){
+    // TODO: check if mult per quad is needed here
     // __MS("** mult(A, rm)")
     // __MS("b:\n", b)
 
@@ -2459,7 +2463,6 @@ void mult(const ElementMatrix < double > & A,
 
     Index nRules(x.size());
 
-
     if (b.rows() == A.matX().size() && b[0].size() == A.matX()[0].cols()){
         //** RVector per quadrature
 
@@ -2471,37 +2474,49 @@ void mult(const ElementMatrix < double > & A,
         }
         C.integrate();
     } else {
-        if (b.rows() != A.matX()[0].rows()){
-            __MS("b:\n", b)
-            __MS("A.matX()[0]:\n", A.matX()[0])
-            log(Error, "Parameter matrix rows need to match Element sub matrix rows: ",
-                A.matX()[0].rows());
-            return;
-        }
+        if (A.entity()->dim() == 2 and b.rows() == 6 and b.cols() == 6){
+            //## special case for 2D elastic with 3D elasticity tensor
+            RSmallMatrix be(3,3);
+            be *= 0.0;
+            be(0,0) = b(0,0) + b(0,2);
+            be(0,1) = b(0,1);
+            be(1,0) = b(1,0);
+            be(1,1) = b(1,1) + b(1,2);
+            be(2,2) = b(4,4);
+            // Ai.transMult(ce, Ci, 1.0, beta);
+            double beta = 0.0;
+            for (Index i = 0; i < nRules; i++){
+                if (i > 0) beta = 1.0;
 
-    // __MS(A.rows(), A.cols())
-    // __MS(b.rows(), b.cols())
-    // __MS(C.rows(), C.cols())
-// #if USE_EIGEN3
-//         RSmallMatrix be;
-//         toEigenMatrix(b, be);
-// #endif
+                RSmallMatrix & Ci = (*C.pMatX())[i];
+                const RSmallMatrix & Ai = A.matX()[i];
+                // A.T * C
+                Ci *= 0.0; // test and optimize me with C creation
+                // result is no bilinear form, so keep it a rowMatrix
+                be.mult(Ai, Ci, 1.0, beta);
+            }
+        } else {
 
-        double beta = 0.0;
-        for (Index i = 0; i < nRules; i++){
-            if (i > 0) beta = 1.0;
+            if (b.rows() != A.matX()[0].rows()){
+                __MS("b:\n", b)
+                __MS("A.matX()[0]:\n", A.matX()[0])
+                log(Error, "Parameter matrix rows need to match Element sub matrix rows: ",
+                    A.matX()[0].rows());
+                return;
+            }
 
-            RSmallMatrix & Ci = (*C.pMatX())[i];
-            const RSmallMatrix & Ai = A.matX()[i];
-            // A.T * C
-            Ci *= 0.0; // test and optimize me with C creation
-            //matTransMult(Ai, b, Ci, 1.0, beta);
-            // result is no bilinear form, so keep it a rowMatrix
-// #if USE_EIGEN3
-//             be.mult(Ai, Ci, 1.0, beta);
-// #else
-            b.mult(Ai, Ci, 1.0, beta);
-// #endif
+            double beta = 0.0;
+            for (Index i = 0; i < nRules; i++){
+                if (i > 0) beta = 1.0;
+
+                RSmallMatrix & Ci = (*C.pMatX())[i];
+                const RSmallMatrix & Ai = A.matX()[i];
+                // A.T * C
+                Ci *= 0.0; // test and optimize me with C creation
+                //matTransMult(Ai, b, Ci, 1.0, beta);
+                // result is no bilinear form, so keep it a rowMatrix
+                b.mult(Ai, Ci, 1.0, beta);
+            }
         }
 
         C.setValid(true);
@@ -2509,7 +2524,9 @@ void mult(const ElementMatrix < double > & A,
     }
 }
 
-// matrix per quadrature
+//******************************************************************************
+// MULT -- Matrix per quadrature
+//******************************************************************************
 void mult(const ElementMatrix < double > & A,
           const std::vector < RSmallMatrix  > & b,
           ElementMatrix < double > & C){
