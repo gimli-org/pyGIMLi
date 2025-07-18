@@ -320,6 +320,7 @@ void ElementMatrixMap::integrate(const A_TYPE & f,                             \
     _T_integrate_LF_PerCell(this, f, R, alpha);                                \
 }                                                                              \
 void ElementMatrixMap::mult(const A_TYPE & f, ElementMatrixMap & ret) const {  \
+    \
     ret.resize(this->size()); \
     ret.setDof(this->dofA(), this->dofB()); \
     if (f.size() == this->dofA()){ \

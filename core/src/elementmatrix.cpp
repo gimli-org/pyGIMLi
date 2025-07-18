@@ -2514,7 +2514,7 @@ void mult(const ElementMatrix < double > & A,
           const std::vector < RSmallMatrix  > & b,
           ElementMatrix < double > & C){
     // __MS("** mult(A, vmd)")
-    // __MS("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    //__MS("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
     C.copyFrom(A, false);
     const PosVector &x = *A.x();
 
@@ -2532,12 +2532,27 @@ void mult(const ElementMatrix < double > & A,
         // A.T * C
         Ci *= 0.0; // test and optimize me with C creation
 
+        if (A.entity()->dim() == 2 and b[i].rows() == 6 and b[i].cols() == 6){
+            //## special case for 2D elastic with 3D elasticity tensor
+            RSmallMatrix be(3,3);
+            be *= 0.0;
+            be(0,0) = b[i](0,0) + b[i](0,2);
+            be(0,1) = b[i](0,1);
+            be(1,0) = b[i](1,0);
+            be(1,1) = b[i](1,1) + b[i](1,2);
+            be(2,2) = b[i](4,4);
+            // Ai.transMult(ce, Ci, 1.0, beta);
+            be.mult(Ai, Ci, 1.0, beta);
+        } else {
+            b[i].mult(Ai, Ci, 1.0, beta);
+        }
+
         // __MS(i, "/", nRules)
         // __MS("Ai:\n", Ai)
         // __MS("b[i]:\n", b[i])
 
         // Ai.transMult(b[i], Ci, 1.0, beta);
-        b[i].mult(Ai, Ci, 1.0, beta);
+        //__MS(b[i].rows(), b[i].cols(), Ai.rows(), Ai.cols())
 // #endif
         // __MS(Ci)
     }
@@ -2816,7 +2831,6 @@ template < > void
 ElementMatrix < double >::integrate(const std::vector< RSmallMatrix > & f,
                                     RVector & R, double scale) const {
     ASSERT_VEC_SIZE(f, this->_w->size())
-
     INTEGRATE_LINFORM(*sum(f[q][k])) // #orig
     rt *= this->_ent->size() * scale;
     R.addVal(rt, this->rowIDs());
