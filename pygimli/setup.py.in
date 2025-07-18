@@ -40,7 +40,7 @@ setup(
     include_package_data=True,
     license="Apache 2.0",
     keywords=["inversion", "modelling", "geophysics"],
-    install_requires=['pgcore>=@PGCORE_VERSION_WHL@', '<2'
+    install_requires=['pgcore>=@PGCORE_VERSION_WHL@,<2'
                       'numpy>=2.1',
                       'matplotlib>=3.7',
                       'scipy>=1.14',
