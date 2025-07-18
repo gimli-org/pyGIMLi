@@ -66,6 +66,7 @@ jobs:
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
       - name: Merge dev -> master (with rebase)
+        working-directory: source
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
