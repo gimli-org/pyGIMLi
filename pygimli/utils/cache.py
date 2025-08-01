@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Caching manager with function decorator.
 
-Input supports python base types and all pg.core objects with .hash() method.
-Output supports DataContainerERT, ...
+Input supports python base types and all `pg.core` objects that are hashable
+with the `.hash()` method.
+Output supports everything that's pickle-able.
+Drop a ticket if some `pg` types need hash or pickle support.
 
 To use just add the decorator.
 
@@ -16,10 +17,10 @@ def myLongRunningStuff(*args, **kwargs):
 
 To use the cache without the decorator, you can call it also like this:
 `pg.cache(myLongRunningStuff)(*args, **kwargs)`
-
 """
 import sys
 import os
+from pathlib import Path
 import traceback
 import inspect
 import hashlib
@@ -31,19 +32,60 @@ import numpy as np
 import pygimli as pg
 
 
-__NO_CACHE__ = False
+class CacheUseSettings:
+    """Class to manage cache settings."""
 
-def noCache(c:bool=True):
-    """ Set the caching to noCache mode.
+    __NO_CACHE__ = False
 
-    This will disable the caching mechanism and all decorated functions
-    """
-    global __NO_CACHE__
-    __NO_CACHE__ = c
+    @classmethod
+    def setNoCache(cls, c:bool=True):
+        """Set the caching to noCache mode.
+
+        This will disable the caching mechanism and all decorated functions.
+        """
+        cls.__NO_CACHE__ = c
+
+
+    @classmethod
+    def isNoCache(cls):
+        """Check if caching is disabled."""
+        return cls.__NO_CACHE__
+
+
+    @classmethod
+    def reset(cls):
+        """Reset the caching settings to default."""
+        cls.__NO_CACHE__ = False
+
+
+    @classmethod
+    def inUse(cls, sysArgs:list, manualSkip:bool=False):
+        """Check if caching is in use.
+
+        Or disabled by command line arguments, prior global setting using
+        `pygimli.utils.cache.CacheUseSettings.setNoCache()`
+        or environment variable `SKIP_CACHE`.
+
+        Arguments
+        ---------
+        sysArgs: list
+            The command line arguments to check for cache disabling flags are:
+            '--noCache', '--skipCache', '-N'
+
+        manualSkip: bool
+            If True, the cache will be skipped regardless of command line
+            arguments.
+        """
+        return not any(('--noCache' in sysArgs,
+                        '--skipCache' in sysArgs,
+                        '-N' in sysArgs,
+                        os.getenv('SKIP_CACHE'),
+                        manualSkip is True,
+                        cls.__NO_CACHE__))
 
 
 def strHash(s: str) -> int:
-    """ Create a hash value for the given string.
+    """Create a hash value for the given string.
 
     Uses sha224 to create a 16 byte hash value.
 
@@ -60,28 +102,41 @@ def strHash(s: str) -> int:
     return int(hashlib.sha224(s.encode()).hexdigest()[:16], 16)
 
 
-def valHash(a:any)-> int:
-    """ Create a hash value for the given value.
+def valHash(a:any, verbose:bool=False)-> int:
+    """Create a hash value for the given value.
 
     Arguments
     ---------
     a: any
         The value to hash. Can be a string, int, list, numpy array or any
         other object. Logs an error if the type is not supported.
+
+    verbose: bool
+        If True, additional logging will be performed.
+
     Returns
     -------
     hash: int
         The hash value of the value.
     """
+    if verbose is True:
+        pg._b(type(a))
+
     if isinstance(a, (list, tuple)):
-        hsh = 0
+        hsh = 1
         for i, item in enumerate(a):
-            hsh = hsh ^ valHash(str(i)+str(item))
+            if hasattr(item, '__hash__'):
+                h = valHash(str(i)) ^ hash(item)
+                if verbose is True:
+                    pg._g(i, type(item), h)
+            else:
+                h = valHash(str(i)+str(item), verbose=verbose)\
+                  ^ valHash(item, verbose=verbose)
+                if verbose is True:
+                    pg._y(i, type(item), h)
+            hsh = hsh ^ h
+
         return hsh
-    elif isinstance(a, str):
-        return strHash(a)
-    elif isinstance(a, int):
-        return a
     elif isinstance(a, str):
         return strHash(a)
     elif isinstance(a, int):
@@ -91,8 +146,9 @@ def valHash(a:any)-> int:
     elif isinstance(a, dict):
         hsh = 0
         for k, v in a.items():
-            # pg._y(k, valHash(k))
-            # pg._y(v, valHash(v))
+            if verbose is True:
+                pg._y(k, valHash(k))
+                pg._y(v, valHash(v))
             hsh = hsh ^ valHash(k) ^ valHash(v)
 
         return hsh
@@ -110,11 +166,10 @@ def valHash(a:any)-> int:
         else:
             print(a)
             pg.error('no hash for numpy array')
-    elif hasattr(a, '__hash__') and not callable(a):
-        # pg._r('has hash: ', a, type(a))
-        # pg._r(hash(a))
+    elif hasattr(a, '__hash__'):
         return hash(a)
     elif isinstance(a, pg.DataContainer):
+        # not used
         return hash(a)
     elif callable(a):
         try:
@@ -133,13 +188,14 @@ def valHash(a:any)-> int:
     return hash(a)
 
 
-class Cache(object):
-    """ Cache class to store and restore data.
+class Cache:
+    """Cache class to store and restore data.
 
     This class is used to store and restore data in a cache.
     """
+
     def __init__(self, hashValue:int):
-        """ Initialize the cache with a hash value.
+        """Initialize the cache with a hash value.
 
         Arguments
         ---------
@@ -148,14 +204,14 @@ class Cache(object):
         """
         self._value = None
         self._hash = hashValue
-        self._name = CacheManager().cachingPath(str(self._hash))
+        self._name = str(CacheManager().cachingPath(str(self._hash)))
         self._info = None
         self.restore()
 
 
     @property
     def info(self):
-        """ Return the cache info dictionary.
+        """Return the cache info dictionary.
 
         This dictionary contains information about the cache like type, file,
         date, duration, restored count, code info, version, args and kwargs.
@@ -176,7 +232,7 @@ class Cache(object):
 
     @info.setter
     def info(self, i):
-        """ Set the cache info dictionary.
+        """Set the cache info dictionary.
 
         Arguments
         ---------
@@ -188,14 +244,13 @@ class Cache(object):
 
     @property
     def value(self):
-        """ Return the cached value.
-        """
+        """Return the cached value."""
         return self._value
 
 
     @value.setter
     def value(self, v):
-        """ Set the cached value and store it in the cache.
+        """Set the cached value and store it in the cache.
 
         Arguments
         ---------
@@ -227,7 +282,7 @@ class Cache(object):
             v.save(self._name)
         else:
             self.info['type'] = 'pickle'
-            with open(self._name + '.pkl', 'wb') as f:
+            with Path(self._name + '.pkl').open('wb') as f:
                 pickle.dump(v, f)
 
         self.updateCacheInfo()
@@ -236,29 +291,22 @@ class Cache(object):
 
 
     def updateCacheInfo(self):
-        """ Update the cache info dictionary and save it to a json file.
-        """
-        with open(self._name + '.json', 'w') as of:
+        """Update the cache info dictionary and save it to a json file."""
+        with Path(self._name + '.json').open('w', encoding='utf-8') as of:
             json.dump(self.info, of, sort_keys=False,
                       indent=4, separators=(',', ': '))
 
     def restore(self):
-        """ Restore cache from json infos.
-        """
-        if os.path.exists(self._name + '.json'):
+        """Restore cache from json infos."""
+        if Path(self._name + '.json').exists():
 
             # mpl kills locale setting to system default .. this went
             # horrible wrong for german 'decimal_point': ','
             pg.checkAndFixLocaleDecimal_point(verbose=False)
 
             try:
-                with open(self._name + '.json') as file:
+                with Path(self._name + '.json').open(encoding='utf-8') as file:
                     self.info = json.load(file)
-
-                # if len(self.info['type']) != 1:
-                #     pg.error('only single return caches supported for now.')
-
-                #pg._y(pg.pf(self.info))
 
                 if self.info['type'] == 'DataContainerERT':
                     self._value = pg.DataContainerERT(self.info['file'],
@@ -279,15 +327,8 @@ class Cache(object):
                 elif self.info['type'] == 'GeostatisticConstraintsMatrix':
                     self._value = pg.matrix.GeostatisticConstraintsMatrix(
                                                             self.info['file'])
-                elif self.info['type'] == 'tuple' and 0:
-                    r = []
-                    with open(self.info['file'] + '.npy', 'rb') as f:
-                        v = np.load(f)
-                        r.append(v)
-                    self._value = (*r,)
-
                 else:
-                    with open(self.info['file'] + '.pkl', 'rb') as f:
+                    with Path(self.info['file'] + '.pkl').open('rb') as f:
                         self._value = pickle.load(f)
 
                 if self.value is not None:
@@ -309,8 +350,8 @@ class Cache(object):
 
 
 #TODO unify singleton handling
-class CacheManager(object):
-    """ Cache manager to handle caching of functions and data.
+class CacheManager:
+    """Cache manager to handle caching of functions and data.
 
     This class is a singleton and should be accessed via the instance method.
     It provides methods to create unique cache paths, hash functions and
@@ -320,34 +361,32 @@ class CacheManager(object):
     ----
         * Unify singleton handling
     """
+
     __instance = None
     __has_init = False
 
     def __new__(cls):
-        """ Create a new instance of the CacheManager.
-        """
+        """Create a new instance of the CacheManager."""
         if cls.__instance is None:
             cls.__instance = object.__new__(cls)
         return cls.__instance
 
 
     def __init__(self):
-        """ Initialize the CacheManager just once.
-        """
+        """Initialize the CacheManager just once."""
         if not self.__has_init:
             self._caches = {}
             self.__has_init = True
 
 
-    @staticmethod
+    @classmethod
     def instance(cls):
-        """ Get the singleton instance of the CacheManager.
-        """
+        """Get the singleton instance of the CacheManager."""
         return cls.__instance__
 
 
     def cachingPath(self, fName:str):
-        """ Create a full path name for the cache.
+        """Create a full path name for the cache.
 
         Arguments
         ---------
@@ -359,17 +398,16 @@ class CacheManager(object):
         path: str
             The full path to the cache file.
         """
-        if pg.rc["globalCache"]:
-            path = pg.getCachePath()
-        else:
-            path = ".cache"
-        if not os.path.exists(path):
-            os.mkdir(path)
-        return os.path.join(path, fName)
+        path = pg.getCachePath() if pg.rc["globalCache"] else ".cache"
+
+        if not Path(path).exists():
+            Path(path).mkdir()
+
+        return Path(path) / fName
 
 
     def funcInfo(self, func):
-        """ Return unique info string about the called function.
+        """Return unique info string about the called function.
 
         Arguments
         ---------
@@ -386,7 +424,7 @@ class CacheManager(object):
 
 
     def hash(self, func, *args, **kwargs):
-        """ Create a hash value.
+        """Create a hash value.
 
         Arguments
         ---------
@@ -402,21 +440,21 @@ class CacheManager(object):
         hash: int
             A unique hash value for the function and its arguments.
         """
-        pg.tic()
-        funcInfo = self.funcInfo(func)
-        funcHash = strHash(funcInfo)
-        versionHash = strHash(pg.versionStr())
-        codeHash = strHash(inspect.getsource(func))
+        with pg.tictoc('hash'):
+            funcInfo = self.funcInfo(func)
+            funcHash = strHash(funcInfo)
+            versionHash = strHash(pg.versionStr())
+            codeHash = strHash(inspect.getsource(func))
 
-        #pg._b('fun:', funcHash, 'ver:', versionHash, 'code:', codeHash)
-        argHash = valHash(args) ^ valHash(kwargs)
-        #pg._b('argHash:', argHash)
-        pg.debug("Hashing took:", pg.dur(), "s")
-        return funcHash ^ versionHash ^ codeHash ^ argHash
+            #pg._b('fun:', funcHash, 'ver:', versionHash, 'code:', codeHash)
+            argHash = valHash(args, verbose=False)
+            kwargHash = valHash(kwargs, verbose=False)
+            #pg._b('argHash:', argHash, kwargHash)
+        return funcHash ^ versionHash ^ codeHash ^ argHash ^ kwargHash
 
 
     def cache(self, func, *args, **kwargs):
-        """ Create a unique cache.
+        """Create a unique cache.
 
         Arguments
         ---------
@@ -449,7 +487,7 @@ class CacheManager(object):
 
 
 def cache(func):
-    """ Cache decorator.
+    """Cache decorator.
 
     This decorator caches the return value of the function and stores it in a
     Cache object. If the function is called again with the same arguments,
@@ -472,12 +510,8 @@ def cache(func):
     """
     def wrapper(*args, **kwargs):
 
-        nc = kwargs.pop('skipCache', False)
-
-        if any(('--noCache' in sys.argv,
-                '--skipCache' in sys.argv,
-                os.getenv('SKIP_CACHE'),
-                '-N' in sys.argv, nc is True, __NO_CACHE__)):
+        if not CacheUseSettings.inUse(sys.argv,
+                                    manualSkip=kwargs.pop('skipCache', False)):
 
             return func(*args, **kwargs)
 

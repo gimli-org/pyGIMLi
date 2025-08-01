@@ -43,13 +43,16 @@ __Matrices = [pgcore.MatrixBase,
               ]
 
 def __Matrix_array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-    """ufunct to communicate with numpy"""
-
+    """Handle ufunc to communicate with numpy."""
     if ufunc == np.multiply:
         ## for np.float * self
-        if self == inputs[0] and len(inputs) == 2:
+        if id(self) == id(inputs[0]) and len(inputs) == 2:
             return self.__mul__(inputs[1])
 
+    if ufunc == np.matmul:
+        ## for np.mat * self
+        if id(self) == id(inputs[0]) and len(inputs) == 2:
+            return self.__mul__(inputs[1])
         # if isinstance(inputs[0], np.ndarray):
         #     return pg.core.mult(self, np.squeeze(inputs[0]))
 
@@ -57,10 +60,11 @@ def __Matrix_array_ufunc__(self, ufunc, method, *inputs, **kwargs):
     pg._r('self:', id(self))
     pg._r('ufunc:', ufunc)
     pg._r('method:', method)
+    pg._r('inputs:', len(inputs))
     for i, ii in enumerate(inputs):
-        pg._r(f'\t input{i}:', type(ii))
-        pg._r(f'\t input{i}:', id(ii))
-        pg._r(f'\t input{i}:', ii)
+        pg._r(f'\t input {i}:', type(ii))
+        pg._r(f'\t input {i}:', id(ii))
+        pg._r(f'\t input {i}:', ii)
 
     pg._r('kwargs', kwargs)
     pg.critical('implementme.')
@@ -85,7 +89,6 @@ pgcore.RSparseMatrix.dtype = float
 pgcore.CSparseMatrix.dtype = complex
 pgcore.RBlockMatrix.dtype = float
 pgcore.CBlockMatrix.dtype = complex
-
 
 
 def __RMatrix_str(self):
@@ -122,16 +125,20 @@ def __ElementMatrix_str(self):
 
     maxRowID = int(np.log10(max(self.rowIDs())))+2
 
+    sAdd = ''
+    if hasattr(self, 'isIdentity'):
+        sAdd +=f'I={self.isIdentity}'
+
     if hasattr(self, 'mulR') and self.mulR is not None:
         if (pg.isScalar(self.mulR) and self.mulR != 1.0) or \
             pg.isPos(self.mulR) or \
             pg.isArray(self.mulR) or\
             pg.isMatrix(self.mulR):
-            s = '\n ' + f' multR = {self.mulR} (applied)' + '\n ' + ' ' * maxRowID
+            s = '\n ' + f'multR = {self.mulR} (applied)' + '\n ' + ' ' * maxRowID
         elif pg.isScalar(self.mulR, 1.0):
             s = '\n ' + ' ' * maxRowID
         else:
-            s = '\n ' + f' multR = {self.mulR} (unknown how to apply)' + '\n ' + ' ' * maxRowID
+            s = '\n ' + f'multR = {self.mulR} (unknown how to apply)' + '\n ' + ' ' * maxRowID
     else:
         self.mulR = 1
         s = '\n ' + ' ' * maxRowID
@@ -139,8 +146,12 @@ def __ElementMatrix_str(self):
     # print(self.mat())
     # print(self.colIDs())
     # print(self.rowIDs())
+    # if sAdd != '':
+    #     s += f' {sAdd}\n'
+
     for i in range(self.mat().cols()):
         s += str(self.colIDs()[i]).rjust(9)
+    s += '    ' + sAdd
     s += '\n'
 
     s += '  ' + '-' * self.mat().cols()*(9 + maxRowID) + '-\n'
@@ -174,10 +185,13 @@ def __ElementMatrix_str(self):
                 for v in self.row(i)*self.mulR.flatten():
                     s += pg.pf(v).rjust(9)
             else:
-                for v in self.row(i):
-                    s += pg.pf(v).rjust(9)
-                s+= '\n'
-                s += f'mulR = {self.mulR} (unknown how to apply)\n'
+                try:
+                    for v in self.row(i):
+                        s += pg.pf(v).rjust(9)
+                        s += '\n'
+                    s += f'mulR = {self.mulR} (unknown how to apply)\n'
+                except Exception as e:
+                    print(f"Error processing row {i}: {e}")
                 # print('mat:', self.mat())
 
                 # pg._r(self.mat())
@@ -197,7 +211,7 @@ def __ElementMatrix_str(self):
             print('multR:', self.mulR)
             try:
                 print(mulE(self, f=self.mulR))
-            except:
+            except BaseException:
                 pass
             warn('invalid element mulR. should be evaluated with mulE?')
             return ''

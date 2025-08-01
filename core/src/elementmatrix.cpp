@@ -2444,6 +2444,7 @@ void mult(const ElementMatrix < double > & A,
 void mult(const ElementMatrix < double > & A,
           const RSmallMatrix  &  b,
           ElementMatrix < double > & C){
+
     // TODO: check if mult per quad is needed here
     // __MS("** mult(A, rm)")
     // __MS("b:\n", b)
@@ -2475,14 +2476,15 @@ void mult(const ElementMatrix < double > & A,
         C.integrate();
     } else {
         if (A.entity()->dim() == 2 and b.rows() == 6 and b.cols() == 6){
+            //__M
             //## special case for 2D elastic with 3D elasticity tensor
             RSmallMatrix be(3,3);
             be *= 0.0;
-            be(0,0) = b(0,0) + b(0,2);
+            be(0,0) = b(0,0);// + b(0,2);
             be(0,1) = b(0,1);
             be(1,0) = b(1,0);
-            be(1,1) = b(1,1) + b(1,2);
-            be(2,2) = b(4,4);
+            be(1,1) = b(1,1);// + b(1,2);
+            be(2,2) = b(3,3);
             // Ai.transMult(ce, Ci, 1.0, beta);
             double beta = 0.0;
             for (Index i = 0; i < nRules; i++){
@@ -2493,7 +2495,10 @@ void mult(const ElementMatrix < double > & A,
                 // A.T * C
                 Ci *= 0.0; // test and optimize me with C creation
                 // result is no bilinear form, so keep it a rowMatrix
+                // __MS("Ai:\n", Ai)
+                // __MS("be:\n", be)
                 be.mult(Ai, Ci, 1.0, beta);
+                // __MS("Ci:\n", Ci)
             }
         } else {
 

@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Useful utility functions.
-"""
+#!/usr/bin/env python
+"""Useful utility functions."""
+
 from .base import (rms, rmsWithErr, nanrms, createDateTimeString,
                    createResultPath, createPath, createPathTimePath,
                    getSavePath, gmat2numpy, interperc, interpExtrap, inthist,
@@ -16,7 +15,7 @@ from .base import rmsWithErr as rmswitherr
 from .complex import (isComplex, toComplex, toPolar, squeezeComplex,
                       toRealMatrix, KramersKronig)
 
-from .cache import (cache, strHash, noCache, valHash)
+from .cache import (cache, strHash, CacheUseSettings, valHash)
 from .geostatistics import (computeInverseRootMatrix, covarianceMatrix,
                             generateGeostatisticalModel)
 from .gps import GKtoUTM, findUTMZone, getProjection, getUTMProjection, readGPX
@@ -25,7 +24,7 @@ from .hankel import hankelFC
 from .postinversion import iterateBounds, modelCovariance, modelResolutionMatrix
 
 from .units import (unit, cmap)
-from .units import cmap as cMap # for compatibilty (will be removed)
+from .units import cmap as cMap # for compatibility (will be removed)
 
 from .utils import (ProgressBar, Table, boxprint, cumDist, cut, diff, dist, rate,
                     filterIndex, filterLinesByCommentStr, findNearest,

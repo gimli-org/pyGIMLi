@@ -659,7 +659,6 @@ DLLEXPORT inline void mult_m_q(const ElementMatrix < double > & A,
                                ElementMatrix < double > & C){
     mult(A, b, C);
 }
-
 /*! scalar per node */
 DLLEXPORT void mult_d_n(const ElementMatrix < double > & A,
                         const RVector & b,
