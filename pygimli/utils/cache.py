@@ -21,6 +21,7 @@ To use the cache without the decorator, you can call it also like this:
 import sys
 import os
 from pathlib import Path
+from tabnanny import verbose
 import traceback
 import inspect
 import hashlib
@@ -122,19 +123,31 @@ def valHash(a:any, verbose:bool=False)-> int:
     if verbose is True:
         pg._b(type(a))
 
-    if isinstance(a, (list, tuple)):
+    if isinstance(a, np.ndarray):
+        if a.ndim == 1:
+            return hash(pg.Vector(a))
+        elif a.ndim == 2:
+            # convert to RVector to use mem copy
+            return hash(pg.Vector(a.reshape((1,a.shape[0]*a.shape[1]))[0]))
+        else:
+            print(a)
+            pg.error('no hash for numpy array')
+
+    if isinstance(a, list | tuple):
         hsh = 1
         for i, item in enumerate(a):
-            if hasattr(item, '__hash__'):
-                h = valHash(str(i)) ^ hash(item)
+            if hasattr(item, '__hash__') and not isinstance(item, list |np.ndarray):
                 if verbose is True:
-                    pg._g(i, type(item), h)
+                    pg._g(i, type(item))
+                h = valHash(str(i)) ^ hash(item)
             else:
                 h = valHash(str(i)+str(item), verbose=verbose)\
                   ^ valHash(item, verbose=verbose)
                 if verbose is True:
                     pg._y(i, type(item), h)
             hsh = hsh ^ h
+        if verbose is True:
+            pg._y(hsh)
 
         return hsh
     elif isinstance(a, str):

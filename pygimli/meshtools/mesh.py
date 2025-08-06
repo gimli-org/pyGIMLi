@@ -374,6 +374,7 @@ def refineHex2Tet(mesh, style=1):
                                 c.node(tet[3]).id()], c.marker())
         elif style == 2:
             # will lead to wrong face split
+            pg.warning('This will lead to inconsistent face split diagonals.')
             for tet in HexahedronSplit5TetID:
                 out.createCell([c.node(tet[0]).id(),
                                 c.node(tet[1]).id(),

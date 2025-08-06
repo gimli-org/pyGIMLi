@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Misc stuff also needed for core imports and monkey patching
-"""
+#!/usr/bin/env python3
+"""Misc type checker."""
 import numpy as np
 
 from .core import (Pos, R3Vector, RMatrix, RDenseMatrix)
@@ -101,7 +99,7 @@ def isArray(v, N=None):
 
 
 def isComplex(vals):
-    """Check numpy or pg.Vector if have complex data type"""
+    """Check numpy or pg.Vector if have complex data type."""
     if isScalar(vals):
         if isinstance(vals, (np.complex128, complex)):
             return True
@@ -149,19 +147,30 @@ def isR3Array(v, N=None):
                 (not isinstance(v, list) and hasattr(v, '__iter__') and \
                     not isinstance(v, (str)) and v.ndim == 2 and isPos(v[0]))
         return isR3Array(v) and len(v) == N
-    except:
+    except BaseException:
         return False
+
 isPosList = isR3Array
 isVecField = isR3Array
 
 
 def isMatrix(v, shape=None):
-    """Check is v has ndim=2 or is comparable list"""
+    """Check is v has ndim=2 or is comparable list."""
     try:
         if shape is None:
             return isinstance(v, (RMatrix, RDenseMatrix)) or \
                     hasattr(v, 'ndim') and v.ndim == 2 or \
                     isinstance(v, list) and isArray(v[0])
         return isMatrix(v) and (hasattr(v, 'shape') and v.shape == shape)
-    except:
+    except BaseException:
+        return False
+
+
+def isSquareMatrix(v, size=None):
+    """Check is v has ndim=2 or is comparable list."""
+    try:
+        if size is None:
+            return isMatrix(v) and v.shape[0] == v.shape[1]
+        return isSquareMatrix(v) and v.shape[0] == size
+    except BaseException:
         return False
