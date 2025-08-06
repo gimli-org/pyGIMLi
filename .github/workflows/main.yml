@@ -66,11 +66,19 @@ jobs:
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
       - name: Merge dev -> master (with rebase)
+        working-directory: source
         run: |
+          # Authorize with personal access token
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git remote set-url origin https://florian-wagner:${{ secrets.SECRET }}@github.com/gimli-org/gimli.git
+
+          # Make sure to be in sync with dev on remote
           git fetch
+          git clean -ffdx
+          git reset --hard HEAD
+
+          # Rebase and push to master
           git rebase origin/master
           git push origin HEAD:master --force-with-lease
   upload-html:

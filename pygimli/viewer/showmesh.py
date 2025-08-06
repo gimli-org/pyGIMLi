@@ -345,7 +345,9 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
             showBoundary = True
     elif isinstance(data, pg.core.stdVectorRVector3):
         drawSensors(ax, data, **kwargs)
-    elif isinstance(data, pg.PosVector):
+    elif isinstance(data, pg.PosVector) \
+        or hasattr(data, 'ndim') and data.ndim == 2 \
+            and (data.shape[1] == 2 or data.shape[1] == 3):
         drawStreams(ax, mesh, data, **kwargs)
     else:
         # check for map like data=[[marker, val], ....]
