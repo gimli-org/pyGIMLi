@@ -16,7 +16,7 @@ from pygimli.physics.ves import VESModelling, VESCModelling
 
 ###############################################################################
 # First we create a data configuration of a 1D Schlumberger sounding with
-# 20 electrodes and and increasing MN/2 electrode spacing from 1m to 24m.
+# 20 electrodes and increasing MN/2 electrode spacing from 1m to 24m.
 scheme = ert.createData(pg.utils.grange(start=1, end=24, dx=1, n=10, log=True),
                         sounding=True)
 
@@ -31,8 +31,9 @@ plc = mt.createWorld(start=[-200, -100], end=[200, 0],
 ###############################################################################
 # To achieve a necessary numerical accuracy, we need some local mesh refinement
 # in the vicinity of the electrodes. However, since we don't need the
-# electrode (aka sensor) positions to be present as nodes in the geometry, we only add forced mesh
-# nodes near the electrode positions, right below the earths surface.
+# electrode (aka sensor) positions to be present as nodes in the geometry, we
+# only add forced mesh nodes near the electrode positions, right below the
+# earth surface.
 for s in scheme.sensors():
     plc.createNode(s + [0.0, -0.2])
 
@@ -42,8 +43,11 @@ mesh = mt.createMesh(plc, quality=33)
 _ = pg.show(mesh, data=mesh.cellMarkers(), label='Marker', showMesh=True)
 
 ###############################################################################
-# It is usually a good idea to calculate with a p2-refined mesh.
-# However, you should be careful for larger meshes since the numerical efford
+# It is usually a good idea to calculate with a p2-refined mesh (A p2-refined
+# mesh indicates that quadratic shape functions are used for the Finite-Element
+# formulation, whereas a h2-refined mesh would simply split existing elements
+# into smaller ones).
+# However, you should be careful for larger meshes since the numerical effort
 # will be highly increased.
 mesh = mesh.createP2()
 
@@ -57,8 +61,8 @@ data = ert.simulate(mesh, res=[[1, 100.0], [2, 1.0]],
 ###############################################################################
 # 1D VES
 x = pg.x(scheme)
-ab2 = (x[scheme('b')] - x[scheme('a')])/2
-mn2 = (x[scheme('n')] - x[scheme('m')])/2
+ab2 = (x[scheme('b')] - x[scheme('a')]) / 2
+mn2 = (x[scheme('n')] - x[scheme('m')]) / 2
 ves = VESModelling(ab2=ab2, mn2=mn2)
 
 ###############################################################################
