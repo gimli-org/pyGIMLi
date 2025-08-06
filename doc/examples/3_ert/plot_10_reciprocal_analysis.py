@@ -28,15 +28,15 @@ The relative error can be computed by
     \frac{\delta R}{|R|} = b + a/|R|
 
 and reflects that the relative error (of either the voltage, the resistance or
-apparent resistivity) has a minimum value of $a$ and increases with decreasing
-voltage gain.
+apparent resistivity) has a minimum value of :math:`a` and increases with
+decreasing voltage gain.
 
 This procedure, originally designed for lab ERT with a small range of R values,
 was used by Udphuay et al. (2011) for determining the error model for field data
 with a much larger range for R values (section 4.4 and Fig. 11).
 For the two data sets (OP and RCP) they found rather low percentage errors of
-about 1% or below and ohmic errors of about 1.5m$\Omega$ (unfortunately the
-milli is missing in the paper) which is about 100µV considering a medium value
+about 1% or below and ohmic errors of about :math:`1.5m\Omega` (unfortunately the
+milli is missing in the paper) which is about :math:`100\mu V` considering a medium value
 of  60mA. This value is a good estimate that has been used as default value in
 the BERT software, which was used to invert the data. To account for other error
 sources like positioning, topography, they increased the percentage error to 2%
@@ -71,7 +71,7 @@ ax.set_xlabel("x (m)")
 ax.set_ylabel("y (m)")
 ax.grid()
 ax.legend()
-ax.set_aspect(1.0)
+_ = ax.set_aspect(1.0)
 
 ###############################################################################
 # Before using the ready-made functions, we go through it step by step:
@@ -84,9 +84,9 @@ iF, iB = ert.reciprocalIndices(data, True)
 print(len(iF), data.size()-len(iF)-len(iB))
 fig, ax = plt.subplots()
 ax.loglog(data['r'][iF], data['r'][iB], '.', markersize=2)
-ax.set_xlabel("R normal (Ohmm)")
-ax.set_ylabel("R reciprocal (Ohmm)")
-ax.grid()
+ax.set_xlabel(r"R normal ($\Omega$)")
+ax.set_ylabel(r"R reciprocal ($\Omega$)")
+_ = ax.grid()
 
 ###############################################################################
 # Except some single outliers, all data are aligned along the identity axis,
@@ -99,15 +99,16 @@ Rmean = abs(R[iF] + R[iB]) / 2
 dR = abs(R[iF] - R[iB])
 fig, ax = plt.subplots()
 ax.loglog(Rmean, dR, '.', markersize=2)
-ax.set_xlabel('R (Ohm)')
-ax.set_ylabel('dR(Ohm)')
+ax.set_xlabel(r'R ($\Omega$)')
+ax.set_ylabel('dR ($\Omega$)')
 ax.grid()
 
 ###############################################################################
 # This plot rather suggests a log-log dependence
+#
 # .. math::
 #
-#     \log\delta R = \log a + b \log R \quad\Rightarrow\quad \delta R = a R^b
+#     \log\delta R = \log a + b \log R \quad\Rightarrow\quad \delta R = a R^b,
 #
 # as it was suggested by Flores-Oroczo et al. (2018) for phase data.
 #
@@ -116,7 +117,7 @@ ax.grid()
 dRbyR = dR / Rmean
 fig, ax = plt.subplots()
 ax.loglog(Rmean, dRbyR, '.', markersize=2)
-ax.set_xlabel('R (Ohm)')
+ax.set_xlabel(r'R ($\Omega$)')
 ax.set_ylabel('dR / R')
 ax.grid()
 
@@ -129,17 +130,17 @@ ax.grid()
 #
 ab1, ax = ert.fitReciprocalErrorModel(data, show=True)
 print(ab1)
-ax.set_yscale("symlog", linthresh=0.0001)
+_ = ax.set_yscale("symlog", linthresh=0.0001)
 
 ###############################################################################
-# Here, we end up with $b\approx$ 1% and $a\approx$ 0.8 mOhm.
-# Alternatively, we can fit the relative errors by `rel=True`.
-# This yields values of about 2.5% and 0.2 mOhm, here the first
+# Here, we end up with :math:`b\approx 1\%` and :math:`a\approx  0.8 m\Omega`.
+# Alternatively, we can fit the relative errors by ``rel=True``.
+# This yields values of about 2.5% and :math:`0.2 m\Omega`, here the first
 # one is more realistic but the second appears rather low.
 #
 ab2, ax = ert.fitReciprocalErrorModel(data, rel=True, show=True)
 print(ab2)
-ax.set_yscale("symlog", linthresh=0.001)
+_ = ax.set_yscale("symlog", linthresh=0.001)
 
 ###############################################################################
 # We plot the two models against each other.
@@ -165,8 +166,8 @@ ax.grid(which='both')
 # Further procedure
 # -----------------
 # A N/R pair of data cannot be independently fitted. Therefore, it is
-# reasonable to remove all values above a certail threshold as suggested by
-# Slater et al. (2000) who used a threshold of 10% (here `sum(dRbyR>0.1)`=223).
+# reasonable to remove all values above a certain threshold, as suggested by
+# Slater et al. (2000), who used a threshold of 10% (here: ``sum(dRbyR>0.1)`` =223).
 # Furthermore, it makes sense to keep only one quadrupole of each pair by taking
 # the mean resistance, possibly weighted by the current strength or stacking
 # error. This "stacking" can improve the data quality. Alternatively, one could
@@ -176,11 +177,11 @@ ax.grid(which='both')
 # large individual values higher than the error model could be taken instead of
 # these. At any rate, I suggest removing data with either large reciprocal error
 # or large error misfits above values in the range of 20%.
-# All this is implemented in the function `reciprocalProcessing`, which basically
-# averages the N/R pairs and sets the property `data['err']` that is used in
+# All this is implemented in the function ``reciprocalProcessing``, which basically
+# averages the N/R pairs and sets the property ``data['err']`` that is used in
 # inversion to weight the data. One can pass a maximum reciprocal error
-# (`maxrec`) to eliminate pairs with wrong reciprocity completely, and maximum
-# error (`maxerr`) for large error estimate that might destroy the statistics.
+# (``maxrec``) to eliminate pairs with wrong reciprocity completely, and maximum
+# error (``maxerr``) for large error estimate that might destroy the statistics.
 #
 out = ert.reciprocalProcessing(data, maxrec=0.2, maxerr=0.2)
 print(out)
@@ -192,19 +193,19 @@ print(out)
 # References
 # ----------
 # * LaBrecque, D.L., Miletto, M., Daily, W., Ramirez, A. & Owen, E. (1996): The
-# effects of noise on Occam’s inversion of resistivity tomography data,
-# Geophysics, 61, 538–548.
+#   effects of noise on Occam’s inversion of resistivity tomography data,
+#   Geophysics, 61, 538–548.
 # * Slater, L., A. M. Binley, W. Daily, and R. Johnson (2000): Cross-hole
-# electrical imaging of a controlled saline tracer injection, J. Appl. Geophys.,
-# 44, 85–102, doi:10.1016/S0926-9851(00)00002-1.
+#   electrical imaging of a controlled saline tracer injection, J. Appl. Geophys.,
+#   44, 85–102, doi:10.1016/S0926-9851(00)00002-1.
 # * Günther, T., Rücker, C. & Spitzer, K. (2006): Three-dimensional modeling and
-# inversion of dc resistivity data incorporating topography – II: Inversion.
-# Geophys. J. Int. 166, 506-517, doi:10.1111/j.1365-246X.2006.03011.x.
+#   inversion of dc resistivity data incorporating topography – II: Inversion.
+#   Geophys. J. Int. 166, 506-517, doi:10.1111/j.1365-246X.2006.03011.x.
 # * Koestel, J., Kemna, A., Javaux, M., Binley, A. & Vereecken, H. (2008):
-# Quantitative imaging of solute transport in an unsaturated and undisturbed soil
-# monolith with 3-D ERT and TDR, Water Resour. Res., 44, W12411,
-# doi:10.1029/2007WR006755.
+#   Quantitative imaging of solute transport in an unsaturated and undisturbed soil
+#   monolith with 3-D ERT and TDR, Water Resour. Res., 44, W12411,
+#   doi:10.1029/2007WR006755.
 # * Udphuay, S., Günther, T., Everett, M.E., Warden, R.R. & Briaud, J.-L. (2011):
-# Three-dimensional resistivity tomography in extreme coastal terrain amidst dense
-# cultural signals: application to cliff stability assessment at the historic D-Day
-# site. Geophys. J. Int. 185(1), 201-220, doi:10.1111/j.1365-246X.2010.04915.x.
+#   Three-dimensional resistivity tomography in extreme coastal terrain amidst dense
+#   cultural signals: application to cliff stability assessment at the historic D-Day
+#   site. Geophys. J. Int. 185(1), 201-220, doi:10.1111/j.1365-246X.2010.04915.x.
