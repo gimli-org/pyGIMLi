@@ -21,7 +21,6 @@ To use the cache without the decorator, you can call it also like this:
 import sys
 import os
 from pathlib import Path
-from tabnanny import verbose
 import traceback
 import inspect
 import hashlib
@@ -283,8 +282,8 @@ class Cache:
         # pg._r(self.info)
 
         if self.info['type'] == 'Mesh':
-            pg.info('Save Mesh binary v2')
-            v.saveBinaryV2(self._name)
+            pg.info('Save Mesh binary')
+            v.save(self._name)
         elif self.info['type'] == 'RVector':
             pg.info('Save RVector binary')
             v.save(self._name, format=pg.core.Binary)
@@ -330,7 +329,7 @@ class Cache:
                     self._value.load(self.info['file'], format=pg.core.Binary)
                 elif self.info['type'] == 'Mesh':
                     self._value = pg.Mesh()
-                    self._value.loadBinaryV2(self.info['file'] + '.bms')
+                    self._value.load(self.info['file'] + '.bms')
                     pg.debug("Restoring cache took:", pg.dur(), "s")
                 elif self.info['type'] == 'ndarray':
                     self._value = np.load(self.info['file'] + '.npy',
