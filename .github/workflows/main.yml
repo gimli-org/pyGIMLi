@@ -69,17 +69,26 @@ jobs:
         working-directory: source
         run: |
           # Authorize with personal access token
+          echo "config"
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
+          echo "remote"
           git remote set-url origin https://florian-wagner:${{ secrets.SECRET }}@github.com/gimli-org/gimli.git
 
           # Make sure to be in sync with dev on remote
+          echo "stash"
+          git stash
+          echo "status"
           git status
+          echo "fetch"
           git fetch
+          echo "clean"
           git clean -ffdx
+          echo "reset"
           git reset --hard HEAD
 
           # Rebase and push to master
+          echo "rebase"
           git rebase origin/master
           git push origin HEAD:master --force-with-lease
   upload-html:
