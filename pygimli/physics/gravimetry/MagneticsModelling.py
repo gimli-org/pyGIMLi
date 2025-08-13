@@ -124,9 +124,11 @@ class RemanentMagneticsModelling(MagneticsModelling):
         self.m2 = pg.Mesh(self._baseMesh)
         self.regionManager().addRegion(1, self.m1, 0)
         self.regionManager().addRegion(2, self.m2, 0)
-        self.J = pg.matrix.hstack([self.magX.jacobian(),
-                                   self.magY.jacobian(),
-                                   self.magZ.jacobian()])
+        self.fak = 4e-7 * np.pi * 1e9  # H to B and T to nT
+        self.JJ = pg.matrix.hstack([self.magX.jacobian(),
+                                    self.magY.jacobian(),
+                                    self.magZ.jacobian()])
+        self.J = pg.matrix.ScaledMatrix(self.JJ, self.fak)
         self.J.recalcMatrixSize()
         self.setJacobian(self.J)
     
@@ -138,5 +140,5 @@ class RemanentMagneticsModelling(MagneticsModelling):
         """Add together all three responses."""
         modelXYZ = np.reshape(model, [3, -1])
         return (self.magX.response(modelXYZ[0]) +
-               self.magY.response(modelXYZ[1]) +
-               self.magZ.response(modelXYZ[2])) * 4e-7 * np.pi * 1e9
+                self.magY.response(modelXYZ[1]) +
+                self.magZ.response(modelXYZ[2])) * self.fak
