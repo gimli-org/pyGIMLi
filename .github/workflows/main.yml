@@ -74,12 +74,12 @@ jobs:
           git remote set-url origin https://florian-wagner:${{ secrets.SECRET }}@github.com/gimli-org/gimli.git
 
           # Make sure to be in sync with dev on remote
+          git status
           git fetch
           git clean -ffdx
           git reset --hard HEAD
 
           # Rebase and push to master
-          git status
           git rebase origin/master
           git push origin HEAD:master --force-with-lease
   upload-html:
