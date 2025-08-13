@@ -165,7 +165,7 @@ try:
         "reset_modules": (reset_mpl),
         # Avoid representation of mpl axis, LineCollections, etc.
         "ignore_repr_types": r"matplotlib[text, axes, collections]",
-        "notebook_extensions": {}, 
+        "notebook_extensions": {},
     }
 
     pyvista = pg.optImport("pyvista", "build the gallery with 3D visualizations")
