@@ -23,7 +23,7 @@ dependencies:
   - pyvista[all,trame]>=0.44
   - meshio
   - scooby
-  - tdqm
+  - tqdm
   - sphinx-design
   - pydata-sphinx-theme
   - myst-nb
