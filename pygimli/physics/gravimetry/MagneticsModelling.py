@@ -60,8 +60,7 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
 
 
     def computeKernel(self):
-        """ Compute the kernel.
-        """
+        """ Compute the kernel."""
         points = np.column_stack([self.sensorPositions[:, 1],
                                   self.sensorPositions[:, 0],
                                   -np.abs(self.sensorPositions[:, 2])])
@@ -80,7 +79,6 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
         self.J.recalcMatrixSize()
         self.setJacobian(self.J)
 
-
     def response(self, model):
         """ Compute forward response.
 
@@ -94,7 +92,6 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
 
         return self.J.dot(model)
 
-
     def createJacobian(self, model):
         """ Do nothing as this is a linear problem.
 
@@ -106,7 +103,7 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
         model: array-like
             Model parameters.
         """
-        # any defaults possible?
+        pass
 
 
 class RemanentMagneticsModelling(MagneticsModelling):
@@ -128,8 +125,8 @@ class RemanentMagneticsModelling(MagneticsModelling):
         self.JJ = pg.matrix.hstack([self.magX.jacobian(),
                                     self.magY.jacobian(),
                                     self.magZ.jacobian()])
+        self.JJ.recalcMatrixSize()
         self.J = pg.matrix.ScaledMatrix(self.JJ, self.fak)
-        self.J.recalcMatrixSize()
         self.setJacobian(self.J)
     
     def createJacobian(self, model):
