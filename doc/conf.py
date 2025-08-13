@@ -158,7 +158,7 @@ try:
         "reset_modules": (reset_mpl),
         # Avoid representation of mpl axis, LineCollections, etc.
         "ignore_repr_types": r"matplotlib[text, axes, collections]",
-        "notebook_extensions": {}, 
+        "notebook_extensions": {},
     }
 
     pyvista = pg.optImport("pyvista", "build the gallery with 3D visualizations")
@@ -674,7 +674,7 @@ bibtex_reference_style = "author_year"
 # breathe_projects = {"gimli":
 #                         os.path.abspath(join(DOC_BUILD_DIR, "../../doxygen/xml")),
 #                     }
-# 
+#
 # breathe_default_project = "gimli"
 # Settings for myst
 myst_enable_extensions = [
