@@ -79,6 +79,7 @@ jobs:
           git reset --hard HEAD
 
           # Rebase and push to master
+          git status
           git rebase origin/master
           git push origin HEAD:master --force-with-lease
   upload-html:
