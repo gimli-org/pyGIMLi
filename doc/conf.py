@@ -674,7 +674,7 @@ bibtex_reference_style = "author_year"
 # breathe_projects = {"gimli":
 #                         os.path.abspath(join(DOC_BUILD_DIR, "../../doxygen/xml")),
 #                     }
-# 
+#
 # breathe_default_project = "gimli"
 # Settings for myst
 myst_enable_extensions = [
