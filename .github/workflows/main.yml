@@ -76,8 +76,6 @@ jobs:
           git remote set-url origin https://florian-wagner:${{ secrets.SECRET }}@github.com/gimli-org/gimli.git
 
           # Make sure to be in sync with dev on remote
-          echo "stash"
-          git stash
           echo "status"
           git status
           echo "fetch"
@@ -88,6 +86,8 @@ jobs:
           git reset --hard HEAD
 
           # Rebase and push to master
+          echo "stash"
+          git stash
           echo "rebase"
           git rebase origin/master
           git push origin HEAD:master --force-with-lease
