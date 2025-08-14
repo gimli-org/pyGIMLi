@@ -418,7 +418,7 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
         if showBoundary is None:
             showBoundary = True
 
-    elif isinstance(data, pg.core.stdVectorRVector3):
+    elif isinstance(data, pg.core.stdVectorR3Vector):
         drawSensors(ax, data, **kwargs)
 
     elif isinstance(data, pg.PosVector) \
