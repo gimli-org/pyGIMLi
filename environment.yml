@@ -21,7 +21,7 @@ dependencies:
   - sphinxcontrib-doxylink
   - sphinx-autobuild
   - bibtexparser
-  - pyvista[all,trame]>=0.44
+  - pyvista[all,trame]>=0.46
   - meshio
   - scooby
   - tabulate

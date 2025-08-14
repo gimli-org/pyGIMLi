@@ -114,12 +114,14 @@ def showMesh3DVistaProcess(mesh, data=None, **kwargs):
         # monkeypatch show of this plotter instance so we can use multiple
         # backends and only use plotter.show(), allows skip show (for testing)
         # whoever this needs.
-        pyvista.set_new_attribute(plotter, "__show", plotter.show)
+        if not hasattr(plotter, "__show"):
+            pyvista.set_new_attribute(plotter, "__show", plotter.show)
         plotter.show = lambda *args, **kwargs: plotter.__show(
             *args, jupyter_backend=backend, **kwargs
         )
     elif pg.viewer.mpl.isInteractive():
-        pyvista.set_new_attribute(plotter, "__show", plotter.show)
+        if not hasattr(plotter, "__show"):
+            pyvista.set_new_attribute(plotter, "__show", plotter.show)
         plotter.show = (
             lambda *args, **kwargs: plotter.__show(*args, **kwargs)
             if pg.viewer.mpl.isInteractive() or pyvista.BUILDING_GALLERY
@@ -127,7 +129,8 @@ def showMesh3DVistaProcess(mesh, data=None, **kwargs):
         )
     else:
         ## on default skip showing if forced, e.g., by test with show=False
-        pyvista.set_new_attribute(plotter, "__show", plotter.show)
+        if not hasattr(plotter, "__show"):
+            pyvista.set_new_attribute(plotter, "__show", plotter.show)
         plotter.show = (
             lambda *args, **kwargs: plotter.__show(*args, **kwargs)
             if pg.rc['pyvista.backend'] is not None else False
