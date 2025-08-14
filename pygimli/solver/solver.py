@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Finite-element solver and utility functions."""
 from copy import deepcopy
 #needed? from lib2to3.pytree import Base
@@ -13,7 +12,7 @@ def parseDictKey_(key, markers):
 
 
 def parseMarkersDictKey(key, markers):
-    """ Parse dictionary key of type str to marker list.
+    """Parse dictionary key of type str to marker list.
 
     Utility function to parse a dictionary key string into a valid list of
     markers containing in a given markers list.
@@ -240,12 +239,12 @@ def cellValues(mesh, arg, **kwargs):
 
     # if arg if scalar or global data type, ndarray or Matrix but not the right
     # size assume global tensor
-    if isinstance(arg, np.ndarray) or \
-            isinstance(arg, pg.core.RMatrix) or \
-            isinstance(arg, pg.core.CMatrix) or \
-            isinstance(arg, float) or \
-            isinstance(arg, int) or \
-            isinstance(arg, complex):
+    if isinstance(arg, (np.ndarray
+                        | pg.core.RMatrix
+                        | pg.core.CMatrix
+                        | float
+                        | int
+                        | complex)):
         return [arg]*mesh.cellCount()
 
     return parseArgToArray(arg,
@@ -254,8 +253,7 @@ def cellValues(mesh, arg, **kwargs):
 
 
 def parseArgToArray(arg, nDof, mesh=None, userData={}):
-    """
-    Parse array related arguments to create a valid value array.
+    """Parse array related arguments to create a valid value array.
 
     Parameters
     ----------
@@ -444,7 +442,8 @@ def generateBoundaryValue(boundary, arg, time=0.0, userData={},
 
 
 def parseArgPairToBoundaryArray(pair, mesh):
-    """
+    """Parse boundary related pair argument to create a list.
+
     Parse boundary related pair argument to create a list of
     [ :gimliapi:`GIMLI::Boundary`, value|callable ].
 
@@ -521,9 +520,9 @@ def parseArgPairToBoundaryArray(pair, mesh):
 
 
 def parseArgToBoundaries(args, mesh):
-    """
-    Parse boundary related arguments to create a valid boundary value list:
-    [ :gimliapi:`GIMLI::Boundary`, value|callable ]
+    """Parse boundary related arguments to create a valid boundary value list.
+
+    List is of type  `[ :gimliapi:`GIMLI::Boundary`, value|callable ]`
 
     TODO
     ----
@@ -648,8 +647,7 @@ def parseArgToBoundaries(args, mesh):
 
 
 def _bcIsForVectorValues(bc, mesh):
-    """Guess if boundary condition is supposed to be for vector valued problems
-    """
+    """Guess if boundary condition is supposed to be for vector valued problems."""
     verbose = False
 
     def testForV3(t):
@@ -781,7 +779,8 @@ def parseMapToCellArray(attributeMap, mesh, default=0.0):
 
 
 def grad(mesh, u, r=None):
-    r"""
+    r"""Return gradient for scalar field.
+
     Return the discrete interpolated gradient :math:`\mathbf{v}`
     for a given scalar field :math:`\mathbf{u}`.
 
@@ -1328,7 +1327,6 @@ def linSolve(mat, b, solver=None, verbose=False, **kwargs):
             # x = spsolve(_m, b.array()[perm])#[perm]
             # x = x[perm]
         else:
-            pg._b(verbose)
             x = spsolve(_m, b)
             if verbose:
                 print(f'spsolve: norm(b-Ax) = {np.linalg.norm(b-_m.dot(x))}')
