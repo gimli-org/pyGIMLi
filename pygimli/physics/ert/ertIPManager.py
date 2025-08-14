@@ -62,7 +62,7 @@ class ERTIPManager(ERTManager):
 
         if max(ipdata) > 3.15:  # mrad
             ipdata /= 1000
-        if iperr >= 1:
+        if np.max(iperr) >= 1:
             iperr /= 1000
 
         complexData = pg.utils.toComplex(data["rhoa"], ipdata)

@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Finite-element solver and utility functions."""
 from copy import deepcopy
-#needed? from lib2to3.pytree import Base
 
 import numpy as np
 import pygimli as pg
@@ -98,7 +97,7 @@ def boundaryIdsFromDictKey(mesh, key, outside=True):
     dict: {marker, [boundary.id()]}
     """
     mas = pg.solver.parseMarkersDictKey(key, mesh.boundaryMarkers())
-    ret = dict()
+    ret = {}
     for m in mas:
         for i in pg.find(mesh.boundaryMarkers() == m):
             if m not in ret:
@@ -126,9 +125,13 @@ def cellValues(mesh, arg, **kwargs):
         Argument to be parsed as cell data.
         If arg is a dictionary, its key will be interpreted as cell marker:
 
-        Dictionary is {key: value, }. Value can be float, int, complex or ndarray. The latter for anistropic or elastic tensors.
-        Key can be integer for the cell marker or a str, which will be interpreted as wildcard, splice or list. See examples or parseDictKey_.
-        String keys will be interpreted before integer keys, the latter will overwite the first, i.e. you can fill all with wildcard '*' and specify others with integers.
+        Dictionary is {key: value, }. Value can be float, int, complex or
+        ndarray. The latter for anistropic or elastic tensors.
+        Key can be integer for the cell marker or a str, which will be
+        interpreted as wildcard, splice or list. See examples or parseDictKey_.
+        String keys will be interpreted before integer keys, the latter will
+        overwite the first, i.e. you can fill all with wildcard '*' and
+        specify others with integers.
         See examples or `py:mod:pygimli.solver.parseMarkersDictKey`.
 
         Iterable of length mesh.nodeCount() to be interpolated to cell centers.
@@ -162,7 +165,7 @@ def cellValues(mesh, arg, **kwargs):
     [1. 1. 2. 2.]
     >>> print(pg.solver.cellValues(mesh, np.ones(mesh.nodeCount())))
     4 [1.0, 1.0, 1.0, 1.0]
-    >>> print(np.array(pg.solver.cellValues(mesh, {'1:3' : np.diag([1.0, 2.0])})))
+    >>> print(np.array(pg.solver.cellValues(mesh, {'1:3':np.diag([1.0, 2.0])})))
     [[[1. 0.]
       [0. 2.]]
     <BLANKLINE>
@@ -174,7 +177,7 @@ def cellValues(mesh, arg, **kwargs):
     <BLANKLINE>
      [[1. 0.]
       [0. 2.]]]
-    >>> print(np.array(pg.solver.cellValues(mesh, {':' : pg.core.CMatrix(2, 2)})))
+    >>> print(np.array(pg.solver.cellValues(mesh, {':':pg.core.CMatrix(2, 2)})))
     [[[0.+0.j 0.+0.j]
       [0.+0.j 0.+0.j]]
     <BLANKLINE>
@@ -2685,7 +2688,7 @@ def checkCFL(times, mesh, vMax, verbose=False):
 def crankNicolson(times, S, I, f=None,
                   u0=None, theta=1.0, dirichlet=None,
                   solver=None, progress=None, **kwargs):
-    """Generic Crank Nicolson solver for time dependend problems.
+    """Calculate time dependend problems with generic Crank Nicolson scheme.
 
     Limitations so far:
         S = Needs to be constant over time (i.e. no change in coefficients)
@@ -2694,7 +2697,9 @@ def crankNicolson(times, S, I, f=None,
     Args
     ----
     times: iterable(float)
-        Timeteps to solve for. Give at least 2. Calculates len(times)-1 time steps. If times is not equidistant the matrix factorization is done for every time step.
+        Timeteps to solve for. Give at least 2. Calculates len(times)-1 time
+        steps. If times is not equidistant the matrix factorization is done
+        for every time step.
     S: Matrix
         System matrix holds your discrete equations and boundary conditions
     I: Matrix

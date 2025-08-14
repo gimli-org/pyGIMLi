@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
+#!/usr/bin/env python3
 """Class for managing first arrival travel time inversions."""
 import os
 import numpy as np
@@ -493,7 +491,7 @@ class TravelTimeManager(MeshMethodManager):
         np.savetxt(os.path.join(path, 'chi.txt'), self.inv.chi2History)
 
         if m.dim() == 2:
-            fig, ax = plt.subplots()
+            fig, ax = pg.plt.subplots()
             self.showResult(ax=ax, cov=self.standardizedCoverage(), **kwargs)
             fig.set_size_inches(size)
             fig.savefig(os.path.join(path, 'velocity.pdf'), bbox_inches='tight')

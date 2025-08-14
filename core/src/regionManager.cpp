@@ -708,7 +708,7 @@ Region * RegionManager::createRegion_(SIndex marker, const Mesh & mesh, SIndex c
     Region * region = NULL;
 
     if (regionMap_.count(marker) == 0){
-        __MS(marker)
+        // __MS(marker)
         region = new Region(marker, mesh, cellMarker, this);
         regionMap_.insert(std::make_pair(marker, region));
     } else {

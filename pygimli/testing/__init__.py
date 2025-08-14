@@ -1,6 +1,5 @@
-# coding=utf-8
-"""
-Testing utilities
+#!/usr/bin/env python3
+"""Testing utilities
 
 In Python you can call `pygimli.test()` to run all docstring
 examples.
@@ -47,7 +46,8 @@ def devTests():
 
 
 def test(target=None, show=False, onlydoctests=False, coverage=False,
-         htmlreport=False, abort=False, verbose=True, devTests=False):
+         htmlreport=False, abort=False, verbose=True, devTests=False,
+         exitOnError=False):
     """Run docstring examples and additional tests.
 
     Examples
@@ -62,6 +62,8 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
     >>> pg.test(boxprint, verbose=False) # doctest: +SKIP
     >>> # Use some logical expressions
     >>> pg.test("draw and not drawMesh") # doctest: +SKIP
+    >>> # Exit the program on test failure (useful for automatic testing)
+    >>> pg.test(exitonerror=True) # doctest: +SKIP
 
     Parameters
     ----------
@@ -77,12 +79,19 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
     htmlreport : str, optional
         Filename for HTML report such as www.pygimli.org/build_tests.html.
         Requires pytest-html plugin.
+    exitOnError : boolean, optional
+        Run sys.exit(1) if pytest detects a test error.
     abort : boolean, optional
-        Return correct exit code, e.g. abort documentation build when a test
-        fails.
+        Deprecated alias for exitOnError.
     devTests: boolean[False]
         Don't skip special tests marked for development, only with the
         @pg.skipOnDefaultTest decorator. Can be overwritten by env DEVTESTS.
+
+    Returns
+    -------
+    exitcode: integer
+        Return code of pytest, usually 0 for a successful test run.
+
     """
     setDevTests(devTests)
 
@@ -91,6 +100,8 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
     except ImportError:
         raise ImportError("pytest is required to run test suite. "
                           "Try 'pip install pytest'.")
+
+    exitOnError = exitOnError | abort
 
     # Remove figure warnings
     np.random.seed(1337)
@@ -181,8 +192,14 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
 
     np.set_printoptions(**printopt)
 
-    if abort is True:
+    # if abort is True:
+    #     if verbose:
+    #         print("Exiting with exitcode", exitcode)
+    #     if exitcode != 0:
+    #         pg.critical("some tests failed, exiting with exitcode", exitcode)
+    if exitOnError == pytest.ExitCode.TESTS_FAILED:
         if verbose:
             print("Exiting with exitcode", exitcode)
-        if exitcode != 0:
-            pg.critical("some tests failed, exiting with exitcode", exitcode)
+        sys.exit(exitcode)
+
+    return exitcode

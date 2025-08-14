@@ -5,10 +5,10 @@ r"""
 Geoelectrics in 2.5D
 ====================
 
-This example shows geoelectrical (DC resistivity) forward modelling in 2.5 D, i.e.
-a 2D conductivity distribution and 3D point sources, to illustrate the modelling level.
-For ready-made ERT forward simulations in practice, please refer to the example on ERT
-modelling and inversion using the ERTManager.
+This example shows geoelectrical (DC resistivity) forward modelling in 2.5 D,
+i.e. a 2D conductivity distribution and 3D point sources, to illustrate the
+modelling level. For ready-made ERT forward simulations in practice, please
+refer to the example on ERT modelling and inversion using the ERTManager.
 """
 ###############################################################################
 # Let us start with the gouverning partial differential equation of Poisson type

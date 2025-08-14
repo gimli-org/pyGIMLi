@@ -36,7 +36,7 @@ print(data)
 # file contains current ('i'), voltage ('u') and resistance ('r') vectors for
 # each of the 264 data.
 #
-# We first generate the geometry by creating a close polygon.
+# We first generate the geometry by creating a closed polygon.
 # Between each two electrodes, we place three additional nodes whose positions
 # are interpolated using a spline.
 plc = mt.createPolygon(data.sensors(), isClosed=True,
@@ -81,7 +81,7 @@ ax = mgr.showFit(circular=True)
 
 ###############################################################################
 # Finally, we have a look at the resulting resistivity distribution.
-# It clearly shows cavity inside as high resistivity.
+# It clearly shows a cavity inside the tree trunk, indicated by the high resistivity region.
 ax, cb = mgr.showResult(cMin=100, cMax=500, coverage=1)
 
 ###############################################################################

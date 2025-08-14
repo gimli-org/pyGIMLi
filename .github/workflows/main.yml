@@ -18,7 +18,6 @@ jobs:
       - name: Getting pyGIMLi sources
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.SECRET }}
           fetch-depth: 0 # checks out all branches and tags
           path: source
       - name: Running cmake
@@ -66,14 +65,32 @@ jobs:
     needs: docs
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
-      - name: Merge dev -> master
+      - name: Merge dev -> master (with rebase)
         working-directory: source
-        run: |   
-          git config user.name 'Florian Wagner'
-          git config user.email 'florian-wagner@users.noreply.github.com'
-          git checkout master
-          git merge dev --no-commit
-          git push origin master
+        run: |
+          # Authorize with personal access token
+          echo "config"
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          echo "remote"
+          git remote set-url origin https://florian-wagner:${{ secrets.SECRET }}@github.com/gimli-org/gimli.git
+
+          # Make sure to be in sync with dev on remote
+          echo "status"
+          git status
+          echo "fetch"
+          git fetch
+          echo "clean"
+          git clean -ffdx
+          echo "reset"
+          git reset --hard HEAD
+
+          # Rebase and push to master
+          echo "stash"
+          git stash
+          echo "rebase"
+          git rebase origin/master
+          git push origin HEAD:master --force-with-lease
   upload-html:
     name: Upload HTML to dev.pygimli.org
     runs-on: self-hosted

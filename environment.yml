@@ -4,7 +4,7 @@ channels:
   - defaults
   - gimli
 dependencies:
-  - pgcore >= 1.5.0
+  - pgcore >= 2.0b
   - matplotlib
   - jupyter
   - sphinx >= 3.1
@@ -25,7 +25,7 @@ dependencies:
   - meshio
   - scooby
   - tabulate
-  - tdqm
+  - tqdm
   - sphinx-design
   - pydata-sphinx-theme
   - myst-nb

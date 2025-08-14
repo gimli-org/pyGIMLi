@@ -202,9 +202,9 @@ def updateColorBar(cbar, gci=None, cMin=None, cMax=None, cMap=None,
     #        logScale, ', nCols:', nCols, nLevs, ', label:', label, levels)
 
     if gci is not None:
-        if min(gci.get_array()) < 1e12:
-            norm = mpl.colors.Normalize(vmin=min(gci.get_array()),
-                                        vmax=max(gci.get_array()))
+        if np.min(gci.get_array().any()) < 1e12:
+            norm = mpl.colors.Normalize(vmin=np.min(gci.get_array()),
+                                        vmax=np.max(gci.get_array()))
             gci.set_norm(norm)
 
         if cbar is not None:
@@ -494,7 +494,8 @@ def setCbarLevels(cbar, cMin=None, cMax=None, nLevs=5, levels=None):
             cbar.ax.figure.draw_without_rendering()
             #cbar._draw_all() # work but dunno how long this will exists
         except:
-            cbar.draw_all() # removed by mpl-3.8
+            #cbar.draw_all() # removed by mpl-3.8
+            cbar._draw_all()
 
         # necessary since mpl 3.0
         cbar.ax.minorticks_off()

@@ -25,7 +25,8 @@ from .ertModelling import ERTModelling, ERTModellingReference
 from .ertScheme import createData
 from .processing import (uniqueERTIndex, generateDataFromUniqueIndex,
                          reciprocalIndices, fitReciprocalErrorModel,
-                         reciprocalProcessing, combineMultipleData)
+                         reciprocalProcessing, combineMultipleData,
+                         removeDuplicates)
 from .timelapse import TimelapseERT
 from .crosshole import CrossholeERT
 from pygimli.physics.ves import VESManager  # backward compatibility
