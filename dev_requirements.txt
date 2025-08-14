@@ -7,7 +7,6 @@
 
 # needed
 setuptools
-#numpy<2
 numpy>=2.1.3
 matplotlib
 pyqt5 #pyqtagg backend
@@ -19,11 +18,9 @@ pygccxml==2.5.0
 matplotlib>=3.7
 
 # optional, but strongly recommended
-#scipy<1.14  # for numpy 1
-scipy>=1.14,<1.15 # for numpy 2
+scipy>=1.14,<1.15
 scooby
-#pyvista[all]<0.44; # for numpy 1
-pyvista[all]>=0.44 # for numpy 2
+pyvista[all]>=0.46 
 pyqt5
 tqdm
 
