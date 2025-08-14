@@ -92,7 +92,7 @@ class TimelapseERT():
 
         if np.any(self.DATA):
             if isinstance(self.DATA[0], pg.DataContainerERT):
-                self.data, self.DATA, self.ERR = combineMultipleData(self.DATA)
+                self.data, self.DATA, self.ERR, *_ = combineMultipleData(self.DATA)
             self.mask()
 
         if "name" in kwargs:

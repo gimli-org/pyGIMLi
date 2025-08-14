@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Utilities to convert pyGIMLi meshes to pyvista meshes."""
 import numpy as np
 import pygimli as pg
 
+
 pv = pg.optImport('pyvista', requiredFor="properly visualize 3D data")
 
-
-pgVTKCELLTypes = {
+PGVTKCELLTYPES = {
     pg.core.MESH_EDGE_CELL_RTTI:     3,
     pg.core.MESH_EDGE_RTTI:          3,
     pg.core.MESH_EDGE3_RTTI:         21,
@@ -26,7 +26,8 @@ pgVTKCELLTypes = {
 }
 
 def pgMesh2pvMesh(mesh, data=None, label=None, boundaries=False):
-    """
+    """Convert a pyGIMLi mesh to a pyvista mesh.
+
     pyGIMLi's mesh format is different from pyvista's needs,
     some preparation is necessary.
 
@@ -39,40 +40,41 @@ def pgMesh2pvMesh(mesh, data=None, label=None, boundaries=False):
     """
     if boundaries:
         mesh.createNeighbourInfos()
-        
+
         if mesh.cellCount() == 0:
             ### mesh is already a boundary mesh
             return pgMesh2pvMesh(mesh, data, label)
 
-        b = mesh.createSubMesh(mesh.boundaries([b.id() for b in mesh.boundaries() if b.outside() or b.marker() != 0]))
+        b = mesh.createSubMesh(mesh.boundaries([b.id()
+                for b in mesh.boundaries() if b.outside() or b.marker() != 0]))
         return pgMesh2pvMesh(b, data, label)
-    
+
     if mesh.cellCount() > 0:
         ids = []
         for c in mesh.cells():
             if c.rtti() == pg.core.MESH_TETRAHEDRON10_RTTI:
-                # gimli still work with old zienk. counting
+                # pg still work with old zienk. counting
                 ids.extend([len(c.ids()), *(c.ids()[[0,1,2,3,4,7,5,6,9,8]])])
             else:
                 ids.extend([len(c.ids()), *c.ids()])
 
         grid = pv.UnstructuredGrid(
             np.asarray(ids),
-            np.asarray([pgVTKCELLTypes[c.rtti()] for c in mesh.cells()]).flatten(),
+            np.asarray([PGVTKCELLTYPES[c.rtti()]
+                            for c in mesh.cells()]).flatten(),
             np.asarray(mesh.positions()))
 
         grid.cell_data['Cell Marker'] = np.asarray(mesh.cellMarkers())
 
     elif mesh.boundaryCount() > 0:
-        grid = pv.PolyData(np.asarray(mesh.positions()), 
-                faces=np.hstack([[len(b.ids()), *b.ids()] 
+        grid = pv.PolyData(np.asarray(mesh.positions()),
+                faces=np.hstack([[len(b.ids()), *b.ids()]
                                         for b in mesh.boundaries()]))
-        
+
         grid.cell_data['Boundary Marker'] = np.asarray(mesh.boundaryMarkers())
-        
+
     else:
         grid = pv.PolyData(np.asarray(mesh.positions()))
-
 
     # check for parameters inside the pg.Mesh
     for key, values in mesh.dataMap():
@@ -80,7 +82,6 @@ def pgMesh2pvMesh(mesh, data=None, label=None, boundaries=False):
             grid.cell_data[key] = np.asarray(values)
         elif len(values) == mesh.nodeCount():
             grid.point_data[key] = np.asarray(values)
-
 
     # check the given data as well
     try:
@@ -99,8 +100,8 @@ def pgMesh2pvMesh(mesh, data=None, label=None, boundaries=False):
                 grid.point_data[label] = np.asarray(data)
             else:
                 pg.warn("Given data fits neither cell count nor node count:")
-                pg.warn("{} vs. {} vs. {}".format(len(data), mesh.cellCount(),
-                                                mesh.nodeCount()))
+                pg.warn(f"{len(data)} vs. "
+                        f"{mesh.cellCount()} vs. {mesh.nodeCount()}")
     except Exception as e:
         print(label)
         print(e)
@@ -113,9 +114,8 @@ def pgMesh2pvMesh(mesh, data=None, label=None, boundaries=False):
         # last data that was added
         label = grid.array_names[-1]
     elif label not in grid.array_names:
-        pg.warn("Given label '{}' was not found.".format(label))
+        pg.warn(f"Given label '{label}' was not found.")
         label = grid.array_names[-1]
-
 
     grid.set_active_scalars(label)
 

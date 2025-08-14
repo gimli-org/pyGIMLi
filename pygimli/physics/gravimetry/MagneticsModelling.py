@@ -60,8 +60,7 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
 
 
     def computeKernel(self):
-        """ Compute the kernel.
-        """
+        """ Compute the kernel."""
         points = np.column_stack([self.sensorPositions[:, 1],
                                   self.sensorPositions[:, 0],
                                   -np.abs(self.sensorPositions[:, 2])])
@@ -80,7 +79,6 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
         self.J.recalcMatrixSize()
         self.setJacobian(self.J)
 
-
     def response(self, model):
         """ Compute forward response.
 
@@ -94,7 +92,6 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
 
         return self.J.dot(model)
 
-
     def createJacobian(self, model):
         """ Do nothing as this is a linear problem.
 
@@ -106,7 +103,7 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
         model: array-like
             Model parameters.
         """
-        # any defaults possible?
+        pass
 
 
 class RemanentMagneticsModelling(MagneticsModelling):
@@ -124,10 +121,12 @@ class RemanentMagneticsModelling(MagneticsModelling):
         self.m2 = pg.Mesh(self._baseMesh)
         self.regionManager().addRegion(1, self.m1, 0)
         self.regionManager().addRegion(2, self.m2, 0)
-        self.J = pg.matrix.hstack([self.magX.jacobian(),
-                                   self.magY.jacobian(),
-                                   self.magZ.jacobian()])
-        self.J.recalcMatrixSize()
+        self.fak = 4e-7 * np.pi * 1e9  # H to B and T to nT
+        self.JJ = pg.matrix.hstack([self.magX.jacobian(),
+                                    self.magY.jacobian(),
+                                    self.magZ.jacobian()])
+        self.JJ.recalcMatrixSize()
+        self.J = pg.matrix.ScaledMatrix(self.JJ, self.fak)
         self.setJacobian(self.J)
     
     def createJacobian(self, model):
@@ -138,5 +137,5 @@ class RemanentMagneticsModelling(MagneticsModelling):
         """Add together all three responses."""
         modelXYZ = np.reshape(model, [3, -1])
         return (self.magX.response(modelXYZ[0]) +
-               self.magY.response(modelXYZ[1]) +
-               self.magZ.response(modelXYZ[2])) * 4e-7 * np.pi * 1e9
+                self.magY.response(modelXYZ[1]) +
+                self.magZ.response(modelXYZ[2])) * self.fak

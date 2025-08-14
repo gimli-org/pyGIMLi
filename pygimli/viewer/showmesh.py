@@ -345,7 +345,9 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
             showBoundary = True
     elif isinstance(data, pg.core.stdVectorRVector3):
         drawSensors(ax, data, **kwargs)
-    elif isinstance(data, pg.PosVector):
+    elif isinstance(data, pg.PosVector) \
+        or hasattr(data, 'ndim') and data.ndim == 2 \
+            and (data.shape[1] == 2 or data.shape[1] == 3):
         drawStreams(ax, mesh, data, **kwargs)
     else:
         # check for map like data=[[marker, val], ....]
@@ -398,9 +400,12 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                 if showBoundary is None:
                     showBoundary = True
 
-            def _drawField(ax, mesh, data, kwargs):  # like view.mpl.drawField?
+            def _drawField(ax, mesh, data, **kwargs):  # like view.mpl.drawField?
                 # kwargs as reference here to set defaults valid outside too
                 validData = True
+                if len(data) == 2:
+                    return _drawField(ax, mesh, np.array(data).T, **kwargs)
+
                 if len(data) == mesh.cellCount():
                     kwargs['nCols'] = kwargs.pop('nCols', 256)
                     gci = drawModel(ax, mesh, data, **kwargs)
@@ -429,7 +434,7 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
 
                     if 'TriContourSet' in str(type(gci)):
                         ax.clear()
-                        gci, validData = _drawField(ax, mesh, data, kwargs)
+                        gci, validData = _drawField(ax, mesh, data, **kwargs)
                         updateAxes(ax, force=True)
                     else:
                         setMappableData(gci, data,
@@ -438,7 +443,7 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                         updateAxes(ax, force=True)
                         return ax, gci.colorbar
                 else:
-                    gci, validData = _drawField(ax, mesh, data, kwargs)
+                    gci, validData = _drawField(ax, mesh, data, **kwargs)
 
                 # Cache mesh and scalarmappable to make replaceData work
                 if not hasattr(mesh, 'gci'):

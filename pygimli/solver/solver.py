@@ -759,7 +759,8 @@ def parseMapToCellArray(attributeMap, mesh, default=0.0):
 
 
 def grad(mesh, u, r=None):
-    r"""
+    r"""Return the discrete interpolated gradient.
+
     Return the discrete interpolated gradient :math:`\mathbf{v}`
     for a given scalar field :math:`\mathbf{u}`.
 
@@ -1955,7 +1956,7 @@ def createStiffnessMatrix(mesh, a=None, isVector=False):
 
     if a is None:
         a = pg.Vector(mesh.cellCount(), 1.0)
-    
+
     if isinstance(a, (float, int)):
         a = pg.Vector(mesh.cellCount(), a)
 

@@ -468,6 +468,54 @@ class InversionBase(object):
             self.response = self.fop.response(self.model)
 
 
+    def start(self, dataVals, model=None, errorVals=None, response=None, **kwargs):
+        """Initialize inversion run by setting data, model and response.
+
+        Parameters
+        ----------
+        dataVals : iterable
+            Data values 
+        model : iterable
+            Model values, if not given, the fops start model will be used.
+        errorVals : iterable
+            Relative error values. dv / v
+            Can be omitted if absoluteError and/or relativeError kwargs given   
+        response : iterable
+            Response vector, if not given, it is computed from the model.
+
+        Keyword Arguments
+        -----------------
+        absoluteError : float | iterable
+            absolute error in units of dataVals
+        relativeError : float | iterable
+            relative error related to dataVals
+        """
+        self.dataVals = dataVals
+
+        if errorVals is None:  # use absoluteError and/or relativeError instead
+            absErr = kwargs.pop("absoluteError", 0)
+            relErr = kwargs.pop("relativeError", 0)
+            if np.any(np.isclose(absErr + relErr, 0, atol=0)):
+                raise Exception("Zero error occurred, check abs/relErr")
+
+            errorVals = pg.abs(absErr / np.asarray(dataVals)) + relErr
+
+        if isinstance(errorVals, (float, int)):
+            errorVals = np.ones_like(dataVals) * errorVals
+
+        # Triggers update of fop properties, any property to be set before.
+        self.errorVals = errorVals
+
+        if self.fop is None:
+            raise Exception("Need valid forward operator for inversion run.")
+
+        if model is None:
+            model = self.fop.startModel()
+        
+        self.model = model
+        if response is None:
+            self.response = self.fop.response(model)
+
     def run(self, dataVals, errorVals=None, **kwargs):
         """ Run inversion.
 
@@ -518,20 +566,8 @@ class InversionBase(object):
             Even more verbose console and file output
         """
         self.reset()
-        if errorVals is None:  # use absoluteError and/or relativeError instead
-            absErr = kwargs.pop("absoluteError", 0)
-            relErr = kwargs.pop("relativeError", 0)
-            if np.any(np.isclose(absErr + relErr, 0, atol=0)):
-                raise Exception("Zero error occurred, check abs/relErr")
-
-            errorVals = pg.abs(absErr / np.asarray(dataVals)) + relErr
-
-        if isinstance(errorVals, (float, int)):
-            errorVals = np.ones_like(dataVals) * errorVals
-
-        if self.fop is None:
-            raise Exception("Need valid forward operator for inversion run.")
-
+        startModel = self.convertStartModel(kwargs.pop('startModel', None))
+        self.start(dataVals, errorVals=errorVals, model=startModel, **kwargs)
         self.fop.setVerbose(False)  # gets rid of CHOLMOD messages
         maxIter = kwargs.pop('maxIter', self.maxIter)
         minDPhi = kwargs.pop('dPhi', self.minDPhi)
@@ -554,15 +590,9 @@ class InversionBase(object):
                 pg.verbose("Set regularization", di)
                 self.setRegularization(**di)
 
-        # Triggers update of fop properties, any property to be set before.
-        self.dataVals = dataVals
-        self.errorVals = errorVals
-
         # temporary set max iter to one for the initial run call
         maxIterTmp = self.maxIter
         self.maxIter = 1
-
-        startModel = self.convertStartModel(kwargs.pop('startModel', None))
 
         if self.verbose:
             pg.info('Starting inversion.')

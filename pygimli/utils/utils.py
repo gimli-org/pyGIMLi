@@ -234,7 +234,7 @@ def prettify(value, roundValue=False):
     elif pg.isScalar(value):
         return prettyFloat(value, roundValue)
     pg.warn("Don't know how to prettify the string representation for: ",
-            value)
+            type(value), value)
     return value
 
 
