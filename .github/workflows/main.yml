@@ -60,7 +60,9 @@ jobs:
           python -m pip install -e source/.[test]
       - name: Run pg.test()
         run: |
-          python3 -c "import pygimli; pygimli.test(show=False, abort=True)"
+          source venv-test/bin/activate
+          which python
+          python -c "import pygimli; pygimli.test(show=False, abort=True)"
   docs:
       name: Build website with examples
       needs: pgtest
@@ -72,16 +74,17 @@ jobs:
       steps:
         - name: Creating virtual environment for docs
           run: |
-            python -m venv venv-docs
-            source venv-docs/bin/activate
+            source venv-test/bin/activate
             python -m pip install -e source/.[doc]
         - name: Clean gallery
           working-directory: build
           run: |
+            source ../venv-test/bin/activate
             make clean-gallery
         - name: Running sphinx
           working-directory: build
           run: |
+            source ../venv-test/bin/activate
             xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
   merging:
     name: Automerging
