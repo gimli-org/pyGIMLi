@@ -33,17 +33,14 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "matplotlib>3.7",
     "numpy>=2.1.3",
-    "pygccxml==2.5.0",
-    "pyplusplus==1.8.5",
-    "pyqt5",                #pyqtagg backend
     "setuptools",
 ]
 
 [project.optional-dependencies]
 opt = [
     "ipython",
+    "matplotlib>3.7",
     "meshio",
     "pyvista[all]>=0.46",
     "pyqt5",
@@ -52,7 +49,18 @@ opt = [
     "tetgen>=0.6.5",
     "tqdm",
 ]
+build = [
+    "pygccxml==2.5.0",
+    "pyplusplus==1.8.5",
+    "build",
+    "twine",
+    "wheel",
+    "auditwheel; sys_platform == 'linux'",
+    "delvewheel; sys_platform == 'win32'",
+    "delocate; sys_platform == 'darwin'",
+]
 test = [
+    "pygimli[opt]",
     "tox",
     "ruff",
     "coverage[toml]",
@@ -62,6 +70,7 @@ test = [
     "pylint",
 ]
 doc = [
+    "pygimli[test]",
     "bibtexparser",
     "jupytext",
     "linkify-it-py",
@@ -73,14 +82,6 @@ doc = [
     "sphinxcontrib-programoutput",
     "sphinx-gallery",
     "sphinx-design",
-]
-build = [
-    "build",
-    "twine",
-    "wheel",
-    "auditwheel; sys_platform == 'linux'",
-    "delvewheel; sys_platform == 'win32'",
-    "delocate; sys_platform == 'darwin'",
 ]
 dev = [
     "pygimli[opt, test, doc, build]",
