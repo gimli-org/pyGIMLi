@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # make the script exit on every fail
 set -e
 
@@ -172,7 +171,7 @@ fi
 PROJECT=gimli
 
 AGENTS_ROOT=$WORKSPACE/..
-PROJECT_ROOT=$(realpath $AGENTS_ROOT/$PROJECT.newfea)
+PROJECT_ROOT=$(realpath $WORKSPACE)
 PROJECT_SRC=$PROJECT_ROOT/$PROJECT
 WHEELHOUSE=$(realpath $AGENTS_ROOT/wheelhouse) # path for resulting whls
 
