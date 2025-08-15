@@ -58,7 +58,7 @@ jobs:
     env:
       OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
     steps:
-      - name: Creating virtual environment for the test
+      - name: Creating virtual environment for tests
         run: |
           python -m venv venv-test
           source venv-test/bin/activate
@@ -78,9 +78,10 @@ jobs:
         PYVISTA_OFF_SCREEN: True
         OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
       steps:
-        - name: Starting test virtual environment
+        - name: Creating virtual environment for docs
           run: |
-            source venv-test/bin/activate
+            python -m venv venv-docs
+            source venv-docs/bin/activate
             python -m pip install -e source/.[doc]
         - name: Clean gallery
           working-directory: build
