@@ -7,7 +7,8 @@ pygimli/_version.py export-subst
 # *.cpp text
 # *.c text
 # *.h text
-# *.sh text
+# keep shell scripts as Linux LE
+*.sh text
 
 # Declare files that will always have CRLF line endings on checkout.
 *.py text eol=crlf
@@ -18,7 +19,6 @@ pygimli/_version.py export-subst
 *.cpp text eol=crlf
 *.c text eol=crlf
 *.h text eol=crlf
-*.sh text eol=crlf
 
 
 # Denote all files that are truly binary and should not be modified.
