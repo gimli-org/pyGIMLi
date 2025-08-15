@@ -44,6 +44,7 @@ jobs:
         run: |
           source venv-build/bin/activate
           python -c 'import pygimli; print(pygimli.version())'
+          python -c 'import pygimli; print(pygimli.Report())
   pgtest:
     name: Running tests
     runs-on: self-hosted
@@ -62,7 +63,9 @@ jobs:
         run: |
           source venv-test/bin/activate
           which python
-          python -c "import pygimli; pygimli.test(show=False, abort=True)"
+          python -c 'import pygimli; print(pygimli.version())'
+          python -c 'import pygimli; print(pygimli.Report())
+          python -c 'import pygimli; pygimli.test(show=False, abort=True)'
   docs:
       name: Build website with examples
       needs: pgtest
