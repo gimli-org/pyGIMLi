@@ -34,10 +34,12 @@ jobs:
           CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake ../source
       - name: Build libgimli
         working-directory: build
-        run: make -j 8 gimli
+        run: |
+          make -j 8 gimli
       - name: Build Python bindings
         working-directory: build
-        run: make pygimli J=4
+        run: |
+          make pygimli J=4
       - name: Test bindings
         run: |
           source venv-build/bin/activate
@@ -122,5 +124,3 @@ jobs:
       - name: Uploading built html files
         working-directory: build
         run: rsync -avP --delete doc/html/ /var/www/html
-
-
