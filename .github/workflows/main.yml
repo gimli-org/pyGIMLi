@@ -34,19 +34,12 @@ jobs:
           CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake ../source
       - name: Build libgimli
         working-directory: build
-<<<<<<< HEAD
-        run: make -j 8 gimli
-      - name: Build Python bindings
-        working-directory: build
-        run: make pygimli J=4
-=======
         run: |
           make -j 8 gimli
       - name: Build Python bindings
         working-directory: build
         run: |
           make pygimli J=4
->>>>>>> 534cf42feace8847b4c8869078bc9a25c072ff67
       - name: Test bindings
         run: |
           source venv-build/bin/activate
