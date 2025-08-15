@@ -23,7 +23,7 @@ jobs:
       - name: Creating virtual environment for the build
         run: |
           python -m venv venv-build
-          source venv-build/bin/activate
+          source ./venv-build/bin/activate
           python -m pip install -U pip
           python -m pip install -e source/.[build]
           pip list
@@ -54,10 +54,9 @@ jobs:
       - name: Creating virtual environment for tests
         run: |
           python -m venv venv-test
-          source venv-test/bin/activate
+          source ./venv-test/bin/activate
+          which python
           python -m pip install -U pip
-      - name: Installing into test virtual environment
-        run: |
           python -m pip install -e source/.[test]
       - name: Run pg.test()
         run: |
