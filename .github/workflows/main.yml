@@ -20,6 +20,13 @@ jobs:
         with:
           fetch-depth: 0 # checks out all branches and tags
           path: source
+      - name: Creating virtual environment for the build
+        run: |
+          python -m venv venv-build
+          source venv-build/bin/activate
+          python -m pip install -U pip
+          python -m pip install -r ./source/dev_requirements.txt
+          pip lists
       - name: Running cmake
         run: |
           mkdir -p build
@@ -38,12 +45,18 @@ jobs:
     env:
       OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
     steps:
+      - name: Creating virtual environment for the test
+        run: |
+          python -m venv venv-test
+          source venv-test/bin/activate
+          python -m pip install -U pip
+      - name: Installing into test virtual environment
+        run: |
+          working-directory: source
+          run: pip install -e . 
       - name: Run pg.test()
         run: python3 -c "import pygimli; pygimli.test(show=False, abort=True)"
         working-directory: source
-      - name: Install as development package
-        working-directory: source
-        run: pip install -e . --break-system-packages --user # better to use virtual enviroment in the future
   docs:
       name: Build website with examples
       needs: pgtest
@@ -53,6 +66,8 @@ jobs:
         PYVISTA_OFF_SCREEN: True
         OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
       steps:
+        - name: Staring test virtual environment
+          run: source venv-test/bin/activate
         - name: Clean gallery
           working-directory: build
           run: make clean-gallery
