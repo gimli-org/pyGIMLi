@@ -25,7 +25,7 @@ jobs:
           python -m venv venv-build
           source venv-build/bin/activate
           python -m pip install -U pip
-          python -m pip install -r ./source/dev_requirements.txt
+          python -m pip install -e source/.[build]
           pip list
       - name: Running cmake
         run: |
@@ -33,11 +33,15 @@ jobs:
           cd build
           CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake ../source
       - name: Build libgimli
+        working-directory: build
         run: make -j 8 gimli
-        working-directory: build
       - name: Build Python bindings
-        run: make pygimli J=4
         working-directory: build
+        run: make pygimli J=4
+      - name: Test bindings
+        run: |
+          source venv-build/bin/activate
+          python -c 'import pygimli; print(pygimli.version())'
   pgtest:
     name: Running tests
     runs-on: self-hosted
@@ -52,11 +56,10 @@ jobs:
           python -m pip install -U pip
       - name: Installing into test virtual environment
         run: |
-          working-directory: source
-          run: pip install -e . 
+          python -m pip install -e source/.[test]
       - name: Run pg.test()
-        run: python3 -c "import pygimli; pygimli.test(show=False, abort=True)"
-        working-directory: source
+        run: |
+          python3 -c "import pygimli; pygimli.test(show=False, abort=True)"
   docs:
       name: Build website with examples
       needs: pgtest
@@ -66,14 +69,18 @@ jobs:
         PYVISTA_OFF_SCREEN: True
         OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
       steps:
-        - name: Staring test virtual environment
-          run: source venv-test/bin/activate
+        - name: Starting test virtual environment
+          run: |
+            source venv-test/bin/activate
+            python -m pip install -e source/.[doc]
         - name: Clean gallery
           working-directory: build
-          run: make clean-gallery
+          run: |
+            make clean-gallery
         - name: Running sphinx
           working-directory: build
-          run: xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
+          run: |
+            xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
   merging:
     name: Automerging
     runs-on: self-hosted
