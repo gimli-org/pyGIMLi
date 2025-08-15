@@ -26,7 +26,7 @@ jobs:
           source venv-build/bin/activate
           python -m pip install -U pip
           python -m pip install -r ./source/dev_requirements.txt
-          pip lists
+          pip list
       - name: Running cmake
         run: |
           mkdir -p build
