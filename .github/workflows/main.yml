@@ -36,7 +36,8 @@ jobs:
           source venv-build/bin/activate
           mkdir -p build
           cd build
-          CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake ../source
+          # CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake ../source
+          cmake ../source
       - name: Build libgimli
         working-directory: build
         run: |
@@ -48,11 +49,11 @@ jobs:
           source ../venv-build/bin/activate
           make pygimli J=4
           rm -f wheelhouse/pgcore*.whl # remove old wheels
-          make whlpgcore
+          make whlpgcoreTest
           # install the wheel to ensure copying all *.so
-          pip install wheelhouse/pgcore*.whl
+          pip install wheelhouse/pgcore*linux*.whl
           rm -f wheelhouse/pygimli*.whl # remove old wheels
-          make whlpygimli
+          make whlpygimliTest
           pip install wheelhouse/pygimli*.whl
       - name: Test bindings
         run: |
