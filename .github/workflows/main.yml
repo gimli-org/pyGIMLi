@@ -44,7 +44,7 @@ jobs:
         run: |
           source ../venv-build/bin/activate
           make pygimli J=4
-          rm wheelhouse/pgcore*.whl # remove old wheels
+          rm -f wheelhouse/pgcore*.whl # remove old wheels
           make whlpgcore
           # install the wheel to ensure copying all *.so
           pip install wheelhouse/pgcore*.whl
