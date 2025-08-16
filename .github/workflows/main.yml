@@ -74,7 +74,7 @@ jobs:
           which python
           pip install -U pip
           pip install -e source/.[test]
-          pip install build/wheelhouse/pgcore*.whl
+          pip install build/wheelhouse/pgcore*linux*.whl
           pip install build/wheelhouse/pygimli*.whl
       - name: Run pg.test()
         run: |
@@ -96,7 +96,7 @@ jobs:
           run: |
             source venv-test/bin/activate
             pip install -e source/.[doc]
-            pip install build/wheelhouse/pgcore*.whl
+            pip install build/wheelhouse/pgcore*linux*.whl
             pip install build/wheelhouse/pygimli*.whl
         - name: Clean gallery
           working-directory: build
