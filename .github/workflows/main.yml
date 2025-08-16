@@ -25,21 +25,29 @@ jobs:
           python -m venv venv-build
           source ./venv-build/bin/activate
           python -m pip install -U pip
+          # run once for the deps
           python -m pip install -e source/.[build]
           pip list
       - name: Running cmake
         run: |
+          source venv-build/bin/activate
           mkdir -p build
           cd build
           CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake ../source
       - name: Build libgimli
         working-directory: build
         run: |
+          source venv-build/bin/activate
           make -j 8 gimli
       - name: Build Python bindings
         working-directory: build
         run: |
+          source venv-build/bin/activate
           make pygimli J=4
+          rm wheelhouse/pgcore*.whl # remove old wheels
+          make whlpgcore
+          # install the wheel to ensure copying all *.so
+          pip install wheelhouse/pgcore*.whl
       - name: Test bindings
         run: |
           source venv-build/bin/activate
@@ -55,9 +63,10 @@ jobs:
       - name: Creating virtual environment for tests
         run: |
           python -m venv venv-test
-          source ./venv-test/bin/activate
+          source venv-test/bin/activate
           which python
           python -m pip install -U pip
+          python -m pip install build/wheelhouse/pgcore*.whl
           python -m pip install -e source/.[test]
       - name: Run pg.test()
         run: |
