@@ -24,9 +24,10 @@ jobs:
         run: |
           python -m venv venv-build
           source ./venv-build/bin/activate
-          python -m pip install -U pip
+          pip install -U pip
           # run once for the deps
-          python -m pip install -e source/.[build]
+          pip install -e source/.[build]
+          pip uninstall source/.
           pip list
       - name: Running cmake
         run: |
@@ -48,6 +49,9 @@ jobs:
           make whlpgcore
           # install the wheel to ensure copying all *.so
           pip install wheelhouse/pgcore*.whl
+          rm -f wheelhouse/pygimli*.whl # remove old wheels
+          make whlpygimli
+          pip install wheelhouse/pygimli*.whl
       - name: Test bindings
         run: |
           source venv-build/bin/activate
@@ -65,9 +69,10 @@ jobs:
           python -m venv venv-test
           source venv-test/bin/activate
           which python
-          python -m pip install -U pip
-          python -m pip install build/wheelhouse/pgcore*.whl
-          python -m pip install -e source/.[test]
+          pip install -U pip
+          pip install -e source/.[test]
+          pip install build/wheelhouse/pgcore*.whl
+          pip install build/wheelhouse/pygimli*.whl
       - name: Run pg.test()
         run: |
           source venv-test/bin/activate
@@ -87,7 +92,9 @@ jobs:
         - name: Creating virtual environment for docs
           run: |
             source venv-test/bin/activate
-            python -m pip install -e source/.[doc]
+            pip install -e source/.[doc]
+            pip install build/wheelhouse/pgcore*.whl
+            pip install build/wheelhouse/pygimli*.whl
         - name: Clean gallery
           working-directory: build
           run: |
