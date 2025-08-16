@@ -11,8 +11,7 @@ on:
 jobs:
   pgcore:
     name: Building pgcore & bindings
-    runs-on: self-hosted
-      labels: test-runner
+    runs-on: [self-hosted, test-runner]
     steps:
       - name: Clean-up
         run: rm -rf ~/.cache/pygimli
@@ -60,7 +59,7 @@ jobs:
           python -c 'import pygimli; print(pygimli.Report())'
   pgtest:
     name: Running tests
-    runs-on: self-hosted
+    runs-on: [self-hosted, test-runner]
     needs: pgcore
     env:
       OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
@@ -84,7 +83,7 @@ jobs:
   docs:
       name: Build website with examples
       needs: pgtest
-      runs-on: self-hosted
+      runs-on: [self-hosted, test-runner]
       env:
         DISPLAY: ":99.0"
         PYVISTA_OFF_SCREEN: True
@@ -108,7 +107,7 @@ jobs:
             xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
   merging:
     name: Automerging
-    runs-on: self-hosted
+    runs-on: [self-hosted, test-runner]
     needs: docs
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
@@ -140,7 +139,7 @@ jobs:
           git push origin HEAD:master --force-with-lease
   upload-html:
     name: Upload HTML to dev.pygimli.org
-    runs-on: self-hosted
+    runs-on: [self-hosted, test-runner]
     needs: docs
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
