@@ -29,7 +29,7 @@ jobs:
           pip install -U pip
           # run once for the deps
           pip install -e source/.[build]
-          pip uninstall pygimli
+          pip uninstall -y pygimli
           pip list
       - name: Running cmake
         run: |
