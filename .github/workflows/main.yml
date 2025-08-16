@@ -37,7 +37,7 @@ jobs:
       - name: Build libgimli
         working-directory: build
         run: |
-          source venv-build/bin/activate
+          source ../venv-build/bin/activate
           make -j 8 gimli
       - name: Build Python bindings
         working-directory: build
