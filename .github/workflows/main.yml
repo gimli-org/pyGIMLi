@@ -11,7 +11,9 @@ on:
 jobs:
   pgcore:
     name: Building pgcore & bindings
-    runs-on: self-hosted test-runner
+    runs-on: 
+      group: self-hosted
+      labels: test-runner
     steps:
       - name: Clean-up
         run: rm -rf ~/.cache/pygimli
