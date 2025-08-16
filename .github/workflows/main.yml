@@ -11,8 +11,7 @@ on:
 jobs:
   pgcore:
     name: Building pgcore & bindings
-    runs-on: 
-      group: self-hosted
+    runs-on: self-hosted
       labels: test-runner
     steps:
       - name: Clean-up
