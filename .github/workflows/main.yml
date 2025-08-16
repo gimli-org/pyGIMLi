@@ -12,6 +12,7 @@ jobs:
   pgcore:
     name: Building pgcore & bindings
     runs-on: self-hosted
+      labels: 30744-002-base-ce
     steps:
       - name: Clean-up
         run: rm -rf ~/.cache/pygimli
