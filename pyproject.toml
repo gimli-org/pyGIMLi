@@ -9,7 +9,7 @@ packages = ["pygimli"]
 [project]
 name = "pygimli"
 #dynamic = ["version"] ## versioneer does not yet seems to work
-version = 1.5.4
+version = "1.5.4"
 requires-python = ">=3.10"
 authors = [
   { name = "Carsten Rücker" },
