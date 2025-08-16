@@ -22,7 +22,9 @@ jobs:
           path: source
       - name: Creating virtual environment for the build
         run: |
-          python -m venv venv-build
+          whoami
+          env
+          /usr/bin/python3 -m venv venv-build
           source ./venv-build/bin/activate
           pip install -U pip
           # run once for the deps
@@ -66,7 +68,7 @@ jobs:
     steps:
       - name: Creating virtual environment for tests
         run: |
-          python -m venv venv-test
+          /usr/bin/python3 -m venv venv-test
           source venv-test/bin/activate
           which python
           pip install -U pip
