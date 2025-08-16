@@ -50,11 +50,12 @@ jobs:
           make pygimli J=4
           rm -f wheelhouse/pgcore*.whl # remove old wheels
           make whlpgcoreTest
+          rm -f wheelhouse/pgcore*manylinux*.whl
           # install the wheel to ensure copying all *.so
-          pip install wheelhouse/pgcore*linux*.whl
+          pip install --force-reinstall wheelhouse/pgcore*linux*.whl
           rm -f wheelhouse/pygimli*.whl # remove old wheels
           make whlpygimliTest
-          pip install wheelhouse/pygimli*.whl
+          pip install --force-reinstall wheelhouse/pygimli*.whl
       - name: Test bindings
         run: |
           source venv-build/bin/activate
