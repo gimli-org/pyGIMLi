@@ -85,6 +85,7 @@ Last try on Ubuntu 22.04.03 (23-11-14)
                  python3-dev python3-matplotlib python3-numpy python3-pyqt5 \
                  python3-scipy libboost-all-dev libedit-dev \
                  libsuitesparse-dev libopenblas-openmp-dev libumfpack5 \
+                 libomp-dev doxygen \
                  libcppunit-dev clang
 
     mkdir -p ~/src/gimli
