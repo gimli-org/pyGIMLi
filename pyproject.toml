@@ -38,6 +38,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+build = [
+    "pygccxml==2.5.0",
+    "pyplusplus==1.8.5",
+    "build",
+    "scooby",
+    "twine",
+    "wheel",
+    "auditwheel; sys_platform == 'linux'",
+    "delvewheel; sys_platform == 'win32'",
+    "delocate; sys_platform == 'darwin'",
+]
 opt = [
     "ipython",
     "matplotlib>3.7",
@@ -45,19 +56,8 @@ opt = [
     "pyvista[all]>=0.46",
     "pyqt5",
     "scipy>=1.14,<1.15",
-    "scooby",
     "tetgen>=0.6.5",
     "tqdm",
-]
-build = [
-    "pygccxml==2.5.0",
-    "pyplusplus==1.8.5",
-    "build",
-    "twine",
-    "wheel",
-    "auditwheel; sys_platform == 'linux'",
-    "delvewheel; sys_platform == 'win32'",
-    "delocate; sys_platform == 'darwin'",
 ]
 test = [
     "pygimli[opt]",
