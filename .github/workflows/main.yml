@@ -37,6 +37,7 @@ jobs:
           mkdir -p build
           cd build
           # CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake ../source
+          rm -f CMakeCache.txt   # ensure cmake setting fits the venv
           cmake ../source
       - name: Build libgimli
         working-directory: build
