@@ -96,8 +96,6 @@ jobs:
           run: |
             source venv-test/bin/activate
             pip install -e source/.[doc]
-            pip install build/wheelhouse/pgcore*linux*.whl
-            pip install build/wheelhouse/pygimli*.whl
         - name: Clean gallery
           working-directory: build
           run: |
@@ -107,6 +105,8 @@ jobs:
           working-directory: build
           run: |
             source ../venv-test/bin/activate
+            rm -f CMakeCache.txt
+            cmake ../source/ # to find the correct sphinx from the current venv
             xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
   merging:
     name: Automerging
