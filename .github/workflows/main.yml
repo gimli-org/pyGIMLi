@@ -22,14 +22,14 @@ jobs:
           path: source
       - name: Creating virtual environment for the build
         run: |
-          whoami
           env
+          rm -rf venv-build/
           /usr/bin/python3 -m venv venv-build
           source ./venv-build/bin/activate
           pip install -U pip
           # run once for the deps
           pip install -e source/.[build]
-          pip uninstall -y pygimli
+          #pip uninstall -y pygimli
           pip list
       - name: Running cmake
         run: |
@@ -50,7 +50,6 @@ jobs:
           make pygimli J=4
           rm -f wheelhouse/pgcore*.whl # remove old wheels
           make whlpgcoreTest
-          rm -f wheelhouse/pgcore*manylinux*.whl
           # install the wheel to ensure copying all *.so
           # pip install --force-reinstall wheelhouse/pgcore*linux*.whl
           # rm -f wheelhouse/pygimli*.whl # remove old wheels
