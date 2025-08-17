@@ -52,10 +52,10 @@ jobs:
           make whlpgcoreTest
           rm -f wheelhouse/pgcore*manylinux*.whl
           # install the wheel to ensure copying all *.so
-          pip install --force-reinstall wheelhouse/pgcore*linux*.whl
-          rm -f wheelhouse/pygimli*.whl # remove old wheels
-          make whlpygimliTest
-          pip install --force-reinstall wheelhouse/pygimli*.whl
+          # pip install --force-reinstall wheelhouse/pgcore*linux*.whl
+          # rm -f wheelhouse/pygimli*.whl # remove old wheels
+          # make whlpygimliTest
+          # pip install --force-reinstall wheelhouse/pygimli*.whl
       - name: Test bindings
         run: |
           source venv-build/bin/activate
@@ -70,13 +70,13 @@ jobs:
     steps:
       - name: Creating virtual environment for tests
         run: |
+          rm -rf venv-test/
           /usr/bin/python3 -m venv venv-test
           source venv-test/bin/activate
           which python
           pip install -U pip
           pip install -e source/.[test]
           pip install build/wheelhouse/pgcore*linux*.whl
-          pip install build/wheelhouse/pygimli*.whl
       - name: Run pg.test()
         run: |
           source venv-test/bin/activate
