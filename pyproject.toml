@@ -53,7 +53,7 @@ opt = [
     "ipython",
     "matplotlib>3.7",
     "meshio",
-    "pyvista[all]>=0.46",
+    "pyvista[all]",
     "pyqt5",
     "scipy>=1.14,<1.15",
     "tetgen>=0.6.5",
