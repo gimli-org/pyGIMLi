@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Plot 3D mesh."""
-
+"""Plot 3D mesh using pyvista."""
 import pygimli as pg
 
 pyvista = pg.optImport("pyvista", requiredFor="properly visualize 3D data")
@@ -20,13 +18,13 @@ else:
     vers_needf = 0.340
 
     if vers_userf < vers_needf:
-        pg.warn("Please consider updating PyVista to at least {}".format(vers_needs))
+        pg.warn(f"Please consider updating PyVista to at least {vers_needs}")
 
     from .draw import drawModel
 
 
 def showMesh3D(mesh, data, **kwargs):
-    """Calling the defined function to show the 3D object."""
+    """Call the defined function to show the 3D object."""
     if pg.rc["view3D"] == "fallback":
         return showMesh3DFallback(mesh, data, **kwargs)
 
@@ -101,9 +99,8 @@ def showMesh3DVista(mesh, data=None, **kwargs):
 
     backend = kwargs.pop("backend", "client")
 
-    plotter = drawModel(
-        kwargs.pop("ax", None), mesh, data, notebook=notebook, cMap=cMap, **kwargs
-    )
+    plotter = drawModel(kwargs.pop("ax", None),
+                        mesh, data, notebook=notebook, cMap=cMap, **kwargs)
 
     # seems top be broken on some machines
     if kwargs.get("aa", False):
@@ -111,21 +108,25 @@ def showMesh3DVista(mesh, data=None, **kwargs):
 
     if notebook is True:
         # monkeypatch show of this plotter instance so we can use multiple
-        # backends and only plotter.show() .. whoever this needs.
-        plotter.__show = plotter.show
+        # backends and only use plotter.show(), allows skip show (for testing)
+        # whoever this needs.
+        if not hasattr(plotter, "__show"):
+            pyvista.set_new_attribute(plotter, "__show", plotter.show)
         plotter.show = lambda *args, **kwargs: plotter.__show(
             *args, jupyter_backend=backend, **kwargs
         )
     elif pg.viewer.mpl.isInteractive():
-        plotter.__show = plotter.show
+        if not hasattr(plotter, "__show"):
+            pyvista.set_new_attribute(plotter, "__show", plotter.show)
         plotter.show = (
             lambda *args, **kwargs: plotter.__show(*args, **kwargs)
             if pg.viewer.mpl.isInteractive() or pyvista.BUILDING_GALLERY
             else False
         )
     else:
-        ## on default skipp showing if forced, e.g., by test with show=False
-        plotter.__show = plotter.show
+        ## on default skip showing if forced, e.g., by test with show=False
+        if not hasattr(plotter, "__show"):
+            pyvista.set_new_attribute(plotter, "__show", plotter.show)
         plotter.show = (
             lambda *args, **kwargs: plotter.__show(*args, **kwargs)
             if pg.rc['pyvista.backend'] is not None else False
