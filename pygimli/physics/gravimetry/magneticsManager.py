@@ -237,19 +237,35 @@ class MagManager(MeshMethodManager):
         return model
 
 
-    def showDataFit(self):
+    def showDataFit(self, **fkw):
         """ Show data, model response and misfit.
+
+        Keyword arguments
+        -----------------
+        cmap : str ['bwr']
+            colormap
+        maxField : float
+            colorbar for field
+        maxMisfit : float
+            colorbar for (error-weighted) misfit    
+        vmin/vmax
         """
         nc = len(self.cmp)
         _, ax = pg.plt.subplots(ncols=3, nrows=nc, figsize=(12, 3*nc),
                                 sharex=True, sharey=True, squeeze=False)
         vals = np.reshape(self.inv.dataVals, [nc, -1])
-        mm = np.max(np.abs(vals))
+        mm = fkw.pop('maxField', np.max(np.abs(vals)))
+        mmis = fkw.pop('maxMisfit', 3)
         resp = np.reshape(self.inv.response, [nc, -1])
         errs = np.reshape(self.inv.errorVals, [nc, -1])  # relative!
         misf = (vals - resp) / np.abs(errs *  vals)
-        fkw = {'cmap':"bwr", 'vmin':-mm, 'vmax':mm}
-        mkw = {'cmap':"bwr", 'vmin':-3, 'vmax':3}
+        mkw = kwargs.copy()
+        fkw.setdefault('cmap', "bwr")
+        fkw.setdefault('vmin', -mm)
+        fkw.setdefault('vmax', mm)
+        mkw.setdefault('cmap', "bwr")
+        mkw.setdefault('vmin', -mmis)
+        mkw.setdefault('vmax', mmis)
         for i in range(nc):
             ax[i, 0].scatter(self.x, self.y, c=vals[i], **fkw)
             ax[i, 1].scatter(self.x, self.y, c=resp[i], **fkw)

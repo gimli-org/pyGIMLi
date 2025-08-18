@@ -1,7 +1,16 @@
 import numpy as np
 
 def magneticDipole(Q, M, P=None, x=None, y=0., z=0., alpha=0, cylinder=False):
-    """Compute magnetic field.
+    """Compute magnetic field according to eq. (4.14) from Blakely (1996).
+
+    The magnetic field :math:`\vec{B}` at a point P due to a dipole in Q reads
+    
+    .. math::
+        \vec{B}(\vec{r}) = \frac{\mu_0 M}{4\pi r^3} \left[ 
+        3 (\vec{M}' \cdot \vec{r}')\vec{r}' - \vex{M}' \right]
+
+    where :math:`\vec r=\vec r_P - \vec r_Q` is the vector between the magnetic 
+    moment Q and the measuring point P, :math:`r'/M'` are unit vectors of r/M.
     
     Parameters
     ----------
