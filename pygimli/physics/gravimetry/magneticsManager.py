@@ -237,7 +237,7 @@ class MagManager(MeshMethodManager):
         return model
 
 
-    def showDataFit(self, **fkw):
+    def showDataFit(self, **kwargs):
         """ Show data, model response and misfit.
 
         Keyword arguments
@@ -254,15 +254,16 @@ class MagManager(MeshMethodManager):
         _, ax = pg.plt.subplots(ncols=3, nrows=nc, figsize=(12, 3*nc),
                                 sharex=True, sharey=True, squeeze=False)
         vals = np.reshape(self.inv.dataVals, [nc, -1])
-        mm = fkw.pop('maxField', np.max(np.abs(vals)))
-        mmis = fkw.pop('maxMisfit', 3)
         resp = np.reshape(self.inv.response, [nc, -1])
         errs = np.reshape(self.inv.errorVals, [nc, -1])  # relative!
         misf = (vals - resp) / np.abs(errs *  vals)
-        mkw = kwargs.copy()
+        fkw = kwargs.copy()
         fkw.setdefault('cmap', "bwr")
+        mm = fkw.pop('maxField', np.max(np.abs(vals)))
         fkw.setdefault('vmin', -mm)
         fkw.setdefault('vmax', mm)
+        mkw = kwargs.copy()
+        mmis = fkw.pop('maxMisfit', 3)
         mkw.setdefault('cmap', "bwr")
         mkw.setdefault('vmin', -mmis)
         mkw.setdefault('vmax', mmis)
