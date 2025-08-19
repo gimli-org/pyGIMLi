@@ -4,6 +4,6 @@
 
 ```{eval-rst}
 .. bibliography:: references.bib
-    :style: mystyle
+    :style: pgstyle
     :all:
 ```

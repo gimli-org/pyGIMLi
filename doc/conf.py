@@ -3,6 +3,7 @@
 pyGIMLi sphinx configuration file.
 """
 
+from asyncio import subprocess
 import warnings
 
 warnings.filterwarnings(
@@ -65,11 +66,14 @@ plot_rcparams = {"savefig.bbox": "tight"}
 # If your documentation needs a minimal Sphinx version, state it here.
 needs_sphinx = "1.8"  # due to napoleon
 
+
+# pkg_resources is deprecated!
 # Check for external sphinx extensions
 deps = [
     "sphinxcontrib-programoutput",
     "sphinxcontrib-bibtex",
-    "sphinxcontrib-doxylink"
+    "sphinxcontrib-doxylink",
+    "pybtex"
 ]
 
 # check for p.version too
@@ -83,12 +87,12 @@ for dep in deps:
 if req:
     msg = (
         "Sorry, there are missing dependencies to build the docs.\n"
-        + "Try: sudo pip install %s.\n" % (" ".join(req))
-        + "Or install all dependencies with: pip install -r dev_requirements.txt\n"
-        + "You can install them all in userspace by adding the --user flag."
+        + "Try: pip install %s.\n" % (" ".join(req))
+        + "Or install all dependencies with: pip install -e . [doc]\n"
     )
     print((pkg_resources.working_set))
     raise ImportError(msg)
+
 
 # Add any Sphinx extension module names here, as strings.
 # They can be extensions coming with Sphinx (named "sphinx.ext.*")
@@ -581,15 +585,32 @@ texinfo_documents = [
 # How to display URL addresses: "footnote", "no", or "inline".
 texinfo_show_urls = "footnote"
 
+
 # -- Options for pybtex output ------------------------------------------------
-# load our plugins for manual bibstyle
+# load our plugins for manual bibstyle `:style: pgstyle`
+def install_and_import(package, src):
+    import importlib
+    try:
+        importlib.import_module(package)
+        print('1 Successfully imported package', package)
+    except ModuleNotFoundError:
+        import subprocess
+        import sys
 
-# temporary disable due to python3 pybtex quirks
-for dist in pkg_resources.find_distributions(
-    SPHINXDOC_PATH + "/_templates/pybtex_plugins/"
-):
-    pkg_resources.working_set.add(dist)
+        def install():
+            print('2 Installing editable package', package, 'from', src)
+            subprocess.run([sys.executable, "-m", "pip", "install", "-e", src],
+                           check=True)
 
+        install()
+
+        print("**** Trying to install pybtex plugin", SPHINXDOC_PATH +"/_templates/pybtex_plugins/")
+        for dist in pkg_resources.find_distributions(SPHINXDOC_PATH +
+                                                         "/_templates/pybtex_plugins/"):
+            print("**** Adding pybtex plugin", dist)
+            pkg_resources.working_set.add(dist)
+
+install_and_import('pybtexPGstylePlugin', SPHINXDOC_PATH +"/_templates/pybtex_plugins/")
 # End pybtex stuff
 
 # -- Options for doxylink -----------------------------------------------------
