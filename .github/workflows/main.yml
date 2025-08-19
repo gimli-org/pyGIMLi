@@ -106,8 +106,8 @@ jobs:
           working-directory: build
           run: |
             source ../venv-test/bin/activate
-            rm -f CMakeCache.txt
             rm -rf doc
+            rm -f CMakeCache.txt
             cmake ../source/ # to find the correct sphinx from the current venv
             xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
   merging:
