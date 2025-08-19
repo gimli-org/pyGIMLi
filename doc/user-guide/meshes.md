@@ -185,7 +185,7 @@ m_reg
 To show the mesh, we can simply call the pg.show() function:
 
 ```{code-cell} 
-pg.show(m_reg)
+_ = pg.show(m_reg)
 ```
 
 :::{admonition} Regular grids in 2D
@@ -204,31 +204,62 @@ pg.show(m_reg)
 
 After covering the basics of regular grids, we want to dive into the world of irregular meshes.
 
-However, we first of all have to create a **geometry** that is used as underlying susurface model for the mesh creation.
+#### Defining the **geometry**/PLC of the region of interest
+
+Creating meshes in pyGIMLi is a two-stage process: First, the geometry (and
+subgeometries) of the region of interest is defined using the so-called PLCs,
+with subsequent addition of smaller details. Only after the geometries have
+been defined, as a last step, the actual mesh generation.
+
+:::{admonition} Piecewise Linear Complexes (PLCs)
+:class: info
+
+Think of a PLC as one piece of geometry defined by nodes connected by lines.
+The PLCs can then be combined to created complex geometries, which, at a later
+state, are then provided to mesh generator that then fills the geometries with
+mesh cells that can be used for subsequent FE modelling.
+
+More information about piecewise linear complexes (PLCs) can be found in the
+tetgen mesh generator manual: https://codeberg.org/TetGen/Manuals
+
+:::
+
+There is a wide variety of functions available to create (and combine) PLCs. A
+simple example of creating a layered subsurface would be:
 
 ```{code-cell}
-# dimensions of the world
+# dimensions of the world [m]
 left = -30
 right = 30
 depth = 25
 
-world = mt.createWorld(start=[left, 0],
-                       end=[right, -depth],
-                       layers=[-5], worldMarker=False)
+world = mt.createWorld(
+    start=[left, 0],
+    end=[right, -depth],
+    layers=[-5],
+ worldMarker=False
+)
 print(world)
-pg.show(world)
+_ = pg.show(world)
 ```
 
 :::{admonition} Region markers
 :class: info
 
-A mesh can have different regions, which are defined by **region markers** for each cell. Region markers can be used to assign properties for forward modelling as well as to control the inversion behavior.
+A mesh can have different regions, which are defined by **region markers** for
+each cell. Region markers can be used to assign properties for forward
+modelling, as well as to control the inversion behavior.
+
+Note that markers can also be assigned to PLCs and will later on propagated to
+all cells that comprise a PLC.
 
 For more information, see the later section on **Markers**
 :::
 
 
-We are using the mt.createWorld() function to create a world based on the gíven x- & z-coordinates. The following table lists all handy functions that can be utilized when creating a geometry in pyGIMLi:
+We are using the `mt.createWorld()` function to create a world based on the gíven
+x- & z-coordinates. The following table lists all handy functions that can be
+utilized when creating a geometry in pyGIMLi:
 
 :::{admonition} PLC creation in pyGIMLi
 :class: tip
@@ -247,10 +278,16 @@ We are using the mt.createWorld() function to create a world based on the gíven
 | {py:class}`createRectangle <pygimli.meshtools.createRectangle>`      |   Creates a rectangular PLC   |
 :::
 
+#### The actual mesh generation
 
-pyGIMLi has different ways to create meshes. mt.createMesh creates a mesh using Triangle, a two-dimensional constrained Delaunay mesh generator.
+pyGIMLi has different ways to create meshes. mt.createMesh creates a mesh using
+Triangle, a two-dimensional constrained Delaunay mesh generator.
 
-The additional input parameters control the maximum triangle area and the mesh smoothness. The quality factor prescribes the minimum angles allowed in the final mesh. This can improve numerical accuracy, however, fine meshes lead to increased computational costs. Notice that we are now using showMesh which is convenient for 2D mesh visualization.
+The additional input parameters control the maximum triangle area and the mesh
+smoothness. The quality factor prescribes the minimum angles allowed in the
+final mesh. This can improve numerical accuracy, however, fine meshes lead to
+increased computational costs. Notice that we are now using showMesh which is
+convenient for 2D mesh visualization.
 
 ```{code-cell}
 from pygimli.viewer import showMesh
@@ -262,6 +299,35 @@ mesh = mt.createMesh(world,
                     )
 showMesh(mesh, markers=True, showMesh=True); 
 ```
+
+:::{admonition} Mesh refinement
+:class: info
+Finite-Element modelings often require local mesh refinement to achieve
+suitable accuracy for a given application. Pygimli basically offers two
+approaches to do this:
+
+* Choose a suitable `quality` parameter when calling `createMesh`, resulting in
+  a mesh with a globally-acceptable mesh size. This has the disadvantage of
+  increasing the total mesh size significantly, leading to potentially (very)
+long computation times
+* Add nodes with suitably small distances to the PLC _before_ calling
+  `createMesh`. In order to incorporate these nodes, the mesh generator is then
+  forced to locally include correspondingly small mesh cells. In order to achieve
+  continuity, mesh sizes will then gradually increase to the globally-accepted
+  mesh size.
+  A PLC object has the method `plc.createNode([x, y, z])` which can be used to
+  add a node at the location (x, y, z).
+
+:::
+
+:::{admonition} 2D mesh quality and cell areas
+:class: info
+
+TODO
+
+:::
+
+
 
 
 ## Utilizing markers
