@@ -7,6 +7,6 @@
 
 ```{eval-rst}
 .. bibliography:: libgimli.bib
-    :style: mystyle
+    :style: pgstyle
     :all:
 ```
