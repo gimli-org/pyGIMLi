@@ -6,7 +6,7 @@ import numpy as np
 from math import ceil
 from .core import (cat, HexahedronShape, Line, RSparseMapMatrix,
                    Mesh, MeshEntity, Node, Boundary, RVector, RVector3,
-                   PolygonFace, TetrahedronShape, TriangleFace)
+                   R3Vector, PolygonFace, TetrahedronShape, TriangleFace)
 from .logger import deprecated, error, info, warn, critical
 from .base import isScalar, isArray, isPos, isR3Array, isComplex
 from ..meshtools import mergePLC, exportPLC, interpolateAlongCurve
@@ -819,6 +819,11 @@ Mesh.submesh = __Mesh__submesh__
 
 def __Mesh__innerBoundaryCenters__(self):
     """Center of all inner boundaries (C1-constraints)."""
-    return [b.center() for b in self.boundaries() if not b.outside()]
+    pw = R3Vector()
+    for b in self.boundaries():
+        if not b.outside():
+            pw.append(b.center())
+
+    return pw
 
 Mesh.innerBoundaryCenters = __Mesh__innerBoundaryCenters__
