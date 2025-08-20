@@ -6,7 +6,7 @@
 ```
 
 ```{eval-rst}
-.. bibliography:: libgimli.bib
+.. bibliography:: ./about/libgimli.bib
     :style: pgstyle
     :all:
 ```
