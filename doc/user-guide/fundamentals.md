@@ -24,7 +24,7 @@ systems we use the open-source collection **SuiteSparse**, which contains multi-
 solvers as well as reordering algorithms.
 
 (fig-gimliblock)=
-:::{figure} _static/pg_design.png
+:::{figure} ../_static/pg_design.png
 :align: center
 :class: wrap-fig
 :::
