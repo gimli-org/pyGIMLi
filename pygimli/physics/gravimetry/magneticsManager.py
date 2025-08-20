@@ -23,21 +23,50 @@ class MagManager(MeshMethodManager):
         self.z = kwargs.pop("z", None)
         self.igrf = kwargs.pop("igrf", None)
         self.mesh_ = kwargs.pop("mesh", None)
+        self.cmp = kwargs.pop("cmp", None)
+        self.dem = kwargs.pop("dem", None)
 
         # self.inv_ = pg.frameworks.Inversion()
+        if isinstance(self.dem, str):
+            from pygimli.utils import DEM
+            self.dem = DEM(self.dem)
+
         if isinstance(data, str):
             self.DATA = np.genfromtxt(data, names=True)
             self.x = self.DATA["x"]
             self.y = self.DATA["y"]
-            self.z = np.abs(self.DATA["z"])
-            self.cmp = [t for t in self.DATA.dtype.names
-                        if t.startswith("B") or t.startswith("T")]
+            self.z = self.DATA["z"]
+            if self.cmp is None:
+                self.cmp = [t for t in self.DATA.dtype.names
+                            if t.startswith("B") or t.startswith("T")]
+            if self.igrf is None:
+                import utm
+                lat, lon = utm.to_latlon(np.mean(self.x), np.mean(self.y), 33, 'U')
+                pg.info(f"Center of data: {lat}, {lon}")
+                self.igrf = [lat, lon]
 
-        self.cmp = kwargs.pop("cmp", ["TFA"])
-        super().__init__()
+        super().__init__(**kwargs)
         if self.mesh_ is not None:
+            if isinstance(self.mesh_, str):
+                self.mesh_ = pg.load(self.mesh_)
+
             self.setMesh(self.mesh_)
 
+
+    def __repr__(self):
+        """String representation of the Magnetics Manager."""
+        out = f"MagManager with {len(self.x)} data points."
+        out += f"\n{len(self.cmp)} active components: "+", ".join(self.cmp)
+        if self.DATA is not None:
+            out += f"\nData fields: {self.DATA.dtype.names}"
+        if self.mesh_ is not None:
+            out += f"\nMesh: {self.mesh_.cellCount()} cells, {self.mesh_.nodeCount()} nodes."
+        if self.igrf is not None:
+            out += f"\nIGRF: {self.igrf}"
+        if self.dem is not None:
+            out += f"\nDEM: {self.dem.__repr__()}"
+
+        return out
 
     def showData(self, cmp=None, **kwargs):
         """ Show data.
@@ -49,6 +78,7 @@ class MagManager(MeshMethodManager):
                                   squeeze=False, figsize=(7, len(self.cmp)*1+3))
         axs = np.atleast_1d(ax.flat)
         kwargs.setdefault("cmap", "bwr")
+        ori = kwargs.pop("orientation", "horizontal")
         for i, c in enumerate(cmp):
             fld = self.DATA[c]
             vv = max(-np.min(fld)*1., np.max(fld)*1.)
@@ -56,7 +86,7 @@ class MagManager(MeshMethodManager):
                                 vmin=-vv, vmax=vv, **kwargs)
             axs[i].set_title(c)
             axs[i].set_aspect(1.0)
-            fig.colorbar(sc, ax=ax.flat[i])
+            fig.colorbar(sc, ax=ax.flat[i], orientation=ori)
 
         return ax
 
@@ -133,12 +163,13 @@ class MagManager(MeshMethodManager):
         return self.mesh_
 
 
-    def createForwardOperator(self):
+    def createForwardOperator(self, verbose=False):
         """ Create forward operator (computationally extensive!).
         """
-        points = np.column_stack([self.x, self.y, -np.abs(self.z)])
+        # points = np.column_stack([self.x, self.y, -np.abs(self.z)])
+        points = np.column_stack([self.x, self.y, self.z])
         self.fwd = MagneticsModelling(points=points,
-                                      cmp=self.cmp, igrf=self.igrf)
+                                      cmp=self.cmp, igrf=self.igrf, verbose=verbose)
         return self.fwd
 
 
