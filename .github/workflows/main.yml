@@ -106,8 +106,10 @@ jobs:
           working-directory: build
           run: |
             source ../venv-test/bin/activate
+            # rm -rf doc
             rm -f CMakeCache.txt
             cmake ../source/ # to find the correct sphinx from the current venv
+            rm -rf pygimli # for some weird reasons its importing this instead of the installed
             xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
   merging:
     name: Automerging
