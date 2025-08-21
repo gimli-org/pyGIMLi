@@ -62,7 +62,6 @@ The underlying equation level allows to directly access the finite element (`pyg
     pygimli.physics.em
     pygimli.physics.ert
     pygimli.physics.gravimetry
-    pygimli.physics.magnetics
     pygimli.physics.petro
     pygimli.physics.seismics
     pygimli.physics.SIP
