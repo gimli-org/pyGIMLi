@@ -72,8 +72,8 @@ class MagManager(MeshMethodManager):
         """ Show data.
         """
         cmp = cmp or self.cmp
-        nc = 2 if len(cmp) > 1 else 1
-        nr = (len(cmp)+1) // 2
+        nc = kwargs.pop("ncols", max(2 if len(cmp) > 1 else 1, len(cmp)))
+        nr = (len(cmp)+nc-1) // nc
         fig, ax = pg.plt.subplots(nr, nc, sharex=True, sharey=True,
                                   squeeze=False, figsize=(7, len(self.cmp)*1+3))
         axs = np.atleast_1d(ax.flat)
@@ -252,11 +252,16 @@ class MagManager(MeshMethodManager):
             self.inv.setRegularization(cType=C)
 
         z0 = kwargs.pop("z0", 25)  # Oldenburg&Li(1996)
-        if kwargs.pop("depthWeighting", True):
+        dw = kwargs.pop("depthWeighting", True)
+        if np.any(dw):
+            pg.info("Using depth")
+            if dw is True:
+                pg.info("Compute depth weighting with z0 = ", z0)
+                dw = depthWeighting(self.mesh_, cell=not(cType==1), z0=z0)
+
             cw = self.fwd.regionManager().constraintWeights()
-            dw = depthWeighting(self.mesh_, cell=not(cType==1), z0=z0)
-            if len(dw) == len(cw):
-                dw *= cw
+            if len(cw) > 0 and len(dw) == len(cw):
+                # dw *= cw
                 print(min(dw), max(dw))
             else:
                 print("lengths not matching!")
