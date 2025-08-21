@@ -3,114 +3,70 @@
 # Glossary
 
 :::{glossary}
-GCC
 
-: The GNU Compiler Collection (GCC). Default compiler for most linux
-  systems. The Windows port is {term}`MinGW` See: <http://gcc.gnu.org/>
+[BERT](http://www.resistivity.net/)
+    Boundless electrical resistivity tomography
 
-FEniCS
+[FEniCS](https://fenicsproject.org/)
+    The FEniCSx computing platform.
 
-: The FEniCSx computing platform. <https://fenicsproject.org/>
+[GCC](http://gcc.gnu.org/)
+    The GNU Compiler Collection (GCC). Default compiler for most linux systems. The Windows port is {term}`MinGW`
 
-Gmsh
+[Gmsh](http://gmsh.info/)
+    Gmsh: a three-dimensional finite element mesh generator with built-in pre- and post-processing facilities {cite}`GeuzaineRemacle2009`. See: {py:func}`pygimli.meshtools.mesh.readGmsh`
 
-: Gmsh: a three-dimensional finite element mesh generator with built-in
-  pre- and post-processing facilities
-  {cite}`GeuzaineRemacle2009`
-  <http://gmsh.info/>.
-  See: {py:func}`pygimli.meshtools.mesh.readGmsh`
+[IPython](http://ipython.org/)
+    An improved {term}`Python` shell that integrates nicely with {term}`Matplotlib`.
 
-BERT
+[Matplotlib](http://matplotlib.org)
+    A Python package displays publication quality results.
 
-: Boundless electrical resistivity tomography <http://www.resistivity.net/>
+[MinGW](http://www.mingw.org/)
+    MinGW, a contraction of "Minimalist GNU for Windows", is a minimalist development environment for native Microsoft Windows applications.
 
-IPython
+[MSYS](http://www.mingw.org/)
+    MSYS, a contraction of "Minimal SYStem", is a Bourne Shell command line interpreter system. Offered as an alternative to Microsoft's cmd.exe, this provides a general purpose command line environment, which is particularly suited to use with MinGW, for porting of many Open Source applications to the MS-Windows platform.
 
-: An improved {term}`Python` shell that integrates nicely with
-  {term}`Matplotlib`. See <http://ipython.org/>.
+[NumPy](https://docs.scipy.org/doc/numpy/)
+    The fundamental package for scientific computing in Python.
 
-Matplotlib
+[Paraview](http://paraview.org/)
+    Is an open-source, multi-platform data analysis and visualization application.
 
-: Matplotlib {term}`Python` package displays publication quality results.
-  It displays both 1D X-Y type plots and 2D contour plots for structured
-  and unstructured data. It works on all common platforms and produces
-  publication quality hard copies. <http://matplotlib.org>
+[pyGIMLi](https://www.pygimli.org)
+    Geophysical inversion and modelling library.
 
-MinGW
+[Python](https://www.python.org/)
+    The programming language that {term}`pyGIMLi` (and our scripts) are
+    written in.
 
-: MinGW, a contraction of "Minimalist GNU for Windows", is a minimalist
-  development environment for native Microsoft Windows applications. See:
-  <http://www.mingw.org/>
+[PyVista](https://www.pyvista.org)
+    3D plotting and mesh analysis through a streamlined
+    interface for the Visualization Toolkit (VTK).
 
-MSYS
+[SciPy](https://scipy.org/about.html)
+    Scientific Computing Tools for Python.
 
-: MSYS, a contraction of "Minimal SYStem", is a Bourne Shell command line
-  interpreter system. Offered as an alternative to Microsoft's cmd.exe,
-  this provides a general purpose command line environment, which is
-  particularly suited to use with MinGW, for porting of many Open Source
-  applications to the MS-Windows platform. See: <http://www.mingw.org/>
+[Sphinx](https://www.sphinx-doc.org)
+    A documentation engine written in Python.
 
-NumPy
+[STL](https://en.wikipedia.org/wiki/STL_%28file_format%29)
+    Unstructured triangulated surface file format native to the "stereolithography" CAD software created by 3D Systems.
 
-: NumPy is the fundamental package for scientific computing in Python. It
-  is a Python library that provides a multidimensional array object and
-  various functionalities related to it. <https://docs.scipy.org/doc/numpy/>
+[SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html)
+    SuiteSparse is a single archive that contains packages for solving
+    large sparse problems using Sparse Cholesky factorization.
 
-Paraview
+[Triangle](http://www.cs.cmu.edu/~quake/triangle.html)
+    A Two-Dimensional Quality Mesh Generator and Delaunay Triangulator.
+    {cite}`Shewchuk1996`
 
-: Is an open-source, multi-platform data analysis and visualization
-  application. See: <http://paraview.org/>
+[Tetgen](http://tetgen.org/)
+    A Quality Tetrahedral Mesh Generator and a 3D Delaunay Triangulator.
+    {cite}`Si2015`
 
-Python
+[Umfpack](https://people.engr.tamu.edu/davis/suitesparse.html)
+    A set of routines for solving unsymmetric sparse linear systems using the Unsymmetric MultiFrontal method {cite}`Davis2004`.
 
-: The programming language that {term}`pyGIMLi` (and your scripts) are
-  written in. See: <https://www.python.org/>
-
-Pylab
-
-: Meta-package importing several core packages such as {term}`NumPy`,
-  {term}`SciPy`, {term}`Matplotlib`, etc. into a single namespace. This is
-  usually not recommended due to possible name conflicts but provides a
-  quick way to get MATLAB-like functionality.
-
-PyVista
-
-: 3D visualization tool based on VTK: <https://www.pyvista.org>
-
-SciPy
-
-: Scientific Computing Tools for Python - Open-source library with many
-  numerical routines but the term is often used as a synonym for the
-  scientific python community, several conferences, and the *SciPy
-  Stack*, i.e. a set of core packages. <https://scipy.org/about.html>
-
-Sphinx
-
-: The tools used to generate the {term}`GIMLi` documentation. See:
-  <http://sphinx-doc.org>
-
-STL
-
-: Unstructured triangulated surface file format native to the "stereolithography"
-  CAD software created by 3D Systems. <https://en.wikipedia.org/wiki/STL_%28file_format%29>
-
-SuiteSparse
-
-: SuiteSparse is a single archive that contains packages for solving
-  large sparse problems using Sparse Cholesky factorization.
-  <http://faculty.cse.tamu.edu/davis/suitesparse.html>
-
-Triangle
-
-: A Two-Dimensional Quality Mesh Generator and Delaunay Triangulator.
-  {cite}`Shewchuk96b`
-  <http://www.cs.cmu.edu/~quake/triangle.html>
-  See: {py:func}`pygimli.meshtools.mesh.readTriangle`
-
-Tetgen
-
-: A Quality Tetrahedral Mesh Generator and a 3D Delaunay Triangulator.
-  {cite}`Si2015`
-  <http://tetgen.org/>
-  See: {py:func}`pygimli.meshtools.mesh.readTetgen`
 :::
