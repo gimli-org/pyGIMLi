@@ -25,6 +25,7 @@ class MagManager(MeshMethodManager):
         self.mesh_ = kwargs.pop("mesh", None)
         self.cmp = kwargs.pop("cmp", None)
         self.dem = kwargs.pop("dem", None)
+        self.line = None
 
         # self.inv_ = pg.frameworks.Inversion()
         if isinstance(self.dem, str):
@@ -90,6 +91,52 @@ class MagManager(MeshMethodManager):
 
         return ax
 
+    def detectLines(self, **kwargs):
+        """Detect lines in data.
+
+        Keyword arguments
+        -----------------
+        mode: str|float|array
+            'x'/'y': along coordinate axis
+            spacing vector: by given spacing
+            float: minimum distance
+        axis: str='x'
+            Axis to use for line detection.
+        show: bool=False
+            Show detected lines.
+        """
+        from pygimli.utils import detectLines
+        if self.x is None or self.y is None:
+            pg.error("No x and y coordinates available for line detection.")
+            return
+
+        self.line = detectLines(self.x, self.y, **kwargs)
+        return self.line
+
+
+    def showLineData(self, line=None, cmp=None, **kwargs):
+        """ Show data for a specific line.
+
+        Parameters
+        ----------
+        line: int|array
+            Line number or array of line numbers to show.
+        cmp: list
+            List of components to show.
+        """
+        if cmp is None:
+            cmp = self.cmp
+
+        for l in np.atleast_1d(line):
+            x = self.x[self.line==l]
+            y = self.y[self.line==l]
+            t = np.hstack([0, np.cumsum(np.sqrt(np.diff(x)**2+ np.diff(y)**2))])
+            for c in cmp:
+                pg.plt.plot(t, self.DATA[c][self.line==l], label=c+f" (line {l})")
+
+        pg.plt.xlabel("X")
+        pg.plt.ylabel("Data")
+        pg.plt.legend()
 
     def createGrid(self, dx:float=50, depth:float=800, bnd:float=0):
         """ Create a grid.
