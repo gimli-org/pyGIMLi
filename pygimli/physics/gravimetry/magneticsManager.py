@@ -132,11 +132,20 @@ class MagManager(MeshMethodManager):
             y = self.y[self.line==l]
             t = np.hstack([0, np.cumsum(np.sqrt(np.diff(x)**2+ np.diff(y)**2))])
             for c in cmp:
-                pg.plt.plot(t, self.DATA[c][self.line==l], label=c+f" (line {l})")
+                pg.plt.plot(t, self.DATA[c][self.line==l], label=c+f" (line {l})", **kwargs)
 
         pg.plt.xlabel("X")
         pg.plt.ylabel("Data")
         pg.plt.legend()
+
+    def setMesh(self, mesh):
+        """Set or load mesh."""
+        if isinstance(mesh, str):
+            mesh = pg.load(mesh)
+        
+        self.fwd.setMesh(mesh)
+        self.mesh_ = mesh
+
 
     def createGrid(self, dx:float=50, depth:float=800, bnd:float=0):
         """ Create a grid.
@@ -320,6 +329,42 @@ class MagManager(MeshMethodManager):
         return model
 
 
+    def saveResults(self, folder=None):
+        """Save inversion results to a folder.
+
+        Arguments
+        ---------
+        folder: str
+            Folder to save results to.
+        """
+        if folder is None:
+            folder = pg.utils.createResultPath(folder)
+        else:
+            pg.utils.createPath(folder)
+
+        self.inv.response.save(folder+"/response.dat")
+        np.savetxt(folder+"/data.dat", self.inv.dataVals)
+        np.savetxt(folder+"/error.dat", self.inv.errorVals)
+        self.mesh_["sus"] = self.inv.model
+        self.mesh_.exportVTK(folder+"/result.vtk")
+
+    def loadResults(self, folder):
+        """Load inversion results from a folder.
+
+        Arguments
+        ---------
+        folder: str
+            Folder to load results from.
+        """
+        self.inv.response = np.loadtxt(folder+"/response.dat")
+        self.inv.dataVals = np.loadtxt(folder+"/data.dat")
+        self.inv.errorVals = np.loadtxt(folder+"/error.dat")
+
+        self.mesh_ = pg.load(folder+"/result.vtk")
+        # self.fwd.setMesh(self.mesh_)
+        # self.inv.setMesh(self.mesh_)
+
+
     def showDataFit(self, **kwargs):
         """ Show data, model response and misfit.
 
@@ -334,7 +379,7 @@ class MagManager(MeshMethodManager):
         vmin/vmax
         """
         nc = len(self.cmp)
-        _, ax = pg.plt.subplots(ncols=3, nrows=nc, figsize=(12, 3*nc),
+        fig, ax = pg.plt.subplots(ncols=3, nrows=nc, figsize=(12, 3*nc),
                                 sharex=True, sharey=True, squeeze=False)
         vals = np.reshape(self.inv.dataVals, [nc, -1])
         resp = np.reshape(self.inv.response, [nc, -1])
@@ -355,6 +400,7 @@ class MagManager(MeshMethodManager):
             ax[i, 1].scatter(self.x, self.y, c=resp[i], **fkw)
             ax[i, 2].scatter(self.x, self.y, c=misf[i], **mkw)
 
+        return fig
 
     def show3DModel(self, label:str=None, trsh:float=0.025,
                     synth:pg.Mesh=None, invert:bool=False,
