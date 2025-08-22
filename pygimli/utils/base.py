@@ -169,7 +169,7 @@ def createPath(pathList):
     pathList: str | list(str)
         Create Path with option subpaths
     """
-    if hasattr(pathList, '__iter__'):
+    if hasattr(pathList, '__iter__') and not isinstance(pathList, str):
         path = os.path.join('', *pathList)
     else:
         path = os.path.join('', pathList)
