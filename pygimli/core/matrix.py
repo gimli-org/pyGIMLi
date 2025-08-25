@@ -698,16 +698,13 @@ def sparseMatrix2csc(A):
     """
     #optImport(scipy.sparse, requiredFor="toCRC_matrix")
 
-    if isinstance(A, CSparseMapMatrix):
+    if isinstance(A, CSparseMapMatrix | SparseMapMatrix):
         return toCOO(A).tocsc()
-    if isinstance(A, SparseMapMatrix):
-        return toCOO(A).tocsc()
-    elif isinstance(A, SparseMatrix):
-        return toCSR(A).tocsc()
-    elif isinstance(A, CSparseMatrix):
+
+    if isinstance(A, CSparseMatrix | SparseMatrix):
         return toCSR(A).tocsc()
 
-    elif isinstance(A, BlockMatrix):
+    if isinstance(A, BlockMatrix):
         M = A.sparseMapMatrix()
         warn('bad efficency BlockMatrix->csc')
         return sparseMatrix2csc(M)

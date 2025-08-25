@@ -353,15 +353,14 @@ class tictoc(object):
 
 
 def swatch(key):
-    """Return Stopwatch with specific key name"""
+    """Return Stopwatch with specific key name."""
     if key.startswith('/'):
         key = key[1:]
     return SWatches()['/'+key]
 
 
 def timings(name='/'):
-    """ Return table of timings for a given root swatch key name.
-    """
+    """Return table of timings for a given root swatch key name."""
     import numpy as np
     class TTree(object):
         def __init__(self, parent=None):
