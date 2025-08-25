@@ -471,6 +471,12 @@ def timings(name='/'):
     return Table(table, header, align='lrcrlr', transpose=False)
 
 
+# patch __version__ into the main module class for lazy evaluation
+class PYGIMLI(sys.modules[__name__].__class__):
+    __version__ = property(lambda self: self.findVersion(cache=False))
+sys.modules[__name__].__class__ = PYGIMLI
+
+
 # special shortcut pg.plt with lazy evaluation
 __MPL_PLT__ = None
 
@@ -520,9 +526,3 @@ def _plt():
         __MPL_PLT__ = plt
 
     return __MPL_PLT__
-    return plt
-
-
-# call once to get version from cache, setup or _version.py
-__version__ = "0"
-findVersion(cache=False)

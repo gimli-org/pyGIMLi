@@ -109,8 +109,10 @@ class AttrGetter:
 
 
 def moduleProperty(func):
-    """Decorator to turn module functions into properties.
-    Function names must be prefixed with an underscore."""
+    """Decorator to turn module functions into a property.
+
+    Function names must be prefixed with an underscore.
+    """
     module = sys.modules[func.__module__]
     def base_getattr(name):
         raise AttributeError(
