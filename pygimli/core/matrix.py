@@ -1,14 +1,16 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """Some matrix specialization."""
-
-import time
-
 import numpy as np
 import pygimli as pg
-from scipy.sparse import csr_matrix, coo_matrix, csc_matrix
+
+from .lazyImport import LazyImport
+scipy = LazyImport('scipy')
+
+# default import to expensive
+
+#from scipy.sparse import csr_matrix, coo_matrix, csc_matrix
 
 from .core import pgcore
-
 from .core import (CMatrix, CSparseMapMatrix, CSparseMatrix,
                    RSparseMapMatrix, RSparseMatrix, ElementMatrix,
                    IVector, MatrixBase, R3Vector, RVector)
@@ -543,7 +545,7 @@ def toSparseMatrix(A):
         S.copy_(A)
         return S
 
-    if isinstance(A, csr_matrix):
+    if isinstance(A, scipy.sparse.csr_matrix):
         #pg.core.setDeepDebug(1)
         if len(A.data) == 0:
             print(A.indptr, A.indices, A.data)
@@ -596,13 +598,13 @@ def toSparseMapMatrix(A):
         S.copy_(A)
         return A
 
-    if isinstance(A, csr_matrix):
+    if isinstance(A, scipy.sparse.csr_matrix):
         return toSparseMapMatrix(toSparseMatrix(A))
 
-    if isinstance(A, csc_matrix):
+    if isinstance(A, scipy.sparse.csc_matrix):
         return toSparseMapMatrix(A.tocsr())
 
-    if isinstance(A, coo_matrix):
+    if isinstance(A, scipy.sparse.coo_matrix):
         return SparseMapMatrix(np.asarray(A.row, dtype=np.uint64),
                                np.asarray(A.col, dtype=np.uint64),
                                A.data)
@@ -663,12 +665,12 @@ def sparseMatrix2csr(A):
         #                    C.vecRowIdx(),
         #                    C.vecColPtr()))
     elif isinstance(A, SparseMatrix):
-        return csr_matrix((A.vecVals().array(),
+        return scipy.sparse.csr_matrix((A.vecVals().array(),
                            A.vecRowIdx().array(),
                            A.vecColPtr().array()), shape=A.shape)
 
     elif isinstance(A, CSparseMatrix):
-        return csr_matrix((A.vecVals().array(),
+        return scipy.sparse.csr_matrix((A.vecVals().array(),
                            A.vecRowIdx().array(),
                            A.vecColPtr().array()), shape=A.shape, dtype=complex)
         return csr
@@ -677,7 +679,7 @@ def sparseMatrix2csr(A):
         warn('bad efficency BlockMatrix->csr')
         return sparseMatrix2csr(M)
 
-    return csr_matrix(A)
+    return scipy.sparse.csr_matrix(A)
 
 def sparseMatrix2csc(A):
     """Convert SparseMatrix to scipy.csr_matrix.
@@ -710,7 +712,7 @@ def sparseMatrix2csc(A):
         warn('bad efficency BlockMatrix->csc')
         return sparseMatrix2csc(M)
 
-    return csc_matrix(A)
+    return scipy.sparse.csc_matrix(A)
 
 
 def sparseMatrix2coo(A, rowOffset=0, colOffset=0):
@@ -735,16 +737,19 @@ def sparseMatrix2coo(A, rowOffset=0, colOffset=0):
         C.fillArrays(vals=vals, rows=rows, cols=cols)
         rows += rowOffset
         cols += colOffset
-        return coo_matrix((vals, (rows, cols)), shape=(A.rows(), A.cols()))
+        return scipy.sparse.coo_matrix((vals, (rows, cols)), shape=(A.rows(), A.cols()))
 
     elif isinstance(A, SparseMapMatrix):
         A.fillArrays(vals, rows, cols)
         rows += rowOffset
         cols += colOffset
 
-        return coo_matrix((vals, (rows, cols)), shape=(A.rows(), A.cols()))
+        return scipy.sparse.coo_matrix((vals, (rows, cols)), shape=(A.rows(), A.cols()))
 
-    return coo_matrix(A)
+    #from scipy.sparse import csr_matrix, coo_matrix, csc_matrix
+
+
+    return scipy.sparse.coo_matrix(A)
 
 
 def convertCRSIndex2Map(rowIdx, colPtr):
@@ -759,7 +764,7 @@ def convertCRSIndex2Map(rowIdx, colPtr):
 
 
 def sparseMatrix2Array(matrix, indices=True, getInCRS=True):
-    """Extract indices and value from sparse matrix (SparseMap or CRS)
+    """Extract indices and value from sparse matrix (SparseMap or CRS).
 
     Get python Arrays from SparseMatrix or SparseMapMatrix in either CRS
     convention (row index, column Start_End, values) or row index, column

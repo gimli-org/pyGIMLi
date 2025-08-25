@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """Utility functions for downloading, caching, and importing."""
 
 import sys
@@ -6,7 +6,6 @@ import os.path
 
 from importlib import import_module
 import contextlib
-from urllib.request import urlopen
 
 import numpy as np
 import pygimli as pg
@@ -231,6 +230,7 @@ def getMD5(fileName):
 
 def getUrlFile(url, fileName, timeout=10, verbose=False):
     """Write file from url. Path will be created."""
+    from urllib.request import urlopen
     import hashlib
     md5_hash = hashlib.md5()
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Import and extensions of the core Mesh class.
-"""
+"""Import and extensions of the core Mesh class."""
 from math import ceil
 import numpy as np
 from .core import (cat, HexahedronShape, Line,
@@ -481,7 +479,7 @@ Mesh.h = __Mesh_h__
 
 
 def __Mesh_findPaths__(self, bounds):
-    """Find paths of connected boundaries
+    """Find paths of connected boundaries.
 
     Arguments
     ---------
