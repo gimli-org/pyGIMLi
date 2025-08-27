@@ -472,9 +472,9 @@ def timings(name='/'):
 
 
 # patch __version__ into the main module class for lazy evaluation
-class PYGIMLI(sys.modules[__name__].__class__):
+class pygimli(sys.modules[__name__].__class__):
     __version__ = property(lambda self: self.findVersion(cache=False))
-sys.modules[__name__].__class__ = PYGIMLI
+sys.modules[__name__].__class__ = pygimli
 
 
 # special shortcut pg.plt with lazy evaluation
