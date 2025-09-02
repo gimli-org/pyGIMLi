@@ -181,3 +181,10 @@ class ERTIPManager(ERTManager):
     def saveResult(self, folder=None, *args, **kwargs):
         """Save all results in given or date-based folder."""
         super().saveResult(folder=folder, **kwargs, ip=self.modelIP*1000)
+
+    def showFit(self, ipkw={}, **kwargs):
+        """Show data fit for both app. res and IP."""
+        super().showFit()
+        fig, ax = pg.plt.subplots(nrows=1, ncols=2)
+        self.showData("ip", ax[0])
+        self.showData("ip", ax[1])
