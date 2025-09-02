@@ -80,11 +80,17 @@ class MagManager(MeshMethodManager):
         axs = np.atleast_1d(ax.flat)
         kwargs.setdefault("cmap", "bwr")
         ori = kwargs.pop("orientation", "horizontal")
+        bg = kwargs.pop("background", None)
+        if bg:
+            from pygimli.viewer.mpl.overlayimage import underlayBKGMap
         for i, c in enumerate(cmp):
             fld = self.DATA[c]
             vv = max(-np.min(fld)*1., np.max(fld)*1.)
             sc = axs[i].scatter(self.x, self.y, c=fld,
                                 vmin=-vv, vmax=vv, **kwargs)
+            if bg is not None:
+                underlayBKGMap(ax=axs[i], mode=bg)    
+                
             axs[i].set_title(c)
             axs[i].set_aspect(1.0)
             fig.colorbar(sc, ax=ax.flat[i], orientation=ori)
@@ -146,7 +152,6 @@ class MagManager(MeshMethodManager):
         self.fwd.setMesh(mesh)
         self.mesh_ = mesh
 
-
     def createGrid(self, dx:float=50, depth:float=800, bnd:float=0):
         """ Create a grid.
 
@@ -173,7 +178,7 @@ class MagManager(MeshMethodManager):
         y = np.arange(min(self.y)-bnd, max(self.y)+bnd+.1, dx)
         z = np.arange(-depth, .1, dx)
         self.mesh_ = mt.createGrid(x=x, y=y, z=z)
-        self.fop.setMesh(self.mesh_)
+        self.fwd.setMesh(self.mesh_)
         return self.mesh_
 
 
@@ -215,7 +220,7 @@ class MagManager(MeshMethodManager):
             geo += addPLC
 
         self.mesh_ = mt.createMesh(geo, quality=quality, area=area)
-        self.fop.setMesh(self.mesh_)
+        self.fwd.setMesh(self.mesh_)
         return self.mesh_
 
 
@@ -326,6 +331,10 @@ class MagManager(MeshMethodManager):
             self.inv.setConstraintWeights(dw)
 
         model = self.inv.run(dataVec, absoluteError=noise_level, **kwargs)
+        self.cov = np.zeros(len(self.inv.model))
+        for j in self.fwd.jacobian():
+            self.cov += np.abs(j)
+
         return model
 
 
@@ -346,6 +355,12 @@ class MagManager(MeshMethodManager):
         np.savetxt(folder+"/data.dat", self.inv.dataVals)
         np.savetxt(folder+"/error.dat", self.inv.errorVals)
         self.mesh_["sus"] = self.inv.model
+        cov = np.zeros(len(self.inv.model))
+        J = self.fwd.jacobian()
+        for j in J:
+            cov += np.abs(j)
+
+        self.mesh_["coverage"] = cov
         self.mesh_.exportVTK(folder+"/result.vtk")
 
     def loadResults(self, folder):
