@@ -333,7 +333,6 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
 
     if isinstance(data, str):
         if mesh.haveData(data):
-            print(factor)
             data = mesh[data] * factor
         else:
             raise IndexError("Mesh does not contain field ", data)
@@ -563,7 +562,6 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
             pass
 
     if axisLabels == True and mesh.dim() == 2:
-
         try:
             useDepth = min(mesh.boundaryMarkers()) < 0 and max(pg.y(mesh)) <= 0
             pg.viewer.mpl.adjustWorldAxes(ax, useDepth=useDepth, xl=xl, yl=yl)
