@@ -39,7 +39,7 @@ from pygimli.frameworks import PriorModelling
 
 # We create a rectangular domain and mesh it with small triangles
 rect = mt.createRectangle(start=[0, -10], end=[10, 0])
-mesh = mt.createMesh(rect, quality=34.5, area=0.1)
+mesh = mt.createMesh(rect, quality=34.3, area=0.2)
 
 # We compute such a covariance matrix by calling
 CM = pg.utils.covarianceMatrix(mesh, I=5)  # I taken for both x and y
