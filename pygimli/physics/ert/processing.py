@@ -396,6 +396,9 @@ def combineMultipleData(DATA):
 
     for i, di in enumerate(DATA):
         ii = np.searchsorted(uI, uIs[i])
+        if di.haveData('k'):  # sort in geometric factors #887
+            scheme['k'][ii] = di['k']
+
         if not di.haveData('r'):
             if di.allNonZero('u') and di.allNonZero('i'):
                 di['r'] = di['u']/di['i']
