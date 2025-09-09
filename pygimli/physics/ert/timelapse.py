@@ -436,22 +436,37 @@ class TimelapseERT():
                 fig.clf()
 
     def chooseTime(self, t=None):
-        """Return data for specific time.
-
-        Parameters
-        ----------
-        t : int|str|datetime
+        """Return data for a specific time index or timestamp.
+        t : int, str, or datetime, optional
+            The time index (int), time label (str), or datetime object specifying the desired time slice.
+            If None, defaults to the first time index.
+        Returns
+        -------
+        data : DataContainerERT
+            A copy of the data container with the "rhoa" (apparent resistivity) and "err" (error) fields
+            updated for the selected time. If error data is missing or invalid, error is estimated.
+        Notes
+        -----
+        - If `t` is not an integer, it is converted to a time index using `self.timeIndex(t)`.
+        - Handles masked values in "rhoa" by replacing them with the median of the absolute values.
+        - If error data is missing or invalid, `data.estimateError()` is called to estimate errors.
         """
         if not isinstance(t, (int, np.int32, np.int64)):
             t = self.timeIndex(t)
 
         rhoa = self.DATA[:, t].copy()
+        err = self.ERR[:, t].copy()
+        aerr = np.abs(err.data)
         arhoa = np.abs(rhoa.data)
         arhoa[rhoa.mask] = np.nanmedian(arhoa)
         data = self.data.copy()
         data["rhoa"] = arhoa
-        data.estimateError()
-        data["err"][rhoa.mask] = 1e8
+        err_arr = np.asarray(err)
+        if err_arr.size == 0 or np.all(~np.isfinite(err_arr)) or np.all(np.isnan(err_arr)):
+            data.estimateError()
+        else:
+            data["err"] = err
+
         self.data = data
         return data
 
