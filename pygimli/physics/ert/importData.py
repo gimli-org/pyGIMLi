@@ -148,14 +148,15 @@ def importRes2dInv(filename, verbose=False, return_header=False):
         if row.startswith("Error"):
             hasErr = True
             row = getNonEmptyRow(it, comment=';')
-            header['ipErrType'] = getNonEmptyRow(it, comment=';')
+            header['ipErrType'] = int(getNonEmptyRow(it, comment=';'))
 
         for i in range(nData):
             row = getNonEmptyRow(it, comment=';')
             vals = row.replace(',', ' ').split()
 
+            nEls = int(float(vals[0]))
             # row starts with 4
-            if int(vals[0]) == 4:
+            if nEls == 4:
                 eaID = data.createSensor(pg.Pos(float(vals[1]),
                                                 float(vals[2])))
                 ebID = data.createSensor(pg.Pos(float(vals[3]),
@@ -164,7 +165,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                                                 float(vals[6])))
                 enID = data.createSensor(pg.Pos(float(vals[7]),
                                                 float(vals[8])))
-            elif int(vals[0]) == 3:
+            elif nEls == 3:
                 eaID = data.createSensor(pg.Pos(float(vals[1]),
                                                 float(vals[2])))
                 ebID = -1
@@ -172,7 +173,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                                                 float(vals[4])))
                 enID = data.createSensor(pg.Pos(float(vals[5]),
                                                 float(vals[6])))
-            elif int(vals[0]) == 2:
+            elif nEls == 2:
                 eaID = data.createSensor(pg.Pos(float(vals[1]),
                                                 float(vals[2])))
                 ebID = -1
@@ -180,19 +181,20 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                                                 float(vals[4])))
                 enID = -1
             else:
-                raise Exception('dont know how to handle row', vals[0])
-            res[i] = float(vals[int(vals[0])*2+1])
+                raise Exception('dont know how to handle first entry', vals[0])
+            
+            res[i] = float(vals[nEls*2+1])
             if hasIP:
-                # ip[i] = float(vals[int(vals[0])*2+2])
-                ipCol = int(vals[0])*2+2
+                # ip[i] = float(vals[nEls*2+2])
+                ipCol = nEls*2+2
                 ip[i] = float(vals[ipCol])
                 if 'ipNumGates' in header:
                     specIP.append(vals[ipCol:])
             if hasErr:
-                ipCol = int(vals[0])*2+3
+                ipCol = nEls*2+3
                 err[i] = float(vals[ipCol])
                 if hasIP:
-                    ipErrCol = int(vals[0])*2+4
+                    ipErrCol = nEls*2+4
                     iperr[i] = float(vals[ipCol])
 
             data.createFourPointData(i, eaID, ebID, emID, enID)
