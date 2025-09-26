@@ -64,7 +64,8 @@ body:
     attributes:
       label: Problem description
       description: Please provide a general description of the issue here.
-    required: true
+    validations:
+      required: true
   - type: markdown
     attributes:
       value: "### Reproducing the issue"
