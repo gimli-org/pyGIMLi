@@ -19,8 +19,8 @@ class MagManager(MeshMethodManager):
         """
         self.DATA = kwargs.pop("DATA", None)
         self.x = kwargs.pop("x", None)
-        self.y = kwargs.pop("y", None)
-        self.z = kwargs.pop("z", None)
+        self.y = kwargs.pop("y", np.zeros_like(self.x))
+        self.z = kwargs.pop("z", np.zeros_like(self.x))
         self.igrf = kwargs.pop("igrf", None)
         self.mesh_ = kwargs.pop("mesh", None)
         self.cmp = kwargs.pop("cmp", None)
@@ -182,7 +182,115 @@ class MagManager(MeshMethodManager):
         return self.mesh_
 
 
-    def createMesh(self, bnd:float=0, area:float=1e5, depth:float=800,
+    def createMesh(self, boundary:float=0, area:float=1e5, depth:float=0,
+                   quality:float=1.3, addPLC:pg.Mesh=None, addPoints:bool=True,
+                   frame:float=0):
+        """ Create an unstructured 3D mesh.
+
+        TODO
+        ----
+            * check default values, make them more sensible
+            and depending on data
+
+        Arguments
+        ---------
+        boundary: float=0
+            Boundary distance to extend the mesh in x and y direction.
+        area: float=1e5
+            Maximum area constraint for cells.
+        depth: float=0
+            Depth of the mesh in z direction.
+        quality: float=1.3
+            Quality factor for mesh generation.
+        addPLC: :gimliapi:`GIMLI::Mesh`
+            PLC mesh to add to the mesh.
+        addPoints: bool=True
+            Add points from self.x and self.y to the mesh.
+
+        Returns
+        -------
+        mesh: :gimliapi:`GIMLI::Mesh`
+            Created 3D unstructured mesh.
+        """
+        x = [min(self.x)-boundary, max(self.x)+boundary] 
+        y = [min(self.y)-boundary, max(self.y)+boundary] 
+        geo = mt.createRectangle(start=[x[0], y[1]], end=[x[1], y[0]], 
+                                 marker=1, area=area, boundaryMarker=1)
+
+        if frame > 0:
+            Xo = [x[0] - frame, x[1] + frame]
+            Yo = [y[0] - frame, y[1] + frame]
+            geo += mt.createRectangle(start=[Xo[0], Yo[1]], end=[Xo[1], Yo[0]], marker=2, boundaryMarker=2)
+            inner_pt = [(x[0] + x[1]) * 0.5, (y[0] + y[1]) * 0.5]  # a point inside the inner rectangle
+            frame_pt = [(Xo[0] + x[0]) * 0.5, (y[0] + y[1]) * 0.5] # a point inside the outter rectangle (in the frame)
+
+            # geo.addRegionMarker(inner_pt, marker=1, area=1e4)
+            geo.addRegionMarker(frame_pt, marker=2, area=area*100)
+
+        mesh2d = mt.createMesh(geo, quality=34, smooth=True)
+        if self.dem is not None:
+            z_vals = self.dem(pg.x(mesh2d), pg.y(mesh2d))
+        else:
+            z_vals = pg.Vector(mesh2d.nodeCount())
+        for i, n in enumerate(mesh2d.nodes()):
+            n.setPos(pg.RVector3(n.x(), n.y(), z_vals[i]))
+
+        surface = mt.createSurface(mesh2d)
+        if depth == 0:
+            ext = max(max(self.x)-min(self.x), max(self.y)-min(self.y))
+            depth = ext / 2
+
+        Zmin = -depth
+        dem_zvals = [surface.node(n).z() for n in range(4)]
+        n0, n1, n2, n3 = [surface.createNode(pg.Pos(
+            surface.node(i).x(), surface.node(i).y(), -depth)) for i in range(4)]
+            
+        surface.createQuadrangleFace(n0, n1, n2, n3, marker=-2)
+        mx = pg.x(surface).array()
+        my = pg.y(surface).array()
+        mz = pg.z(surface).array()
+        x_min = mx.min()
+        x_max = mx.max()
+        y_min = my.min()
+        y_max = my.max()
+        # front face
+        f2 = [n0.id(), n3.id()]
+        f2sort = np.array(f2)[np.argsort(mx[f2])[::-1]]  # decreasing y
+        f1 = pg.find(np.isclose(my, y_max))
+        f1 = np.setdiff1d(f1, f2)
+        f1sort = f1[np.argsort(mx[f1])]  # sort left to right
+        front_face = list(f1sort) + list(f2sort)
+        surface.createPolygonFace(surface.nodes(front_face), marker=-2)
+        # left face
+        f2 = [n1.id(), n0.id()]
+        f2sort = np.array(f2)[np.argsort(my[f2])[::-1]]  # decreasing y
+        f1 = pg.find(np.isclose(mx, x_min))
+        f1 = np.setdiff1d(f1, f2)
+        f1sort = f1[np.argsort(my[f1])]  # sort left to right
+        left_face = list(f1sort) + list(f2sort)
+        surface.createPolygonFace(surface.nodes(left_face), marker=-2)
+        # right face
+        f2 = [n3.id(), n2.id()]
+        f2sort = np.array(f2)[np.argsort(my[f2])[::-1]]  # decreasing y
+        f1 = pg.find(np.isclose(mx, x_max))
+        f1 = np.setdiff1d(f1, f2)
+        f1sort = f1[np.argsort(my[f1])]  # sort left to right
+        right_face = list(f1sort) + list(f2sort)
+        surface.createPolygonFace(surface.nodes(right_face), marker=-2)
+        # back face
+        f2 = [n2.id(), n1.id()]
+        f2sort = np.array(f2)[np.argsort(mx[f2])[::-1]]  # decreasing y
+        f1 = pg.find(np.isclose(my, y_min))
+        f1 = np.setdiff1d(f1, f2)
+        f1sort = f1[np.argsort(mx[f1])]  # sort left to right
+        back_face = list(f1sort) + list(f2sort)
+        surface.createPolygonFace(surface.nodes(back_face), marker=-2)
+        # create 3D mesh
+        self.mesh_ = mt.createMesh(surface, quality=quality, area=area)
+        self.fwd.setMesh(self.mesh_)
+        return self.mesh_
+
+    def createMeshOld(self, bnd:float=0, area:float=1e5, depth:float=0,
                    quality:float=1.3, addPLC:pg.Mesh=None, addPoints:bool=True):
         """ Create an unstructured 3D mesh.
 
@@ -197,7 +305,7 @@ class MagManager(MeshMethodManager):
             Boundary distance to extend the mesh in x and y direction.
         area: float=1e5
             Maximum area constraint for cells.
-        depth: float=800
+        depth: float=0
             Depth of the mesh in z direction.
         quality: float=1.3
             Quality factor for mesh generation.
@@ -211,6 +319,9 @@ class MagManager(MeshMethodManager):
         mesh: :gimliapi:`GIMLI::Mesh`
             Created 3D unstructured mesh.
         """
+        if depth == 0:
+            ext = max(max(self.x)-min(self.x), max(self.y)-min(self.y))
+            depth = ext / 2
         geo = mt.createCube(start=[min(self.x)-bnd, min(self.x)-bnd, -depth],
                             end=[max(self.x)+bnd, max(self.y)+bnd, 0])
         if addPoints is True:
