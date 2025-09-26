@@ -79,7 +79,7 @@ body:
     attributes:
       label: Code to reproduce the issue
       description: Please provide the code that produces the error in the form of a minimal reproducible example. Alternatively, you can also attach the code as a file in the field below.
-      render: code
+      render: python
   - type: textarea
     id: reproduce-data
     attributes:
