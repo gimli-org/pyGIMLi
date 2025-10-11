@@ -4,22 +4,21 @@ r"""
 Naive complex-valued electrical inversion
 =========================================
 
-This example presents a quick and dirty proof-of-concept for a complex-valued
-inversion, similar to Kemna, 2000. The normal equations are solved using numpy,
-and no optimization with respect to running time and memory consumptions are
-applied. As such this example is only a technology demonstration and should
+This example presents a quick-and-dirty proof-of-concept for a complex-valued
+inversion, like in Kemna (2000). The normal equations are solved using numpy,
+and no optimization with respect to runtime and memory consumptions are
+applied. As such, this example is only a technology demonstration and should
 **not** be used for real-world inversion of complex resistivity data!
 
 Kemna, A.: Tomographic inversion of complex resistivity - theory and
-application, Ph.D.  thesis, Ruhr-Universität Bochum,
+application, Ph.D. thesis, Ruhr-Universität Bochum,
 doi:10.1111/1365-2478.12013, 2000.
-
 
 .. note::
 
-    This is a technology demonstration. Don't use this code for research. If
-    you require a complex-valued inversion, please contact us at
-    info@pygimli.org
+    This is a technology demonstration. A complex-valued inversion is
+    implemented in the ERTIPManager class, which should be used instead of
+    this example for real-world applications.
 
 """
 # sphinx_gallery_thumbnail_number = 5
@@ -297,7 +296,7 @@ Wd = np.diag(1.0 / err_mag_log)
 WdTwd = Wd.conj().dot(Wd)
 
 ###############################################################################
-# Put together one iteration of a  naive inversion in log-log transformation
+# Put together one iteration of a naive inversion in log-log transformation
 # d = log(V)
 # m = log(sigma)
 
@@ -375,7 +374,6 @@ plot_inv_pars('stats_it{}.jpg'.format(i + 1), d, response, Wd, iteration=1)
 
 ###############################################################################
 # And finally, plot the inversion results
-
 fig, axes = plt.subplots(2, 3, figsize=(26 / 2.54, 15 / 2.54))
 plot_fwd_model(axes[0, :])
 axes[0, 0].set_title('This row: Forward model')

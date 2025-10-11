@@ -83,7 +83,7 @@ pg.show(mesh, markers=True, showMesh=True)
 
 ###############################################################################
 # First we want to simulate our ERT response for a homogeneous resistivity
-# of 1 :math:`\Omega`m. Usually, simulate will calculate apparent resistivities
+# of 1 Ohmm. Usually, simulate will calculate apparent resistivities
 # (rhoa) and put them into the returned DataContainerERT.
 # However, for the calculation of rhoa, geometric factors (k) are expected in
 # the data container.
@@ -144,8 +144,8 @@ het = ert.simulate(mesh, res=res, scheme=shm, sr=False,
 # homogeneous model and use it as geometric factors to find the apparent
 # resistivities for the inhomogeneous model.
 
-het['k'] = 1.0/ (hom('u') / hom('i'))
-het['rhoa'] = het('k') * het('u') / het('i')
+het['k'] = 1.0/ (hom['u'] / hom['i'])
+het['rhoa'] = het['k'] * het['u'] / het['i']
 
 het.save('simulated.dat', 'a b m n rhoa k u i')
 
