@@ -903,7 +903,8 @@ class MeshMethodManager(MethodManager):
                                            1.0 / self.inv.response,
                                            1.0 / self.inv.model)
         nCells = self.fop.paraDomain.cellCount()
-        return np.log10(covTrans[:nCells] / self.fop.paraDomain.cellSizes())
+        return covTrans[:nCells] / self.fop.paraDomain.cellSizes()
+        # return np.log10(covTrans[:nCells] / self.fop.paraDomain.cellSizes())
 
     def standardizedCoverage(self, threshold=0.01):
         """Standardized coverage vector (0|1) using thresholding."""
