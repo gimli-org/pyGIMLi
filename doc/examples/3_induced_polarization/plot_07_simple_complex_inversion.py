@@ -10,7 +10,7 @@ and no optimization with respect to running time and memory consumptions are
 applied. As such this example is only a technology demonstration and should
 **not** be used for real-world inversion of complex resistivity data!
 
-Kemna, A.: Tomographic inversion of complex resistivity – theory and
+Kemna, A.: Tomographic inversion of complex resistivity - theory and
 application, Ph.D.  thesis, Ruhr-Universität Bochum,
 doi:10.1111/1365-2478.12013, 2000.
 

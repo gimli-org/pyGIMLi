@@ -17,6 +17,11 @@ def load(fileName, verbose=False, **kwargs):
     Parameters
     ----------
     fileName: str
+        file name
+    verbose : bool
+        print some stuff or not
+    ensureKRhoa : bool
+        make sure data container has geometric factors and apparent resistivity
 
     Returns
     -------
