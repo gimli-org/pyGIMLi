@@ -437,20 +437,26 @@ class TimelapseERT():
 
     def chooseTime(self, t=None):
         """Return data for a specific time index or timestamp.
+        
+        Parameters
+        ----------
         t : int, str, or datetime, optional
             The time index (int), time label (str), or datetime object specifying the desired time slice.
             If None, defaults to the first time index.
+        
         Returns
         -------
         data : DataContainerERT
-            A copy of the data container with the "rhoa" (apparent resistivity) and "err" (error) fields
+            A copy of the data container with the 'rhoa' (apparent resistivity) and 'err' (error) fields
             updated for the selected time. If error data is missing or invalid, error is estimated.
+        
         Notes
         -----
         - If `t` is not an integer, it is converted to a time index using `self.timeIndex(t)`.
         - Handles masked values in "rhoa" by replacing them with the median of the absolute values.
         - If error data is missing or invalid, `data.estimateError()` is called to estimate errors.
         """
+
         if not isinstance(t, (int, np.int32, np.int64)):
             t = self.timeIndex(t)
 
