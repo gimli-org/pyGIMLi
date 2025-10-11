@@ -83,7 +83,7 @@ def drawFirstPicks(ax, data, tt=None, plotva=False, **kwargs):
     """
     px = pg.x(data)
     gx = np.array([px[int(g)] for g in data["g"]])
-    sx = np.array([px[int(s)] for s in data[]"s"]])
+    sx = np.array([px[int(s)] for s in data["s"]])
     if tt is None:
         tt = data["t"]
 
