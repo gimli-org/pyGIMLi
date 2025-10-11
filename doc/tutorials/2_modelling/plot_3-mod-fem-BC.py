@@ -10,7 +10,7 @@ Modelling with Boundary Conditions
 We use the preceding example (Poisson equation on the unit square) but want to
 specify different boundary conditions on the four sides.
 
-Again, we first import numpy and pygimli, the solver and post processing
+Again, we first import numpy and pyGIMLi, the solver and post processing
 functionality.
 """
 
@@ -63,7 +63,7 @@ ax.text(-1.01, 0, '$u=1$', va='center', ha='right', rotation='vertical')
 ax.text(0, 1.01, '$u=4$', ha='center')
 ax.text(0, -1.01, '$u=3+x$', ha='center', va='top')
 
-ax.set_title('$\\nabla\cdot(1\\nabla u)=1$')
+ax.set_title(r'$\\nabla\cdot(1\\nabla u)=1$')
 
 ax.set_xlim([-1.1, 1.1])  # some boundary for the text
 ax.set_ylim([-1.1, 1.1])
@@ -94,14 +94,14 @@ drawStreams(ax, grid, u)
 
 ax.text(0.0, 1.01, '$u=1$',
         horizontalalignment='center')  # top -- 3
-ax.text(-1.0, 0.0, '$\partial u/\partial n=-0.5$',
+ax.text(-1.0, 0.0, r'$\partial u/\partial n=-0.5$',
         va='center', ha='right', rotation='vertical')  # left -- 1
-ax.text(0.0, -1.01, '$\partial u/\partial n=2.5$',
+ax.text(0.0, -1.01, r'$\partial u/\partial n=2.5$',
         ha='center', va='top')  # bot -- 4
-ax.text(1.01, 0.0, '$\partial u/\partial n=0$',
+ax.text(1.01, 0.0, r'$\partial u/\partial n=0$',
         va='center', ha='left', rotation='vertical')  # right -- 2
 
-ax.set_title('$\\nabla\cdot(1\\nabla u)=0$')
+ax.set_title(r'$\\nabla\cdot(1\\nabla u)=0$')
 
 ax.set_xlim([-1.1, 1.1])
 ax.set_ylim([-1.1, 1.1])

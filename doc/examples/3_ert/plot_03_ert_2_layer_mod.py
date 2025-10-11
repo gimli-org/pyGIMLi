@@ -71,7 +71,7 @@ fig, ax = pg.plt.subplots(1, 1)
 ax.plot(ab2, data('rhoa'), '-o', label='2D (FEM)')
 ax.plot(ab2, ves.response([10.0, 100.0, 1.0]), '-x', label='1D (VES)')
 ax.set_xlabel('AB/2 (m)')
-ax.set_ylabel('Apparent resistivity ($\Omega$m)')
+ax.set_ylabel(r'Apparent resistivity ($\Omega$m)')
 ax.grid(1)
 _ = ax.legend()
 

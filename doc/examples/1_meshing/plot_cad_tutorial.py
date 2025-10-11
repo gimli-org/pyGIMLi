@@ -39,7 +39,7 @@ In this example you will learn how to create a geometry in
 #
 # Two geometries have to be created. One for modelling and one for
 # inversion. When the same meshes are used for modelling and inversion,
-# the geometry of the sand channel is alreadyincluded in the structure
+# the geometry of the sand channel is already included in the structure
 # of the mesh. Therefore, the mesh itself would act as prior information
 # to the inversion. The modelling geometry consists of three regions: the
 # outer region; the inner region (same as inversion region in this
@@ -169,6 +169,7 @@ if gmsh:
 # 3. Clip the mesh and geometry with Tools → Clipping.
 # 4. The number of elements ect. can be found in the Tools → Statistics
 #    window.
+#
 #
 # Make sure to quickly write down the Gmsh volume tags of the outer
 # region, dike and channel and the surface tags of the free surface and
