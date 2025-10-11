@@ -222,10 +222,7 @@ start_model = np.ones(mesh.cellCount()) * pg.utils.complex.toComplex(
 
 ###############################################################################
 # Initialize the complex forward operator
-fop = ert.ERTModelling(
-    sr=False,
-    verbose=True,
-)
+fop = ert.ERTModelling(sr=False, verbose=True)
 fop.setComplex(True)
 fop.setData(scheme)
 fop.setMesh(mesh, ignoreRegionManager=True)
@@ -267,8 +264,7 @@ dpha = np.arctan2(data_rcomplex.imag, data_rcomplex.real) * 1000
 
 fig, axes = plt.subplots(1, 2, figsize=(20 / 2.54, 10 / 2.54))
 k = np.array(ert.createGeometricFactors(scheme))
-ert.showERTData(
-    scheme, vals=dmag * k, ax=axes[0], label=r'$|\rho_a|~[\Omega$m]')
+ert.showERTData(scheme, vals=dmag * k, ax=axes[0], label=r'$|\rho_a|~[\Omega$m]')
 ert.showERTData(scheme, vals=dpha, ax=axes[1], label=r'$\phi_a~[mrad]$')
 
 # real part: log-magnitude
@@ -339,7 +335,7 @@ m_old = np.log(start_model)
 # d = np.log(pg.utils.toComplex(data_rre_rim))
 d = np.log(data_rcomplex)
 response = np.log(pg.utils.toComplex(f_0))
-# tranform to log-log sensitivities
+# transform to log-log sensitivities
 J = J0 / np.exp(response[:, np.newaxis]) * np.exp(m_old)[np.newaxis, :]
 lam = 100
 
@@ -360,7 +356,7 @@ for i in range(1):
         term2
     )
 
-    print('Model Update')
+    print('Model update')
     print(model_update)
 
     m1 = np.array(m_old + 1.0 * model_update).squeeze()

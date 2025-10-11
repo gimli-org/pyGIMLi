@@ -74,7 +74,7 @@ def uAnalytical(p, sourcePos, k, sigma=1):
     """
     r1A = (p - sourcePos).abs()
     # Mirror on surface at depth=0
-    r2A = (p - pg.Pos([1.0, -1.0])*sourcePos).abs()
+    r2A = (p - pg.Pos([1.0, -1.0]) * sourcePos).abs()
 
     if r1A > 1e-12 and r2A > 1e-12:
         return  1 / (2.0 * np.pi) * 1/sigma * \
@@ -90,7 +90,7 @@ def uAnalytical(p, sourcePos, k, sigma=1):
 #     \sigma k \frac{{\bf r}\cdot {\bf n}}{{|r|}} \frac{K_1(|r-r_s|k)}{K_0(|r-r_s|k)}
 #
 def mixedBC(boundary, userData):
-    """Mixed boundary conditions.
+    r"""Mixed boundary conditions.
 
     Define the derivative of the analytical solution regarding the outer normal
     direction :math:`\vec{n}`. So we can define the values for mixed boundary
@@ -134,7 +134,7 @@ def mixedBC(boundary, userData):
 # functions `N`.
 #
 def rhsPointSource(mesh, source):
-    """Define function for the current source term.
+    r"""Define function for the current source term.
 
     :math:`\delta(x-pos), \int f(x) \delta(x-pos)=f(pos)=N(pos)`
     Right hand side entries will be shape functions(pos)
@@ -204,7 +204,6 @@ ax = pg.show(mesh, data=pg.abs(uAna-u), cMap="Reds",
           nCols=12, nLevs=7,
           showMesh=True)[0]
 
-#print('l2:', pg.pf(pg.solver.normL2(uAna-u)))
 print('L2:', pg.pf(pg.solver.normL2(uAna-u, mesh)))
 print('H1:', pg.pf(pg.solver.normH1(uAna-u, mesh)))
 np.testing.assert_approx_equal(pg.solver.normL2(uAna-u, mesh),
