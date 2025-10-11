@@ -105,8 +105,8 @@ class ERTManager(MeshMethodManager):
         self.setMesh(mesh)
         return mesh
 
-    def simulate(self, *args, **kwargs):
     # def simulate(self, mesh, scheme, res, **kwargs):
+    def simulate(self, *args, **kwargs):
         """Simulate an ERT measurement.
 
         Perform the forward task for a given mesh, resistivity distribution &
