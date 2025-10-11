@@ -688,7 +688,7 @@ napoleon_use_rtype = True
 # -- Options for Bibtex
 ################################################################################
 
-bibtex_bibfiles = ["gimliuses.bib", "libgimli.bib", "references.bib"]
+bibtex_bibfiles = ["gimliuses.bib", "about/libgimli.bib", "references.bib"]
 bibtex_reference_style = "author_year"
 
 ################################################################################
