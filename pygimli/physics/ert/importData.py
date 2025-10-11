@@ -148,12 +148,17 @@ def importRes2dInv(filename, verbose=False, return_header=False):
         if row.startswith("Error"):
             hasErr = True
             row = getNonEmptyRow(it, comment=';')
-            header['ipErrType'] = int(getNonEmptyRow(it, comment=';'))
+            if row.startswith("Type"):
+                row = getNonEmptyRow(it, comment=';')
+
+            header['ipErrType'] = int(row)
+            row = getNonEmptyRow(it, comment=';')
 
         for i in range(nData):
-            row = getNonEmptyRow(it, comment=';')
+            if i > 0:
+                row = getNonEmptyRow(it, comment=';')
+            
             vals = row.replace(',', ' ').split()
-
             nEls = int(float(vals[0]))
             # row starts with 4
             if nEls == 4:
@@ -420,7 +425,6 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
             pg.debug("Keys are:", d.keys())
             raise Exception("No electrode positions found!")
         for i in range(nData):
-            # print(i, d['A(x)'][i])
             if abmn[0]+'(z)' in d:
                 eID = [data.createSensor([d[se+'(x)'][i], d[se+'(y)'][i],
                                           d[se+'(z)'][i]]) for se in abmn]
