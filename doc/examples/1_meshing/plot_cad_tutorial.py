@@ -127,7 +127,7 @@ In this example you will learn how to create a geometry in
 
 import numpy as np
 import pygimli as pg
-gmsh = pg.optImport("gmsh", "do this tutorial. Install by running: pip install gmsh")
+gmsh = pg.optImport("gmsh", "Install GMesh by running: pip install gmsh")
 
 # Download all nessesary files
 geom_filename = pg.getExampleFile("cad/dike_mod.brep")
@@ -333,3 +333,4 @@ if gmsh:
 #    (`replaces GeoData
 #    workbench <https://forum.freecadweb.org/viewtopic.php?f=8&t=37178&hilit=geodata#p316040>`_)
 #    allows for GPS, LiDAR and GIS data to be imported to FreeCAD
+#
