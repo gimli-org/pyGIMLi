@@ -73,12 +73,12 @@ html-nogallery: api
 	@echo "Build finished without gallery. The HTML pages are in $(BUILDDIR)/html."
 
 html: api
-	$(SPHINXBUILD) -v -D abort_on_example_error=True -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html 
+	$(SPHINXBUILD) -v -D abort_on_example_error=1 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html 
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 spelling: api
-	$(SPHINXBUILD) -v -D abort_on_example_error=True -b spelling $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	$(SPHINXBUILD) -v -D abort_on_example_error=1 -b spelling $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Spellcheck finished."
 
