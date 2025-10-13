@@ -2150,6 +2150,88 @@ def createCube(size=[1.0, 1.0, 1.0], pos=None,
     return poly
 
 
+def createSphere(size=[1.0, 1.0, 1.0], pos=None, nSegments=20, rot=None, boundaryMarker=0, **kwargs):
+    
+    """Create sphere PLC as geometrie definition.
+
+    Create sphere PLC as geometrie definition.
+    You can either give size and center position.
+
+    Parameters
+    ----------
+    size: [x, y, z]
+        x, y, and z-size of the cube. Default = [1.0, 1.0, 1.0] in m
+    pos: [x, y, z]
+        The center position, default is at the origin.
+    rot: pg.Pos [None]
+        Rotate on the center.
+    boundaryMarker: int[0]
+        Boundary marker for the resulting faces.
+
+    ** kwargs:
+        Marker related arguments:
+        See :py:mod:`pygimli.meshtools.polytools.setPolyRegionMarker`
+
+    Examples
+    --------
+    >>> import pygimli.meshtools as mt
+    >>> sphere = mt.createSphere()
+    >>> print(sphere)
+    Mesh: Nodes: 182 Cells: 0 Boundaries: 360
+    >>> sphere = mt.createSphere([10, 10, 1])
+    >>> print(sphere.bb())
+    [RVector3: (-5.0, -5.0, -0.5), RVector3: (5.0, 5.0, 0.5)]
+
+    Returns
+    -------
+    poly : :gimliapi:`GIMLI::Mesh`
+        The resulting polygon is a :gimliapi:`GIMLI::Mesh`.
+
+    """
+    
+    poly = pg.Mesh(3, isGeometry=True)
+    
+    if nSegments < 4:
+        nSegments = 4
+
+    for i in range(int(nSegments/2)+1):
+        theta = np.pi * (i / int(nSegments/2))
+        for j in range(nSegments):
+            phi = 2 * np.pi * (j / (nSegments))
+            x = 0.5 * np.sin(theta) * np.cos(phi)
+            y = 0.5 * np.sin(theta) * np.sin(phi)
+            z = 0.5 * np.cos(theta)
+            poly.createNode(x, y, z)
+            if i == 0 or i == int(nSegments/2):
+                break
+            
+    num = len(poly.nodes())
+    for i, f in enumerate(range(nSegments-1)):
+        poly.createPolygonFace(poly.nodes([0,f+1,f+2]), marker=boundaryMarker)
+        poly.createPolygonFace(poly.nodes([num-1,num-f-2,num-f-3]), marker=boundaryMarker)
+    poly.createPolygonFace(poly.nodes([0,1,nSegments]), marker=boundaryMarker)
+    poly.createPolygonFace(poly.nodes([num-1,num-2,num-nSegments-1]), marker=boundaryMarker)
+    for b in range(int(nSegments/2)-2):
+        b_l = b*nSegments
+        for i, f in enumerate(range(1, nSegments)):
+            poly.createPolygonFace(poly.nodes([f+b_l,f+nSegments+b_l,f+nSegments+1+b_l]), marker=boundaryMarker)
+            poly.createPolygonFace(poly.nodes([num-1-f-b_l,num-1-f-nSegments-b_l,num-1-f-nSegments-1-b_l]), marker=boundaryMarker)
+        poly.createPolygonFace(poly.nodes([b_l+nSegments,nSegments*2+b_l,nSegments+b_l+1]), marker=boundaryMarker)
+        poly.createPolygonFace(poly.nodes([num-1-b_l-nSegments,num-1-nSegments*2-b_l,num-1-nSegments-b_l-1]), marker=boundaryMarker)
+        
+    poly.scale(size)
+    
+    if rot is not None:
+        poly.rotate(rot)
+
+    if pos is not None:
+        poly.translate(pos)
+        
+    setPolyRegionMarker(poly, **kwargs)
+    
+    return poly
+
+
 def extrude(p2, z=-1.0, boundaryMarker=0, **kwargs):
     """Create 3D body by extruding a closed 2D poly into z direction.
 
