@@ -144,7 +144,7 @@ try:
             "pygimli": "https://pygimli.org",
             "python": "https://docs.python.org/dev",
             "numpy": "https://numpy.org/doc/stable",
-            "scipy": "https://docs.scipy.org/doc/scipy/reference",
+            "scipy": "https://docs.scipy.org/doc/scipy/",
             "matplotlib": "https://matplotlib.org/stable",
         },
         # Don"t report time of fast scripts (< 10 sec)
