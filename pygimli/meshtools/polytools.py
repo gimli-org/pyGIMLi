@@ -2150,8 +2150,8 @@ def createCube(size=[1.0, 1.0, 1.0], pos=None,
     return poly
 
 
-def createSphere(size=[1.0, 1.0, 1.0], pos=None, nSegments=20, rot=None, boundaryMarker=0, **kwargs):
-    
+def createSphere(size=[1.0, 1.0, 1.0], pos=None, nSegments=20, nRings=10, 
+                 rot=None, boundaryMarker=0, **kwargs):
     """Create sphere PLC as geometrie definition.
 
     Create sphere PLC as geometrie definition.
@@ -2163,6 +2163,10 @@ def createSphere(size=[1.0, 1.0, 1.0], pos=None, nSegments=20, rot=None, boundar
         x, y, and z-size of the cube. Default = [1.0, 1.0, 1.0] in m
     pos: [x, y, z]
         The center position, default is at the origin.
+    nSegments: int[0]
+        Discrete number of segments along the horizontal axis
+    nRings: int[0]
+        Discrete number of segments along the vertical axis
     rot: pg.Pos [None]
         Rotate on the center.
     boundaryMarker: int[0]
@@ -2181,6 +2185,8 @@ def createSphere(size=[1.0, 1.0, 1.0], pos=None, nSegments=20, rot=None, boundar
     >>> sphere = mt.createSphere([10, 10, 1])
     >>> print(sphere.bb())
     [RVector3: (-5.0, -5.0, -0.5), RVector3: (5.0, 5.0, 0.5)]
+    >>> sphere = mt.createSphere([10, 10, 5], nSegments=5, nRings=25)
+    >>> pg.show(sphere, showMesh=True, markers=True)
 
     Returns
     -------
@@ -2188,36 +2194,63 @@ def createSphere(size=[1.0, 1.0, 1.0], pos=None, nSegments=20, rot=None, boundar
         The resulting polygon is a :gimliapi:`GIMLI::Mesh`.
 
     """
-    
     poly = pg.Mesh(3, isGeometry=True)
     
-    if nSegments < 4:
-        nSegments = 4
+    if nSegments < 3:
+        nSegments = 3
 
-    for i in range(int(nSegments/2)+1):
-        theta = np.pi * (i / int(nSegments/2))
+    for i in range(nRings+1):
+        theta = np.pi * (i / nRings)
         for j in range(nSegments):
             phi = 2 * np.pi * (j / (nSegments))
             x = 0.5 * np.sin(theta) * np.cos(phi)
             y = 0.5 * np.sin(theta) * np.sin(phi)
             z = 0.5 * np.cos(theta)
             poly.createNode(x, y, z)
-            if i == 0 or i == int(nSegments/2):
+            if i == 0 or i == nRings:
                 break
             
     num = len(poly.nodes())
-    for i, f in enumerate(range(nSegments-1)):
-        poly.createPolygonFace(poly.nodes([0,f+1,f+2]), marker=boundaryMarker)
-        poly.createPolygonFace(poly.nodes([num-1,num-f-2,num-f-3]), marker=boundaryMarker)
-    poly.createPolygonFace(poly.nodes([0,1,nSegments]), marker=boundaryMarker)
-    poly.createPolygonFace(poly.nodes([num-1,num-2,num-nSegments-1]), marker=boundaryMarker)
-    for b in range(int(nSegments/2)-2):
+
+    for f in range(nSegments-1):
+        poly.createBoundary(poly.nodes([0,
+                                        1+f,
+                                        2+f]), 
+                            marker=boundaryMarker)
+        poly.createBoundary(poly.nodes([num-1,
+                                        num-2-f,
+                                        num-3-f]), 
+                            marker=boundaryMarker)
+        
+    poly.createBoundary(poly.nodes([0,
+                                    1,
+                                    nSegments]), 
+                        marker=boundaryMarker)
+    poly.createBoundary(poly.nodes([num-1,
+                                    num-2,
+                                    num-1-nSegments]), 
+                        marker=boundaryMarker)
+    
+    for b in range(nRings-2):
         b_l = b*nSegments
-        for i, f in enumerate(range(1, nSegments)):
-            poly.createPolygonFace(poly.nodes([f+b_l,f+nSegments+b_l,f+nSegments+1+b_l]), marker=boundaryMarker)
-            poly.createPolygonFace(poly.nodes([num-1-f-b_l,num-1-f-nSegments-b_l,num-1-f-nSegments-1-b_l]), marker=boundaryMarker)
-        poly.createPolygonFace(poly.nodes([b_l+nSegments,nSegments*2+b_l,nSegments+b_l+1]), marker=boundaryMarker)
-        poly.createPolygonFace(poly.nodes([num-1-b_l-nSegments,num-1-nSegments*2-b_l,num-1-nSegments-b_l-1]), marker=boundaryMarker)
+        for f in range(1, nSegments):
+            poly.createBoundary(poly.nodes([f+b_l,
+                                            f+b_l+nSegments,
+                                            f+b_l+nSegments+1]), 
+                                marker=boundaryMarker)
+            poly.createBoundary(poly.nodes([num-1-f-b_l,
+                                            num-1-f-b_l-nSegments,
+                                            num-2-f-b_l-nSegments]), 
+                                marker=boundaryMarker)
+            
+        poly.createBoundary(poly.nodes([b_l+nSegments,
+                                        b_l+nSegments*2,
+                                        b_l+nSegments+1]), 
+                            marker=boundaryMarker)
+        poly.createBoundary(poly.nodes([num-1-b_l-nSegments,
+                                        num-1-b_l-nSegments*2,
+                                        num-2-b_l-nSegments]), 
+                            marker=boundaryMarker)
         
     poly.scale(size)
     
@@ -2230,7 +2263,6 @@ def createSphere(size=[1.0, 1.0, 1.0], pos=None, nSegments=20, rot=None, boundar
     setPolyRegionMarker(poly, **kwargs)
     
     return poly
-
 
 
 def extrude(p2, z=-1.0, boundaryMarker=0, **kwargs):
