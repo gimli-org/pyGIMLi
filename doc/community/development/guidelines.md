@@ -202,13 +202,6 @@ Read API documentation from shell:
 python -c "import pygimli as pg; help(pg.test)"
 ```
 
-More information on pyGIMLi's native testing function:
-
-```{eval-rst}
-.. autofunction:: pygimli.test
-
-```
-
 ### Adding an example to the paper carousel
 
 1. Put a catchy figure in *doc/\_static/usecases*. It should be 750X380 px. You can use this command:
@@ -253,7 +246,7 @@ We use: (exceptions in .landscape.yml and .pylintrc)
 We encurage to add 2 BLANKLINE between classes and methods and never use 2 BLANKLINES in the code itself.
 
 
-### Behaviour by name for global functions:
+### Behavior by name for global functions:
 
 ```python
 createFOO(...)
