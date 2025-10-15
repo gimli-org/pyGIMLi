@@ -304,17 +304,17 @@ def refineQuad2Tri(mesh, style=1):
 
             if c.nodeCount() == 3:
                 out.createCell([c.node(0).id(), c.node(1).id(), c.node(2).id()],
-                                    c.marker())
+                                c.marker())
             else:
                 if style == 1:
+                    # out.createCell([c.node(0).id(), c.node(1).id(), c.node(3).id()],
+                    #                c.marker())
+                    # out.createCell([c.node(1).id(), c.node(2).id(), c.node(3).id()],
+                    #                c.marker())
                     out.createCell([c.node(0).id(), c.node(1).id(), c.node(2).id()],
-                                c.marker())
+                                    c.marker())
                     out.createCell([c.node(0).id(), c.node(2).id(), c.node(3).id()],
-                                c.marker())
-                    out.createCell([c.node(0).id(), c.node(1).id(), c.node(2).id()],
-                                c.marker())
-                    out.createCell([c.node(0).id(), c.node(2).id(), c.node(3).id()],
-                                c.marker())
+                                    c.marker())
 
                 elif style == 2:
                     newNode = out.createNodeWithCheck(c.center())
