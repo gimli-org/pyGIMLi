@@ -135,7 +135,9 @@ def valHash(a:any, verbose:bool=False)-> int:
     if isinstance(a, list | tuple):
         hsh = 1
         for i, item in enumerate(a):
-            if hasattr(item, '__hash__') and not isinstance(item, list |np.ndarray):
+            if hasattr(item, '__hash__') \
+                and not isinstance(item, list|np.ndarray):
+
                 if verbose is True:
                     pg._g(i, type(item))
                 h = valHash(str(i)) ^ hash(item)
