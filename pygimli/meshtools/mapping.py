@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """Mesh based data transformation and mapping, interpolation, extrapolation."""
 
 import numpy as np
-
 import pygimli as pg
 
 
@@ -263,7 +262,7 @@ def interpolateAlongCurve(curve, t, **kwargs):
 
     Parameters
     ----------
-    curve : [[x,z]] | [[x,y,z]] | [:gimliapi:`GIMLI::Pos`] | :gimliapi:`GIMLI::PosVector`
+    curve : [[x,z]] | [[x,y,z]] | [:gimliapi:`GIMLI::Pos`,]
         Discrete curve for 2D :math:`x,z` curve=[[x,z]], 3D :math:`x,y,z`
 
     t: 1D iterable
@@ -414,29 +413,30 @@ def tapeMeasureToCoordinates(tape, pos):
 
 
 def interpolate(*args, **kwargs):
-    r"""Interpolation convenience function.
+    r"""Interpolate different kind of data.
 
-    Convenience function to interpolate different kind of data.
-    Currently supported interpolation schemes are:
+    Convenience function for different interpolation schemes:
 
-    * Interpolate mesh based data from one mesh to another
-     (syntactic sugar for the core based interpolate (see below))
+    **1. Interpolate mesh based data from one mesh to another**
+      syntactic sugar for the core based `pg.core.interpolate`
 
     Parameters
     ----------
-        args: :gimliapi:`GIMLI::Mesh`, :gimliapi:`GIMLI::Mesh`, iterable
-            `outData = interpolate(outMesh, inMesh, vals)`
-            Interpolate values based on inMesh to outMesh.
-            Values can be of length inMesh.cellCount() interpolated to
-            outMesh.cellCenters() or inMesh.nodeCount() which are interpolated
-            to outMesh.positions().
+        args: :gimliapi:`GIMLI::Mesh`, :gimliapi:`GIMLI::Mesh`, values
+            `outData = pg.core.interpolate(outMesh, inMesh, values)`
+
+            Interpolated values based on inMesh to outMesh.
+
+            Values can be of length `inMesh.cellCount()` interpolated to
+            `outMesh.cellCenters()`, or `inMesh.nodeCount()` which are
+            interpolated to `outMesh.positions()`.
 
     Returns
     -------
         Interpolated values.
 
-    * Mesh based values to arbitrary points, based on finite element
-      interpolation (from gimli core).
+    **2. Mesh based values to arbitrary points, based on finite elements**
+      syntactic sugar for the core based `pg.core.interpolate`
 
     Parameters
     ----------
@@ -445,14 +445,14 @@ def interpolate(*args, **kwargs):
         kwargs:
             Arguments forwarded to :gimliapi:`GIMLI::interpolate`
 
-        `interpolate(srcMesh, destMesh)`
+            `interpolate(srcMesh, destMesh)`
             All data from inMesh are interpolated to outMesh
 
     Returns
     -------
         Interpolated values
 
-    * Interpolate along curve.
+    **3. Interpolate along curve.**
       Forwarded to :py:mod:`pygimli.meshtools.interpolateAlongCurve`
 
     Parameters
@@ -463,18 +463,19 @@ def interpolate(*args, **kwargs):
             Arguments forwarded to
             :py:mod:`pygimli.meshtools.interpolateAlongCurve`
 
-            periodic : bool [False]
-                Curve is periodic.
-                Useful for closed parametric spline interpolation.
+        periodic: bool [False]
+            Curve is periodic.
+            Useful for closed parametric spline interpolation.
 
-    * 1D point set :math:`u(x)` for ascending :math:`x`.
+    **4. 1D interpolation**
+      1D point set :math:`u(x)` for ascending :math:`x`.
       Find interpolation function :math:`I = u(x)` and
       returns :math:`u_{\text{i}} = I(x_{\text{i}})`
       (interpolation methods are [**linear** via numpy,
       cubic **spline** via scipy, fit **harmonic** functions' via pygimli])
       Note, for 'linear' and 'spline' the interpolate contains all original
       coordinates while 'harmonic' returns an approximate best fit.
-      The amount of harmonic coefficients can be specfied by the 'nc' keyword.
+      The amount of harmonic coefficients can be specified by the 'nc' keyword.
 
     Parameters
     ----------
@@ -482,6 +483,7 @@ def interpolate(*args, **kwargs):
             * :math:`x_{\text{i}}` - target sample points
             * :math:`x` - function sample points
             * :math:`u` - function values
+
         kwargs:
             * method : string ['linear']
                 Specify interpolation method 'linear, 'spline', 'harmonic'
@@ -496,16 +498,15 @@ def interpolate(*args, **kwargs):
         ui: array of length xi
             :math:`u_{\text{i}} = I(x_{\text{i}})`, with :math:`I = u(x)`
 
-
     To use the core functions :gimliapi:`GIMLI::interpolate` start with a
     mesh instance as first argument or use the appropriate keyword arguments.
 
     TODO
-
-    * 2D parametric to points (method=['linear, 'spline', 'harmonic'])
-    * 2D/3D point cloud to points/grids
-        ('Delauney', 'linear, 'spline', 'harmonic')
-    * Mesh to points based on nearest neighbor values (pgcore)
+    ----
+        * 2D parametric to points (method=['linear, 'spline', 'harmonic'])
+        * 2D/3D point cloud to points/grids
+            ('Delauney', 'linear, 'spline', 'harmonic')
+        * Mesh to points based on nearest neighbor values (pgcore)
 
     Examples
     --------

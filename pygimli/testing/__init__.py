@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testing utilities
+"""Testing utilities.
 
 In Python you can call `pygimli.test()` to run all docstring
 examples.
@@ -9,7 +9,6 @@ Writing tests for pyGIMLi
 
 Please check: https://docs.pytest.org/en/latest/
 """
-
 import sys
 from os.path import join, realpath
 
@@ -122,7 +121,11 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
     old_backend = plt.get_backend()
     old_backend_pv = pg.rc["pyvista.backend"]
 
+
     if not show:
+        import pyvista
+        pyvista.OFF_SCREEN=True
+
         plt.switch_backend("Agg")
         pg.rc["pyvista.backend"] = None
     else:

@@ -7,7 +7,7 @@ kernelspec:
 (first-steps)=
 # First steps
 
-The modelling as well as the inversion part of {term}`GIMLi` often requires a
+The modelling as well as the inversion part of {term}`pyGIMLi` often requires a
 spatial discretization for the domain of interest, the so called
 {gimliapi}`GIMLI::Mesh`.
 This tutorial shows some basic aspects of handling a mesh.
@@ -23,7 +23,7 @@ import pygimli as pg
 Every part of the c++ namespace {gimliapi}`GIMLI` is bound to python and can
 be used with the leading `pg.`
 
-For instance get the current version for {term}`GIMLi` with:
+For instance get the current version for `pyGIMLi` with:
 
 ```{code-cell} ipython3
 print(pg.__version__)
@@ -78,7 +78,7 @@ print(type(grid.cell(0)))
 To generate the input arrays `x` and `y`, you can use the
 built-in {gimliapi}`GIMLI::Vector` (pre-defined with values that are type double as
 `pg.Vector`), standard python lists or {term}`numpy` arrays,
-which are widely compatible with {term}`GIMLi` vectors.
+which are widely compatible with {term}`pyGIMLi` vectors.
 
 ```{code-cell} ipython3
 import numpy as np

@@ -685,12 +685,19 @@ if (SPHINX_FOUND AND NOT SKIP_SPHINX)
     set (RECDOCTYPES "*.rst" "*.md" "*.png" "*.svg" "*.bib" "paper/*.py")
 
     foreach (DTYPE ${RECDOCTYPES})
-        file(GLOB_RECURSE DFILES
-                LIST_DIRECTORIES false
-                RELATIVE "${CMAKE_SOURCE_DIR}"
-            "./doc/${DTYPE}")
+        file(GLOB_RECURSE DFILES LIST_DIRECTORIES false
+             RELATIVE "${CMAKE_SOURCE_DIR}" "./doc/${DTYPE}")
         message(STATUS "Append DOC files: (${DTYPE}) " ${DFILES})
         list(APPEND DOCFILES ${DFILES})
+    endforeach()
+
+    foreach(DF "./AUTHORS.md"
+               "./CITATION.md"
+               "./INSTALLATION.md"
+               "./LICENSE.md"
+               )
+        message(STATUS "Append DOC files: " ${DF})
+        list(APPEND DOCFILES ${DF})
     endforeach()
 
     set(RSTFILES ${DOCFILES} CACHE INTERNAL "RST source file that we need to copy")

@@ -33,8 +33,9 @@ from .mesh import (checkMeshConsistency, convert, convertMeshioMesh,
                    toSubsurface, fromSubsurface, extractUpperSurface2dMesh)
 
 from .polytools import createParaDomain2D  # keep for backward compatibility
-from .polytools import (createCircle, createCube, createCylinder,
-                        createFacet, createLine, createPolygon, createRectangle, createSurface, createWorld,
+from .polytools import (createCircle, createCube, createCylinder, createSphere,
+                        createFacet, createLine, createPolygon, createRectangle,
+                        createSurface, createWorld,
                         createParaMeshPLC, createParaMeshSurface,
                         createParaMeshPLC3D,
                         merge, mergePLC, mergePLC3D,

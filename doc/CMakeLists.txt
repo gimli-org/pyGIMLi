@@ -52,9 +52,9 @@ foreach(file ${RSTFILES})
             TARGET
                 sphinx_check_sources
             VERBATIM
+            PRE_BUILD
             COMMENT
                 "Updating documentation sources files into build path: ${file}"
-            POST_BUILD
     )
 endforeach()
 
@@ -67,9 +67,9 @@ foreach(file ${PYFILES})
         TARGET
             sphinx_check_sources
         VERBATIM
-            COMMENT
+        PRE_BUILD
+        COMMENT
             "Updating documentation sources files into build path: conf.py"
-        POST_BUILD
     )
 endforeach()
 

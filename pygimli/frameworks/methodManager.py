@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """Method Manager.
 
 Provide the end user interface for method (geophysical) dependent
@@ -13,8 +11,8 @@ import pygimli as pg
 from pygimli.utils import prettyFloat as pf
 
 
-def fit(func, data, err=None, **kwargs):
-    """Generic function fitter.
+def fit(funct, data, err=None, **kwargs):
+    """Fit generic function.
 
     Fit data to a given function.
 
@@ -391,31 +389,32 @@ class MethodManager(object):
 
         return vals
 
+
     def preRun(self, *args, **kwargs):
         """Fcn to be called just before the inversion run starts."""
-        pass
+
 
     def postRun(self, *args, **kwargs):
         """Fcn to be called just after the inversion run."""
-        pass
+
 
     def invert(self, data=None, err=None, **kwargs):
         """Invert the data.
 
-        Invert the data by calling self.inv.run() with mandatory data and
+        Invert the data by calling `self.inv.run()` with mandatory data and
         error values.
 
         TODO
-            *need dataVals mandatory? what about already loaded data
+        ----
+            * need data mandatory? what about already loaded data
 
-        Parameters
-        ----------
-        dataVals: iterable
+        Arguments
+        ---------
+        data: iterable
             Data values to be inverted.
-
-        errVals: iterable | float
+        err: iterable | float
             Error value for the given data.
-            If errVals is float we assume this means to be a global relative
+            If err is float we assume this means to be a global relative
             error and force self.estimateError to be called.
         """
         if data is not None:
@@ -433,6 +432,7 @@ class MethodManager(object):
         self.postRun(**kwargs)
 
         return self.fw.model
+
 
     def showModel(self, model, ax=None, **kwargs):
         """Show a model.
@@ -459,6 +459,7 @@ class MethodManager(object):
 
         ax, cBar = self.fop.drawModel(ax, model, **kwargs)
         return ax, cBar
+
 
     def showData(self, data=None, ax=None, **kwargs):
         """Show the data.
@@ -491,6 +492,7 @@ class MethodManager(object):
         self.fop.drawData(ax, data, **kwargs)
 
         return ax, None
+
 
     def showResult(self, model=None, ax=None, **kwargs):
         """Show the last inversion result.
@@ -917,7 +919,8 @@ class MeshMethodManager(MethodManager):
                                            1.0 / self.inv.response,
                                            1.0 / self.inv.model)
         nCells = self.fop.paraDomain.cellCount()
-        return np.log10(covTrans[:nCells] / self.fop.paraDomain.cellSizes())
+        return covTrans[:nCells] / self.fop.paraDomain.cellSizes()
+        # return np.log10(covTrans[:nCells] / self.fop.paraDomain.cellSizes())
 
     def standardizedCoverage(self, threshold=0.01):
         """Standardized coverage vector (0|1) using thresholding."""

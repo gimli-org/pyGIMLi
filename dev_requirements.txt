@@ -20,7 +20,7 @@ matplotlib>=3.7
 # optional, but strongly recommended
 scipy>=1.14,<1.15
 scooby
-pyvista[all]>=0.46 
+pyvista[all]>=0.46
 pyqt5
 tabulate
 tqdm

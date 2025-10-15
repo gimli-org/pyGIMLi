@@ -30,13 +30,13 @@ from matplotlib.patheffects import withStroke
 
 def circle(x, y, text=None, radius=0.15, c="blue"):
     circle = Circle((x, y), radius, clip_on=False, zorder=10, linewidth=1,
-                    edgecolor='black', facecolor=(0, 0, 0, .0125), 
+                    edgecolor='black', facecolor=(0, 0, 0, .0125),
                     path_effects=[withStroke(linewidth=5, foreground='w')])
     ax.add_artist(circle)
     ax.plot(x, y, color=c, marker=".")
     ax.text(x, y - (radius + 0.05), text, backgroundcolor="white",
             ha='center', va='top', weight='bold', color=c)
-    
+
 m = pg.createGrid(4,4)
 
 # Create matplotlib figure and set size
@@ -99,8 +99,9 @@ pg.wait()
 The mesh class holds either geometric definitions (piece-wise linear complex - **PLC**) or discretizations of the subsurface. It contains <span style="color:green">**nodes**</span>, <span style="color:red">**boundaries**</span> (edges in 2D, faces in 3D) and <span style="color:blue">**cells**</span> (triangles, quadrangles in 2D, hexahedra or tetrahedra in 3D) with associated markers and arbitrary data for nodes or cells.
 
 
-:::{admonition} Working with meshes
+:::: {admonition} Working with meshes
 :class: tip
+
 :::{table} **General commands for accessing different entities of a mesh**
 :widths: auto
 :align: center
@@ -108,18 +109,19 @@ The mesh class holds either geometric definitions (piece-wise linear complex - *
 | Function              | Usage |
 | :---------------- | :------: |
 | `mesh.cells()`          |   Allows to access mesh cells   |
-|  `mesh.cell()`          | Allows to access a single cell (using the cell ID) |
-| `mesh.cell().center()`  | Allows to point to the center of a specific mesh cell |
-| `mesh.cell().center().x()/.y()` | Allows to extract the x / y coordinate of a cell center |
+| `mesh.cell(id:int)`     | Allows to access a single cell (using the cell ID) |
+| `mesh.cell(id:int).center()`  | Allows to point to the center of a specific mesh cell |
+| `mesh.cell(id:int).center().x()/.y()` | Allows to extract the x / y coordinate of a cell center |
 | `mesh.boundaries()`  |  Accesses mesh boundaries   |
-| `mesh.boundary()` | Points to a specific boundary of the mesh (using boundary IDs)
-| `mesh.boundary().center()` | Allows to point to the center of a specific mesh boundary |
-| `mesh.boundary().center().x/.y` | Allows to extract x / y coordinate of a boundary
+| `mesh.boundary(id:int)` | Points to a specific boundary of the mesh (using boundary IDs)
+| `mesh.boundary(id:int).center()` | Allows to point to the center of a specific mesh boundary |
+| `mesh.boundary(id:int).center().x/.y` | Allows to extract x / y coordinate of a boundary
 | `mesh.nodes()` |  Accesses mesh nodes   |
-| `mesh.node()` | Refers to one specific node within the mesh |
-| `mesh.node().x()/.y()` | Allows to extract x / y coordinate of a node
+| `mesh.node(id:int)` | Refers to one specific node within the mesh |
+| `mesh.node(id:int).x()/.y()` | Allows to extract x / y coordinate of a node
 :::
 
+::::
 
 
 It is common practice to classify meshes into two main types - structured and unstructured.
@@ -156,7 +158,7 @@ zmin, zmax = -10., 0.
 
 xreg = np.linspace(xmin, xmax, 20)
 zreg = np.linspace(zmin, zmax, 10)
-m_reg = pg.meshtools.createGrid(xreg,zreg,marker=2) 
+m_reg = pg.meshtools.createGrid(xreg,zreg,marker=2)
 
 pg.show(m_reg, ax=ax1)
 # Unstructured mesh
@@ -172,7 +174,7 @@ fig.tight_layout()
 
 To create a regular 2D grid, pyGIMLi offers a variety of tools that help with the task. To create a regular grid, we first of all have to create the extent of the mesh in x and z direction. For this example, we create a mesh of _20 x 10 m_ with a regular cell size of _1 x 1 m_. After defining the extent, we can simply call the pg.meshtools.createGrid() and get an overview of the number of nodes, cells and boundaries:
 
-```{code-cell} 
+```{code-cell}
 xmin, xmax = -10, 10.
 zmin, zmax = -10., 0.
 
@@ -184,12 +186,13 @@ m_reg
 
 To show the mesh, we can simply call the pg.show() function:
 
-```{code-cell} 
+```{code-cell}
 pg.show(m_reg)
 ```
 
-:::{admonition} Regular grids in 2D
+:::: {admonition} Regular grids in 2D
 :class: tip
+
 :::{table}
 :widths: 200px
 :align: center
@@ -198,6 +201,8 @@ pg.show(m_reg)
 | :---------------- | :------: |
 | {py:class}`createGrid <pygimli.meshtools.createWorld>`  |   Creates a regular grid mesh from the provided x- and z-coordinates   |
 :::
+
+::::
 
 
 ### Creating an irregular mesh with pyGIMLi
@@ -230,7 +235,7 @@ For more information, see the later section on **Markers**
 
 We are using the mt.createWorld() function to create a world based on the gíven x- & z-coordinates. The following table lists all handy functions that can be utilized when creating a geometry in pyGIMLi:
 
-:::{admonition} PLC creation in pyGIMLi
+:::: {admonition} PLC creation in pyGIMLi
 :class: tip
 :::{table} **General commands for geometry creations**
 :widths: 200px
@@ -246,7 +251,7 @@ We are using the mt.createWorld() function to create a world based on the gíven
 | {py:class}`createPolygon <pygimli.meshtools.createPolygon>` |   Creates a polygon from a list of vertices   |
 | {py:class}`createRectangle <pygimli.meshtools.createRectangle>`      |   Creates a rectangular PLC   |
 :::
-
+::::
 
 pyGIMLi has different ways to create meshes. mt.createMesh creates a mesh using Triangle, a two-dimensional constrained Delaunay mesh generator.
 
@@ -255,12 +260,12 @@ The additional input parameters control the maximum triangle area and the mesh s
 ```{code-cell}
 from pygimli.viewer import showMesh
 
-mesh = mt.createMesh(world, 
+mesh = mt.createMesh(world,
                      area=2.0,
                      quality=33,
                      smooth=[2, 4] # [0:no smoothing or 1:node center or 2:weighted node center, # of iter]
                     )
-showMesh(mesh, markers=True, showMesh=True); 
+showMesh(mesh, markers=True, showMesh=True);
 ```
 
 
@@ -311,7 +316,7 @@ If we assume a simple rectangular world without additional layers, we have two d
 
 1) Set `createWorld(worldMarker=False)`, which leads to enumerated boundaries (*1 = left, 2=right, 3=bottom, 4=top, 5=front and 6=back*).
 
-2) Set `createWorld(worldMarker=True)`, which leads to the top holding the boundary marker -1 and other outer boundaries -2. 
+2) Set `createWorld(worldMarker=True)`, which leads to the top holding the boundary marker -1 and other outer boundaries -2.
 
 
 ```{code-cell}
@@ -353,9 +358,9 @@ To see applications where the indices of the PLC / mesh boundary are utilized, p
 
 ### Import options for meshes in pyGIMLi
 
-A broad variety of functions to import and convert different mesh types into a GIMLI mesh object exists within pyGIMLi. The following functions are the most commonly used ones: 
+A broad variety of functions to import and convert different mesh types into a GIMLI mesh object exists within pyGIMLi. The following functions are the most commonly used ones:
 
-:::{admonition} PLC creation in pyGIMLi
+:::: {admonition} PLC creation in pyGIMLi
 :class: tip
 :::{table}
 :widths: 200px
@@ -373,7 +378,7 @@ A broad variety of functions to import and convert different mesh types into a G
 | {py:class}`Tetgen <pygimli.meshtools.readTetgen>` |   Read and convert a mesh from the basic Tetgen output   |
 | {py:class}`Triangle <pygimli.meshtools.readTriangle>`      |   Read Triangle mesh   |
 :::
-
+::::
 
 ### Example: mesh generation using Gmsh
 
@@ -403,7 +408,7 @@ pyGIMLi provides a variety of operators to modify your mesh. The following table
 
 ### Merging meshes
 
-In some cases, the modelling domain may require different degrees of flexibility in separate mesh regions. In the following, we demonstrate this for a two-dimensional mesh consisting of a region with regularly spaced quadrilaterals and a region with unstructured triangles. 
+In some cases, the modelling domain may require different degrees of flexibility in separate mesh regions. In the following, we demonstrate this for a two-dimensional mesh consisting of a region with regularly spaced quadrilaterals and a region with unstructured triangles.
 
 pyGIMLi offers the possibility to merge two meshes by calling {py:class}`merge2Meshes <pygmli.meshtools.merge2Meshes()>`.
 
@@ -446,7 +451,7 @@ pg.show(translated_mesh)
 Apart from moving the mesh along its axes, pyGIMLi also provides a tool to scale the mesh along specified axes - in this example, we scale along the z-axis with a factor of 2:
 
 ```{code-cell}
-scaled_mesh = pg.Mesh(mesh) 
+scaled_mesh = pg.Mesh(mesh)
 scaled_mesh.scale([1, 2])
 pg.show(scaled_mesh)
 ```
@@ -456,7 +461,7 @@ Another valuable mesh modification tool is the mesh.rotate function. By providin
 
 ```{code-cell}
 import numpy as np
-rotated_mesh = pg.Mesh(mesh) 
+rotated_mesh = pg.Mesh(mesh)
 rotated_mesh.rotate([0, 0, np.deg2rad(-20)])
 pg.show(rotated_mesh)
 ```
@@ -464,9 +469,9 @@ pg.show(rotated_mesh)
 ## Mesh export
 
 
-Suppose we want to continue working on our GIMLi mesh object in a different meshing tool - pyGIMLi provides a variety of export functions to transfer your GIMLi mesh into a different format: 
+Suppose we want to continue working on our GIMLi mesh object in a different meshing tool - pyGIMLi provides a variety of export functions to transfer your GIMLi mesh into a different format:
 
-:::{admonition} Mesh export functions
+:::: {admonition} Mesh export functions
 :class: tip
 :::{table}
 :widths: 200px
@@ -480,6 +485,7 @@ Suppose we want to continue working on our GIMLi mesh object in a different mesh
 | {py:class}`STL <pygimli.meshtools.exportSTL>`     |   Write STL surface mesh   |
 | {py:class}`STL <pygimli.meshtools.mesh().exportVTK>`     |   Save mesh alongside properties as vtk   |
 :::
+::::
 
 ```{code-cell}
 # Save rotated mesh from above as vtk file

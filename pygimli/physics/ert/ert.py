@@ -35,8 +35,7 @@ def simulate(mesh, scheme, res, **kwargs):
     mesh : :gimliapi:`GIMLI::Mesh`
         2D or 3D Mesh to calculate for.
 
-    res : float, array(mesh.cellCount()) | array(N, mesh.cellCount()) |
-          list
+    res : float, array(mesh.cellCount()), array(N, mesh.cellCount()), list
         Resistivity distribution for the given mesh cells can be:
         . float for homogeneous resistivity (e.g. 1.0)
         . single array of length mesh.cellCount()

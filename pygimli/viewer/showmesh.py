@@ -163,6 +163,12 @@ def show(obj=None, data=None, **kwargs):
 
     if isinstance(mesh, list):
         ax = kwargs.pop('ax', None)
+        if isinstance(mesh[0], pg.Mesh) \
+            and mesh[0].dim() == 3 and mesh[0].isGeometry():
+            ## assume a list of 3d geometries
+            mesh = pg.meshtools.mergePLC(mesh)
+            return pg.show(mesh, **kwargs)
+
         label = kwargs.pop('label', None)
         if not isinstance(label, list):
             label = [label]* len(mesh)
@@ -661,7 +667,6 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
             pass
 
     if axisLabels == True and mesh.dim() == 2:
-
         try:
             useDepth = min(mesh.boundaryMarkers()) < 0 and max(pg.y(mesh)) <= 0
             pg.viewer.mpl.adjustWorldAxes(ax, useDepth=useDepth, xl=xl, yl=yl)

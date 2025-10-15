@@ -31,7 +31,7 @@ Mesh.show = __Mesh__show__
 
 
 def __Mesh_unique_dataKeys(self):
-    """Return unique data keys"""
+    """Return unique data keys."""
     uniqueNames = {}
     for d in self.dataMap().keys():
 
@@ -95,7 +95,7 @@ Mesh.dataDict = __Mesh_getData__
 
 
 def __Mesh_str(self):
-    """Return a string of some mesh infos."""
+    """Return string representation for mesh."""
     st = "Mesh: Nodes: " + str(self.nodeCount()) + " Cells: " + str(
         self.cellCount()) + " Boundaries: " + str(self.boundaryCount())
 
@@ -123,7 +123,7 @@ Mesh.__repr__ =__Mesh_str
 
 
 def __Mesh_createNodes__(self, posList):
-    """Create nodes for all pos in posList"""
+    """Create nodes for all pos in posList."""
     try:
         return [self.createNode(p) for p in posList]
     except BaseException:
@@ -132,6 +132,7 @@ Mesh.createNodes = __Mesh_createNodes__
 
 
 def __addPLCs__(self, other):
+    """Add another mesh or a list of points as a new PLC."""
     if isR3Array(other):
         m = Mesh(dim=self.dim(), isGeometry=True)
         m.createNodes(other)
@@ -145,8 +146,8 @@ Mesh.__add__ = __addPLCs__
 
 
 def __MeshEntity_str(self):
-    """Give mesh entity infos."""
-    s = repr(self)
+    """Return string representation for mesh entity."""
+    s = self.__repr__()
     s += '\tID: ' + str(self.id()) + \
          ', Marker: ' + str(self.marker()) + \
          ', Size: ' + str(self.size()) + '\n'
@@ -161,7 +162,7 @@ MeshEntity.__str__ =__MeshEntity_str
 
 
 def __Node_str(self):
-    """Give node infos."""
+    """Return string representation for node."""
     s = '\tID: ' + str(self.id()) + \
          ', Marker: ' + str(self.marker())
     s += '\t' + str(self.pos()) + '\n'
@@ -235,9 +236,9 @@ def __Mesh_setVal(self, key, val):
                 self.setCellMarkers(val)
             else:
                 self.addData(key, val)
-        except BaseException:
-            # print('key:', key)
-            # print('val:', val)
+        except BaseException as e:
+            raise ValueError(f"Could not add data with key {key} "
+                             f"of shape {np.shape(val)}") from e
 
             # try:
             #     print(val.shape)
@@ -249,7 +250,7 @@ Mesh.__setitem__ = __Mesh_setVal
 
 
 def __Mesh_getVal(self, key):
-    """Index access to the mesh data"""
+    """Index access to the mesh data."""
     if self.haveData(key):
         return self.data(key)
     else:
@@ -303,6 +304,7 @@ Mesh.bb = __MeshBoundingBox__
 
 
 def __MeshHoleMarkers__(self):
+    """Return list of hole markers."""
     return self.holeMarker()
 
 Mesh.holeMarkers = __MeshHoleMarkers__
@@ -779,7 +781,7 @@ def __Mesh__align__(self, pnts):
     """
     import pygimli as pg
     if self.dim() != 2:
-        pg.critical("Only 2D meshes can be aligned to 3D coordinates")
+        critical("Only 2D meshes can be aligned to 3D coordinates")
 
     A = None
 
@@ -799,7 +801,7 @@ def __Mesh__align__(self, pnts):
 
     if A is None:
         print(pnts)
-        pg.critical("Can't, interpret pnts.")
+        critical("Can't, interprete ptns.")
 
     tn = [n.pos()[0] for n in self.nodes()]
     zn = [n.pos()[1] for n in self.nodes()]
@@ -876,10 +878,7 @@ def __Mesh__extent__(self, axis=None):
     dist = bb[1]- bb[0]
     if isinstance(axis, str):
         sa0 = axis.lower()[0]
-        if sa0 == "m":
-            axis = None
-        else:
-            axis = "dxyz".find(sa0) - 1
+        axis = None if sa0 == "m" else "dxyz".find(sa0) - 1
 
     if axis is None:
         return max(np.abs(dist))
@@ -909,6 +908,7 @@ def __Mesh__populate__(self, prop:str, value):
     field: array (length cellCount)
     """
     from pygimli.solver import parseMapToCellArray
+
     if isinstance(value, dict):
         self[prop] =  parseMapToCellArray(value, self)
     elif hasattr(value, '__iter__'):
@@ -919,7 +919,7 @@ def __Mesh__populate__(self, prop:str, value):
         elif len(value) > max(self.cellMarkers()):  # cell marker indexing
             self[prop] = np.array(value)[self.cellMarkers()]
         else:
-            raise Exception("Length mismatch!")
+            raise ValueError("Length mismatch!")
 
     return self[prop]
 Mesh.populate = __Mesh__populate__
@@ -966,3 +966,58 @@ def __Mesh__innerBoundaryCenters__(self):
     """Center of all inner boundaries (C1-constraints)."""
     return [b.center() for b in self.boundaries() if not b.outside()]
 Mesh.innerBoundaryCenters = __Mesh__innerBoundaryCenters__
+
+
+__Mesh__createH2__Orig = Mesh.createH2
+def __Mesh__createH2__(self):
+    """Create a new refined mesh according to H2 criteria."""
+    if self.dim() == 3 and self.isGeometry():
+
+        poly = Mesh(3, isGeometry=True)
+        ## non-optimized version, if runtime is an issue, implement
+        ## a better core version
+        for b in self.boundaries():
+            if b.nodeCount() == 4:
+                n0 = poly.createNode(b.node(0).pos(), b.node(0).marker())
+                n1 = poly.createNode(b.node(1).pos(), b.node(1).marker())
+                n2 = poly.createNode(b.node(2).pos(), b.node(2).marker())
+                n3 = poly.createNode(b.node(3).pos(), b.node(3).marker())
+                n4 = poly.createNode((b.node(0).pos() + b.node(1).pos()) / 2)
+                n5 = poly.createNode((b.node(1).pos() + b.node(2).pos()) / 2)
+                n6 = poly.createNode((b.node(2).pos() + b.node(3).pos()) / 2)
+                n7 = poly.createNode((b.node(3).pos() + b.node(0).pos()) / 2)
+                n8 = poly.createNode((  b.node(0).pos() + b.node(1).pos()
+                                      + b.node(2).pos() + b.node(3).pos()) / 4)
+
+                poly.createBoundary([n0.id(), n4.id(), n8.id(), n7.id()],
+                                    marker=b.marker())
+                poly.createBoundary([n4.id(), n1.id(), n5.id(), n8.id()],
+                                    marker=b.marker())
+                poly.createBoundary([n5.id(), n2.id(), n6.id(), n8.id()],
+                                    marker=b.marker())
+                poly.createBoundary([n6.id(), n3.id(), n7.id(), n8.id()],
+                                    marker=b.marker())
+
+            elif b.nodeCount() == 3:
+                n0 = poly.createNode(b.node(0).pos(), b.node(0).marker())
+                n1 = poly.createNode(b.node(1).pos(), b.node(1).marker())
+                n2 = poly.createNode(b.node(2).pos(), b.node(2).marker())
+                n3 = poly.createNode((b.node(0).pos() + b.node(1).pos()) / 2)
+                n4 = poly.createNode((b.node(1).pos() + b.node(2).pos()) / 2)
+                n5 = poly.createNode((b.node(2).pos() + b.node(0).pos()) / 2)
+
+                poly.createBoundary([n0.id(), n3.id(), n5.id()],
+                                    marker=b.marker())
+                poly.createBoundary([n3.id(), n1.id(), n4.id()],
+                                    marker=b.marker())
+                poly.createBoundary([n4.id(), n2.id(), n5.id()],
+                                    marker=b.marker())
+                poly.createBoundary([n3.id(), n4.id(), n5.id()],
+                                    marker=b.marker())
+
+        return poly
+
+    else:
+        return __Mesh__createH2__Orig(self)
+
+Mesh.createH2 = __Mesh__createH2__

@@ -7,7 +7,8 @@ from .kernel import SolveGravMagHolstein
 class MagneticsModelling(pg.frameworks.MeshModelling):
     """ Magnetics modelling operator using Holstein (2007).
     """
-    def __init__(self, mesh=None, points=None, cmp=["TFA"], igrf=[0, 0, 50000]):
+    def __init__(self, mesh=None, points=None, cmp=["TFA"], igrf=[0, 0, 50000],
+                 verbose=False):
         """ Setup forward operator.
 
         Parameters

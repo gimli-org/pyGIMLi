@@ -43,7 +43,7 @@ setup(
     install_requires=['pgcore>=@GIMLI_GIT_TAG@',
                       'numpy>=2.1',
                       'matplotlib>=3.7',
-                      'scipy>=1.14',
+                      'scipy>=1.14,<1.16',
                       'scooby',
                       'pyvista[all]>=0.44',
                       'tetgen>=0.6.5',

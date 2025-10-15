@@ -1,5 +1,6 @@
 ADD_CUSTOM_TARGET(pggen ALL)
 ADD_CUSTOM_COMMAND(
+    PRE_BUILD
     COMMAND
         ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_BINARY_DIR}/_pygimli_.cache
     COMMAND
@@ -8,11 +9,10 @@ ADD_CUSTOM_COMMAND(
         #python
     ARGS
         ${CMAKE_CURRENT_SOURCE_DIR}/generate_pygimli_code.py
---extra-path=${PYGCCXML_PATH} --extra-includes=${Boost_INCLUDE_DIR}
---caster=${CASTER_EXECUTABLE} --clang=${CLANG_EXECUTABLE}
+            --extra-path=${PYGCCXML_PATH} --extra-includes=${Boost_INCLUDE_DIR}
+            --caster=${CASTER_EXECUTABLE} --clang=${CLANG_EXECUTABLE}
     TARGET
         pggen
-    POST_BUILD
     #DEPENDS
         #set(ENV{PYTHONPATH} $ENV{PYTHONPATH}${PYGCCXML_PATH})
         #${CMAKE_CURRENT_SOURCE_DIR}/generate_pygimli_code.py
@@ -23,21 +23,20 @@ ADD_CUSTOM_COMMAND(
 #HACK!! but we need this to force cmake looking for our generated binding files
 ADD_CUSTOM_TARGET(fixpygimlisrc ALL)
 ADD_CUSTOM_COMMAND(
+    PRE_BUILD
     COMMAND
         ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt
     TARGET
         fixpygimlisrc
-    POST_BUILD
    )
 
 ADD_CUSTOM_TARGET(pgbuild ALL)
 ADD_CUSTOM_COMMAND(
-    #test -z $J && ${CMAKE_MAKE_PROGRAM} -j 1 -C ${CMAKE_BINARY_DIR} pg  || echo "no 1"
+    PRE_BUILD
     COMMAND
         if [ -z $J ]; then ${CMAKE_MAKE_PROGRAM} -j 1 -C ${CMAKE_BINARY_DIR} pg \; else ${CMAKE_MAKE_PROGRAM} -j $J -C ${CMAKE_BINARY_DIR} pg \; fi
     TARGET
         pgbuild
-    POST_BUILD
    )
 
 find_file (HAVE_DUMMY dummy.cpp PATHS ${CMAKE_CURRENT_BINARY_DIR}/generated/)

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Plotting functions for traveltime."""
 import numpy as np
 
@@ -85,7 +84,8 @@ def drawFirstPicks(ax, data, tt=None, plotva=False, **kwargs):
     gx = np.array([px[int(g)] for g in data["g"]])
     sx = np.array([px[int(s)] for s in data["s"]])
     if tt is None:
-        tt = np.array(data["t"])
+        tt = data["t"]
+
     if plotva:
         tt = np.absolute(gx - sx) / tt
 

@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """General grid generation and maintenance."""
 
 import numpy as np
-
 import pygimli as pg
 
 # type from python3.12
@@ -92,10 +91,11 @@ def createGrid(x=None, y=None, z=None, **kwargs):# -> Mesh:
 
 
 def createGridPieShaped(r, degree=10.0, h=2, marker=0, phi=None):
-    """Create a 2D pie shaped grid in polar coordinates
+    """Create a 2D pie shaped grid in polar coordinates.
+
     (segment from annulus or cirlce).
 
-    TODO:
+    TODO
     ----
     * degree: > 90 .. 360 (use with phi)
 

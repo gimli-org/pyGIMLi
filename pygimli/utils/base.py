@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """Pygimli base functions.
 
 Some needs to be sorted. Need to fit nameing conventions!
@@ -178,13 +178,13 @@ def createPathTimePath(path, now=None, sub=None, symlink=None):
     """
     timeStr = createDateTimeString(now)
     ret = createPath(['.', path, timeStr, *sub])
-    
+
     if symlink is not None:
-        
+
         target = os.path.join(path, symlink)
         if os.path.exists(target):
             os.remove(target)
-        
+
         os.symlink(timeStr, os.path.join(path, symlink))
 
     return ret
@@ -198,7 +198,7 @@ def createPath(pathList):
     pathList: str | list(str)
         Create Path with optional subpaths
     """
-    if isinstance(pathList, (list, tuple)):
+    if isinstance(pathList, list | tuple):
         path = os.path.join('', *pathList)
     else:
         path = os.path.join('', pathList)
