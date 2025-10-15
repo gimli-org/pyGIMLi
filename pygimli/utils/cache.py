@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Caching manager with function decorator.
 
 Input supports python base types and all pg.core objects with .hash() method.

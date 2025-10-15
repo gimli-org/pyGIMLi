@@ -265,39 +265,68 @@ def refineQuad2Tri(mesh, style=1):
     >>> ax, _ = pg.show(mt.refineQuad2Tri(quads, style=2))
     >>> pg.wait()
     """
-    out = pg.Mesh(2)
-    newNode = None
+    if mesh.dim() == 3 and mesh.isGeometry():
+        out = pg.Mesh(3, isGeometry=True)
+        for n in mesh.nodes():
+            out.createNode(n.pos())
+        for b in mesh.boundaries():
+            if b.nodeCount() == 4:
+                # Split the quadrangle into two triangles such that
+                # the split is along the diagonal with the largest angle sum
+                n = [b.node(i) for i in range(4)]
+                # Compute angles at each node
+                def angle(a, b, c):
+                    ab = (b.pos() - a.pos()).norm()
+                    cb = (b.pos() - c.pos()).norm()
+                    dot = np.clip(np.dot(ab, cb), -1.0, 1.0)
+                    return np.arccos(dot)
+                # Diagonal 0-2
+                angle1 = angle(n[1], n[0], n[2]) + angle(n[3], n[2], n[0])
+                # Diagonal 1-3
+                angle2 = angle(n[0], n[1], n[3]) + angle(n[2], n[3], n[1])
+                if angle1 > angle2:
+                    out.createBoundary([n[0].id(), n[1].id(), n[2].id()], b.marker())
+                    out.createBoundary([n[0].id(), n[2].id(), n[3].id()], b.marker())
+                else:
+                    out.createBoundary([n[1].id(), n[2].id(), n[3].id()], b.marker())
+                    out.createBoundary([n[1].id(), n[3].id(), n[0].id()], b.marker())
+            else:
+                out.createBoundary(b.ids(), b.marker())
 
-    for n in mesh.nodes():
-        out.createNode(n.pos())
+    else:
+        out = pg.Mesh(2)
+        newNode = None
 
-    for c in mesh.cells():
+        for n in mesh.nodes():
+            out.createNode(n.pos())
 
-        if style == 1:
-            # out.createCell([c.node(0).id(), c.node(1).id(), c.node(3).id()],
-            #                c.marker())
-            # out.createCell([c.node(1).id(), c.node(2).id(), c.node(3).id()],
-            #                c.marker())
+        for c in mesh.cells():
 
-            out.createCell([c.node(0).id(), c.node(1).id(), c.node(2).id()],
-                           c.marker())
-            out.createCell([c.node(0).id(), c.node(2).id(), c.node(3).id()],
-                           c.marker())
+            if style == 1:
+                # out.createCell([c.node(0).id(), c.node(1).id(), c.node(3).id()],
+                #                c.marker())
+                # out.createCell([c.node(1).id(), c.node(2).id(), c.node(3).id()],
+                #                c.marker())
 
-        elif style == 2:
-            newNode = out.createNodeWithCheck(c.center())
+                out.createCell([c.node(0).id(), c.node(1).id(), c.node(2).id()],
+                            c.marker())
+                out.createCell([c.node(0).id(), c.node(2).id(), c.node(3).id()],
+                            c.marker())
 
-            for i in range(4):
-                out.createCell([c.node(i).id(), c.node((i + 1) % 4).id(),
-                                newNode.id()], c.marker())
+            elif style == 2:
+                newNode = out.createNodeWithCheck(c.center())
 
-        for i in range(c.boundaryCount()):
-            b = c.boundary(i)
-            if b.marker() != 0:
-                out.createBoundary([b.node(0).id(), b.node(1).id()],
-                                   b.marker())
+                for i in range(4):
+                    out.createCell([c.node(i).id(), c.node((i + 1) % 4).id(),
+                                    newNode.id()], c.marker())
 
-    out.createNeighborInfos()
+            for i in range(c.boundaryCount()):
+                b = c.boundary(i)
+                if b.marker() != 0:
+                    out.createBoundary([b.node(0).id(), b.node(1).id()],
+                                    b.marker())
+
+        out.createNeighborInfos()
 
     return out
 
