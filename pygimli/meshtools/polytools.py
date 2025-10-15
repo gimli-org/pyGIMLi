@@ -2213,7 +2213,8 @@ def createSphere(size=None, pos=None, nSegments=20, nRings=10,
     ...                                 refine=3, triFaces=True)
     >>> ico = pg.meshtools.createSphere(var='icosphere', pos=[0,0,0],
     ...                                 refine=2)
-    >>> pg.show([uv, qs4, qs3, ico], showMesh=True, markers=True) # doctest: +ELLIPSIS
+    >>> pg.show([uv, qs4, qs3, ico], showMesh=True,
+    ...         markers=True) # doctest: +ELLIPSIS
     (<pyvista...
     """
     if size is None:
@@ -2312,7 +2313,8 @@ def createSphere(size=None, pos=None, nSegments=20, nRings=10,
             [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1],]
 
         for f in faces:
-            poly.createBoundary([nodes[i].id() for i in f], marker=boundaryMarker)
+            poly.createBoundary([nodes[i].id() for i in f],
+                                marker=boundaryMarker)
 
         refine = kwargs.pop('refine', 2)
         for r in range(refine):
@@ -2323,7 +2325,8 @@ def createSphere(size=None, pos=None, nSegments=20, nRings=10,
                 n.setPos(r.at(0.5/n.pos().abs()))
                 # alternative could be smooth with neighbors, and
                 # post normalize with the end result, test and compare
-
+    else:
+        pg.critical("Unknown sphere variance: ", var)
 
 
     poly.scale(size)
