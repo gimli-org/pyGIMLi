@@ -100,7 +100,7 @@ dR = abs(R[iF] - R[iB])
 fig, ax = plt.subplots()
 ax.loglog(Rmean, dR, '.', markersize=2)
 ax.set_xlabel(r'R ($\Omega$)')
-ax.set_ylabel('dR ($\Omega$)')
+ax.set_ylabel(r'dR ($\Omega$)')
 ax.grid()
 
 ###############################################################################

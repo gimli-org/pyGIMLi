@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """Tools to create or manage PLC.
 
 Please note there is currently no collision or intersection check at all.
@@ -747,26 +747,27 @@ def mergePLC(plcs, tol=1e-3):
 
     Merge multiply polygons into a single polygon.
     Common nodes and common edges will be checked and removed.
-    When a node touches an edge, the edge will be splited.
+    When a node touches an edge, the edge will be split.
 
-    3D only OOC with polytools
+    3D only OOC with polytools.
 
-    TODO:
-        * Crossing or Node/Edge intersections will NOT be
-        recognized yet.
-        * Edge on Node touch
+    TODO
+    ----
+    * Crossing or Node/Edge intersections will NOT be recognized yet.
+    * Edge on Node touch
+
 
     Parameters
     ----------
-    plcs: [:gimliapi:`GIMLI::Mesh`]
+    plcs: [:gimliapi:`GIMLI::Mesh`,]
         List of PLC that want to be merged into one new PLC
 
-    tol : double
+    tol: double
         Tolerance to check for duplicated nodes. [1e-3]
 
     Returns
     -------
-    plc : :gimliapi:`GIMLI::Mesh`
+    plc: :gimliapi:`GIMLI::Mesh`
         The resulting polygon is a :gimliapi:`GIMLI::Mesh`.
 
     Examples
@@ -1158,7 +1159,7 @@ def createParaMeshSurface(sensors, paraBoundary=None, boundary=-1,
     """
     if hasattr(sensors, 'sensors'):
         sensors = sensors.sensors()
-    
+
     sensors = np.asarray(sensors)
 
     if paraBoundary is None:
@@ -1394,25 +1395,23 @@ def createParaMeshPLC3D(sensors, paraDX=0, paraDepth=-1, paraBoundary=None,
     return pdPLC
 
 
-def readPLC(filename, comment='#'):
+def readPLC(filename:str, comment:str='#'):
     r"""Read in a piece-wise linear complex object (PLC) from .poly file.
-
-    A PLC is a pyGIMLi geometry, e.g., created using `mt.exportPLC`.
 
     Read 2D :term:`Triangle` or 3D :term:`Tetgen` PLC files.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     filename: string
-        Filename *.poly
+        Filename .poly
 
-    comment: string ('#')
+    comment: string
         String containing all characters that define a comment line.
         Identified lines will be ignored during import.
 
     Returns
     -------
-    poly :
+    poly:
         :gimliapi:`GIMLI::Mesh`
 
     See Also
@@ -1577,7 +1576,7 @@ def exportPLC(poly, fname, **kwargs):
     r"""Export a piece-wise linear complex (PLC) to a .poly file (2D or 3D).
 
     Chooses from poly.dimension() and forwards accordingly to
-    :gimliapi:`GIMLI::Mesh::exportAsTetgenPolyFile`
+    `poly.exportAsTetgenPolyFile`
     or :py:mod:`pygimli.meshtools.writeTrianglePoly`
 
     Parameters
@@ -2065,8 +2064,7 @@ def createFacet(mesh, boundaryMarker=None):
     return poly
 
 
-def createCube(size=[1.0, 1.0, 1.0], pos=None,
-               start=None, end=None,
+def createCube(size=None, pos=None, start=None, end=None,
                rot=None, boundaryMarker=0, **kwargs):
     """Create cube PLC as geometrie definition.
 
@@ -2109,8 +2107,10 @@ def createCube(size=[1.0, 1.0, 1.0], pos=None,
     -------
     poly : :gimliapi:`GIMLI::Mesh`
         The resulting polygon is a :gimliapi:`GIMLI::Mesh`.
-
     """
+    if size is None:
+        size = [1.0, 1.0, 1.0]
+
     if start is not None and end is not None:
         size = pg.Pos(end) - pg.Pos(start)
         pos = pg.Pos(start) + pg.Pos(size)/2
@@ -2136,6 +2136,198 @@ def createCube(size=[1.0, 1.0, 1.0], pos=None,
     else:
         for f in faces:
             poly.createPolygonFace(poly.nodes(f), marker=boundaryMarker)
+
+    poly.scale(size)
+
+    if rot is not None:
+        poly.rotate(rot)
+
+    if pos is not None:
+        poly.translate(pos)
+
+    setPolyRegionMarker(poly, **kwargs)
+
+    return poly
+
+
+def createSphere(size=None, pos=None, nSegments=20, nRings=10,
+                 rot=None, boundaryMarker=0, var='uvsphere',
+                 triFaces=True, **kwargs):
+    """Create sphere PLC as geometrie definition.
+
+    Create sphere PLC as geometrie definition.
+    You can either give size and center position.
+
+    Arguments
+    ---------
+    size: [x, y, z]
+        x, y, and z-size of the cube. Default = [1.0, 1.0, 1.0] in m
+    pos: [x, y, z]
+        The center position, default is at the origin.
+    nSegments: int[0]
+        Discrete number of segments along the horizontal axis
+    nRings: int[0]
+        Discrete number of segments along the vertical axis
+    rot: pg.Pos [None]
+        Rotate on the center.
+    boundaryMarker: int[0]
+        Boundary marker for the resulting faces.
+    var: str='uvsphere'
+        Variance of sphere: 'uvsphere', 'qsphere' or 'icosphere'.
+    triFaces: bool [True]
+        Output triangular faces instead of quadrilateral faces. Only for qsphere
+        at the moment.
+
+    Keyword Args
+    ------------
+    ** kwargs:
+        * Marker related arguments:
+        See :py:mod:`pygimli.meshtools.polytools.setPolyRegionMarker`
+        * refine: int [3]
+        Number of refinements to create a smoother sphere.
+        Default `refine=3` for variance='qsphere' and `refine=2`
+        for 'icosphere'
+
+    Returns
+    -------
+    poly : :gimliapi:`GIMLI::Mesh`
+        The resulting polygon is a :gimliapi:`GIMLI::Mesh`.
+
+    Examples
+    --------
+    >>> import pygimli as pg
+    >>> import pygimli.meshtools as mt
+    >>> sphere = mt.createSphere()
+    >>> print(sphere)
+    Mesh: Nodes: 182 Cells: 0 Boundaries: 360
+    >>> sphere = mt.createSphere()
+    >>> print(sphere.bb())
+    [RVector3: (-0.5, -0.5, -0.5), RVector3: (0.5, 0.5, 0.5)]
+    >>> uvs = mt.createSphere([6, 5, 2], nSegments=25, nRings=15)
+    >>> pg.show(uvs, showMesh=True, markers=True) # doctest: +ELLIPSIS
+    (<pyvista...
+    >>> uv = pg.meshtools.createSphere(var='uvsphere', pos=[3,0,0])
+    >>> qs4 = pg.meshtools.createSphere(var='qsphere', pos=[2,0,0],
+    ...                                 refine=3, triFaces=False)
+    >>> qs3 = pg.meshtools.createSphere(var='qsphere', pos=[1,0,0],
+    ...                                 refine=3, triFaces=True)
+    >>> ico = pg.meshtools.createSphere(var='icosphere', pos=[0,0,0],
+    ...                                 refine=2)
+    >>> pg.show([uv, qs4, qs3, ico], showMesh=True,
+    ...         markers=True) # doctest: +ELLIPSIS
+    (<pyvista...
+    """
+    if size is None:
+        size = [1.0, 1.0, 1.0]
+
+    poly = pg.Mesh(3, isGeometry=True)
+
+    if var == 'uvsphere':
+        if nSegments < 3:
+            nSegments = 3
+
+        for i in range(nRings+1):
+            theta = np.pi * (i / nRings)
+            for j in range(nSegments):
+                phi = 2 * np.pi * (j / (nSegments))
+                x = 0.5 * np.sin(theta) * np.cos(phi)
+                y = 0.5 * np.sin(theta) * np.sin(phi)
+                z = 0.5 * np.cos(theta)
+                poly.createNode(x, y, z)
+                if i == 0 or i == nRings:
+                    break
+
+        num = len(poly.nodes())
+
+        for f in range(nSegments-1):
+            poly.createBoundary(poly.nodes([0, 1+f, 2+f]),
+                                marker=boundaryMarker)
+            poly.createBoundary(poly.nodes([num-1, num-2-f, num-3-f]),
+                                marker=boundaryMarker)
+
+        poly.createBoundary(poly.nodes([0, 1, nSegments]),
+                            marker=boundaryMarker)
+        poly.createBoundary(poly.nodes([num-1, num-2, num-1-nSegments]),
+                            marker=boundaryMarker)
+
+        for b in range(nRings-2):
+            b_l = b*nSegments
+            for f in range(1, nSegments):
+                poly.createBoundary(poly.nodes([f+b_l,
+                                                f+b_l+nSegments,
+                                                f+b_l+nSegments+1]),
+                                    marker=boundaryMarker)
+                poly.createBoundary(poly.nodes([num-1-f-b_l,
+                                                num-1-f-b_l-nSegments,
+                                                num-2-f-b_l-nSegments]),
+                                    marker=boundaryMarker)
+
+            poly.createBoundary(poly.nodes([b_l+nSegments,
+                                            b_l+nSegments*2,
+                                            b_l+nSegments+1]),
+                                marker=boundaryMarker)
+            poly.createBoundary(poly.nodes([num-1-b_l-nSegments,
+                                            num-1-b_l-nSegments*2,
+                                            num-2-b_l-nSegments]),
+                                marker=boundaryMarker)
+    elif var == 'qsphere':
+        ## trivial version of quad sphere
+        poly = createCube()
+        refine = kwargs.pop('refine', 3)
+        for r in range(refine):
+            poly = poly.createH2()
+            for n in poly.nodes():
+                r = pg.Line([0.0, 0.0, 0.0], n.pos())
+                # normalizing with project on the unit sphere
+                n.setPos(r.at(0.5/n.pos().abs()))
+                ### alternatively could be smooth with neighbors, and
+                ### post normalize the end result, TODO test and compare
+
+        if triFaces is True:
+            poly = pg.meshtools.refineQuad2Tri(poly)
+
+    elif var == 'icosphere':
+        ## trivial version of quad sphere
+
+        poly = pg.Mesh(3, isGeometry=True)
+        # Create an icosahedron (20 faces, 12 vertices)
+        phi = (1 + math.sqrt(5)) / 2  # golden ratio
+
+        # Vertices of a unit icosahedron centered at origin
+        verts = [
+            [-1,  phi, 0], [ 1,  phi, 0], [-1, -phi, 0], [ 1, -phi, 0],
+            [0, -1,  phi], [0,  1,  phi], [0, -1, -phi], [0,  1, -phi],
+            [ phi, 0, -1], [ phi, 0,  1], [-phi, 0, -1], [-phi, 0,  1],]
+
+        # Normalize to radius 0.5
+        verts = np.array(verts)
+        verts = 0.5 * verts / np.linalg.norm(verts[0])
+
+        nodes = [poly.createNode(*v) for v in verts]
+
+        # Faces of the icosahedron (each as 3 indices into verts)
+        faces = [
+            [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
+            [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
+            [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
+            [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1],]
+
+        for f in faces:
+            poly.createBoundary([nodes[i].id() for i in f],
+                                marker=boundaryMarker)
+
+        refine = kwargs.pop('refine', 2)
+        for r in range(refine):
+            poly = poly.createH2()
+            for n in poly.nodes():
+                r = pg.Line([0.0, 0.0, 0.0], n.pos())
+                # normalizing with project on the unit sphere
+                n.setPos(r.at(0.5/n.pos().abs()))
+                # alternative could be smooth with neighbors, and
+                # post normalize with the end result, test and compare
+    else:
+        pg.critical("Unknown sphere variance: ", var)
+
 
     poly.scale(size)
 

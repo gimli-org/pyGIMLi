@@ -181,3 +181,25 @@ class ERTIPManager(ERTManager):
     def saveResult(self, folder=None, *args, **kwargs):
         """Save all results in given or date-based folder."""
         super().saveResult(folder=folder, **kwargs, ip=self.modelIP*1000)
+
+    def showFit(self, ipkw={}, **kwargs):
+        """Show data fit for both app. res and IP."""
+        self.showDCFit(**kwargs)
+        self.showIPFit(**ipkw)
+
+    def showDCFit(self, **kw):
+        """Show DC data fit."""
+        return super().showFit(**kw)
+
+    def showIPFit(self, **kw):
+        fig, ax = pg.plt.subplots(nrows=1, ncols=2)
+        label = "chargeability (mV/V)"
+        if self.isfd:
+            label = "phase (mrad)"
+
+        ipv = self.invIP.dataVals * 1000
+        kw.setdefault("cMin", min(ipv))
+        kw.setdefault("cMax", max(ipv))
+        kw.setdefault("logScale", False)
+        _, cb = self.showData("ip", ax[0], label=label, **kw)
+        self.showData(self.invIP.response*1000, ax[1], label=label, **kw)

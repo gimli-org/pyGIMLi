@@ -41,6 +41,6 @@ from .utils import (ProgressBar, boxprint, cumDist, cut, diff, dist,
 
 from .streams import streamline, streamlineDir
 from .dem import DEM
-
+from .positioning import distToLine, pointInsidePolygon, detectLines
 
 __all__ = [name for name in dir() if '_' not in name]

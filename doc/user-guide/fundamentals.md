@@ -24,7 +24,7 @@ systems we use the open-source collection **SuiteSparse**, which contains multi-
 solvers as well as reordering algorithms.
 
 (fig-gimliblock)=
-:::{figure} _static/pg_design.png
+:::{figure} ../_static/pg_design.png
 :align: center
 :class: wrap-fig
 :::
@@ -62,7 +62,6 @@ The underlying equation level allows to directly access the finite element (`pyg
     pygimli.physics.em
     pygimli.physics.ert
     pygimli.physics.gravimetry
-    pygimli.physics.magnetics
     pygimli.physics.petro
     pygimli.physics.seismics
     pygimli.physics.SIP
