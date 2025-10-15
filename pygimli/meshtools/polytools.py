@@ -2150,6 +2150,121 @@ def createCube(size=[1.0, 1.0, 1.0], pos=None,
     return poly
 
 
+def createSphere(size=[1.0, 1.0, 1.0], pos=None, nSegments=20, nRings=10, 
+                 rot=None, boundaryMarker=0, **kwargs):
+    """Create sphere PLC as geometrie definition.
+
+    Create sphere PLC as geometrie definition.
+    You can either give size and center position.
+
+    Parameters
+    ----------
+    size: [x, y, z]
+        x, y, and z-size of the cube. Default = [1.0, 1.0, 1.0] in m
+    pos: [x, y, z]
+        The center position, default is at the origin.
+    nSegments: int[0]
+        Discrete number of segments along the horizontal axis
+    nRings: int[0]
+        Discrete number of segments along the vertical axis
+    rot: pg.Pos [None]
+        Rotate on the center.
+    boundaryMarker: int[0]
+        Boundary marker for the resulting faces.
+
+    ** kwargs:
+        Marker related arguments:
+        See :py:mod:`pygimli.meshtools.polytools.setPolyRegionMarker`
+
+    Examples
+    --------
+    >>> import pygimli.meshtools as mt
+    >>> sphere = mt.createSphere()
+    >>> print(sphere)
+    Mesh: Nodes: 182 Cells: 0 Boundaries: 360
+    >>> sphere = mt.createSphere([10, 10, 1])
+    >>> print(sphere.bb())
+    [RVector3: (-5.0, -5.0, -0.5), RVector3: (5.0, 5.0, 0.5)]
+    >>> sphere = mt.createSphere([10, 10, 5], nSegments=5, nRings=25)
+    >>> pg.show(sphere, showMesh=True, markers=True)
+
+    Returns
+    -------
+    poly : :gimliapi:`GIMLI::Mesh`
+        The resulting polygon is a :gimliapi:`GIMLI::Mesh`.
+
+    """
+    poly = pg.Mesh(3, isGeometry=True)
+    
+    if nSegments < 3:
+        nSegments = 3
+
+    for i in range(nRings+1):
+        theta = np.pi * (i / nRings)
+        for j in range(nSegments):
+            phi = 2 * np.pi * (j / (nSegments))
+            x = 0.5 * np.sin(theta) * np.cos(phi)
+            y = 0.5 * np.sin(theta) * np.sin(phi)
+            z = 0.5 * np.cos(theta)
+            poly.createNode(x, y, z)
+            if i == 0 or i == nRings:
+                break
+            
+    num = len(poly.nodes())
+
+    for f in range(nSegments-1):
+        poly.createBoundary(poly.nodes([0,
+                                        1+f,
+                                        2+f]), 
+                            marker=boundaryMarker)
+        poly.createBoundary(poly.nodes([num-1,
+                                        num-2-f,
+                                        num-3-f]), 
+                            marker=boundaryMarker)
+        
+    poly.createBoundary(poly.nodes([0,
+                                    1,
+                                    nSegments]), 
+                        marker=boundaryMarker)
+    poly.createBoundary(poly.nodes([num-1,
+                                    num-2,
+                                    num-1-nSegments]), 
+                        marker=boundaryMarker)
+    
+    for b in range(nRings-2):
+        b_l = b*nSegments
+        for f in range(1, nSegments):
+            poly.createBoundary(poly.nodes([f+b_l,
+                                            f+b_l+nSegments,
+                                            f+b_l+nSegments+1]), 
+                                marker=boundaryMarker)
+            poly.createBoundary(poly.nodes([num-1-f-b_l,
+                                            num-1-f-b_l-nSegments,
+                                            num-2-f-b_l-nSegments]), 
+                                marker=boundaryMarker)
+            
+        poly.createBoundary(poly.nodes([b_l+nSegments,
+                                        b_l+nSegments*2,
+                                        b_l+nSegments+1]), 
+                            marker=boundaryMarker)
+        poly.createBoundary(poly.nodes([num-1-b_l-nSegments,
+                                        num-1-b_l-nSegments*2,
+                                        num-2-b_l-nSegments]), 
+                            marker=boundaryMarker)
+        
+    poly.scale(size)
+    
+    if rot is not None:
+        poly.rotate(rot)
+
+    if pos is not None:
+        poly.translate(pos)
+        
+    setPolyRegionMarker(poly, **kwargs)
+    
+    return poly
+
+
 def extrude(p2, z=-1.0, boundaryMarker=0, **kwargs):
     """Create 3D body by extruding a closed 2D poly into z direction.
 
