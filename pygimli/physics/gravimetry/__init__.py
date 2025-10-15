@@ -22,6 +22,7 @@ from . MagneticsModelling import MagneticsModelling, RemanentMagneticsModelling
 from . magneticsManager import MagManager
 from . GravityModelling import GravityModelling
 from . blakely import magneticDipole
+from . tools import depthWeighting
 #from . MagneticsModelling import gravMagBoundaryHolstein
 
 # from . gravMagModelling import GravimetryModelling  # FOP class
