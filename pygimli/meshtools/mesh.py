@@ -336,8 +336,8 @@ def refineHex2Tet(mesh, style=1):
 
     TODO
     ----
-        * mixed meshes (needed to ensure consistent face diagonal for
-                        nonstructured hex grids .. if such exists)
+    * mixed meshes (needed to ensure consistent face diagonal for
+        nonstructured hex grids .. if such exists)
 
     Parameters
     ----------
@@ -346,11 +346,11 @@ def refineHex2Tet(mesh, style=1):
 
     style: int [1]
         * 1 bisect each hexahedron int 6 tetrahedrons
-          (less numerical quality but no problems due to diagonal face split)
+            (less numerical quality but no problems due to diagonal face split)
         * 2 bisect each hexahedron int 5 tetrahedrons
-          (leads to inconsistent meshes. Neighboring cell have different face
-           split diagonal. Might be fixable by rotating the split order
-           depending on coordinates for every 2nd split)
+            (leads to inconsistent meshes. Neighboring cell have different face
+            split diagonal. Might be fixable by rotating the split order
+            depending on coordinates for every 2nd split)
 
     Returns
     -------
@@ -585,7 +585,7 @@ def convertMeshioMesh(mesh, verbose=False):
 
 
 def fromSubsurface(obj, order='C', verbose=False):
-    """ Convert subsurface object to pygimli mesh.
+    """Convert subsurface object to pygimli mesh.
 
     See more: https://softwareunderground.github.io/subsurface/
 
@@ -668,7 +668,7 @@ def fromSubsurface(obj, order='C', verbose=False):
 
 
 def toSubsurface(mesh, verbose=False):
-    """ Create a subsurface object from pygimli mesh.
+    """Create a subsurface object from pygimli mesh.
 
     Testet objects so far:
 

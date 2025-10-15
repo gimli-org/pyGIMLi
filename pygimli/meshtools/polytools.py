@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """Tools to create or manage PLC.
 
 Please note there is currently no collision or intersection check at all.
@@ -747,26 +747,27 @@ def mergePLC(plcs, tol=1e-3):
 
     Merge multiply polygons into a single polygon.
     Common nodes and common edges will be checked and removed.
-    When a node touches an edge, the edge will be splited.
+    When a node touches an edge, the edge will be split.
 
-    3D only OOC with polytools
+    3D only OOC with polytools.
 
-    TODO:
-        * Crossing or Node/Edge intersections will NOT be
-        recognized yet.
-        * Edge on Node touch
+    TODO
+    ----
+    * Crossing or Node/Edge intersections will NOT be recognized yet.
+    * Edge on Node touch
+
 
     Parameters
     ----------
-    plcs: [:gimliapi:`GIMLI::Mesh`]
+    plcs: [:gimliapi:`GIMLI::Mesh`,]
         List of PLC that want to be merged into one new PLC
 
-    tol : double
+    tol: double
         Tolerance to check for duplicated nodes. [1e-3]
 
     Returns
     -------
-    plc : :gimliapi:`GIMLI::Mesh`
+    plc: :gimliapi:`GIMLI::Mesh`
         The resulting polygon is a :gimliapi:`GIMLI::Mesh`.
 
     Examples
@@ -1394,25 +1395,23 @@ def createParaMeshPLC3D(sensors, paraDX=0, paraDepth=-1, paraBoundary=None,
     return pdPLC
 
 
-def readPLC(filename, comment='#'):
+def readPLC(filename:str, comment:str='#'):
     r"""Read in a piece-wise linear complex object (PLC) from .poly file.
-
-    A PLC is a pyGIMLi geometry, e.g., created using `mt.exportPLC`.
 
     Read 2D :term:`Triangle` or 3D :term:`Tetgen` PLC files.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     filename: string
-        Filename *.poly
+        Filename .poly
 
-    comment: string ('#')
+    comment: string
         String containing all characters that define a comment line.
         Identified lines will be ignored during import.
 
     Returns
     -------
-    poly :
+    poly:
         :gimliapi:`GIMLI::Mesh`
 
     See Also
@@ -1577,7 +1576,7 @@ def exportPLC(poly, fname, **kwargs):
     r"""Export a piece-wise linear complex (PLC) to a .poly file (2D or 3D).
 
     Chooses from poly.dimension() and forwards accordingly to
-    :gimliapi:`GIMLI::Mesh::exportAsTetgenPolyFile`
+    `poly.exportAsTetgenPolyFile`
     or :py:mod:`pygimli.meshtools.writeTrianglePoly`
 
     Parameters
