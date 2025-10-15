@@ -123,6 +123,12 @@ def show(obj=None, data=None, **kwargs):
 
     if isinstance(mesh, list):
         ax = kwargs.pop('ax', None)
+        if isinstance(mesh[0], pg.Mesh) \
+            and mesh[0].dim() == 3 and mesh[0].isGeometry():
+            ## assume a list of 3d geometries
+            mesh = pg.meshtools.mergePLC(mesh)
+            return pg.show(mesh, **kwargs)
+
         ax, cBar = show(mesh[0], data, hold=True, ax=ax,
                         fitView=fitView, **kwargs)
 
