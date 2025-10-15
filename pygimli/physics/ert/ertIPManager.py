@@ -184,7 +184,22 @@ class ERTIPManager(ERTManager):
 
     def showFit(self, ipkw={}, **kwargs):
         """Show data fit for both app. res and IP."""
-        super().showFit()
+        self.showDCFit(**kwargs)
+        self.showIPFit(**ipkw)
+
+    def showDCFit(self, **kw):
+        """Show DC data fit."""
+        return super().showFit(**kw)
+
+    def showIPFit(self, **kw):
         fig, ax = pg.plt.subplots(nrows=1, ncols=2)
-        self.showData("ip", ax[0])
-        self.showData("ip", ax[1])
+        label = "chargeability (mV/V)"
+        if self.isfd:
+            label = "phase (mrad)"
+
+        ipv = self.invIP.dataVals * 1000
+        kw.setdefault("cMin", min(ipv))
+        kw.setdefault("cMax", max(ipv))
+        kw.setdefault("logScale", False)
+        _, cb = self.showData("ip", ax[0], label=label, **kw)
+        self.showData(self.invIP.response*1000, ax[1], label=label, **kw)
