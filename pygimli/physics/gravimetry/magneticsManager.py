@@ -537,7 +537,7 @@ class MagManager(MeshMethodManager):
             Label for the mesh data to visualize.
         trsh: float=0.025
             Threshold for the mesh data to visualize.
-        synth: :gimliapi:`GIMLI::Mesh`=None
+        synth: :gimliapi:`GIMLI::Mesh` [None]
             Synthetic model to visualize in wireframe.
         invert: bool=False
             Invert the threshold filter.
