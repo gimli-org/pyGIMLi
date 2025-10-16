@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Functions for visualizing ERT data."""
 
 from math import pi
@@ -29,20 +30,24 @@ def generateDataPDF(data, filename="data.pdf", **kwargs):
                 fig.savefig(pdf, format='pdf')
                 fig.clf()
 
+
 def showERTData(data, vals=None, **kwargs):
     """Plot ERT data as pseudosection matrix (position over separation).
 
     Creates figure, axis and draw a pseudosection.
 
-    Parameters
-    ----------
-    data : :gimliapi:`GIMLi::DataContainerERT`
+    Arguments
+    ---------
+    data: :gimliapi:`DataContainerERT`
+        Data container with sensorPositions and a/b/m/n fields
 
-    **kwargs :
+    vals : array[nData] | str
+        Values to be plotted. Default is data['rhoa'].
+        Can be array or string whose data field is extracted.
 
-        * vals : array[nData] | str
-            Values to be plotted. Default is data['rhoa'].
-            Can be array or string whose data field is extracted.
+    Keyword Args
+    ------------
+    **kwargs:
         * axes : matplotlib.axes
             Axes to plot into. By default (None), a new figure with
             a single Axes is created.

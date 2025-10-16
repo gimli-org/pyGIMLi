@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Method Manager for Magnetics."""
 import numpy as np
 
@@ -39,7 +40,8 @@ class MagManager(MeshMethodManager):
                             if t.startswith("B") or t.startswith("T")]
             if self.igrf is None:
                 import utm
-                lat, lon = utm.to_latlon(np.mean(self.x), np.mean(self.y), 33, 'U')
+                lat, lon = utm.to_latlon(np.mean(self.x),
+                                         np.mean(self.y), 33, 'U')
                 pg.info(f"Center of data: {lat}, {lon}")
                 self.igrf = [lat, lon]
 
@@ -154,8 +156,7 @@ class MagManager(MeshMethodManager):
 
         TODO
         ----
-            * check default values, make them more sensible
-            and depending on data
+        * check default values, make them more sensible and depending on data
 
         Arguments
         ---------
@@ -186,8 +187,7 @@ class MagManager(MeshMethodManager):
 
         TODO
         ----
-            * check default values, make them more sensible
-            and depending on data
+        * check default values, make them more sensible and depending on data
 
         Arguments
         ---------
@@ -542,7 +542,7 @@ class MagManager(MeshMethodManager):
         invert: bool=False
             Invert the threshold filter.
         position: str="yz"
-            Camera position, e.g. "yz", "xz", "xy".
+            Camera position, e.g., "yz", "xz", "xy".
         elevation: float=10
             Camera elevation angle.
         azimuth: float=25
@@ -561,7 +561,7 @@ class MagManager(MeshMethodManager):
             Colormap for the mesh data visualization.
         logScale: bool=False
             Use logarithmic scale for the mesh data visualization.
-        **kwargs:
+        kwargs:
             Additional keyword arguments for the pyvista plot.
 
         Returns

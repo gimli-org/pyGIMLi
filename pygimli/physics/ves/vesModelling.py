@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Vertical electrical sounding (VES) manager class."""
 import numpy as np
 
@@ -9,7 +10,7 @@ from pygimli.frameworks.modelling import DEFAULT_STYLES
 class VESModelling(Block1DModelling):
     """Vertical Electrical Sounding (VES) forward operator.
 
-    Attributes
+    Parameters
     ----------
     ab2 : array-like
         Half distance between the current electrodes A and B.
@@ -52,6 +53,7 @@ class VESModelling(Block1DModelling):
         super().__init__(**kwargs)
         self.ab2 = ab2
         self.mn2 = mn2
+
 
         if 'dataContainerERT' in kwargs or 'data' in kwargs:
             if 'data' in kwargs:

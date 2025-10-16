@@ -1237,6 +1237,11 @@ def drawStreams(ax, mesh, data, startStream=3, coarseMesh=None, quiver=False,
     viewMesh = None
     dataMesh = None
 
+    ## normalize data to [ux, uy].T shape = (n, 2)
+    data = np.array(data)
+    if data.shape[0] < 3:
+        data = data.T
+
     if quiver:
 
         x = None

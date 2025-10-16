@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Frequency Domain Electromagnetics (FDEM) functions and class."""
 
 import numpy as np
@@ -38,7 +37,7 @@ def cmapDAERO():
 
 def xfplot(ax, DATA, x, freq, everyx=5, orientation='horizontal', aspect=30,
            label=None, cMap="Spectral_r"):
-    """Plots a matrix according to x and frequencies."""
+    """Plot a matrix according to x and frequencies."""
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
     nt = list(range(0, len(x), everyx))
@@ -75,7 +74,7 @@ class FDEM2dFOPold(pg.core.ModellingBase):
         self.setMesh(self.mesh_)
 
     def response(self, model):
-        """Yields forward model response."""
+        """Yield forward model response."""
         modA = np.asarray(model).reshape((self.nlay * 2 - 1, self.nx)).T
         resp = pg.Vector(0)
         for modi in modA:
@@ -178,7 +177,7 @@ class FDEM():
             imaginary part of :math:`|amplitude| * \exp^{i phase}`
 
         filename : str
-            Filename to read from. Supported: .xyz (MaxMin), *.txt (Emsys)
+            Filename to read from. Supported: .xyz (MaxMin), .txt (Emsys)
 
         scaleFreeAir : bool
             Scale inphase and outphase data by free air (primary) solution
@@ -220,7 +219,7 @@ class FDEM():
             self.OP /= freeAirSolution
 
     def __repr__(self):
-        """String representation."""
+        """Create string representation."""
         if self.x is None:
             part1 = "<FDEMdata: sounding with {:d} frequencies".format(
                 len(self.frequencies))
@@ -367,7 +366,7 @@ class FDEM():
             self.x = x
 
     def importMaxMinData(self, filename, verbose=False):
-        """Import MaxMin ASCII export (*.txt) data."""
+        """Import MaxMin ASCII export (.txt) data."""
         with open(filename) as fid:
             lines = fid.readlines()
 

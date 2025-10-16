@@ -5,20 +5,19 @@
 
 If you don't want to use the conda environment we encourage the use of a
 virtual python environment.
-Assuming you have a proper build toolchain and the required libraries
-(see Installation on Ubuntu below) installed.
+Assuming you have a proper build toolchain and the required libraries (see Installation on Ubuntu below) installed.
 
 First we need to create a root directory for our installation,
-e.g., `$HOME/src/gimli` and get the source code:
+e.g., ``$HOME/src/gimli`` and get the source code:
 
 ```bash
     mkdir -p gimli
     cd gimli
     git clone https://github.com/gimli-org/gimli.git
-    #optionally change to the development branch
+    # optionally change to the development branch
     git checkout dev
     # create a virtual environment for pyGIMLi, this can be at any place with any name
-    # if you want easy VScode support consider `gimli/.venv`
+    # if you want easy VScode support consider gimli/.venv
     deactivate # in case there is another venv active
     python -m venv venv-build --prompt=gimli-build
     # activate the venv
@@ -29,11 +28,11 @@ e.g., `$HOME/src/gimli` and get the source code:
     pip install -e ./gimli[all]
 ```
 
-We need to compile the C++ part of pyGIMLi, which is currently done with cmake and not
-with the pip internal build system.
+We need to compile the C++ part of pyGIMLi, which is currently done with cmake and not with the pip internal build system.
 We recommend an out of source build:
 
 ```bash
+
     mkdir -p build
     cd build
     cmake ../gimli

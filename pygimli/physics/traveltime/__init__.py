@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
 """Refraction seismics or first arrival traveltime calculations."""
 
 
