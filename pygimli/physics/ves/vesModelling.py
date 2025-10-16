@@ -122,7 +122,7 @@ class VESModelling(Block1DModelling):
             if len(ab2) != len(mn2):
                 print("ab2", ab2)
                 print("mn2", mn2)
-                raise BaseException("length of ab2 is unequal length of mn2")
+                raise ValueError("length of ab2 is unequal length of mn2")
 
             self.am = ab2 - mn2
             self.an = ab2 + mn2
