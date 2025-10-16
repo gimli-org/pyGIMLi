@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Collection of several utility functions."""
 
 from __future__ import print_function
@@ -42,7 +41,7 @@ class ProgressBar(object):
     """
 
     def __init__(self, its, width=80, sign=":", **kwargs):
-        """Create animated text-based progress bar.
+        r"""Create animated text-based progress bar.
 
         Todo
         ----
@@ -423,14 +422,14 @@ def niceLogspace(vMin, vMax, nDec=10):
 def grange(start, end, dx=0, n=0, log=False):
     """Create array with possible increasing spacing.
 
-    Create either array from start step-wise filled with dx until end reached
-    [start, end] (like np.array with defined end).
-    Fill the array from start to end with n steps.
-    [start, end] (like np.linespace)
-    Fill the array from start to end with n steps but logarithmic increasing,
-    dx will be ignored.
+    Create either array from start step-wise filled with `dx` until end reached
+    `[start, end]` (like `np.array` with defined end).
+    Fill the array from `start` to `end` with `n` steps.
+    `[start, end]` (like `np.linespace`)
+    Fill the array from `start` to `end` with `n` steps but logarithmic
+    increasing, `dx` will be ignored.
 
-    Parameters
+    Attributes
     ----------
     start: float
         First value of the resulting array
@@ -444,6 +443,11 @@ def grange(start, end, dx=0, n=0, log=False):
         Logarithmic increasing range of length = n from start to end.
         dx will be ignored.
 
+    Returns
+    -------
+    ret: :gimliapi:`GIMLI::Vector`
+        Return resulting array
+
     Examples
     --------
     >>> from pygimli.utils import grange
@@ -453,11 +457,6 @@ def grange(start, end, dx=0, n=0, log=False):
     4 [0.0, 3.0, 6.0, 9.0]
     >>> print(v2)
     3 [0.0, 5.0, 10.0]
-
-    Returns
-    -------
-    ret: :gimliapi:`GIMLI::RVector`
-        Return resulting array
     """
     s = float(start)
     e = float(end)
@@ -594,18 +593,18 @@ def dist(p, c=None):
 
 
 def cumDist(p):
-    """The progressive, i.e., cumulative length for a path p.
+    """Create the progressive, i.e., cumulative length for a path p.
 
-    d = [0.0, d[0]+ | p[1]-p[0] |, d[1] + | p[2]-p[1] | + ...]
+    `d = [0.0, d[0]+ | p[1]-p[0] |, d[1] + | p[2]-p[1] | + ...]`
 
-    Parameters
+    Attributes
     ----------
-    p : ndarray(N,2) | ndarray(N,3) | pg.PosVector
+    p: ndarray(N,2) | ndarray(N,3) | pg.PosVector
         Position array
 
     Returns
     -------
-    d : ndarray(N)
+    d: ndarray(N)
         Distance array
 
     Examples
