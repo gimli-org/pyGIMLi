@@ -305,8 +305,6 @@ class MethodManager(object):
         noiseLevel = kwargs.pop('noiseLevel', 0.0)
         if noiseLevel > 0:
             err = self.estimateError(ra, errLevel=noiseLevel)
-            print(pg.randn(ra.size(), seed=kwargs.pop('seed', 0)))
-            print(err)
             try:
                 ra *= 1. + pg.randn(ra.size(), seed=kwargs.pop('seed', None)) * err
             except Exception as e:
