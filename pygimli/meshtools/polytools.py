@@ -1403,7 +1403,7 @@ def readPLC(filename:str, comment:str='#'):
     Arguments
     ---------
     filename: string
-        Filename .poly
+        Filename `*.poly`
 
     comment: string
         String containing all characters that define a comment line.
