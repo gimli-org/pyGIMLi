@@ -87,7 +87,7 @@ class VESModelling(Block1DModelling):
         # resistivity properties
         self.setRegionProperties(1, startModel=np.median(rhoa), trans='log')
 
-        return super(VESModelling, self).createStartModel()
+        return super().createStartModel()
 
     def setDataSpace(self, ab2=None, mn2=None,
                      am=None, bm=None, an=None, bn=None,
@@ -97,13 +97,15 @@ class VESModelling(Block1DModelling):
         You can set either
         * AB/2 and (optionally) MN/2 spacings for a classical sounding, or
         * all distances AM, AN, BM, BN for arbitrary arrays
+
         Parameters
         ----------
         ab2 : iterable
             AB/2 distances
         mn2 : iterable | float
             MN/2 distance(s)
-        am, an, bm, bn : distances between current and potential electrodes
+        am, an, bm, bn : iterable
+            distances between current and potential electrodes
         """
         # Sometimes you don't have AB2/MN2 but provide am etc.
         self.am = am
@@ -120,7 +122,7 @@ class VESModelling(Block1DModelling):
             if len(ab2) != len(mn2):
                 print("ab2", ab2)
                 print("mn2", mn2)
-                raise Exception("length of ab2 is unequal length of mn2")
+                raise BaseException("length of ab2 is unequal length of mn2")
 
             self.am = ab2 - mn2
             self.an = ab2 + mn2
@@ -235,7 +237,8 @@ class VESCModelling(VESModelling):
     """
 
     def __init__(self, **kwargs):
-        super(VESCModelling, self).__init__(nPara=2, **kwargs)
+        """Initialize with number of parameters and distances."""
+        super().__init__(nPara=2, **kwargs)
         self.phiAxe = None
 
     def phaseModel(self, model):
@@ -275,12 +278,12 @@ class VESCModelling(VESModelling):
         Returns
         -------
         response : iterable
-            [|rhoa|, +phi(rad)] for [thicks, res, phi(rad)]
+            [rhoa, +phi(rad)] for [thicks, res, phi(rad)]
         """
         if self.am is not None and self.bm is not None:
             nLayers = (len(par) + 1) // 3
-            fop = pg.core.DC1dModellingC(nLayers,
-                                         self.am, self.bm, self.an, self.bn)
+            fop = pg.core.DC1dModellingC(
+                nLayers, self.am, self.bm, self.an, self.bn)
         else:
             pg.critical("No data basis known.")
 
@@ -291,9 +294,8 @@ class VESCModelling(VESModelling):
         a1 = ax
         a2 = pg.viewer.mpl.createTwinY(ax)
 
-        super(VESCModelling, self).drawModel(a1,
-                                             model=self.resModel(model),
-                                             **kwargs)
+        super().drawModel(
+            a1, model=self.resModel(model), **kwargs)
 
         plot = kwargs.pop('plot', 'semilogy')
         if plot == 'loglog':
@@ -377,7 +379,7 @@ class VESCModelling(VESModelling):
             label, pg.frameworks.modelling.DEFAULT_STYLES['Default']))
         style.update(kwargs)
 
-        super(VESCModelling, self).drawData(a1, ra, error=raE,
+        super().drawData(a1, ra, error=raE,
                                             label=labels[0], **style)
 
         style['color'] = 'C2'

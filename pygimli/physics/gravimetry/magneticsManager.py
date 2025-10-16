@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Method Manager for Magnetics."""
 import numpy as np
 
@@ -12,11 +10,10 @@ from .tools import depthWeighting
 
 
 class MagManager(MeshMethodManager):
-    """ Magnetics Manager.
-    """
+    """Magnetics Manager."""
+
     def __init__(self, data=None, **kwargs):
-        """ Create Magnetics Manager instance.
-        """
+        """Create Magnetics Manager instance."""
         self.DATA = kwargs.pop("DATA", None)
         self.x = kwargs.pop("x", None)
         self.y = kwargs.pop("y", np.zeros_like(self.x))
@@ -55,7 +52,7 @@ class MagManager(MeshMethodManager):
 
 
     def __repr__(self):
-        """String representation of the Magnetics Manager."""
+        """Representation Magnetics Manager as string."""
         out = f"MagManager with {len(self.x)} data points."
         out += f"\n{len(self.cmp)} active components: "+", ".join(self.cmp)
         if self.DATA is not None:
@@ -70,8 +67,7 @@ class MagManager(MeshMethodManager):
         return out
 
     def showData(self, cmp=None, **kwargs):
-        """ Show data.
-        """
+        """Show data."""
         cmp = cmp or self.cmp
         nc = kwargs.pop("ncols", max(2 if len(cmp) > 1 else 1, len(cmp)))
         nr = (len(cmp)+nc-1) // nc
@@ -89,8 +85,8 @@ class MagManager(MeshMethodManager):
             sc = axs[i].scatter(self.x, self.y, c=fld,
                                 vmin=-vv, vmax=vv, **kwargs)
             if bg is not None:
-                underlayBKGMap(ax=axs[i], mode=bg)    
-                
+                underlayBKGMap(ax=axs[i], mode=bg)
+
             axs[i].set_title(c)
             axs[i].set_aspect(1.0)
             fig.colorbar(sc, ax=ax.flat[i], orientation=ori)
@@ -121,7 +117,7 @@ class MagManager(MeshMethodManager):
 
 
     def showLineData(self, line=None, cmp=None, **kwargs):
-        """ Show data for a specific line.
+        """Show data for a specific line.
 
         Parameters
         ----------
@@ -138,7 +134,8 @@ class MagManager(MeshMethodManager):
             y = self.y[self.line==l]
             t = np.hstack([0, np.cumsum(np.sqrt(np.diff(x)**2+ np.diff(y)**2))])
             for c in cmp:
-                pg.plt.plot(t, self.DATA[c][self.line==l], label=c+f" (line {l})", **kwargs)
+                pg.plt.plot(t, self.DATA[c][self.line==l],
+                            label=c+f" (line {l})", **kwargs)
 
         pg.plt.xlabel("X")
         pg.plt.ylabel("Data")
@@ -148,12 +145,12 @@ class MagManager(MeshMethodManager):
         """Set or load mesh."""
         if isinstance(mesh, str):
             mesh = pg.load(mesh)
-        
+
         self.fwd.setMesh(mesh)
         self.mesh_ = mesh
 
     def createGrid(self, dx:float=50, depth:float=800, bnd:float=0):
-        """ Create a grid.
+        """Create a grid.
 
         TODO
         ----
@@ -185,7 +182,7 @@ class MagManager(MeshMethodManager):
     def createMesh(self, boundary:float=0, area:float=1e5, depth:float=0,
                    quality:float=1.3, addPLC:pg.Mesh=None, addPoints:bool=True,
                    frame:float=0):
-        """ Create an unstructured 3D mesh.
+        r"""Create an unstructured 3D mesh.
 
         TODO
         ----
@@ -212,17 +209,18 @@ class MagManager(MeshMethodManager):
         mesh: :gimliapi:`GIMLI::Mesh`
             Created 3D unstructured mesh.
         """
-        x = [min(self.x)-boundary, max(self.x)+boundary] 
-        y = [min(self.y)-boundary, max(self.y)+boundary] 
-        geo = mt.createRectangle(start=[x[0], y[1]], end=[x[1], y[0]], 
+        x = [min(self.x)-boundary, max(self.x)+boundary]
+        y = [min(self.y)-boundary, max(self.y)+boundary]
+        geo = mt.createRectangle(start=[x[0], y[1]], end=[x[1], y[0]],
                                  marker=1, area=area, boundaryMarker=1)
 
         if frame > 0:
             Xo = [x[0] - frame, x[1] + frame]
             Yo = [y[0] - frame, y[1] + frame]
-            geo += mt.createRectangle(start=[Xo[0], Yo[1]], end=[Xo[1], Yo[0]], marker=2, boundaryMarker=2)
-            inner_pt = [(x[0] + x[1]) * 0.5, (y[0] + y[1]) * 0.5]  # a point inside the inner rectangle
-            frame_pt = [(Xo[0] + x[0]) * 0.5, (y[0] + y[1]) * 0.5] # a point inside the outter rectangle (in the frame)
+            geo += mt.createRectangle(start=[Xo[0], Yo[1]], end=[Xo[1], Yo[0]],
+                                      marker=2, boundaryMarker=2)
+            inner_pt = [(x[0] + x[1]) * 0.5, (y[0] + y[1]) * 0.5]  # inner point
+            frame_pt = [(Xo[0] + x[0]) * 0.5, (y[0] + y[1]) * 0.5] # outer point
 
             # geo.addRegionMarker(inner_pt, marker=1, area=1e4)
             geo.addRegionMarker(frame_pt, marker=2, area=area*100)
@@ -244,7 +242,7 @@ class MagManager(MeshMethodManager):
         dem_zvals = [surface.node(n).z() for n in range(4)]
         n0, n1, n2, n3 = [surface.createNode(pg.Pos(
             surface.node(i).x(), surface.node(i).y(), -depth)) for i in range(4)]
-            
+
         surface.createQuadrangleFace(n0, n1, n2, n3, marker=-2)
         mx = pg.x(surface).array()
         my = pg.y(surface).array()
@@ -292,12 +290,11 @@ class MagManager(MeshMethodManager):
 
     def createMeshOld(self, bnd:float=0, area:float=1e5, depth:float=0,
                    quality:float=1.3, addPLC:pg.Mesh=None, addPoints:bool=True):
-        """ Create an unstructured 3D mesh.
+        r"""Create an unstructured 3D mesh.
 
         TODO
         ----
-            * check default values, make them more sensible
-            and depending on data
+        * check default values, make them more sensible and depending on data
 
         Arguments
         ---------
@@ -325,7 +322,7 @@ class MagManager(MeshMethodManager):
         geo = mt.createCube(start=[min(self.x)-bnd, min(self.x)-bnd, -depth],
                             end=[max(self.x)+bnd, max(self.y)+bnd, 0])
         if addPoints is True:
-            for xi, yi in zip(self.x, self.y):
+            for xi, yi in zip(self.x, self.y, strict=False):
                 geo.createNode([xi, yi, 0])
         if addPLC:
             geo += addPLC
@@ -336,8 +333,7 @@ class MagManager(MeshMethodManager):
 
 
     def createForwardOperator(self, verbose=False):
-        """ Create forward operator (computationally extensive!).
-        """
+        """Create forward operator (computationally extensive!)."""
         # points = np.column_stack([self.x, self.y, -np.abs(self.z)])
         points = np.column_stack([self.x, self.y, self.z])
         self.fwd = MagneticsModelling(points=points,
@@ -429,7 +425,7 @@ class MagManager(MeshMethodManager):
             pg.info("Using depth")
             if dw is True:
                 pg.info("Compute depth weighting with z0 = ", z0)
-                dw = depthWeighting(self.mesh_, cell=not(cType==1), z0=z0)
+                dw = depthWeighting(self.mesh_, cell=(cType != 1), z0=z0)
 
             cw = self.fwd.regionManager().constraintWeights()
             if len(cw) > 0 and len(dw) == len(cw):
@@ -492,7 +488,7 @@ class MagManager(MeshMethodManager):
 
 
     def showDataFit(self, **kwargs):
-        """ Show data, model response and misfit.
+        """Show data, model response and misfit.
 
         Keyword arguments
         -----------------
@@ -501,8 +497,9 @@ class MagManager(MeshMethodManager):
         maxField : float
             colorbar for field
         maxMisfit : float
-            colorbar for (error-weighted) misfit    
-        vmin/vmax
+            colorbar for (error-weighted) misfit
+        vmin/vmax : float
+            colorbar limits
         """
         nc = len(self.cmp)
         fig, ax = pg.plt.subplots(ncols=3, nrows=nc, figsize=(12, 3*nc),
@@ -532,13 +529,12 @@ class MagManager(MeshMethodManager):
                     synth:pg.Mesh=None, invert:bool=False,
                     position:str="yz", elevation:float=10, azimuth:float=25,
                     zoom:float=1.2, **kwargs):
-        """ Standard 3D view.
+        """Show standard 3D view.
 
         Arguments
         ---------
         label: str='sus'
             Label for the mesh data to visualize.
-
         trsh: float=0.025
             Threshold for the mesh data to visualize.
         synth: :gimliapi:`GIMLI::Mesh`=None

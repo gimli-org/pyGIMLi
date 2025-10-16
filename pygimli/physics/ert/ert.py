@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Electrical resistivity tomography"""
+"""Electrical resistivity tomography."""
 
 import numpy as np
 
@@ -7,7 +6,7 @@ import pygimli as pg
 
 from .ertModelling import ERTModelling
 from .ertScheme import createData
-createERTData = createData  # backward compatibility
+createERTData = createData  # backward compatibility  # noqa: N816
 
 
 def simulate(mesh, scheme, res, **kwargs):
@@ -37,11 +36,10 @@ def simulate(mesh, scheme, res, **kwargs):
 
     res : float, array(mesh.cellCount()), array(N, mesh.cellCount()), list
         Resistivity distribution for the given mesh cells can be:
-        . float for homogeneous resistivity (e.g. 1.0)
-        . single array of length mesh.cellCount()
-        . matrix of N resistivity distributions of length mesh.cellCount()
-        . resistivity map as [[regionMarker0, res0],
-                              [regionMarker0, res1], ...]
+        - float for homogeneous resistivity (e.g. 1.0)
+        - single array of length mesh.cellCount()
+        - matrix of N resistivity distributions of length mesh.cellCount()
+        - resistivity map as [[regionMarker0, res0], [regionMarker0, res1],...]
 
     scheme : :gimliapi:`GIMLI::DataContainerERT`
         Data measurement scheme.
@@ -145,11 +143,11 @@ def simulate(mesh, scheme, res, **kwargs):
             # the rhomap. better signal here before it results in errors
             meshMarkers = list(set(mesh.cellMarkers()))
             mapMarkers = [m[0] for m in res]
-            if any([mark not in mapMarkers for mark in meshMarkers]):
+            if any(mark not in mapMarkers for mark in meshMarkers):
                 left = [m for m in meshMarkers if m not in mapMarkers]
                 pg.critical("Mesh contains markers without assigned "
-                            "resistivities {}. Please fix given "
-                            "rhomap.".format(left))
+                            f"resistivities {left}. Please fix given "
+                            "rhomap.")
             res = pg.solver.parseArgToArray(res, mesh.cellCount(), mesh)
         else:  # probably nData x nCells array
             # better check for array data here
@@ -200,7 +198,7 @@ def simulate(mesh, scheme, res, **kwargs):
 
                 if returnFields:
                     return pg.Matrix(fop.solution())
-                
+
                 return ret
             else:
                 if fop.complex():
@@ -326,8 +324,8 @@ def simulateOld(mesh, scheme, res, sr=True, useBert=True,
 
 
 @pg.cache
-def createGeometricFactors(scheme, numerical=None, mesh=None, dim=3,
-                           h2=True, p2=True, forceFlatEarth=False, verbose=False):
+def createGeometricFactors(scheme, numerical=None, mesh=None, dim=3, h2=True,
+                           p2=True, forceFlatEarth=False, verbose=False):
     """Create geometric factors for a given data scheme.
 
     Create geometric factors for a data scheme with and without topography.
@@ -355,7 +353,7 @@ def createGeometricFactors(scheme, numerical=None, mesh=None, dim=3,
     p2: bool [True]
         Default polynomial refinement to achieve high accuracy
     forceFlatEarth : bool [False]
-        Set z values of electrodes to zero for geometric factor (usful only for topography).
+        Set z values of electrodes to zero for geometric factor (for topo).
     verbose: bool
         Give some output.
     """
@@ -370,7 +368,8 @@ def createGeometricFactors(scheme, numerical=None, mesh=None, dim=3,
             pg.info('Calculate analytical flat-earth geometric factors.')
 
         # better to be replaced by a Python function analyticalGeometricFactors
-        return pg.core.geometricFactors(scheme, forceFlatEarth=forceFlatEarth, dim=dim)
+        return pg.core.geometricFactors(
+            scheme, forceFlatEarth=forceFlatEarth, dim=dim)
 
     if mesh is None:
         pg.info('Create default mesh for geometric factor calculation.')
