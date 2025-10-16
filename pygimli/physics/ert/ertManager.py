@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Method Manager for Electrical Resistivity Tomography (ERT)"""
+"""Method Manager for Electrical Resistivity Tomography (ERT)."""
 
 import os.path
 import numpy as np
@@ -133,11 +131,10 @@ class ERTManager(MeshMethodManager):
         res : float, array(mesh.cellCount()) | array(N, mesh.cellCount()) |
               list
             Resistivity distribution for the given mesh cells can be:
-            . float for homogeneous resistivity (e.g. 1.0)
-            . single array of length mesh.cellCount()
-            . matrix of N resistivity distributions of length mesh.cellCount()
-            . resistivity map as [[regionMarker0, res0],
-                                  [regionMarker0, res1], ...]
+            - float for homogeneous resistivity (e.g. 1.0)
+            - single array of length mesh.cellCount()
+            - matrix of N resistivity distributions of length mesh.cellCount()
+            - resistivity map [[regionMarker0, res0], [regionMarker0, res1],...]
 
         scheme : :gimliapi:`GIMLI::DataContainerERT`
             Data measurement scheme.
@@ -289,7 +286,7 @@ class ERTManager(MeshMethodManager):
                 if err.haveData('iperr'):
                     _, phi = pg.utils.toPolar(dataVals)
                     # assuming ipErr are absolute dPhi in mrad
-                    ipe = err['iperr'] / abs((phi*1000))
+                    ipe = err['iperr'] / abs(phi*1000)
                 else:
                     pg.warn("Datacontainer have no 'iperr' values. "
                             "Fallback set to 0.01")
@@ -391,11 +388,11 @@ class ERTManager(MeshMethodManager):
 
         kwargs.setdefault("coverage", self.coverage())
         color = kwargs.pop("color", "magenta")
-        ax, cBar = self.fop.drawModel(ax, model, **kwargs)        
+        ax, cBar = self.fop.drawModel(ax, model, **kwargs)
         if elecs:
             if isinstance(elecs, str):
                 color = elecs
-            
+
             pg.viewer.mpl.drawSensors(ax, self.fop.data.sensors(), color=color)
 
         return ax, cBar

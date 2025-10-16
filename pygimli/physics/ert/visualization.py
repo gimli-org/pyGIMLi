@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""View ERT data."""
+"""Functions for visualizing ERT data."""
 
 from math import pi
 import numpy as np
@@ -26,7 +24,8 @@ def generateDataPDF(data, filename="data.pdf", **kwargs):
                 vals = data[tok]
                 logScale = min(vals) > 0 and tok in logToks
                 ax = fig.add_subplot()
-                pg.show(data, vals, ax=ax, label=tok, logScale=logScale, **kwargs)
+                pg.show(data, vals, ax=ax, label=tok, logScale=logScale,
+                        **kwargs)
                 fig.savefig(pdf, format='pdf')
                 fig.clf()
 
@@ -37,7 +36,7 @@ def showERTData(data, vals=None, **kwargs):
 
     Parameters
     ----------
-    data : :gimliapi:`BERT::DataContainerERT`
+    data : :gimliapi:`GIMLi::DataContainerERT`
 
     **kwargs :
 
@@ -53,8 +52,8 @@ def showERTData(data, vals=None, **kwargs):
             can be strings ("a", "m", "mid", "sep") or lists of them ["a", "m"]
         * style : str
             predefined styles for choosing x and y arguments (x/y overrides)
-            - "ab-mn" (default):  any combination of current/potential electrodes
-            - "a-m" : only a and m electrode (for unique dipole spacings like DD)
+            - "ab-mn" (default): any combination of current/potential electrodes
+            - "a-m" : only a and m electrode (for unique dipole spacings as DD)
             - "a-mn" : a and combination of mn electrode (PD with different MN)
             - "ab-m" : a and combination of mn electrode
             - "sepa-m" : current dipole length with a and m (multi-gradient)
@@ -153,7 +152,7 @@ def showERTData(data, vals=None, **kwargs):
         if equidistant:
             d = pg.DataContainerERT(data)
             sc = data.sensorCount()
-            d.setSensors(list(zip(range(sc), np.zeros(sc))))
+            d.setSensors(list(zip(range(sc), np.zeros(sc), strict=False)))
             ax, cbar = drawERTData(ax, d, vals=vals, **kwargs)
 
     # TODO here cbar handling like pg.show
@@ -207,7 +206,7 @@ def drawERTData(ax, data, vals=None, **kwargs):
             indices to limit display
         * circular : bool
             Plot in polar coordinates when plotting via patchValMap
-    
+
     Returns
     -------
     ax:
@@ -217,7 +216,7 @@ def drawERTData(ax, data, vals=None, **kwargs):
     """
     if vals is None:
         vals = 'rhoa'
-    
+
     if isinstance(vals, str):
         vals = data[vals].array()
 
@@ -320,7 +319,7 @@ def midconfERT(data, ind=None, rnum=1, circular=False, switch=False):
     if switch:
         mI, mO = mO, mI
 
-    if len(ux) * 2 > data.sensorCount() and not circular:  # 2D with topography case
+    if len(ux) * 2 > data.sensorCount() and not circular:  # 2D with topography
         dx = np.array(pg.utils.diff(pg.utils.cumDist(data.sensorPositions())))
         dxM = pg.mean(dx)
         if min(pg.y(data)) != max(pg.y(data)) or \
@@ -448,7 +447,7 @@ def midconfERT(data, ind=None, rnum=1, circular=False, switch=False):
         mid[ibeta] = _averageAngle([abC, mnC])
 
         # special case when dipoles are completely opposite
-        iOpp = abs(abs((mnC - abC)) - np.pi) < 1e-3
+        iOpp = abs(abs(mnC - abC) - np.pi) < 1e-3
         mid[iOpp] = _averageAngle([b[iOpp], m[iOpp]])
 
         minAb = min(ab[ibeta])
@@ -473,7 +472,7 @@ def midconfERT(data, ind=None, rnum=1, circular=False, switch=False):
 
 def generateConfStr(yy, switch=False):
     """Generate configuration string to characterize array."""
-    mI, mO, mT = 1, 100, 10000
+    mO, mT = 100, 10000
     types = ['PP', 'PD', 'DP', 'WA', 'SL', 'DD']  # base types
     typ = np.round(yy//mT)
     if switch:
@@ -488,14 +487,14 @@ def generateConfStr(yy, switch=False):
     # check if DD-n-n should be renamed
     rendd = (np.mean(spac / (dip+1)) < 2.1)
     keys = []
-    for s, d, t in zip(spac, dip, typ):
+    for s, d, t in zip(spac, dip, typ, strict=False):
         key = types[t]
         if d > 0:
             if rendd and d+1 == s and t == 5:
                 key = 'WB'
             else:
                 key = key + str(d+1) + '-'
-        key = key + "{:2d}".format(s)  # str(s)
+        key = key + f"{s:2d}"
         keys.append(key)
 
     return keys
