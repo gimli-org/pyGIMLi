@@ -21,7 +21,3 @@ alternative ways of installation or compilation from source:
     .. tab-item:: Linux
 
         .. include:: BUILD_LINUX.rst
-
-    .. tab-item:: Build dependencies
-
-        .. include:: ../dependencies.rst

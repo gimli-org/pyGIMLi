@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Pygimli base functions.
 
 Some needs to be sorted. Need to fit nameing conventions!

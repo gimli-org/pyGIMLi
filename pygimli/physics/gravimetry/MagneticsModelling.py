@@ -5,11 +5,11 @@ from .kernel import SolveGravMagHolstein
 
 
 class MagneticsModelling(pg.frameworks.MeshModelling):
-    """ Magnetics modelling operator using Holstein (2007).
-    """
-    def __init__(self, mesh=None, points=None, cmp=["TFA"], igrf=[0, 0, 50000],
+    """Magnetics modelling operator using Holstein (2007)."""
+
+    def __init__(self, mesh=None, points=None, cmp=None, igrf=None,
                  verbose=False):
-        """ Setup forward operator.
+        """Set up forward operator.
 
         Parameters
         ----------
@@ -35,6 +35,11 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
         """
         # check if components do not contain g!
         super().__init__()
+        if cmp is None:
+            cmp = ["TFA"]
+        if igrf is None:
+            igrf = [0, 0, 50000]  # vertical inducing field
+
         self._refineH2 = False
         # self.createRefinedForwardMesh(refine=False, pRefine=False)
         self.mesh_ = mesh
@@ -61,7 +66,7 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
 
 
     def computeKernel(self):
-        """ Compute the kernel."""
+        """Compute the kernel."""
         points = np.column_stack([self.sensorPositions[:, 1],
                                   self.sensorPositions[:, 0],
                                   -np.abs(self.sensorPositions[:, 2])])
@@ -81,7 +86,7 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
         self.setJacobian(self.J)
 
     def response(self, model):
-        """ Compute forward response.
+        """Compute forward response.
 
         Arguments
         ---------
@@ -94,7 +99,7 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
         return self.J.dot(model)
 
     def createJacobian(self, model):
-        """ Do nothing as this is a linear problem.
+        """Do nothing as this is a linear problem.
 
         Abstract method to create the Jacobian matrix.
         Need to be implemented in derived classes.
@@ -108,15 +113,25 @@ class MagneticsModelling(pg.frameworks.MeshModelling):
 
 
 class RemanentMagneticsModelling(MagneticsModelling):
-    def __init__(self, mesh, points, cmp=["Bx", "By", "Bz"], igrf=[0, 0, 50000]):
+    """Remanent magnetics modelling operator for arbitrary magnetization."""
+
+    def __init__(self, mesh, points, cmp=None, igrf=None):
         self.mesh_ = mesh
         self.mesh_["marker"] = 0
+        if cmp is None:
+            cmp = ["Bx", "By", "Bz"]
+        if igrf is None:
+            igrf = [0, 0, 50000]
+
         super().__init__(mesh=self.mesh_, points=points, igrf=igrf, cmp=cmp)
-        self.magX = MagneticsModelling(self.mesh_, points, igrf=[1, 0, 0], cmp=cmp)
+        self.magX = MagneticsModelling(
+            self.mesh_, points, igrf=[1, 0, 0], cmp=cmp)
         self.magX.computeKernel()
-        self.magY = MagneticsModelling(self.mesh_, points, igrf=[0, 1, 0], cmp=cmp)
+        self.magY = MagneticsModelling(
+            self.mesh_, points, igrf=[0, 1, 0], cmp=cmp)
         self.magY.computeKernel()
-        self.magZ = MagneticsModelling(self.mesh_, points, igrf=[0, 0, 1], cmp=cmp)
+        self.magZ = MagneticsModelling(
+            self.mesh_, points, igrf=[0, 0, 1], cmp=cmp)
         self.magZ.computeKernel()
         self.m1 = pg.Mesh(self._baseMesh)
         self.m2 = pg.Mesh(self._baseMesh)
@@ -129,7 +144,7 @@ class RemanentMagneticsModelling(MagneticsModelling):
         self.JJ.recalcMatrixSize()
         self.J = pg.matrix.ScaledMatrix(self.JJ, self.fak)
         self.setJacobian(self.J)
-    
+
     def createJacobian(self, model):
         """Do nothing."""
         pass

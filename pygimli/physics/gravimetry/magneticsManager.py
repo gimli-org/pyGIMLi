@@ -219,8 +219,8 @@ class MagManager(MeshMethodManager):
             Yo = [y[0] - frame, y[1] + frame]
             geo += mt.createRectangle(start=[Xo[0], Yo[1]], end=[Xo[1], Yo[0]],
                                       marker=2, boundaryMarker=2)
-            inner_pt = [(x[0] + x[1]) * 0.5, (y[0] + y[1]) * 0.5]  # inner point
-            frame_pt = [(Xo[0] + x[0]) * 0.5, (y[0] + y[1]) * 0.5] # outer point
+            # inner_pt = [(x[0] + x[1]) * 0.5, (y[0] + y[1]) * 0.5] # inner pt
+            frame_pt = [(Xo[0] + x[0]) * 0.5, (y[0] + y[1]) * 0.5] # outer pt
 
             # geo.addRegionMarker(inner_pt, marker=1, area=1e4)
             geo.addRegionMarker(frame_pt, marker=2, area=area*100)
@@ -238,15 +238,15 @@ class MagManager(MeshMethodManager):
             ext = max(max(self.x)-min(self.x), max(self.y)-min(self.y))
             depth = ext / 2
 
-        Zmin = -depth
-        dem_zvals = [surface.node(n).z() for n in range(4)]
+        # Zmin = -depth
+        # dem_zvals = [surface.node(n).z() for n in range(4)]
         n0, n1, n2, n3 = [surface.createNode(pg.Pos(
             surface.node(i).x(), surface.node(i).y(), -depth)) for i in range(4)]
 
         surface.createQuadrangleFace(n0, n1, n2, n3, marker=-2)
         mx = pg.x(surface).array()
         my = pg.y(surface).array()
-        mz = pg.z(surface).array()
+        # mz = pg.z(surface).array()
         x_min = mx.min()
         x_max = mx.max()
         y_min = my.min()
