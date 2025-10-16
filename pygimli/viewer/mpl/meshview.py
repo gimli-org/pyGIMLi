@@ -410,19 +410,19 @@ def drawSelectedMeshBoundaries(ax, boundaries, color=None, linewidth=1.0,
 
     Parameters
     ----------
-    ax : matplotlib axes
+    ax: matplotlib axes
         axes to plot into
-    boundaries : :gimliapi:`GIMLI::Mesh` boundary vector
+    boundaries: :gimliapi:`GIMLI::Mesh` boundary vector
         collection of boundaries to plot
-    color : matplotlib color |str [None]
+    color: matplotlib color | str [None]
         matching color or string, else colors are according to markers
-    linewidth : float [1.0]
+    linewidth: float [1.0]
         line width
-    linestyles : linestyle for line collection, i.e. solid or dashed
+    linestyles: linestyle for line collection, i.e., solid or dashed
 
     Returns
     -------
-    lco : matplotlib line collection object
+    lco: matplotlib line collection object
     """
     import matplotlib as mpl
     drawAA = True
@@ -460,22 +460,24 @@ def drawSelectedMeshBoundariesShadow(ax, boundaries, first='x', second='y',
                                      color=(0.3, 0.3, 0.3, 1.0)):
     """Draw mesh boundaries as shadows into a given axes.
 
-    Parameters
+    Attributes
     ----------
-    ax : matplotlib axes
+    ax: matplotlib axes
         axes to plot into
-    boundaries : :gimliapi:`GIMLI::Mesh` boundary vector
+    boundaries: :gimliapi:`GIMLI::Mesh` boundary vector
         collection of boundaries to plot
-    first / second : str ['x' / 'y']
-        attribute names to retrieve from nodes
-    color : matplotlib color |str [None]
+    first: str [``x``|``y``]
+        Attribute names to retrieve from nodes.
+    second: str [``x``|``y``]
+        Attribute names to retrieve from nodes.
+    color: matplotlib color | str [None]
         matching color or string, else colors are according to markers
-    linewidth : float [1.0]
+    linewidth: float [1.0]
         line width
 
     Returns
     -------
-    lco : matplotlib line collection object
+    lco: matplotlib line collection object
     """
     import matplotlib as mpl
     polys = []
