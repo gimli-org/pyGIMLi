@@ -90,13 +90,13 @@ DLLEXPORT RVector cellDataToPointData(const Mesh & mesh,
 DLLEXPORT void triangleMesh_(const Mesh & mesh, Mesh & tmpMesh);
 
 /*! Temporary until implemented using Interpolator matrix.*/
-void interpolateGradients(const Mesh & mesh,
+DLLEXPORT void interpolateGradients(const Mesh & mesh,
                           const stdVectorR3Vector & qp,
                           const RVector & u,
                           stdVectorR3Vector & grad,
                           Index dim=3);
 /*! Temporary until implemented using Interpolator matrix.*/
-void interpolateGradients(const Mesh & mesh,
+DLLEXPORT void interpolateGradients(const Mesh & mesh,
                           const stdVectorR3Vector & qp,
                           const R3Vector & u,
                           stdVectorMatrixVector & grad,

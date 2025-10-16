@@ -147,7 +147,7 @@ private:
     std::string _trace;
 };
 
-class TicToc{
+class DLLEXPORT TicToc{
 public:
     TicToc(const std::string & name, bool reset=false);
 
@@ -163,7 +163,7 @@ protected:
 #define WITH_TICTOC(name) TicToc tictoc_name(name);
 
 
-class PickleTest{
+class DLLEXPORT PickleTest{
 public:
     PickleTest();
 

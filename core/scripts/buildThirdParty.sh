@@ -55,10 +55,20 @@ CPPUNIT_URL=http://svn.code.sf.net/p/cppunit/code/trunk
 
 
 checkTOOLSET(){
+    echo "checkTOOLSET:" $TOOLSET $SYSTEM
     if [ "$TOOLSET" == "none" ]; then
         echo "No TOOLSET set .. using default gcc"
-        SYSTEM=UNIX
+        echo "OS:" $OS
+
+        if [ "$OS" == "Windows_NT" ]; then
+            SYSTEM=WIN
+        else
+            SYSTEM=UNIX
+        fi
+        echo "SYSTEM:" $SYSTEM
+
         SetGCC_TOOLSET
+    
     elif [ "$TOOLSET" == "clang" ]; then
         SetCLANG_TOOLSET
     fi
@@ -107,7 +117,11 @@ SetGCC_TOOLSET(){
     B2TOOLSET=''
     MAKE=make
 
-    if [ "$OSTYPE" == "msys" -o "$MSYSTEM" == "MINGW32" ]; then
+    echo "OS:" $OS
+    echo "OSTYPE:" $OSTYPE
+    echo "MSTYPE:" $MSYSTEM
+
+    if [ "$OS" == "Windows_NT" -o "$OSTYPE" == "msys" -o "$MSYSTEM" == "MINGW32" ]; then
         #CMAKE_GENERATOR='MSYS Makefiles'
         CMAKE_GENERATOR='Unix Makefiles'
         #CMAKE_GENERATOR='MinGW Makefiles'
@@ -446,21 +460,16 @@ buildBOOST(){
         echo "copying sourcetree into build: $BOOST_BUILD"
         cp -r $BOOST_SRC $BOOST_BUILD
     fi
+    
     pushd $BOOST_BUILD
         echo "Try to build b2 for TOOLSET: $B2TOOLSET"
-
+        
         if [ "$SYSTEM" == "WIN" ]; then
             if [ ! -f ./b2.exe ]; then
+                echo "Building b2.exe for $SYSTEM"
                 ./bootstrap.sh  ## works with 1.86.0
                 # need to escape the python binary path
                 sed -i -s 's/\\/\\\\/g' project-config.jam
-                #echo "Try with cmd /c \"bootstrap.bat $B2TOOLSET\""
-                #cmd.exe /c "bootstrap.bat $B2TOOLSET" # try this first .. works for 54 with mingw
-
-                #if [ ! -f ./b2.exe ]; then
-                #    echo "Try with ./bootstrap.sh --with-toolset=$B2TOOLSET"
-                #    ./bootstrap.sh --with-toolset=$B2TOOLSET # only mingw does not work either
-                #fi
                 #sed -e s/gcc/mingw/ project-config.jam > project-config.jam
             fi
             B2="./b2.exe"
@@ -470,6 +479,7 @@ buildBOOST(){
             if [ -f "b2" ]; then
                 echo "*** using existing $B2"
             else
+                echo "Building b2 for $SYSTEM"
                 sh bootstrap.sh
             fi
         fi
@@ -485,22 +495,23 @@ buildBOOST(){
 
             #linkflags="-L C:\Users\carsten\anaconda311\libs" \
             # venv does not have pyconfig.h so we add the base config to the build system
-            export PYTHON_BASE_LIB=`python -c 'import sys; import re; print(re.escape(sys.base_prefix))'`
-            export CPLUS_INCLUDE_PATH=$PYTHON_BASE_LIB/include
-            echo "$CPLUS_INCLUDE_PATH"
+            export PYTHON_BASE_LIB=` python -c 'import sys; print(sys.base_prefix.replace(r"\\\\",r"\\\\\\\\"))'`
+            export CPLUS_INCLUDE_PATH=$PYTHON_BASE_LIB\\include
+            echo "Setting extra include to pyconfig for mingw $CPLUS_INCLUDE_PATH"
+        else
+            PY_PLATFORM=cp$PYTHONMAJOR$PYTHONMINOR
+            PY_CONFIG_DIR=/opt/python/$PY_PLATFORM-$PY_PLATFORM/include/python3.$PYTHONMINOR
+
+            if [ -f $PY_CONFIG_DIR/pyconfig.h ]; then
+                # special includes for manylinux, since venv does not copy python
+                # config on alamlinux docker container
+                echo "Setting extra include to pyconfig for manylinux_$PY_PLATFORM-$PY_PLATFORM"
+                export CPLUS_INCLUDE_PATH=$PY_CONFIG_DIR
+            fi
+            #python3.7-config --includes --libs
         fi
         echo "*** Building boost in $PWD"
-
-        PY_PLATFORM=cp$PYTHONMAJOR$PYTHONMINOR
-        PY_CONFIG_DIR=/opt/python/$PY_PLATFORM-$PY_PLATFORM/include/python3.$PYTHONMINOR
-
-        if [ -f $PY_CONFIG_DIR/pyconfig.h ]; then
-            # special includes for manylinux, since venv does not copy python
-            # config on alamlinux docker container
-            echo "Setting extra include to pyconfig for manylinux_$PY_PLATFORM-$PY_PLATFORM"
-            export CPLUS_INCLUDE_PATH=$PY_CONFIG_DIR
-        fi
-        #python3.7-config --includes --libs
+        #/return
 
         "$B2" \
             toolset=$COMPILER \
@@ -509,7 +520,7 @@ buildBOOST(){
             threading=multi \
             cxxflags='-Wno-strict-aliasing -Wno-deprecated-declarations -Wno-attributes' \
             linkflags="-L $PYTHON_BASE_LIB\libs" \
-            address-model=$ADDRESSMODEL $EXTRADEFINES install \
+            address-model=$ADDRESSMODEL $EXTRADEFINES install\
             --platform=msys \
             -j 8 \
             -d 1 \
@@ -713,17 +724,22 @@ buildTRIANGLE(){
 
     pushd $TRIANGLE_BUILD
         if [ "$SYSTEM" == "WIN" ]; then
-            sed -i -e 's/-DLINUX/-DCPU86/g' makefile ;
+            echo "skipp"
+            sed -i -e 's/-DLINUX/-DCPU86 -D ANSI_DECLARATORS/g' makefile ;
             patch triangle.c -i $BUILDSCRIPT_HOME/patches/triangle-mingw-win64.patch
+        elif [ "$SYSTEM" == "UNIX" ]; then
+            sed -i -e 's/-DLINUX/-DCPU86/g' makefile ;
         elif [ "$SYSTEM" == "MAC" ]; then
             sed -i -e 's/-DLINUX//g' makefile ;
         fi
 
         if [ "$ADDRESSMODEL" == "64" ]; then
-            sed -i -e 's/CC = cc/CC = gcc -fPIC/g' makefile;
+            sed -i -e 's/CC = cc/CC = gcc -fPIC -Wno-old-style-definition -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast /g' makefile;
         else
             sed -i -e 's/CC = cc/CC = gcc/g' makefile;
         fi
+
+        sed -i -e 's/VOID/int/g' triangle.h;
 
         make trilibrary
         mkdir -p $TRIANGLE_DIST

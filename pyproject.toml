@@ -10,6 +10,7 @@ packages = ["pygimli"]
 name = "pygimli"
 #dynamic = ["version"] ## versioneer does not yet seems to work
 version = "2.0b1"
+#requires-python = ">=3.11"; sys_platform == 'win32'
 requires-python = ">=3.10"
 authors = [
   { name = "Carsten Rücker" },
