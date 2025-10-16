@@ -1,19 +1,17 @@
-.. _sec:install_mac:
-
-Building on MAC OSX
--------------------
+(build_mac)=
+# Building on MAC OSX
 
 The current working solution is based on `this discussion on GitHub
 <https://github.com/gimli-org/gimli/discussions/603>`_.  Many thanks to Robin
 Thibaut!
 
-.. code-block:: bash
+```bash
 
     # Install Homebrew
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 
     # Install dependencies via brew
-    brew install cmake 
+    brew install cmake
     brew install wget
     brew install mercurial
 
@@ -39,14 +37,13 @@ Thibaut!
     cmake -DPYTHON_EXECUTABLE=$PYTHON_EXEC -DPYTHON_LIBRARY=$PYTHON_LIB -DPYTHON_INCLUDE_DIR=$PYTHON_INC ../source
     make -j 8
     make pygimli J=8
+```
 
-Troubleshooting
-+++++++++++++++
+## Troubleshooting
 
 If you encounter problems, you may have to specify some paths manually, e.g.:
 
-.. code-block:: bash
-
+```bash
     cmake -DPYTHON_EXECUTABLE=$PYTHON_EXEC -DPYTHON_LIBRARY=$PYTHON_LIB
           -DPYTHON_INCLUDE_DIR=$PYTHON_INC \
           -DUMFPACK_LIBRARIES=~/minforge3/base/lib/libumfpack.dylib \
@@ -57,3 +54,4 @@ If you encounter problems, you may have to specify some paths manually, e.g.:
           -DOpenBLAS_INCLUDE_DIR=~/minforge3/base/include \
           -DBoost_PYTHON_LIBRARY=~/minforge3/base/lib/libboost_python310.dylib \
           ../source
+```
