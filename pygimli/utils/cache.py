@@ -380,15 +380,18 @@ class CacheManager(object):
 
 
     def cache(self, func, *args, **kwargs):
-        """ Create a unique cache.
+        """Create a unique cache.
 
         Arguments
         ---------
         func: function
             The function to cache.
-        *args: any
+        args: any
             The positional arguments of the function.
-        **kwargs: any
+
+        Keyword Args
+        ------------
+        kwargs: any
             The keyword arguments of the function.
 
         Returns
@@ -408,7 +411,7 @@ class CacheManager(object):
 
 
 def cache(func):
-    """ Cache decorator.
+    """Cache decorator.
 
     This decorator caches the return value of the function and stores it in a
     Cache object. If the function is called again with the same arguments,
@@ -430,7 +433,18 @@ def cache(func):
         A wrapper function that caches the return value of the function.
     """
     def wrapper(*args, **kwargs):
+        """Handle caching.
 
+        Arguments
+        ---------
+        *args: any
+            The positional arguments of the function.
+
+        Keyword Args
+        ------------
+        **kwargs: any
+            The keyword arguments of the function.
+        """
         nc = kwargs.pop('skipCache', False)
 
         if any(('--noCache' in sys.argv,
@@ -442,7 +456,6 @@ def cache(func):
         if c.value is not None:
             return c.value
 
-        # pg.tic will not work because there is only one global __swatch__
         sw = pg.Stopwatch(True)
         rv = func(*args, **kwargs)
         c.info['date'] = time.time()

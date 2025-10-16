@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Timelapse ERT manager class."""
 import os.path
 from glob import glob
@@ -32,7 +33,7 @@ def guessDateTime(fname, delimiter="_", fmt="%Y%m%d-%H%M%S"):
             dtstr = "-".join([dstr, tstr])
         else:
             return None
-    
+
     mydate = datetime.strptime(dtstr, fmt)
     return mydate
 
@@ -84,7 +85,7 @@ class TimelapseERT():
         if filename is not None:
             if isinstance(filename, str):
                 results = kwargs.pop("results", None)
-                self.load(filename, **kwargs)                
+                self.load(filename, **kwargs)
                 if results is not None:
                     self.loadResults(results)
             else:
@@ -117,7 +118,7 @@ class TimelapseERT():
         return "\n".join(out)
 
     def load(self, filename, **kwargs):
-        """Load or import data (or data files using *)."""
+        """Load or import data (or data files using '*')."""
         if os.path.isfile(filename):
             self.data = ert.load(filename)
             if os.path.isfile(filename[:-4]+".rhoa"):
@@ -133,7 +134,7 @@ class TimelapseERT():
             DATA = [ert.load(fname) for fname in fnames]
             if guessDateTime(fnames[0]) is not None:
                 self.times = [guessDateTime(fname) for fname in fnames]
-            
+
             self.data, self.DATA, self.ERR, self.IP, self.IPERR = \
                 combineMultipleData(DATA)
 
@@ -242,7 +243,7 @@ class TimelapseERT():
 
     def automask(self, dmax=0.3, nc=5, robustData=True):
         """Automatic outlier masking using dist to smoothed curve.
-        
+
         Parameters
         ----------
         dmax : float
@@ -261,7 +262,7 @@ class TimelapseERT():
                 data.mask[misfit > dmax] = True
 
     def showData(self, v="rhoa", t=None, **kwargs):
-        """Show data as pseudosections (single-hole) or cross-plot (crosshole)
+        """Show data as pseudosections (single-hole) or cross-plot (crosshole).
 
         Parameters
         ----------
@@ -307,7 +308,7 @@ class TimelapseERT():
         ax : mpl.Axes|None
             matplotlib axes to plot (otherwise new)
         what : str ["rhoa"]
-            define what to plot 
+            define what to plot
         a, b, m, n : int
             tokens to extract data from
         """
@@ -437,26 +438,25 @@ class TimelapseERT():
 
     def chooseTime(self, t=None):
         """Return data for a specific time index or timestamp.
-        
+
         Parameters
         ----------
         t : int, str, or datetime, optional
             The time index (int), time label (str), or datetime object specifying the desired time slice.
             If None, defaults to the first time index.
-        
+
         Returns
         -------
         data : DataContainerERT
             A copy of the data container with the 'rhoa' (apparent resistivity) and 'err' (error) fields
             updated for the selected time. If error data is missing or invalid, error is estimated.
-        
+
         Notes
         -----
         - If `t` is not an integer, it is converted to a time index using `self.timeIndex(t)`.
         - Handles masked values in "rhoa" by replacing them with the median of the absolute values.
         - If error data is missing or invalid, `data.estimateError()` is called to estimate errors.
         """
-
         if not isinstance(t, (int, np.int32, np.int64)):
             t = self.timeIndex(t)
 
@@ -484,18 +484,23 @@ class TimelapseERT():
             print(self.mesh)
             pg.show(self.mesh, markers=True, showMesh=True)
 
+
     def invert(self, t=None, reg=None, regTL=None, **kwargs):
         """Run inversion for a specific timestep or all subsequently.
 
-        Parameter
+        Arguments
         ---------
-        t : int|datetime|str|array
+
+        t: int|datetime|str|array
             time index, string or datetime object, or array of any of these
-        reg : dict
+        reg: dict
             regularization options (setRegularization) for all inversions
-        regTL : dict
+        regTL: dict
             regularization options for timesteps inversion only
-        **kwargs : dict
+
+        Keyword Args
+        ------------
+        **kwargs: dict
             keyword arguments passed to ERTManager.invert
         """
         if t is not None:
@@ -527,7 +532,7 @@ class TimelapseERT():
             self.chi2s.append(self.mgr.inv.chi2())
             if i == 0 and isinstance(regTL, dict):
                 kwargs.update(regTL)
-                # self.mgr.inv.setRegularization(**regTL)
+                # self.mgr.inv.setRegularization(**regTL) #**docstring warning
 
         if len(t) == 1:
             self.mgr.showResult()
@@ -695,7 +700,7 @@ class TimelapseERT():
         """Save inversion results."""
         if basename is None:
             basename = self.name
-        
+
         self.pd.save(basename+".bms")
         np.savetxt(basename+".result", self.models, fmt="%.1f")
 
@@ -703,7 +708,7 @@ class TimelapseERT():
         """Load inversion results."""
         if basename is None or basename is True:
             basename = self.name
-        
+
         self.pd = pg.load(basename+".bms")
         self.models = np.loadtxt(basename+".result")
 

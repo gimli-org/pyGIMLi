@@ -352,7 +352,12 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
         drawSensors(ax, data, **kwargs)
     elif isinstance(data, pg.PosVector) \
         or hasattr(data, 'ndim') and data.ndim == 2 \
-            and (data.shape[1] == 2 or data.shape[1] == 3):
+            and (data.shape[1] == 2 or data.shape[1] == 3) \
+        or isinstance(data, list) and len(data) == 2 \
+            and (hasattr(data[0], '__iter__')):
+        ## PosVector = [[x,y,z], ]
+        ## ndarray = [N, 2|3]
+        ## list = [[u,],[v,]] -> will be normalized in drawStreams
         drawStreams(ax, mesh, data, **kwargs)
     else:
         # check for map like data=[[marker, val], ....]

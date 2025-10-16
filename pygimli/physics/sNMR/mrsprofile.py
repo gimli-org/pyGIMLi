@@ -1,10 +1,12 @@
-# -*- coding: utf-8 -*-
-"""classes for inverting profile data with magnetic resonance soundings (MRS)
+#!/usr/bin/env python
+"""Classes for inverting profile data with magnetic resonance soundings (MRS).
+
 The preferred LCI type of MRS inversion was published in:
 Costabel, S., Günther, T., Dlugosch, R. & Müller-Petke, M. (2016):
 Torus-nuclear magnetic resonance: Quasi-continuous airborne magnetic resonance
 profiling by using a helium-filled balloon. Geophysics 81(4), W119-W129,
-doi:10.1190/geo2015-0467.1."""
+doi:10.1190/geo2015-0467.1.
+"""
 
 import sys
 import os
@@ -99,13 +101,12 @@ class MRSLCI(pg.core.ModellingBase):
 
 
 class MRSprofile():
-    """manager class for several MRS data along a profile for joint inversion
+    """Manager class for several MRS data along a profile for joint inversion.
 
     Attributes
     ----------
-    mrs : list of MRS objects (single soundings)
-
-    x : list of positions for the soundings
+    mrs: list of MRS objects (single soundings)
+    x: list of positions for the soundings
 
 
     Methods
@@ -130,10 +131,10 @@ class MRSprofile():
     def __init__(self, filename=None, x=None, dx=1, x0=0, **kwargs):
         """Initialize profile object by mrs objects and optional positions.
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         filename : list of str | str
-            list of files OR filenames(with *) OR directory to load
+            list of files OR filenames(with wildcard '*') OR directory to load
         x : iterable
             position vector of individual soundings
         x0 : float [0]
