@@ -378,12 +378,16 @@ def combineMultipleData(DATA):
     IPERR : np.array(same size)
         induced polarization error matrix
     """
-    assert hasattr(DATA, '__iter__'), "DATA should be DataContainers or str!"
+    if not hasattr(DATA, '__iter__'):
+        raise TypeError("DATA should be DataContainers or str!")
+
     if isinstance(DATA[0], str):  # read in if strings given
         DATA = [pg.DataContainerERT(data) for data in DATA]
 
     nEls = [data.sensorCount() for data in DATA]
-    assert max(np.abs(np.diff(nEls))) == 0, "Electrodes not equal"
+    if max(np.abs(np.diff(nEls))) != 0:
+        raise ValueError("Electrodes not equal")
+
     uIs = [uniqueERTIndex(data) for data in DATA]
     uI = np.unique(np.hstack(uIs))
     scheme = generateDataFromUniqueIndex(uI, DATA[0])
