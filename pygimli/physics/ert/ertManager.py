@@ -1,8 +1,6 @@
 """Method Manager for Electrical Resistivity Tomography (ERT)."""
-
-import os.path
+from pathlib import Path
 import numpy as np
-
 import pygimli as pg
 from pygimli.frameworks import MeshMethodManager
 from .ertModelling import ERTModelling, ERTModellingReference
@@ -408,16 +406,14 @@ class ERTManager(MeshMethodManager):
             Mesh (bms and vtk with results)
         """
         subfolder = self.__class__.__name__
-        path = getSavePath(folder, subfolder)
-
-        pg.info('Saving inversion results to: {}'.format(path))
-
-        np.savetxt(path + '/resistivity.vector', self.model)
-        np.savetxt(path + '/resistivity-cov.vector', self.coverage())
-        np.savetxt(path + '/resistivity-scov.vector',
+        path = Path(getSavePath(folder, subfolder))
+        pg.info(f'Saving inversion results to: {path}')
+        np.savetxt(path / '/resistivity.vector', self.model)
+        np.savetxt(path / '/resistivity-cov.vector', self.coverage())
+        np.savetxt(path / '/resistivity-scov.vector',
                    self.standardizedCoverage())
 
-        self.mesh.save(os.path.join(path, 'mesh'))
+        self.mesh.save(path / 'mesh.bms')
 
         m = pg.Mesh(self.paraDomain)
         m['Resistivity'] = self.model
@@ -429,17 +425,17 @@ class ERTManager(MeshMethodManager):
             if hasattr(v, "__iter__") and len(v) == nM:
                 m[k] = v
 
-        m.exportVTK(os.path.join(path, 'resistivity'))
-        m.saveBinaryV2(os.path.join(path, 'resistivity-pd'))
-        self.fop.mesh().save(os.path.join(path, 'resistivity-mesh'))
+        m.exportVTK(path / 'resistivity.vtk')
+        m.saveBinaryV2(path / 'resistivity-pd.bms')
+        self.fop.mesh().save(path / 'resistivity-mesh')
 
-        np.savetxt(path + '/response.vector', self.inv.response)
+        np.savetxt(path / 'response.vector', self.inv.response)
         residual = self.inv.residual()  # includes error-(re)weighting
-        np.savetxt(path + '/residual.vector', residual)
+        np.savetxt(path / 'residual.vector', residual)
         data = self.fop.data.copy()
         data['response'] = self.inv.response
         data['residual'] = residual
-        data.save(os.path.join(path, 'data.dat'),
+        data.save(path / 'data.dat',
                   'a b m n rhoa k err ip iperr response residual')
 
         if self.paraDomain.dim() == 2:

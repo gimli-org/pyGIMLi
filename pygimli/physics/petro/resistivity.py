@@ -169,8 +169,6 @@ def transInvArchieS(rFluid=20, phi=0.4, m=2, n=2):  # S(rho)
 
 def test_Archie():
     """Test Archie."""
-    import unittest
-
     dx = 0.01
     phivec = np.arange(dx, 0.5, dx)
     swvec = np.arange(dx, 1, dx)

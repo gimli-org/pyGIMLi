@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Finite-element solver and utility functions."""
 from copy import deepcopy
 
@@ -7,6 +6,7 @@ import pygimli as pg
 
 
 def parseDictKey_(key, markers):
+    """Parse dictionary key of type str to marker list."""
     return parseMarkersDictKey(key, markers)
 
 
@@ -220,12 +220,12 @@ def cellValues(mesh, arg, **kwargs):
 
     # if arg if scalar or global data type, ndarray or Matrix but not the right
     # size assume global tensor
-    if isinstance(arg, np.ndarray) or \
-            isinstance(arg, pg.core.RMatrix) or \
-            isinstance(arg, pg.core.CMatrix) or \
-            isinstance(arg, float) or \
-            isinstance(arg, int) or \
-            isinstance(arg, complex):
+    if isinstance(arg, (np.ndarray,
+                        pg.core.RMatrix,
+                        pg.core.CMatrix,
+                        float,
+                        int,
+                        complex)):
         return [arg]*mesh.cellCount()
 
     return parseArgToArray(arg,
@@ -281,7 +281,7 @@ def parseArgToArray(arg, nDof, mesh=None, userData={}):
             if len(arg) == nDof[0]:
                 return arg
             else:
-                raise Exception('Given array does not have requested (' +
+                raise ValueError('Given array does not have requested (' +
                                 str(nDof) + ') size (' +
                                 str(len(arg)) + ')')
 
@@ -293,13 +293,13 @@ def parseArgToArray(arg, nDof, mesh=None, userData={}):
             # [marker, val] || [[marker, val]]
             return parseMapToCellArray(arg, mesh)
         except BaseException:
-            raise Exception("Array 'arg' has the wrong size: " +
+            raise ValueError("Array 'arg' has the wrong size: " +
                             str(len(arg)) + " != " + str(nDof))
-    elif hasattr(arg, '__call__'):
+    elif callable(arg):
         ret = pg.Vector(nDof[0], 0.0)
 
         if not mesh:
-            raise Exception("Please provide a mesh for the callable"
+            raise ValueError("Please provide a mesh for the callable"
                             "argument to parse ")
 
         if nDof[0] == mesh.nodeCount():
@@ -396,9 +396,8 @@ def generateBoundaryValue(boundary, arg, time=0.0, userData={},
 
     # transform val into list of length nodeCount
 
-    if expectList is True:
-        if np.array(val).ndim != 2:
-            val = np.atleast_1d(val)
+    if expectList is True and np.array(val).ndim != 2:
+        val = np.atleast_1d(val)
 
     if isinstance(boundary, pg.core.Node):
         return val
@@ -420,9 +419,9 @@ def generateBoundaryValue(boundary, arg, time=0.0, userData={},
 
 
 def parseArgPairToBoundaryArray(pair, mesh):
-    r"""Parse boundary related pair argument.
+    """Parse boundary-related argument pairs.
 
-    Create a list of [:gimliapi:`GIMLI::Boundary`, value|callable].
+    Creates a list of [:gimliapi:`GIMLI::Boundary`, value|callable ].
 
     Parameters
     ----------
@@ -449,9 +448,9 @@ def parseArgPairToBoundaryArray(pair, mesh):
     """
     bc = []
     bounds = []
-    if isinstance(pair[1], list):  #  [marker, [callable, *kwargs]]
-        if callable(pair[1][0]):
-            pair = [pair[0]] + pair[1]
+    #  [marker, [callable, *kwargs]]
+    if isinstance(pair[1], list) and callable(pair[1][0]):
+        pair = [pair[0]] + pair[1]
 
     if pair[0] == '*':
         mesh.createNeighborInfos()
@@ -466,10 +465,7 @@ def parseArgPairToBoundaryArray(pair, mesh):
 
     for b in bounds:
         val = None
-        if len(pair) > 2:
-            val = pair[1:]
-        else:
-            val = pair[1]
+        val = pair[1:] if len(pair) > 2 else pair[1]
 
         bc.append([b, val])
 
@@ -492,9 +488,9 @@ def parseArgPairToBoundaryArray(pair, mesh):
 
 
 def parseArgToBoundaries(args, mesh):
-    """
-    Parse boundary related arguments to create a valid boundary value list:
-    [ :gimliapi:`GIMLI::Boundary`, value|callable ]
+    """Parse boundary-related arguments.
+
+    Create a valid list [ :gimliapi:`GIMLI::Boundary`, value|callable]
 
     TODO
     ----
@@ -608,8 +604,7 @@ def parseArgToBoundaries(args, mesh):
 
         return boundaries
 
-    if hasattr(args, '__call__') or isinstance(args, float) or \
-            isinstance(args, int):
+    if callable(args) or isinstance(args, (float, int)):
         return parseArgToBoundaries({'*': args}, mesh)
 
     else:
@@ -619,18 +614,14 @@ def parseArgToBoundaries(args, mesh):
 
 
 def _bcIsForVectorValues(bc, mesh):
-    """Guess if boundary condition is supposed to be for vector valued problems
-    """
+    """Guess if boundary condition is for vector-valued problems."""
     verbose = False
 
     def testForV3(t):
         if verbose:
             print("test for v3", t)
         try:
-            if callable(t):
-                test = t(mesh.boundary(0))
-            else:
-                test = t
+            test = t(mesh.boundary(0)) if callable(t) else t
 
             if verbose:
                 print("test for v3 test", test)
@@ -639,8 +630,8 @@ def _bcIsForVectorValues(bc, mesh):
                 test = np.array(test)
                 # call(b): [v_i] in R with i==1..nodeCount() -> scalar values
                 # call(b): [v_i] in R³ with i==1..nodeCount() -> value values
-                if len(test) == mesh.boundary(0).nodeCount():
-                    if len(test[0]) == mesh.dim():
+                if len(test) == mesh.boundary(0).nodeCount() and \
+                    len(test[0]) == mesh.dim():
                         return True
 
                 if test.ndim == 2 and len(test[0]) == mesh.dim():
@@ -682,8 +673,7 @@ def _bcIsForVectorValues(bc, mesh):
 
 
 def parseMapToCellArray(attributeMap, mesh, default=0.0):
-    """
-    Parse a value map to cell attributes.
+    """Parse a value map to cell attributes.
 
     A map should consist of pairs of marker and value.
     A marker is an integer and corresponds to the cell.marker().
@@ -919,14 +909,18 @@ def divergence(mesh, func=None, normMap=None, order=1):
 
     MOVE THIS to a better place
 
-    Divergence for callable function func((x,y,z)).
     Return sum div over boundary.
 
     Parameters
     ----------
+    func : function
+        function to be called
+    normMap : [[]]
+        mapping
 
     Returns
     -------
+    div : iterable
     """
     if func is None:
         func = lambda r: r
@@ -1060,7 +1054,7 @@ def showSparseMatrix(mat, full=False):
             print(np.array(matD))
 
 
-class LinSolver(object):
+class LinSolver:
     """Proxy class for the solution of linear systems of equations."""
 
     def __init__(self, mat=None, solver=None, verbose=False, **kwargs):
@@ -1103,15 +1097,17 @@ class LinSolver(object):
         self._factorize = 'factorize' + self.solver
 
         if self.verbose:
-            pg.info("Solving with {0}".format(self.solver))
+            pg.info(f"Solving with {self.solver}")
 
         if mat is not None:
             self.factorize(mat)
 
     def isFactorized(self):
+        """Is factorized."""
         return self._factorized
 
     def factorize(self, mat):
+        """Factorization."""
         swatch = pg.Stopwatch()
 
         getattr(self, self._factorize)(mat)
@@ -1122,13 +1118,13 @@ class LinSolver(object):
         self._factorized = True
 
     def factorizePG(self, mat):
-        """"""
+        """Generate solver using pyGIMLi linear solver."""
         self._m = pg.utils.toSparseMatrix(mat)
         self._desiredArrayType = pg.Vector
         self._solver = pg.core.LinSolver(self._m, verbose=self.verbose)
 
     def factorizeSciPy(self, mat):
-        """"""
+        """Generate solver/factorization using SciPy linear solver."""
         self._m = pg.utils.sparseMatrix2csr(mat)
         # scipy is not dependency
         # scipy = pg.optImport('scipy', 'Used for sparse linear solver.')
@@ -1138,7 +1134,7 @@ class LinSolver(object):
         self._solver = factorized(self._m)
 
     def __call__(self, b):
-        """short cut to self.solve(b)"""
+        """Shortcut to self.solve(b)."""
         return self.solve(b)
 
     def _convertRHS(self, b):
@@ -1148,7 +1144,7 @@ class LinSolver(object):
         return b
 
     def solve(self, b):
-        """ """
+        """Solve system with right-hand side vector."""
         swatch = pg.Stopwatch()
         x = self._solver(self._convertRHS(b))
         self.solverTime = swatch.duration(restart=True)
@@ -1215,7 +1211,7 @@ def linSolve(mat, b, solver=None, verbose=False, **kwargs):
         solver = pg.core.LinSolver(_m, verbose=verbose)
 
         if verbose:
-            pg.info("Solving with {0}".format(solver.solverName()))
+            pg.info(f"Solving with {solver.solverName()}")
             pg.info("Matrix factorization:", swatch.duration(restart=True))
 
         x = solver.solve(b)
@@ -1243,8 +1239,7 @@ def linSolve(mat, b, solver=None, verbose=False, **kwargs):
         if verbose:
             pg.info("Solving with scipy.sparse.spsolve")
 
-        if reorder is True and 0:
-
+        if reorder is True and 0:  # deactivated
             def permCOO(M, perm):
                 # M.indices = perm.take(M.indices)
                 # M = M.tocsc()
@@ -1283,14 +1278,8 @@ def linSolve(mat, b, solver=None, verbose=False, **kwargs):
 
 
 def applyDirichlet(mat, rhs, uDirIndex, uDirichlet):
-    """This should be moved directly into the core"""
-
+    """Apply Dirichlet BC. This should be moved into the core."""
     # idx = np.argsort(uDirIndex)
-    # print(idx)
-    # print(np.asarray(uDirIndex)[idx])
-    # print(np.asarray(uDirichlet[idx]))
-
-
     if mat is not None:
         if rhs is not None:
             uDir = pg.Vector(mat.rows(), 0.0)
@@ -1657,27 +1646,35 @@ def assembleRobinBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
 
 def assembleBC(bc, mesh, mat, rhs, time=None, userData={}, dofOffset=0,
                nCoeff=1):
-    r"""Shortcut to apply all boundary conditions.
+    r"""Assemble all types of boundary conditions.
 
-    Shortcut to apply all boundary conditions will only forward to
-    appropriate assemble functions.
+    Forward to appropriate assemble functions.
 
     Parameters
     ----------
+    mesh : pg.Mesh
+        mesh
+    mat : pg.SparseMapMatrix
+        system matrix
+    rhs : vector
+        right-hand side
+    time : float|iterable
+        time vector
+    userData : dict
+        user data passed to the assembly functions
+    dofOffset : int
+        offset for degree of freedom numbering
 
     Returns
     -------
     map{id: uDirichlet}: Map of index to Dirichlet value.
-
-    None
     """
     # we can't iterate because we want the following fixed order
     dirichletMap = {}
     bct = dict(bc)
     nDim = 1
-    if mat is not None:
-        if mat.rows() == mesh.nodeCount() * mesh.dim():
-            nDim = mesh.dim()
+    if mat is not None and mat.rows() == mesh.nodeCount() * mesh.dim():
+        nDim = mesh.dim()
 
     if 'Neumann' in bct:
         assembleNeumannBC(rhs, parseArgToBoundaries(bct.pop('Neumann'), mesh),
@@ -1742,16 +1739,15 @@ def assembleLoadVector(mesh, f, userData={}):
 
 
 def createForceVector(mesh, f, userData={}):
-    """ Create a right hand side vector for vector valued solutions.
+    """Create a right hand side vector for vector valued solutions.
 
     Parameters
     ----------
-    f: [ convertable ]
+    f: convertible
         List of rhs side options. Must be convertable to createLoadVector.
         See :py:mod:`createLoadVector`
     rhs: np.array()
         Squeezed vector of length mesh.nodeCount() * mesh.dimensions()
-
     """
     if not isinstance(f, list):
         pg.error("Create Force Vector need list of attribute f with an entry "
@@ -1768,13 +1764,10 @@ def createForceVector(mesh, f, userData={}):
 
 
 def createLoadVector(mesh, f=1.0, userData={}):
-    """Create right hand side vector.
+    """Create right-hand-side vector from load/force vectors.
 
-    Create right hand side vector based on the given mesh and load values
-    (scalar solution) or force vectors (vector value solution).
-
-    Create right hand side based on the given mesh and load or force
-    values.
+    Based on given mesh and load values (scalar solution) or
+    force vectors (vector value solution).
 
     TODO
     ----
@@ -1813,7 +1806,7 @@ def createLoadVector(mesh, f=1.0, userData={}):
                     fn.append(f['Node'](n, **userData))
             if hasattr(fn[0], '__iter__'):
                 # result is vector valued
-                return createLoadVector(mesh, [fi for fi in np.array(fn).T],
+                return createLoadVector(mesh, list(np.array(fn).T),
                                         userData=userData)
 
             return createLoadVector(mesh, fn, userData=userData)
@@ -1826,9 +1819,8 @@ def createLoadVector(mesh, f=1.0, userData={}):
         f = float(f)
 
     # f is list [fx, fy, [fz]] for vector problems
-    if isinstance(f, list):
-        if len(f) == mesh.dim():
-            return createForceVector(mesh, f, userData=userData)
+    if isinstance(f, list) and len(f) == mesh.dim():
+        return createForceVector(mesh, f, userData=userData)
 
     # f is list of array [f_0, f_1, ..., f_n] for scalar problems
     if isinstance(f, list) or hasattr(f, 'ndim'):
@@ -1957,9 +1949,7 @@ def createStiffnessMatrix(mesh, a=None, isVector=False):
     A = None
 
     if isVector is False:
-        if isinstance(a[0], float) or \
-           isinstance(a[0], int) or \
-           isinstance(a[0], np.float64):
+        if isinstance(a[0], (float, int, np.float64)):
             A = pg.matrix.SparseMatrix()
             A.fillStiffnessMatrix(mesh, a)
             return A

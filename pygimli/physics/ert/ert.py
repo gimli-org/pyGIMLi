@@ -183,7 +183,6 @@ def simulate(mesh, scheme, res, **kwargs):
                       "min r_a:", min(rhoa[i]), "max r_a:", max(rhoa[i]))
     else:  # res is single resistivity array
         if len(res) == mesh.cellCount():
-
             if calcOnly:
                 fop.mapERTModel(res, 0)
 
@@ -213,7 +212,7 @@ def simulate(mesh, scheme, res, **kwargs):
         else:
             print(mesh)
             print("res: ", res)
-            raise BaseException(
+            raise IndexError(
                 "Simulate called with wrong resistivity array.")
 
     if not isArrayData:
