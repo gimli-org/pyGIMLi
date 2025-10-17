@@ -45,11 +45,7 @@ def drawMesh(ax, mesh, notebook=False, **kwargs):
     returnActor = kwargs.pop('returnActor', False)
     showMesh = kwargs.pop('showMesh', False)
     grid = kwargs.pop('grid', False)
-<<<<<<< HEAD
     colorBar = kwargs.pop('colorBar', style!='wireframe')
-=======
-    colorBar = kwargs.pop('colorBar', style != 'wireframe')
->>>>>>> dev
 
     if pv.BUILDING_GALLERY:
         bc = "#ffffff"
@@ -85,13 +81,8 @@ def drawMesh(ax, mesh, notebook=False, **kwargs):
 
     #pg._y(ax)
     if ax is None:
-<<<<<<< HEAD
         ax = pv.Plotter(notebook=notebook, theme=theme, **kwargs)
         ax.show_bounds(all_edges=True, minor_ticks=True)
-=======
-        ax = pv.Plotter(notebook=notebook, theme=theme,
-                        **kwargs)
->>>>>>> dev
 
     if grid is True:
         pass  # implementme
