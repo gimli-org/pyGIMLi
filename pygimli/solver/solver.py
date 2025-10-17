@@ -427,17 +427,18 @@ def parseArgPairToBoundaryArray(pair, mesh):
     ----------
     pair: tuple
         - [marker, arg]
-        - [marker, [callable, \*\*kwargs]]
+        - [marker, [callable, `**`kwargs]]
         - [marker, [arg_x, arg_y, arg_z]]
         - [boundary, arg]
-        - [\*, arg]
+        - [`*`, arg]
         - [node, arg]
 
         arg will be parsed by
         :py:mod:`pygimli.solver.solver.generateBoundaryValue`
         and distributed to each boundary.
         Callable functions will be executed at run time.
-        wildcard \* is interpreted as all boundary elements with one neighboring cell
+        Wildcard `*` is interpreted as all boundary elements with one
+        neighboring cell
     mesh: :gimliapi:`GIMLI::Mesh`
         Used to find boundaries by marker.
 

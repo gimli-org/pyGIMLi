@@ -53,6 +53,8 @@ so you can test the pygimli build with:
     python -c 'import pygimli as pg; print(pg.Report())'
 ```
 
+Note, if you test like this, ensure there is no actual path with a name `pygimli` in your current directory or he will test this path as package instead. This will probably fail.
+
 As long nothing changes in the C++ part of pygimli you can just update pyGIMLi
 but just pulling the latest changes from git.
 If you end the terminal session you can reactivate the venv with:
