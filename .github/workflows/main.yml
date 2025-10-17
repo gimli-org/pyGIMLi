@@ -29,33 +29,23 @@ jobs:
           pip install -U pip
           # run once for the deps
           pip install -e source/.[build]
-          #pip uninstall -y pygimli
           pip list
       - name: Running cmake
         run: |
           source venv-build/bin/activate
+          rm -rf build
           mkdir -p build
           cd build
           # CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake ../source
-          rm -f CMakeCache.txt   # ensure cmake setting fits the venv
           cmake ../source
       - name: Build libgimli
         working-directory: build
         run: |
           source ../venv-build/bin/activate
-          make -j 8 gimli
-      - name: Build Python bindings
-        working-directory: build
-        run: |
-          source ../venv-build/bin/activate
-          make pygimli J=4
+          make -j 28
+          make pygimli J=28
           rm -f wheelhouse/pgcore*.whl # remove old wheels
-          make whlpgcoreTest
-          # install the wheel to ensure copying all *.so
-          # pip install --force-reinstall wheelhouse/pgcore*linux*.whl
-          # rm -f wheelhouse/pygimli*.whl # remove old wheels
-          # make whlpygimliTest
-          # pip install --force-reinstall wheelhouse/pygimli*.whl
+          make whlTest
       - name: Test bindings
         run: |
           source venv-build/bin/activate
@@ -68,7 +58,7 @@ jobs:
     env:
       OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
     steps:
-      - name: Creating virtual environment for tests
+      - name: Creating virtual environment for tests and doc build
         run: |
           rm -rf venv-test/
           /usr/bin/python3 -m venv venv-test
@@ -97,19 +87,11 @@ jobs:
           run: |
             source venv-test/bin/activate
             pip install -e source/.[doc]
-        - name: Clean gallery
-          working-directory: build
-          run: |
-            source ../venv-test/bin/activate
-            make clean-gallery
         - name: Running sphinx
           working-directory: build
           run: |
             source ../venv-test/bin/activate
-            # rm -rf doc
-            rm -f CMakeCache.txt
-            cmake ../source/ # to find the correct sphinx from the current venv
-            rm -rf pygimli # for some weird reasons its importing this instead of the installed
+            make clean-gallery
             xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
   merging:
     name: Automerging
