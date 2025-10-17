@@ -1,8 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Collection of several utility functions."""
-
-from __future__ import print_function
 import sys
 from math import floor, sqrt
 
@@ -29,11 +26,11 @@ except ImportError:
             return message
 
         def to_dict(self):
-            """Dictionary representation (empty for now)."""
+            """Convert to dictionary (empty for now)."""
             return {}
 
 
-class ProgressBar(object):
+class ProgressBar:
     """Animated text-based progress bar.
 
     Animated text-based progressbar for intensive loops. Should work in the
@@ -65,9 +62,10 @@ class ProgressBar(object):
         --------
         >>> from pygimli.utils import ProgressBar
         >>> pBar = ProgressBar(its=20, width=40, sign='+')
-        >>> pBar.update(5)
+        >>> pBar.update(5) # doctest: +ELLIPSIS
         \r[+++++++++++       30%                 ] 6 of 20 complete
         """
+
         self.its = int(its)
         self.width = width
         self.sign = sign[0]  # take first character only if sign is longer
@@ -142,7 +140,7 @@ class ProgressBar(object):
         self.pBar = "[" + self.sign * num_signs + \
             " " * (full_width - num_signs) + "]"
         pct_place = (len(self.pBar) // 2) - len(str(pct_done))
-        pct_string = " %d%% " % pct_done
+        pct_string = f" {pct_done}% "
         self.pBar = self.pBar[0:pct_place] + \
             (pct_string + self.pBar[pct_place + len(pct_string):])
 
@@ -286,13 +284,13 @@ def prettyFloat(value, roundValue=None, mathtex=False):
         # max three symbols after comma
          string = str("%.3f" % round(value, 3))
     elif abs(value) < 1e0:
-        string = str("%.2f" % round(value, 2))
+        string = f"{round(value, 2):.2f}"
     elif abs(value) < 1e1:
-        string = str("%.2f" % round(value, 2))
+        string = f"{round(value, 2):.2f}"
     elif abs(value) < 1e2:
-        string = str("%.2f" % round(value, 2))
+        string = f"{round(value, 2):.2f}"
     else:
-        string = str("%.0f" % round(value, 2))
+        string = f"{round(value, 2):.0f}"
 
     # pg._y(string)
     # print(string.endswith("0") and string[-2] == '.')
@@ -363,38 +361,38 @@ def prettyTime(t):
         minutes, seconds = divmod(seconds, 60)
         if years > 0:
             if days >= 1:
-                return '%dy%dd' % (years, days)
+                return f'{years}y{days}d'
             else:
                 if years > 1:
-                    return '%d years' % (years,)
+                    return f'{years} years'
                 else:
-                    return '%d year' % (years,)
+                    return f'{years} year'
         elif days > 0:
             if hours >= 1:
-                return '%dd%dh' % (days, hours)
+                return f'{days}d{hours}h'
             else:
                 if days > 1:
-                    return '%d days' % (days,)
+                    return f'{days} days'
                 else:
-                    return '%d day' % (days,)
+                    return f'{days} day'
         elif hours > 0:
             if minutes >= 1:
-                return '%dh%dm' % (hours, minutes)
+                return f'{hours}h{minutes}m'
             else:
                 if hours > 1:
-                    return '%d hours' % (hours)
+                    return f'{hours} hours'
                 else:
-                    return '%d hour' % (hours)
+                    return f'{hours} hour'
         elif minutes > 0:
             if seconds >= 1:
-                return '%dm%ds' % (minutes, seconds)
+                return f'{minutes}m{seconds}s'
             else:
                 if minutes > 1:
-                    return '%d minutes' % (minutes)
+                    return f'{minutes} minutes'
                 else:
-                    return '%d minute' % (minutes)
+                    return f'{minutes} minute'
         else:
-            return '%d s' % (seconds,)
+            return '{seconds} s'
     else:
         if abs(t) >= 1e-3 and abs(t) <= 0.1:
             return prettyFloat(t*1e3) + " ms"
@@ -451,7 +449,7 @@ def niceLogspace(vMin, vMax, nDec=10):
 
     if vMin < 1e-12:
         print("vMin:", vMin, "vMax", vMax)
-        raise Exception('vMin > vMax or vMin <= 0.')
+        raise ValueError('vMin > vMax or vMin <= 0.')
 
     vMin = 10**np.floor(np.log10(vMin))
     vMax = 10**np.ceil(np.log10(vMax))
@@ -471,14 +469,14 @@ def niceLogspace(vMin, vMax, nDec=10):
 def grange(start, end, dx=0, n=0, log=False):
     """Create array with possible increasing spacing.
 
-    Create either array from start step-wise filled with dx until end reached
-    [start, end] (like np.array with defined end).
-    Fill the array from start to end with n steps.
-    [start, end] (like np.linespace)
-    Fill the array from start to end with n steps but logarithmic increasing,
-    dx will be ignored.
+    Create either array from start step-wise filled with `dx` until end reached
+    `[start, end]` (like `np.array` with defined end).
+    Fill the array from `start` to `end` with `n` steps.
+    `[start, end]` (like `np.linespace`)
+    Fill the array from `start` to `end` with `n` steps but logarithmic
+    increasing, `dx` will be ignored.
 
-    Parameters
+    Attributes
     ----------
     start: float
         First value of the resulting array
@@ -492,6 +490,11 @@ def grange(start, end, dx=0, n=0, log=False):
         Logarithmic increasing range of length = n from start to end.
         dx will be ignored.
 
+    Returns
+    -------
+    ret: :gimliapi:`GIMLI::Vector`
+        Return resulting array
+
     Examples
     --------
     >>> from pygimli.utils import grange
@@ -501,11 +504,6 @@ def grange(start, end, dx=0, n=0, log=False):
     4 [0.0, 3.0, 6.0, 9.0]
     >>> print(v2)
     3 [0.0, 5.0, 10.0]
-
-    Returns
-    -------
-    ret: :gimliapi:`GIMLI::RVector`
-        Return resulting array
     """
     s = float(start)
     e = float(end)
@@ -529,7 +527,7 @@ def grange(start, end, dx=0, n=0, log=False):
         else:
             return pg.core.increasingRange(start, end, n)[1:]
     else:
-        raise Exception('Either dx or n have to be given.')
+        raise ValueError('Either dx or n have to be given.')
 
 
 def diff(v):
@@ -584,7 +582,7 @@ def diff(v):
     elif isinstance(v, list):
         v = pg.PosVector(v)
 
-    if isinstance(v, pg.PosVector):
+    if isinstance(v, pg.PosVector | pg.core.stdVectorRVector3):
         d = pg.PosVector(len(v) - 1)
     else:
         d = pg.Vector(len(v) - 1)
@@ -657,18 +655,18 @@ def dist(p, c=None):
 
 
 def cumDist(p):
-    """The progressive, i.e., cumulative length for a path p.
+    """Create the progressive, i.e., cumulative length for a path p.
 
-    d = [0.0, d[0]+ | p[1]-p[0] |, d[1] + | p[2]-p[1] | + ...]
+    `d = [0.0, d[0]+ | p[1]-p[0] |, d[1] + | p[2]-p[1] | + ...]`
 
-    Parameters
+    Attributes
     ----------
-    p : ndarray(N,2) | ndarray(N,3) | pg.PosVector
+    p: ndarray(N,2) | ndarray(N,3) | pg.PosVector
         Position array
 
     Returns
     -------
-    d : ndarray(N)
+    d: ndarray(N)
         Distance array
 
     Examples
@@ -759,11 +757,7 @@ def getIndex(seq, f):
 def filterIndex(seq, idx):
     """TODO DOCUMENTME."""
     pg.error('filterIndex in use?')
-    if isinstance(seq, pg.Vector):
-        # return seq(idx)
-        ret = pg.Vector(len(idx))
-    else:
-        ret = list(range(len(idx)))
+    ret = pg.Vector(len(idx)) if isinstance(seq, pg.Vector) else list(range(len(idx)))
 
     for i, ix in enumerate(idx):
         ret[i] = seq[ix]
@@ -925,7 +919,7 @@ def uniqueAndSum(indices, to_sum, return_index=False, verbose=False):
     """
     flag_mult = len(indices) != indices.size
     if verbose:
-        print('Get {} indices for sorting'.format(np.shape(indices)))
+        print(f'Get {np.shape(indices)} indices for sorting')
     if flag_mult:
         ar = indices.ravel().view(
             np.dtype((np.void,
@@ -946,13 +940,10 @@ def uniqueAndSum(indices, to_sum, return_index=False, verbose=False):
     perm = ar.argsort(kind='mergesort')
     aux = ar[perm]
     flag = np.concatenate(([True], aux[1:] != aux[:-1]))
-    if flag_mult:
-        ret = (indices[perm[flag]], )
+    ret = (indices[perm[flag]], ) if flag_mult else (aux[flag], ) # unique indices
 
-    else:
-        ret = (aux[flag], )  # unique indices
     if verbose:
-        print('Identified {} unique indices'.format(np.shape(ret)))
+        print(f'Identified {np.shape(ret)} unique indices')
     if verbose:
         print('Performing reduceat...')
     summed = np.add.reduceat(to_sum[perm], np.nonzero(flag)[0])

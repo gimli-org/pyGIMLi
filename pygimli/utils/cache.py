@@ -306,20 +306,21 @@ class Cache:
 
     def updateCacheInfo(self):
         """Update the cache info dictionary and save it to a json file."""
-        with Path(self._name + '.json').open('w', encoding='utf-8') as of:
+        with Path(self._name).with_suffix('.json').open('w',
+                                                        encoding='utf-8') as of:
             json.dump(self.info, of, sort_keys=False,
                       indent=4, separators=(',', ': '))
 
     def restore(self):
         """Restore cache from json infos."""
-        if Path(self._name + '.json').exists():
-
+        if Path(self._name).with_suffix('.json').exists():
             # mpl kills locale setting to system default .. this went
             # horrible wrong for german 'decimal_point': ','
             pg.checkAndFixLocaleDecimal_point(verbose=False)
 
             try:
-                with Path(self._name + '.json').open(encoding='utf-8') as file:
+                with Path(self._name).with_suffix('.json').open(
+                                                    encoding='utf-8') as file:
                     self.info = json.load(file)
 
                 if self.info['type'] == 'DataContainerERT':
@@ -474,9 +475,12 @@ class CacheManager:
         ---------
         func: function
             The function to cache.
-        *args: any
+        args: any
             The positional arguments of the function.
-        **kwargs: any
+
+        Keyword Args
+        ------------
+        kwargs: any
             The keyword arguments of the function.
 
         Returns
@@ -523,7 +527,7 @@ def cache(func):
         A wrapper function that caches the return value of the function.
     """
     def wrapper(*args, **kwargs):
-
+        """Wrap function."""
         if not CacheUseSettings.inUse(sys.argv,
                                     manualSkip=kwargs.pop('skipCache', False)):
 
@@ -533,7 +537,6 @@ def cache(func):
         if c.value is not None:
             return c.value
 
-        # pg.tic will not work because there is only one global __swatch__
         sw = pg.Stopwatch(True)
         rv = func(*args, **kwargs)
         c.info['date'] = time.time()

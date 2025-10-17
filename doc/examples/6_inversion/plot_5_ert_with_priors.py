@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 Incorporating prior data into ERT inversion
 ===========================================
+
 Prior data can often help to overcome ambiguity in the inversion process.
 Here we demonstrate the use of direct push (DP) data in an ERT inversion of
 data collected at the surface.
@@ -39,7 +39,7 @@ ax.grid(True)
 # We mainly see four layers: 1. a conductive (clayey) overburden of about
 # 17m thickness, 2. a medium resistivity interbedding of silt and sand,
 # about 7m thick 3. again clay with 8m thickness 4. the resistive bedrock
-# with a few hundred :math:`\Omega`m
+# with a few hundred :math:`\Omega` m
 #
 
 # %%%

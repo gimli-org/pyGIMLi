@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Digital Elevation Model (DEM) class for interpolating elevations."""
 import os.path
 import math
@@ -219,20 +218,19 @@ class DEM:
     def show(self, cmap="terrain", cbar=True, ax=None, **kwargs):
         """Show digital elevation model (i.e. the elevation map).
 
-        Keyword arguments
-        -----------------
-
-        - cmap = "terrain", type str ()
+        Arguments
+        ---------
+        cmap: str="terrain"
             matplotlib colormap definiton
+        cbar: bool=True
+            Add colorbar to the plot or not.
+        ax: matplotlib axes object
+            Add the plot to a given axes object or create a new one.
 
-        - cbar = True, type bool
-            add colorbar to the plot or not
-
-        - ax = None, type matplotlib figure axes object
-            add the plot to a given axes object or create a new one
-
-        - **kwargs, type keyword arguments
-            add additional keyword arguments for the plot style (e.g., *lw*)
+        Keyword Args
+        ------------
+        **kwargs, type keyword arguments
+            Additional keyword arguments forwarded to mpl plot.
         """
         import matplotlib.pyplot as plt
         import matplotlib.tri as mtri

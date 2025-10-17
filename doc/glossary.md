@@ -60,7 +60,7 @@
 
 [Triangle](http://www.cs.cmu.edu/~quake/triangle.html)
     A Two-Dimensional Quality Mesh Generator and Delaunay Triangulator.
-    {cite}`Shewchuk1996`
+    {cite}`Shewchuk96b`
 
 [Tetgen](http://tetgen.org/)
     A Quality Tetrahedral Mesh Generator and a 3D Delaunay Triangulator.

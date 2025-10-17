@@ -309,7 +309,11 @@ class MethodManager(object):
         noiseLevel = kwargs.pop('noiseLevel', 0.0)
         if noiseLevel > 0:
             err = self.estimateError(ra, errLevel=noiseLevel)
-            ra *= 1. + pg.randn(ra.size(), seed=kwargs.pop('seed', None)) * err
+            try:
+                ra *= 1. + pg.randn(ra.size(), seed=kwargs.pop('seed', None)) * err
+            except Exception as e:
+                print("Error occurred while adding noise:", e)
+
             return ra, err
 
         return ra

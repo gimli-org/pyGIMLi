@@ -61,8 +61,6 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
     >>> pg.test(boxprint, verbose=False) # doctest: +SKIP
     >>> # Use some logical expressions
     >>> pg.test("draw and not drawMesh") # doctest: +SKIP
-    >>> # Exit the program on test failure (useful for automatic testing)
-    >>> pg.test(exitonerror=True) # doctest: +SKIP
 
     Parameters
     ----------
