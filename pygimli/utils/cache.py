@@ -18,7 +18,7 @@ To use the cache without the decorator, you can call it also like this:
 
 """
 import sys
-import os
+from pathlib import Path
 import traceback
 import inspect
 import hashlib
@@ -32,7 +32,7 @@ import pygimli as pg
 __NO_CACHE__ = False
 
 def noCache(c:bool=True):
-    """ Set the caching to noCache mode.
+    """Set the caching to noCache mode.
 
     This will disable the caching mechanism and all decorated functions
     """
@@ -41,7 +41,7 @@ def noCache(c:bool=True):
 
 
 def strHash(s: str) -> int:
-    """ Create a hash value for the given string.
+    """Create a hash value for the given string.
 
     Uses sha224 to create a 16 byte hash value.
 
@@ -59,13 +59,14 @@ def strHash(s: str) -> int:
 
 
 def valHash(a:any)-> int:
-    """ Create a hash value for the given value.
+    """Create a hash value for the given value.
 
     Arguments
     ---------
     a: any
         The value to hash. Can be a string, int, list, numpy array or any
         other object. Logs an error if the type is not supported.
+
     Returns
     -------
     hash: int
@@ -93,13 +94,11 @@ def valHash(a:any)-> int:
     return hash(a)
 
 
-class Cache(object):
-    """ Cache class to store and restore data.
+class Cache:
+    """Class to store and restore (cache) data."""
 
-    This class is used to store and restore data in a cache.
-    """
     def __init__(self, hashValue:int):
-        """ Initialize the cache with a hash value.
+        """Initialize the cache with a hash value.
 
         Arguments
         ---------
@@ -115,7 +114,7 @@ class Cache(object):
 
     @property
     def info(self):
-        """ Return the cache info dictionary.
+        """Return the cache info dictionary.
 
         This dictionary contains information about the cache like type, file,
         date, duration, restored count, code info, version, args and kwargs.
@@ -136,7 +135,7 @@ class Cache(object):
 
     @info.setter
     def info(self, i):
-        """ Set the cache info dictionary.
+        """Set the cache info dictionary.
 
         Arguments
         ---------
@@ -148,14 +147,13 @@ class Cache(object):
 
     @property
     def value(self):
-        """ Return the cached value.
-        """
+        """Return the cached value."""
         return self._value
 
 
     @value.setter
     def value(self, v):
-        """ Set the cached value and store it in the cache.
+        """Set the cached value and store it in the cache.
 
         Arguments
         ---------
@@ -196,23 +194,21 @@ class Cache(object):
 
 
     def updateCacheInfo(self):
-        """ Update the cache info dictionary and save it to a json file.
-        """
-        with open(self._name + '.json', 'w') as of:
+        """Update the cache info dictionary and save it to a json file."""
+        with Path.open(self._name + '.json', 'w') as of:
             json.dump(self.info, of, sort_keys=False,
                       indent=4, separators=(',', ': '))
 
     def restore(self):
-        """ Restore cache from json infos.
-        """
-        if os.path.exists(self._name + '.json'):
+        """Restore cache from json infos."""
+        if Path.exists(self._name + '.json'):
 
             # Fricking mpl kills locale setting to system default .. this went
             # horrible wrong for german 'decimal_point': ','
             pg.checkAndFixLocaleDecimal_point(verbose=False)
 
             try:
-                with open(self._name + '.json') as file:
+                with Path.open(self._name + '.json') as file:
                     self.info = json.load(file)
 
                 # if len(self.info['type']) != 1:
@@ -247,10 +243,10 @@ class Cache(object):
                 if self.value is not None:
                     self.info['restored'] = self.info['restored'] + 1
                     self.updateCacheInfo()
-                    pg.info('Cache {3} restored ({1}s x {0}): {2}'.\
-                        format(self.info['restored'],
-                               round(self.info['dur'], 1),
-                               self._name, self.info['codeinfo']))
+                    pg.info('Cache {} restored ({}s x {}): {}'.format(
+                        self.info['codeinfo'],
+                        round(self.info['dur'], 1),
+                        self.info['restored'], self._name))
                 else:
                     # default try numpy
                     pg.warn('Could not restore cache of type '
@@ -263,8 +259,8 @@ class Cache(object):
                 pg.error('Cache restoring failed:', e)
 
 
-class CacheManager(object):
-    """ Cache manager to handle caching of functions and data.
+class CacheManager:
+    """Cache manager to handle caching of functions and data.
 
     This class is a singleton and should be accessed via the instance method.
     It provides methods to create unique cache paths, hash functions and
@@ -274,20 +270,19 @@ class CacheManager(object):
     ----
         * Unify singleton handling
     """
+
     __instance = None
     __has_init = False
 
     def __new__(cls):
-        """ Create a new instance of the CacheManager.
-        """
+        """Create a new instance of the CacheManager."""
         if cls.__instance is None:
             cls.__instance = object.__new__(cls)
         return cls.__instance
 
 
     def __init__(self):
-        """ Initialize the CacheManager just once.
-        """
+        """Initialize the CacheManager just once."""
         if not self.__has_init:
             self._caches = {}
             self.__has_init = True
@@ -295,13 +290,12 @@ class CacheManager(object):
 
     @staticmethod
     def instance(cls):
-        """ Get the singleton instance of the CacheManager.
-        """
+        """Get the singleton instance of the CacheManager."""
         return cls.__instance__
 
 
     def cachingPath(self, fName:str):
-        """ Create a full path name for the cache.
+        """Create a full path name for the cache.
 
         Arguments
         ---------
@@ -313,17 +307,16 @@ class CacheManager(object):
         path: str
             The full path to the cache file.
         """
-        if pg.rc["globalCache"]:
-            path = pg.getCachePath()
-        else:
-            path = ".cache"
-        if not os.path.exists(path):
-            os.mkdir(path)
-        return os.path.join(path, fName)
+        path = pg.getCachePath() if pg.rc["globalCache"] else ".cache"
+
+        if not Path.exists(path):
+            Path.mkdir(path)
+
+        return Path(path) / fName
 
 
     def funcInfo(self, func):
-        """ Return unique info string about the called function.
+        """Return unique info string about the called function.
 
         Arguments
         ---------
@@ -340,7 +333,7 @@ class CacheManager(object):
 
 
     def hash(self, func, *args, **kwargs):
-        """ Create a hash value.
+        """Create a hash value.
 
         Arguments
         ---------
