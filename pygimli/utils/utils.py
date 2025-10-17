@@ -251,7 +251,7 @@ def prettyFloat(value, roundValue=None):
     elif abs(value) < 1e-14:
         string = "0"
     elif abs(value) > 1e4 or abs(value) <= 1e-3:
-        string = f"{value:%.1e}"
+        string = f"{value:.1e}"
     elif abs(value) < 1e-2:
         string = f"{round(value, 4):.4f}"
     # max two values after comma
@@ -330,7 +330,7 @@ def prettyTime(t):
                 return f'{years}y{days}d'
             else:
                 if years > 1:
-                    return f'{years} years' % (years,)
+                    return f'{years} years'
                 else:
                     return f'{years} year'
         elif days > 0:
