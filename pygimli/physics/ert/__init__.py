@@ -29,10 +29,6 @@ from .processing import (uniqueERTIndex, generateDataFromUniqueIndex,
                          removeDuplicates)
 from .timelapse import TimelapseERT
 from .crosshole import CrossholeERT
-from pygimli.physics.ves import VESManager  # backward compatibility
-from pygimli.physics.ves.vesModelling import VESModelling
-# , VESCModelling, VESRhoModelling
-
 from .visualization import showERTData, drawERTData, generateDataPDF
 from .importData import load
 
