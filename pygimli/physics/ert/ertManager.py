@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Method Manager for Electrical Resistivity Tomography (ERT)"""
-
-import os.path
+"""Method Manager for Electrical Resistivity Tomography (ERT)."""
+from pathlib import Path
 import numpy as np
-
 import pygimli as pg
 from pygimli.frameworks import MeshMethodManager
 from .ertModelling import ERTModelling, ERTModellingReference
@@ -133,11 +129,10 @@ class ERTManager(MeshMethodManager):
         res : float, array(mesh.cellCount()) | array(N, mesh.cellCount()) |
               list
             Resistivity distribution for the given mesh cells can be:
-            . float for homogeneous resistivity (e.g. 1.0)
-            . single array of length mesh.cellCount()
-            . matrix of N resistivity distributions of length mesh.cellCount()
-            . resistivity map as [[regionMarker0, res0],
-                                  [regionMarker0, res1], ...]
+            - float for homogeneous resistivity (e.g. 1.0)
+            - single array of length mesh.cellCount()
+            - matrix of N resistivity distributions of length mesh.cellCount()
+            - resistivity map [[regionMarker0, res0], [regionMarker0, res1],...]
 
         scheme : :gimliapi:`GIMLI::DataContainerERT`
             Data measurement scheme.
@@ -289,7 +284,7 @@ class ERTManager(MeshMethodManager):
                 if err.haveData('iperr'):
                     _, phi = pg.utils.toPolar(dataVals)
                     # assuming ipErr are absolute dPhi in mrad
-                    ipe = err['iperr'] / abs((phi*1000))
+                    ipe = err['iperr'] / abs(phi*1000)
                 else:
                     pg.warn("Datacontainer have no 'iperr' values. "
                             "Fallback set to 0.01")
@@ -391,11 +386,11 @@ class ERTManager(MeshMethodManager):
 
         kwargs.setdefault("coverage", self.coverage())
         color = kwargs.pop("color", "magenta")
-        ax, cBar = self.fop.drawModel(ax, model, **kwargs)        
+        ax, cBar = self.fop.drawModel(ax, model, **kwargs)
         if elecs:
             if isinstance(elecs, str):
                 color = elecs
-            
+
             pg.viewer.mpl.drawSensors(ax, self.fop.data.sensors(), color=color)
 
         return ax, cBar
@@ -411,16 +406,14 @@ class ERTManager(MeshMethodManager):
             Mesh (bms and vtk with results)
         """
         subfolder = self.__class__.__name__
-        path = getSavePath(folder, subfolder)
-
-        pg.info('Saving inversion results to: {}'.format(path))
-
-        np.savetxt(path + '/resistivity.vector', self.model)
-        np.savetxt(path + '/resistivity-cov.vector', self.coverage())
-        np.savetxt(path + '/resistivity-scov.vector',
+        path = Path(getSavePath(folder, subfolder))
+        pg.info(f'Saving inversion results to: {path}')
+        np.savetxt(path / '/resistivity.vector', self.model)
+        np.savetxt(path / '/resistivity-cov.vector', self.coverage())
+        np.savetxt(path / '/resistivity-scov.vector',
                    self.standardizedCoverage())
 
-        self.mesh.save(os.path.join(path, 'mesh'))
+        self.mesh.save(path / 'mesh.bms')
 
         m = pg.Mesh(self.paraDomain)
         m['Resistivity'] = self.model
@@ -432,17 +425,17 @@ class ERTManager(MeshMethodManager):
             if hasattr(v, "__iter__") and len(v) == nM:
                 m[k] = v
 
-        m.exportVTK(os.path.join(path, 'resistivity'))
-        m.saveBinaryV2(os.path.join(path, 'resistivity-pd'))
-        self.fop.mesh().save(os.path.join(path, 'resistivity-mesh'))
+        m.exportVTK(path / 'resistivity.vtk')
+        m.saveBinaryV2(path / 'resistivity-pd.bms')
+        self.fop.mesh().save(path / 'resistivity-mesh')
 
-        np.savetxt(path + '/response.vector', self.inv.response)
+        np.savetxt(path / 'response.vector', self.inv.response)
         residual = self.inv.residual()  # includes error-(re)weighting
-        np.savetxt(path + '/residual.vector', residual)
+        np.savetxt(path / 'residual.vector', residual)
         data = self.fop.data.copy()
         data['response'] = self.inv.response
         data['residual'] = residual
-        data.save(os.path.join(path, 'data.dat'),
+        data.save(path / 'data.dat',
                   'a b m n rhoa k err ip iperr response residual')
 
         if self.paraDomain.dim() == 2:

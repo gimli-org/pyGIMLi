@@ -1403,7 +1403,7 @@ def readPLC(filename:str, comment:str='#'):
     Arguments
     ---------
     filename: string
-        Filename .poly
+        Filename `*.poly`
 
     comment: string
         String containing all characters that define a comment line.
@@ -2182,11 +2182,11 @@ def createSphere(size=None, pos=None, nSegments=20, nRings=10,
     ------------
     ** kwargs:
         * Marker related arguments:
-        See :py:mod:`pygimli.meshtools.polytools.setPolyRegionMarker`
+            See :py:mod:`pygimli.meshtools.polytools.setPolyRegionMarker`
         * refine: int [3]
-        Number of refinements to create a smoother sphere.
-        Default `refine=3` for variance='qsphere' and `refine=2`
-        for 'icosphere'
+            Number of refinements to create a smoother sphere.
+            Default `refine=3` for variance='qsphere' and `refine=2`
+            for 'icosphere'
 
     Returns
     -------

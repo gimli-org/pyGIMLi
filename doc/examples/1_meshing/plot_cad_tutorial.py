@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-# encoding: utf-8
 r"""
 CAD to mesh tutorial
 ====================
+
 In this example you will learn how to create a geometry in
 `FreeCAD <https://www.freecadweb.org/>`_ and then export and mesh it using
 `Gmsh <http://gmsh.info/>`_.
@@ -98,7 +98,7 @@ In this example you will learn how to create a geometry in
 #
 #     FreeCAD important dialogs for making a correct compsolid.
 #
-# * It must be ``.brep``. This is the native format of the OpenCascade
+# It must be ``.brep``. This is the native format of the OpenCascade
 # CAD engine on which both FreeCAD and Gmsh run. ``.step`` (also
 # ``.stp``) is the standardized CAD exchange format, for some reason
 # this format does not export the shape as a compound solid. Gmsh can

@@ -45,7 +45,8 @@ def devTests():
 
 
 def test(target=None, show=False, onlydoctests=False, coverage=False,
-         htmlreport=False, abort=False, verbose=True, devTests=False, exitonerror=False):
+         htmlreport=False, abort=False, verbose=True, devTests=False,
+         exitonerror=False):
     """Run docstring examples and additional tests.
 
     Examples
@@ -60,8 +61,6 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
     >>> pg.test(boxprint, verbose=False) # doctest: +SKIP
     >>> # Use some logical expressions
     >>> pg.test("draw and not drawMesh") # doctest: +SKIP
-    >>> # Exit the program on test failure (useful for automatic testing)
-    >>> pg.test(exitonerror=True) # doctest: +SKIP
 
     Parameters
     ----------

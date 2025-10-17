@@ -7,7 +7,7 @@ from .ert import createGeometricFactors
 
 
 def uniqueERTIndex(data, nI=0, reverse=False, unify=True):
-    """Generate unique index from sensor indices A/B/M/N for matching
+    """Generate unique index from sensor indices A/B/M/N for matching.
 
     Parameters
     ----------
@@ -74,7 +74,8 @@ def generateDataFromUniqueIndex(ind, data=None, nI=None):
 def reciprocalIndices(data, onlyOnce=False, unify=True):
     """Return indices for reciprocal data.
 
-    Parameters:
+    Parameters
+    ----------
     data : DataContainerERT
         data containing reciprocal data
     onlyOnce : bool [False]
@@ -102,7 +103,7 @@ def reciprocalIndices(data, onlyOnce=False, unify=True):
         return iF, iB
 
 def getResistance(data):
-    """Return data resistance."""
+    """Return data resistance from either R, U/I or rhoa/k."""
     if data.allNonZero('r'):
         R = data['r']
     elif data.haveData('u') and data.haveData('i'):
@@ -174,7 +175,7 @@ def fitReciprocalErrorModel(data, nBins=None, show=False, rel=False):
             ii = meanR > 1e-12
             x = x[x > 1e-12]
             eModel = ab[0] + ab[1] / x
-            ax.plot(meanR[ii], stdR[ii]/meanR[ii], '*', label='std dev') # /meanR
+            ax.plot(meanR[ii], stdR[ii]/meanR[ii], '*', label='std dev') #/meanR
             ax.set_title(r'$\delta$R/R={:.6f}+{:.6f}/|R|'.format(*ab))
             ax.set_ylabel(r'$\delta$R/R')
         else:
@@ -249,7 +250,7 @@ def getReciprocals(data, change=False, remove=False):
     their mean) is computed and saved under the dataContainer field 'rec'
 
     Parameters
-    ==========
+    ----------
     data : pg.DataContainerERT
         input data container to be changed inplace
     change : bool [True]
@@ -287,7 +288,7 @@ def getReciprocals(data, change=False, remove=False):
 
 def removeDuplicates(data, mode:str="average"):
     """Remove duplicate rows from an ERT datacontainer.
-    
+
     Parameters
     ----------
     data : ERTDataContainer
@@ -321,8 +322,8 @@ def removeDuplicates(data, mode:str="average"):
                     ff = fi[np.argmin(data["err"][fi])]
                 for tok in tokens:
                     data[tok][f0] = data[tok][ff]
-    
-    data.removeInvalid()  
+
+    data.removeInvalid()
 
 
 def extractReciprocals(fwd, bwd):
@@ -358,7 +359,7 @@ def combineMultipleData(DATA):
 
     Generates a unified data container and a data matrices
     Non-existing data are filled with NaN values.
-    
+
     Parameters
     ----------
     DATA : list of DataContainerERT
@@ -377,12 +378,16 @@ def combineMultipleData(DATA):
     IPERR : np.array(same size)
         induced polarization error matrix
     """
-    assert hasattr(DATA, '__iter__'), "DATA should be DataContainers or str!"
+    if not hasattr(DATA, '__iter__'):
+        raise TypeError("DATA should be DataContainers or str!")
+
     if isinstance(DATA[0], str):  # read in if strings given
         DATA = [pg.DataContainerERT(data) for data in DATA]
 
     nEls = [data.sensorCount() for data in DATA]
-    assert max(np.abs(np.diff(nEls))) == 0, "Electrodes not equal"
+    if max(np.abs(np.diff(nEls))) != 0:
+        raise ValueError("Electrodes not equal")
+
     uIs = [uniqueERTIndex(data) for data in DATA]
     uI = np.unique(np.hstack(uIs))
     scheme = generateDataFromUniqueIndex(uI, DATA[0])

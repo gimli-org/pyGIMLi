@@ -6,12 +6,9 @@ kernelspec:
 
 # Data
 
-
 ## What is a pyGIMLi DataContainer?
 
-
 Data are often organized in a data container storing the individual data values as well as any description how they were obtained, e.g. the geometry of source and receivers. DataContainer is essentially a class that stores all of this information. It is different for every method and can be then filtered accordingly. It stores two primary things: sensor information and data measurements.
-
 
 A data container holds vectors like in a dictionary, however, all of them need to have the same length defined by the .size() method. Let's first go over how you can create a DataContainer from scratch. Assume we want to create and store Vertical Electrical Sounding (VES) data.
 
@@ -62,9 +59,7 @@ As you can see from the print out there is no sensor information. In the next su
 Data containers can also be initialized from different method managers. These have the custom names for sensors and data types of each method. For example {py:class}`pygimli.physics.ert.DataContainer` already has ['a', 'b', 'm', 'n'] entries. One can also add alias translators like C1, C2, P1, P2, so that dataERT[“P1”] will return dataERT[“m”]
 :::
 
-
 ## Creating Sensors in DataContainer
-
 
 Assume we have data associate with a transmitter, receivers and a property U. The transmitter (Tx) and receiver (Rx) positions are stored separately and we refer them with an Index (integer). Therefore we define these fields index.
 
@@ -98,7 +93,7 @@ print(data)
 The positions under the sensor indexes must be of the same size.
 :::
 
-If the sensor positions are given by another file (for example a GPS file), you can transform this to a NumPy array and set the sensor positions using [`.setSensorPositions()`](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a3c58caec5486d5390a2b6c2d8056724f) method of the DataContainer. 
+If the sensor positions are given by another file (for example a GPS file), you can transform this to a NumPy array and set the sensor positions using [`.setSensorPositions()`](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a3c58caec5486d5390a2b6c2d8056724f) method of the DataContainer.
 
 ## File export
 
@@ -111,16 +106,15 @@ print(open("data.data").read())
 
 ## File format import
 
-Now we will go over the case if you have your own data and want to first import it using pyGIMLi and assign it to a data container. You can manually do this by importing data via Python (data must be assigned as Numpy arrays) and assign the values to the different keys in the data container. 
+Now we will go over the case if you have your own data and want to first import it using pyGIMLi and assign it to a data container. You can manually do this by importing data via Python (data must be assigned as Numpy arrays) and assign the values to the different keys in the data container.
 
-pyGIMLi also uses {py:func}`pygimli.load` that loads meshes and data files. It should handle most data types since it detects the headings and file extensions to get a good guess on how to load the data. 
+pyGIMLi also uses {py:func}`pygimli.load` that loads meshes and data files. It should handle most data types since it detects the headings and file extensions to get a good guess on how to load the data.
 
 Most methods also have the `load` function to load common data types used for the method. Such as, {py:func}`pygimli.physics.ert.load`. Method specific load functions assign the sensors if specified in the file. For a more extensive list of data imports please refer to [pybert importer package](http://resistivity.net/bert/_api/pybert.importer.html#module-pybert.importer).
 
-
 ## Processing
 
-To start processing the data for inversion, you can filter out and analyze the data container by applying different methods available to all types of data containers. This is done to the data container and in my cases the changes happen in place, so it is recommended to view the data in between the steps to observe what changed. 
+To start processing the data for inversion, you can filter out and analyze the data container by applying different methods available to all types of data containers. This is done to the data container and in my cases the changes happen in place, so it is recommended to view the data in between the steps to observe what changed.
 
 You can check the validity of the measurements using a given condition. We can mask or unmask the data with a boolean vector. For example, below we would like to mark valid all receivers that are larger or equal to 0.
 
@@ -152,17 +146,16 @@ You can also do some pre-processing using the validity option again. For example
 data.markInvalid(data["Rx"] == data["Tx"])
 ```
 
-then we can remove the invalid data and see the information of the remaining data. 
+then we can remove the invalid data and see the information of the remaining data.
 
 ```{code-cell} ipython3
 data.removeInvalid()
 data.showInfos()
 ```
 
-
 Below there is a table with the most useful methods, for a full list of methods of data container, please refer to [DataContainer class reference](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html)
 
-:::{admonition} Table of useful methods for DataContainer
+:::: {admonition} Table of useful methods for DataContainer
 :class: tip
 :::{table}
 :widths: auto
@@ -179,13 +172,13 @@ Below there is a table with the most useful methods, for a full list of methods 
 | [data.registerSensorIndex()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a955c7c33ff8118ff9c3f5a7a78b75283) | Mark the data field entry as sensor index. |
 | [data.removeUnusedSensor()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#a017137847f635e56a0eb5f84cbc58f5d) |  Remove all unused sensors from this DataContainer and recount data sensor index entries. |
 | [data.removeSensorIdx()](https://www.pygimli.org/gimliapi/classGIMLI_1_1DataContainer.html#ab0207d2be4491338818a6c67d1ed78e3) |  Remove all data that contains the sensor and the sensor itself. |
+
 :::
-
-
+::::
 
 ## Visualization
 
-You can visualize the data in many ways depending on the physics manager. To simply view the data as a matrix you can use `pg.viewer.mpl.showDataContainerAsMatrix`. This visualizes a matrix of receivers and transmitters pairs with the associated data to plot : 'dist'. 
+You can visualize the data in many ways depending on the physics manager. To simply view the data as a matrix you can use `pg.viewer.mpl.showDataContainerAsMatrix`. This visualizes a matrix of receivers and transmitters pairs with the associated data to plot : 'dist'.
 
 ```{code-cell} ipython3
 pg.viewer.mpl.showDataContainerAsMatrix(data, "Rx", "Tx", 'dist')

@@ -59,15 +59,20 @@ class MRS():
     """
 
     def __init__(self, name=None, verbose=True, **kwargs):
-        """MRS init with optional data load from mrsi file
+        r"""MRS init with optional data load from mrsi file.
 
-        Parameters
-        ----------
-        name : string
-            Filename with load data and kernel (*.mrsi) or just data (*.mrsd)
-        verbose : bool
+        Arguments
+        ---------
+        name: string
+            Filename with load data and kernel (`*`.mrsi) or just
+            data (`*`.mrsd)
+        verbose: bool
             be verbose
-        kwargs - see :func:`MRS.loadMRSI`.
+
+        Keyword Args
+        ------------
+        **kwargs
+            see :func:`MRS.loadMRSI`.
         """
         self.verbose = verbose
         self.t, self.q, self.z = None, None, None

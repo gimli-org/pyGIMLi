@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Vertical electrical sounding (VES) manager class."""
 import numpy as np
 
@@ -14,11 +15,12 @@ class VESManager(MethodManager1d):
     >>> import numpy as np
     >>> import pygimli as pg
     >>> from pygimli.physics import VESManager
+    >>>
     >>> ab2 = np.logspace(np.log10(1.5), np.log10(100), 32)
     >>> mn2 = 1.0
     >>> # 3 layer with 100, 500 and 20 Ohmm
     >>> # and layer thickness of 4, 6, 10 m
-    >>> # over a Halfspace of 800 Ohmm
+    >>> # over a half-space of 800 Ohmm
     >>> synthModel = pg.cat([4., 6., 10.], [100., 5., 20., 800.])
     >>> ves = VESManager()
     >>> ra, err = ves.simulate(synthModel, ab2=ab2, mn2=mn2, noiseLevel=0.01)
@@ -31,15 +33,12 @@ class VESManager(MethodManager1d):
     def __init__(self, **kwargs):
         """Initialize instance.
 
-        Parameters
-        ----------
-        complex : bool
-            Accept complex resistivities.
+        Keyword Arguments
+        -----------------
+        **kwargs:
+            complex: bool
+                Accept complex resistivities.
 
-        Attributes
-        ----------
-        complex : bool
-            Accept complex resistivities.
         """
         self._complex = kwargs.pop('complex', False)
 
@@ -201,7 +200,6 @@ def VESManagerApp():
                lam=options.lam,
                )
     mgr.showResultAndFit()
-    pg.wait()
 
 
 if __name__ == '__main__':
