@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptoolsi>=75.8.2", 
+requires = ["setuptools>=75.8.2", 
 	    "versioneer[toml]==0.29"]
 #requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
