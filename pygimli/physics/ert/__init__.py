@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
 """Electrical Resistivity Tomography (ERT).
 
 Direct-Current (DC) Resistivity and Induced Polarisation (IP)
