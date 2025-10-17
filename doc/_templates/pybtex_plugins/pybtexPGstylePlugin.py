@@ -19,6 +19,11 @@ class Alpha(BaseLabelStyle):
     name = 'alpha'
 
     def format(self, entry):
-        print('########  templates.pybtex.Alpha: #############')
+        print('########  templates.pybtex.Alpha.format: #############')
         print(entry.__dict__)
         return str(entry.key)
+
+    def format_label(self, label):
+        print('######## templates.pybtex.Alpha.format_label: #############')
+        print(label)
+        return label
