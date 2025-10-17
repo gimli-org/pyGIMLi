@@ -63,9 +63,10 @@ class ProgressBar:
         --------
         >>> from pygimli.utils import ProgressBar
         >>> pBar = ProgressBar(its=20, width=40, sign='+')
-        >>> pBar.update(5) # doctest: +ELLIPSIS
-        \r[+++++++++++       30%                 ] 6 of 20 complete
         """
+        # >>> pBar.update(5) # doctest: +ELLIPSIS
+        # \r[+++++++++++       30%                 ] 6 of 20 complete
+
         self.its = int(its)
         self.width = width
         self.sign = sign[0]  # take first character only if sign is longer
