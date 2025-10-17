@@ -90,9 +90,9 @@ jobs:
           working-directory: build
           run: |
             source ../venv-test/bin/activate
-            make clean-gallery
             rm -rf pygimli # name clash?
             python -c 'import pygimli; pygimli.version()'
+            make clean-gallery
             xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
   merging:
     name: Automerging
