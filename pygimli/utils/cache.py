@@ -107,7 +107,7 @@ class Cache:
         """
         self._value = None
         self._hash = hashValue
-        self._name = CacheManager().cachingPath(str(self._hash))
+        self._name = str(CacheManager().cachingPath(str(self._hash)))
         self._info = None
         self.restore()
 
@@ -195,20 +195,19 @@ class Cache:
 
     def updateCacheInfo(self):
         """Update the cache info dictionary and save it to a json file."""
-        with Path.open(self._name + '.json', 'w') as of:
+        with Path(self._name).with_suffix('.json').open('w') as of:
             json.dump(self.info, of, sort_keys=False,
                       indent=4, separators=(',', ': '))
 
     def restore(self):
         """Restore cache from json infos."""
-        if Path.exists(self._name + '.json'):
-
+        if Path(self._name).with_suffix('.json').exists():
             # Fricking mpl kills locale setting to system default .. this went
             # horrible wrong for german 'decimal_point': ','
             pg.checkAndFixLocaleDecimal_point(verbose=False)
 
             try:
-                with Path.open(self._name + '.json') as file:
+                with Path(self._name).with_suffix('.json').open() as file:
                     self.info = json.load(file)
 
                 # if len(self.info['type']) != 1:
@@ -308,11 +307,10 @@ class CacheManager:
             The full path to the cache file.
         """
         path = pg.getCachePath() if pg.rc["globalCache"] else ".cache"
+        path = Path(path)
+        path.mkdir(exist_ok=True)
 
-        if not Path.exists(path):
-            Path.mkdir(path)
-
-        return Path(path) / fName
+        return path / fName
 
 
     def funcInfo(self, func):
