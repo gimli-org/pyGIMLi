@@ -73,13 +73,13 @@ deps = [
     "sphinxcontrib-programoutput",
     "sphinxcontrib-bibtex",
     "sphinxcontrib-doxylink",
-    "pybtex"
+    "bibtexparser",
+    #"pybtex" ## temporarily disabled as it breaks the doc build
 ]
 
 # check for p.version too
 modules = [p.project_name for p in pkg_resources.working_set]
 
-pg._b(modules)
 req = []
 for dep in deps:
     if dep not in modules:
@@ -140,7 +140,7 @@ try:
             #join(SPHINXDOC_PATH, "tutorials"),
         ],
         "gallery_dirs": [
-                    #"_examples_auto", 
+                    #"_examples_auto",
                     #"_tutorials_auto"
                     ],
         "reference_url": {
@@ -203,7 +203,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-    "matplotlib": ("https://matplotlib.org/stable/", None),    
+    "matplotlib": ("https://matplotlib.org/stable/", None),
 }
 
 autosectionlabel_prefix_document = True
@@ -610,13 +610,20 @@ def install_and_import(package, src):
 
         install()
 
-        print("**** Trying to install pybtex plugin", SPHINXDOC_PATH +"/_templates/pybtex_plugins/")
+        print("**** Trying to install pybtex plugin",
+              SPHINXDOC_PATH +"/_templates/pybtex_plugins/")
         for dist in pkg_resources.find_distributions(SPHINXDOC_PATH +
-                                                         "/_templates/pybtex_plugins/"):
+                                                 "/_templates/pybtex_plugins/"):
             print("**** Adding pybtex plugin", dist)
             pkg_resources.working_set.add(dist)
 
-install_and_import('pybtexPGstylePlugin', SPHINXDOC_PATH +"/_templates/pybtex_plugins/")
+        importlib.import_module(package)
+        print('2b Successfully imported package', package)
+
+# install_and_import('pybtexPGstylePlugin',
+#                    SPHINXDOC_PATH +"/_templates/pybtex_plugins/")
+
+
 # End pybtex stuff
 
 # -- Options for doxylink -----------------------------------------------------
