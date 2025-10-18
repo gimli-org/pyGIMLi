@@ -1,4 +1,7 @@
+#/usr/bin/env python3
 """
+Not maintained anymore. Volunteers welcome to take over.
+
 BUGS:
 + varying the limits (eg exclude a marker) only has effect on the scalar_bar (color_bar), but not on the display of the vtk
 + there is no good coming back from volumetric slicing atm
@@ -14,16 +17,21 @@ import pygimli.viewer.pv
 #from .draw import drawMesh
 #from .utils import pgMesh2pvMesh
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QIcon
-from PyQt5.QtWidgets import (
-    QMainWindow, QFrame, QVBoxLayout, QComboBox, QPushButton,
-    QFileDialog, QSplitter, QLabel, QAction, QDialog, QStatusBar
-)
+# from PyQt5.QtCore import Qt
+# from PyQt5.QtGui import QFont, QIcon
+# from PyQt5.QtWidgets import (
+#     QMainWindow, QFrame, QVBoxLayout, QComboBox, QPushButton,
+#     QFileDialog, QSplitter, QLabel, QAction, QDialog, QStatusBar
+# )
 
-from gwidgets import (
-    GToolBar, GButton, GLineEdit, GComboBox, GSlider, GDoubleSpinBox, CMAPS
-)
+# from gwidgets import (
+#     GToolBar, GButton, GLineEdit, GComboBox, GSlider, GDoubleSpinBox, CMAPS
+# )
+QMainWindow = object
+QFrame = object
+QVBoxLayout = object
+QComboBox = object
+QPushButton = object
 
 pv = pg.optImport('pyvista', requiredFor="properly visualize 3D data")
 
@@ -39,7 +47,7 @@ class Show3D(QMainWindow):
 
         Note
         ----
-        Everything pyvista.Plotter would accept: 
+        Everything pyvista.Plotter would accept:
         https://docs.pyvista.org/api/plotting/plotting.html
         """
         super(Show3D, self).__init__(None)
