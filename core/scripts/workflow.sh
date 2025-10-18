@@ -238,7 +238,7 @@ function all(){
 # Show system information
 lsb_release -d
 uname -a
-env
+#env
 
 JOB_NUM=0
 
