@@ -9,7 +9,7 @@ on:
       - dev
 
 jobs:
-  env: \
+  env: 
     SOURCE_DIR: source
   pgcore:
     name: Building pgcore & bindings
