@@ -10,7 +10,7 @@ on:
 
 jobs:
   env: \
-    SOURCE_DIR=source
+    SOURCE_DIR: source
   pgcore:
     name: Building pgcore & bindings
     runs-on: [self-hosted, test-runner]
