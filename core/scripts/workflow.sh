@@ -238,10 +238,25 @@ function all(){
 # Show system information
 lsb_release -d
 uname -a
-env
+#env
 
-if [ -z $WORKSPACE ]; then
-    WORKSPACE=$(pwd)
+JOB_NUM=0
+
+if [ ! -z $GITHUB_ACTIONS ]; then
+    GREEN
+    echo "GITHUB action runner on WORKSPACE=$WORKSPACE at $RUNNER_NAME"
+    echo "RUNNER_ARCH=$RUNNER_ARCH"
+    echo "RUNNER_TEMP=$RUNNER_TEMP"
+    echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
+    echo "GITHUB_JOB=$GITHUB_JOB"
+    echo "GITHUB_REPOSITORY=$GITHUB_REPOSITORY"
+    NCOL
+
+    WORKSPACE=$RUNNER_WORKSPACE
+    JOB_NUM=$GITHUB_RUN_NUMBER
+    OS=$RUNNER_OS
+elif [ -z $WORKSPACE ]; then
+    WORKSPACE=$(realpath $(pwd))
     GREEN
     echo "Local Build (no Jenkins) on WORKSPACE=$WORKSPACE"
     NCOL
@@ -249,11 +264,13 @@ else
     GREEN
     echo "CI Build on WORKSPACE=$WORKSPACE"
     NCOL
+    WORKSPACE=$(realpath $(pwd))
 fi
 
-SOURCE_DIR=gimli
+if [ -z $SOURCE_DIR ]; then
+    SOURCE_DIR=gimli
+fi
 
-WORKSPACE=$(realpath $(pwd))
 PROJECT_ROOT=$WORKSPACE
 PROJECT_SRC=$PROJECT_ROOT/$SOURCE_DIR
 
@@ -279,8 +296,9 @@ DOC_VENV=$(realpath $WORKSPACE/venv-doc-py$PYVERSION)
 
 
 echo "WORKSPACE=$WORKSPACE"
+echo "JOB_NUM=$JOB_NUM"
 echo "PROJECT_SRC=$PROJECT_SRC"
-echo "OS=$(lsb_release -d | cut -f2)"
+echo "OS=$OS"
 echo "NUM_THREADS=$GIMLI_NUM_THREADS"
 echo "BUILD_VENV=$BUILD_VENV"
 echo "BUILD_DIR=$BUILD_DIR"
