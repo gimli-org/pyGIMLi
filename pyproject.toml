@@ -1,7 +1,6 @@
 [build-system]
-requires = ["setuptools>=75.8.2",
-	    "versioneer[toml]==0.29"]
-#requires = ["setuptools"]
+requires = ["setuptools",
+	        "versioneer[toml]==0.29"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -60,7 +59,7 @@ opt = [
     "tqdm",
 ]
 test = [
-    "pygimli[opt]",
+    "pygimli[build,opt]",
     "tox",
     "ruff",
     "coverage[toml]",
@@ -85,7 +84,7 @@ doc = [
     "sphinx-design",
 ]
 dev = [
-    "pygimli[opt, test, doc, build]",
+    "pygimli[build, opt, test, doc]",
 ]
 all = [
     "pygimli[dev]",

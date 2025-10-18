@@ -60,10 +60,8 @@ function new_venv(){
     echo "*** Creating fresh virtual environment $venv_path ***"
     NCOL
     python --version
-    if [ -x deactivate ]; then
-        echo "leave old virtual environment"
-        deactivate
-    fi
+    deactivate 2>/dev/null || true
+
     rm -rf $venv_path
     python -m venv $venv_path
     use_venv $venv_path
@@ -203,14 +201,21 @@ function doc(){
 
     pushd $PROJECT_ROOT
         use_venv $DOC_VENV
-        if [ ! -d $BUILD_DIR ]; then
+
+        if python -c 'import sphinx' &>/dev/null; then
+            GREEN
+            echo "sphinx is installed"
+            NCOL
+        else echo "no";
+            echo "sphinx is NOT installed"
             doc_pre
         fi
+
         pushd $BUILD_DIR
-            touch CMakeCache.txt # to renew search for sphinx
+            #touch CMakeCache.txt # to renew search for sphinx
             cmake $PROJECT_SRC
             make clean-gallery
-            if [ -x xvfb-run > 2/dev/null || true ]; then
+            if [ -x "$(command -v xvfb-run)" ]; then
                 # xvfb is necessary for headless display of pyvista plots
                 echo "xvfb-run available: using it to build docs"
                 xvfb-run make doc
