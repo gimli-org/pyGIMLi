@@ -13,44 +13,19 @@ jobs:
     name: Building pgcore & bindings
     runs-on: [self-hosted, test-runner]
     steps:
-      - name: Clean-up
-        run: rm -rf ~/.cache/pygimli
       - name: Getting pyGIMLi sources
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # checks out all branches and tags
           path: source
-      - name: Creating virtual environment for the build
-        run: |
-          env
-          rm -rf venv-build/
-          /usr/bin/python3 -m venv venv-build
-          source ./venv-build/bin/activate
-          pip install -U pip
-          # run once for the deps
-          pip install -e source/.[build]
-          pip list
-      - name: Running cmake
-        run: |
-          source venv-build/bin/activate
-          rm -rf build
-          mkdir -p build
-          cd build
-          # CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake ../source
-          cmake ../source
+      - name: Cleaning old builds
+        run: bash ./source/core/scripts/workflow.sh clean
+      - name: Prepare build
+        run: bash ./source/core/scripts/workflow.sh build_pre
       - name: Build libgimli
-        working-directory: build
-        run: |
-          source ../venv-build/bin/activate
-          make -j 28
-          make pygimli J=28
-          rm -f wheelhouse/pgcore*.whl # remove old wheels
-          make whlTest
+        run: bash ./source/core/scripts/workflow.sh build
       - name: Test bindings
-        run: |
-          source venv-build/bin/activate
-          python -c 'import pygimli; print(pygimli.version())'
-          python -c 'import pygimli; print(pygimli.Report())'
+        run: bash ./source/core/scripts/workflow.sh build_post
   pgtest:
     name: Running tests
     runs-on: [self-hosted, test-runner]
@@ -58,21 +33,10 @@ jobs:
     env:
       OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
     steps:
-      - name: Creating virtual environment for tests and doc build
-        run: |
-          rm -rf venv-test/
-          /usr/bin/python3 -m venv venv-test
-          source venv-test/bin/activate
-          which python
-          pip install -U pip
-          pip install -e source/.[test]
+      - name: Prepare tests
+        run: bash ./source/core/scripts/workflow.sh test_pre
       - name: Run pg.test()
-        run: |
-          source venv-test/bin/activate
-          which python
-          python -c 'import pygimli; print(pygimli.version())'
-          python -c 'import pygimli; print(pygimli.Report())'
-          python -c 'import pygimli; pygimli.test(show=False, abort=True)'
+        run: bash ./source/core/scripts/workflow.sh test
   docs:
       name: Build website with examples
       needs: pgtest
@@ -82,18 +46,10 @@ jobs:
         PYVISTA_OFF_SCREEN: True
         OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
       steps:
-        - name: Creating virtual environment for docs
-          run: |
-            source venv-test/bin/activate
-            pip install -e source/.[doc]
+        - name: Preparing doc build
+          run: bash ./source/core/scripts/workflow.sh doc_pre
         - name: Running sphinx
-          working-directory: build
-          run: |
-            source ../venv-test/bin/activate
-            rm -rf pygimli # name clash?
-            python -c 'import pygimli; pygimli.version()'
-            make clean-gallery
-            xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
+          run: bash ./source/core/scripts/workflow.sh doc
   merging:
     name: Automerging
     runs-on: [self-hosted, test-runner]
