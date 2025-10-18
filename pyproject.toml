@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=75.8.2", 
+requires = ["setuptools>=75.8.2",
 	    "versioneer[toml]==0.29"]
 #requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
@@ -55,7 +55,6 @@ opt = [
     "matplotlib>3.7",
     "meshio",
     "pyvista[all]",
-    "pyqt5",
     "scipy>=1.14,<1.15",
     "tetgen>=0.6.5",
     "tqdm",

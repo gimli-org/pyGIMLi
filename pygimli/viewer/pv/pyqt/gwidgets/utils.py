@@ -1,14 +1,24 @@
+#!/usr/bin/env python3
+"""Not maintained anymore. Volunteers welcome to take over."""
+
 import matplotlib as mpl
 import numpy as np
 
-from PyQt5.QtCore import Qt, QPointF, QRect, QSize
-from PyQt5.QtGui import (
-    QPixmap, QPainter, QLinearGradient, QColor, QBrush, QDoubleValidator, QIcon
-)
-from PyQt5.QtWidgets import (
-    QWidget, QPushButton, QLineEdit, QComboBox, QSlider, QDoubleSpinBox,
-    QVBoxLayout, QHBoxLayout, QGroupBox, QLabel, QCheckBox
-)
+# from PyQt5.QtCore import Qt, QPointF, QRect, QSize
+# from PyQt5.QtGui import (
+#     QPixmap, QPainter, QLinearGradient, QColor, QBrush, QDoubleValidator, QIcon
+# )
+# from PyQt5.QtWidgets import (
+#     QWidget, QPushButton, QLineEdit, QComboBox, QSlider, QDoubleSpinBox,
+#     QVBoxLayout, QHBoxLayout, QGroupBox, QLabel, QCheckBox
+# )
+
+QWidget = object
+QPushButton = object
+QLineEdit = object
+QComboBox = object
+QSlider = object
+QDoubleSpinBox = object
 
 # predefined color maps
 CMAPS = ['viridis',
