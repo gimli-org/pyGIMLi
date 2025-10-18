@@ -269,6 +269,9 @@ fi
 
 if [ -z $SOURCE_DIR ]; then
     SOURCE_DIR=gimli
+    echo "Using SOURCE_DIR=$SOURCE_DIR"
+else
+    echo "Using SOURCE_DIR=$SOURCE_DIR (forced by env setting SOURCE_DIR)"
 fi
 
 PROJECT_ROOT=$WORKSPACE
