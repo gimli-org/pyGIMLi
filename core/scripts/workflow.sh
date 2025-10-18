@@ -238,7 +238,7 @@ function all(){
 # Show system information
 lsb_release -d
 uname -a
-#env
+env
 
 JOB_NUM=0
 
@@ -250,9 +250,10 @@ if [ ! -z $GITHUB_ACTIONS ]; then
     echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
     echo "GITHUB_JOB=$GITHUB_JOB"
     echo "GITHUB_REPOSITORY=$GITHUB_REPOSITORY"
+    echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
     NCOL
 
-    WORKSPACE=$RUNNER_WORKSPACE
+    WORKSPACE=$GITHUB_WORKSPACE
     JOB_NUM=$GITHUB_RUN_NUMBER
     OS=$RUNNER_OS
 elif [ -z $WORKSPACE ]; then
