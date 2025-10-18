@@ -136,12 +136,12 @@ try:
     # Setup automatic gallery generation
     sphinx_gallery_conf = {
         "examples_dirs": [
-            #join(SPHINXDOC_PATH, "examples"),
-            #join(SPHINXDOC_PATH, "tutorials"),
+            join(SPHINXDOC_PATH, "examples"),
+            join(SPHINXDOC_PATH, "tutorials"),
         ],
         "gallery_dirs": [
-                    #"_examples_auto",
-                    #"_tutorials_auto"
+                    "_examples_auto",
+                    "_tutorials_auto"
                     ],
         "reference_url": {
             "pygimli": "https://pygimli.org",
