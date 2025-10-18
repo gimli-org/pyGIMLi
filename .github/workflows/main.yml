@@ -1,5 +1,8 @@
 name: pyGIMLi CI
 
+env: 
+    SOURCE_DIR: source
+    
 on:
   push:
     branches:
@@ -7,10 +10,8 @@ on:
   pull_request:
     branches:
       - dev
-
+    
 jobs:
-  env: 
-    SOURCE_DIR: source
   pgcore:
     name: Building pgcore & bindings
     runs-on: [self-hosted, test-runner]
