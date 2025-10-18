@@ -59,11 +59,11 @@ function new_venv(){
     GREEN
     echo "*** Creating fresh virtual environment $venv_path ***"
     NCOL
-    python --version
+    $BASEPYTHON --version
     deactivate 2>/dev/null || true
 
     rm -rf $venv_path
-    python -m venv $venv_path
+    $BASEPYTHON -m venv $venv_path
     use_venv $venv_path
 
     echo "Updating pip ..."
@@ -261,20 +261,39 @@ if [ ! -z $GITHUB_ACTIONS ]; then
     WORKSPACE=$GITHUB_WORKSPACE
     JOB_NUM=$GITHUB_RUN_NUMBER
     OS=$RUNNER_OS
+    SYSTEM=$(uname -s)
 elif [ -z $WORKSPACE ]; then
     WORKSPACE=$(realpath $(pwd))
+    OS=$(lsb_release -is)
+    SYSTEM=$(uname -s)
+
     GREEN
     echo "Local Build (no Jenkins) on WORKSPACE=$WORKSPACE"
     NCOL
 else
     GREEN
-    echo "CI Build on WORKSPACE=$WORKSPACE"
+    echo "Unknown CI Build on WORKSPACE=$WORKSPACE"
     NCOL
     WORKSPACE=$(realpath $(pwd))
 fi
 
 if [ -z $SOURCE_DIR ]; then
-    SOURCE_DIR=gimli
+    # derive SOURCE_DIR from location of this script (top-level project dir)
+    SCRIPT_REALPATH=$(realpath "${BASH_SOURCE[0]}")
+    SCRIPT_DIR=$(dirname "$SCRIPT_REALPATH")
+    CAND="$SCRIPT_DIR"
+    # climb up until we find a project marker (.git, pyproject.toml)
+    while [ "$CAND" != "/" ] && [ ! -e "$CAND/.git" ] && [ ! -e "$CAND/pyproject.toml" ]; do
+        CAND=$(dirname "$CAND")
+    done
+    if [ "$CAND" = "/" ]; then
+        # fallback: use the immediate directory name of the script
+        RED
+        echo "Could not find project root marker (.git or pyproject.toml). Using script directory name as SOURCE_DIR."
+        NCOL
+    else
+        SOURCE_DIR=$(basename "$CAND")
+    fi
     echo "Using SOURCE_DIR=$SOURCE_DIR"
 else
     echo "Using SOURCE_DIR=$SOURCE_DIR (forced by env setting SOURCE_DIR)"
@@ -283,14 +302,16 @@ fi
 PROJECT_ROOT=$WORKSPACE
 PROJECT_SRC=$PROJECT_ROOT/$SOURCE_DIR
 
-python --version
 
 if [ -z $PYVERSION ]; then
     PYVERSION=$(python -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")')
     echo "building for python: $PYVERSION"
+    BASEPYTHON=python3
 else
     echo "building for python: $PYVERSION (forced by setting PYVERSION)"
+    BASEPYTHON=python$PYVERSION
 fi
+
 
 GIMLI_NUM_THREADS=$((`nproc --all` - 2))
 
@@ -308,11 +329,13 @@ echo "WORKSPACE=$WORKSPACE"
 echo "JOB_NUM=$JOB_NUM"
 echo "PROJECT_SRC=$PROJECT_SRC"
 echo "OS=$OS"
+echo "SYSTEM=$SYSTEM"
 echo "NUM_THREADS=$GIMLI_NUM_THREADS"
 echo "BUILD_VENV=$BUILD_VENV"
 echo "BUILD_DIR=$BUILD_DIR"
 echo "TEST_VENV=$TEST_VENV"
 echo "DOC_VENV=$DOC_VENV"
+echo "PYTHON=$BASEPYTHON"
 
 echo "Starting automatic build #$BUILD_NUMBER on" `date`
 start=$(date +"%s")
