@@ -44,7 +44,7 @@ configure_file(
 # file(GLOB_RECURSE RSTFILES RELATIVE ${CMAKE_SOURCE_DIR} "*.rst")
 
 add_custom_target(sphinx_check_sources ALL)
-
+message(STATUS "RSTFILES: ${RSTFILES}")
 foreach(file ${RSTFILES})
     add_custom_command(
             COMMAND
@@ -52,7 +52,7 @@ foreach(file ${RSTFILES})
             TARGET
                 sphinx_check_sources
             VERBATIM
-            PRE_BUILD
+            POST_BUILD
             COMMENT
                 "Updating documentation sources files into build path: ${file}"
     )
@@ -67,9 +67,9 @@ foreach(file ${PYFILES})
         TARGET
             sphinx_check_sources
         VERBATIM
-        PRE_BUILD
+        POST_BUILD
         COMMENT
-            "Updating documentation sources files into build path: conf.py"
+            "Updating documentation sources files into build path: ${file}"
     )
 endforeach()
 
