@@ -9,6 +9,8 @@ on:
       - dev
 
 jobs:
+  env: \
+    SOURCE_DIR=source
   pgcore:
     name: Building pgcore & bindings
     runs-on: [self-hosted, test-runner]
@@ -17,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # checks out all branches and tags
-          path: source
+          path: $SOURCE_DIR
       - name: Cleaning old builds
         run: bash ./source/core/scripts/workflow.sh clean
       - name: Prepare build
