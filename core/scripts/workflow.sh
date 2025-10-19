@@ -86,12 +86,12 @@ function clean(){
         rm -rf $PROJECT_SRC/*.egg-info
         echo "remove BUILD_DIR: $BUILD_DIR"
         rm -rf $BUILD_DIR
-        echo "remove BUILD_VENV: $BUILD_VENV"
-        rm -rf $BUILD_VENV
-        echo "remove TEST_VENV: $TEST_VENV"
-        rm -rf $TEST_VENV
-        echo "remove DOC_VENV: $DOC_VENV"
-        rm -rf $DOC_VENV
+        echo "remove VENV_BUILD: $VENV_BUILD"
+        rm -rf $VENV_BUILD
+        echo "remove VENV_TEST: $VENV_TEST"
+        rm -rf $VENV_TEST
+        echo "remove VENV_DOC: $VENV_DOC"
+        rm -rf $VENV_DOC
     popd
 }
 
@@ -104,7 +104,7 @@ function build_pre(){
     clean
 
     pushd $PROJECT_ROOT
-        new_venv $BUILD_VENV
+        new_venv $VENV_BUILD
 
         echo "pip install -e $PROJECT_SRC/[build]"
         uv pip install -e $PROJECT_SRC/[build]
@@ -122,11 +122,11 @@ function build(){
         echo "BUILD_DIR: $BUILD_DIR not found. Running build_pre first."
         build_pre
     else
-        use_venv $BUILD_VENV
+        use_venv $VENV_BUILD
     fi
 
     pushd $PROJECT_ROOT
-        use_venv $BUILD_VENV
+        use_venv $VENV_BUILD
 
         pushd $BUILD_DIR
             cmake $PROJECT_SRC
@@ -154,7 +154,7 @@ function build_post(){
     fi
 
     pushd $PROJECT_ROOT
-        use_venv $BUILD_VENV
+        use_venv $VENV_BUILD
 
         python -c 'import pygimli; print(pygimli.version())'
         python -c 'import pygimli; print(pygimli.Report())'
@@ -178,7 +178,7 @@ function test_pre(){
     fi
 
     pushd $PROJECT_ROOT
-        new_venv $TEST_VENV
+        new_venv $VENV_TEST
         # not needed to install pgcore in editable after build for linux
         #uv pip install $PROJECT_DIST/pgcore*.whl
         uv pip install -e $PROJECT_SRC/[test]
@@ -190,10 +190,10 @@ function test(){
     NCOL
 
     pushd $PROJECT_ROOT
-        if [ ! -d $TEST_VENV ]; then
+        if [ ! -d $VENV_TEST ]; then
             test_pre
         else
-            use_venv $TEST_VENV
+            use_venv $VENV_TEST
         fi
 
         python -c 'import pygimli; print(pygimli.version())'
@@ -212,7 +212,7 @@ function doc_pre(){
     fi
 
     pushd $PROJECT_ROOT
-        new_venv $DOC_VENV
+        new_venv $VENV_DOC
 
         # TODO find a way to install the whl file with optional deps
         uv pip install $PROJECT_SRC/[doc]
@@ -230,17 +230,18 @@ function doc(){
     echo "*** doc (Creating documentation) ***"
     NCOL
 
+    use_venv $VENV_DOC
     if python -c 'import sphinx' &>/dev/null; then
         GREEN
         echo "sphinx is installed"
         NCOL
-    else echo "no";
-        echo "sphinx is NOT installed"
+    else
+        echo "sphinx is NOT installed (calling doc_pre)"
         doc_pre
     fi
 
     pushd $PROJECT_ROOT
-        use_venv $DOC_VENV
+        use_venv $VENV_DOC
 
         pushd $BUILD_DIR
             #touch CMakeCache.txt # to renew search for sphinx
@@ -264,11 +265,10 @@ function doc_post(){
     NCOL
 
     if [ ! -f $PROJECT_DIST/html/index.html ]; then
+        echo "Documentation html not found in dist. Building first."
         doc
     fi
 
-    rm -rf $PROJECT_DIST
-    mkdir -p $PROJECT_DIST
     pushd $BUILD_DIR/doc/
         cp -r html $PROJECT_DIST/html
         tar -czvf $PROJECT_DIST/html.tgz html
@@ -399,10 +399,10 @@ OPENBLAS_CORETYPE="ARMV8"
 DISPLAY=':99.0'
 PYVISTA_OFF_SCREEN=True
 
-BUILD_VENV=$(realpath $WORKSPACE/venv-build-py$PYVERSION)
 BUILD_DIR=$(realpath $WORKSPACE/build-py$PYVERSION)
-TEST_VENV=$(realpath $WORKSPACE/venv-test-py$PYVERSION)
-DOC_VENV=$(realpath $WORKSPACE/venv-doc-py$PYVERSION)
+VENV_BUILD=$(realpath $WORKSPACE/venv-build-py$PYVERSION)
+VENV_TEST=$(realpath $WORKSPACE/venv-test-py$PYVERSION)
+VENV_DOC=$(realpath $WORKSPACE/venv-doc-py$PYVERSION)
 PROJECT_DIST=$(realpath $WORKSPACE/dist-py$PYVERSION)
 
 echo "WORKSPACE=$WORKSPACE"
@@ -411,10 +411,10 @@ echo "PROJECT_SRC=$PROJECT_SRC"
 echo "OS=$OS"
 echo "SYSTEM=$SYSTEM"
 echo "NUM_THREADS=$GIMLI_NUM_THREADS"
-echo "BUILD_VENV=$BUILD_VENV"
+echo "VENV_BUILD=$VENV_BUILD"
 echo "BUILD_DIR=$BUILD_DIR"
-echo "TEST_VENV=$TEST_VENV"
-echo "DOC_VENV=$DOC_VENV"
+echo "VENV_TEST=$VENV_TEST"
+echo "VENV_DOC=$VENV_DOC"
 echo "PROJECT_DIST=$PROJECT_DIST"
 echo "PYTHON=$BASEPYTHON"
 
