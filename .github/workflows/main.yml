@@ -92,5 +92,5 @@ jobs:
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
       - name: Uploading built html files
-        working-directory: build
-        run: rsync -avP --delete doc/html/ /var/www/html
+        run: bash ./$SOURCE_DIR/core/scripts/workflow.sh doc_post
+        
