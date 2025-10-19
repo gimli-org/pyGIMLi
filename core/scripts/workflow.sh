@@ -229,8 +229,28 @@ function doc(){
 
 function help(){
     echo ""
-    echo run: ${BASH_SOURCE[0]} "help | clean | build_pre | build | build_post | test_pre | test |
-    | doc_pre | doc | all"
+    echo "run: ${BASH_SOURCE[0]} TARGET"
+    echo ""
+    echo "TARGETS:"
+    echo "    help       show this help"
+    echo "    clean      remove build artifacts for PYTHONVERSION"
+    echo "    build_pre  prepare build environment venv"
+    echo "    build      [build_pre] build project"
+    echo "    build_post [build] test build"
+    echo "    test_pre   [build] prepare test environment"
+    echo "    test       [test_pre] run tests"
+    echo "    doc_pre    [build] prepare documentation environment"
+    echo "    doc        [doc_pre] build documentation"
+    echo "    all        [clean build test doc]"
+    echo ""
+    echo "ENVIRONMENT variables:"
+    echo "    BASEPYTHON   base python interpreter. Default system python3."
+    echo "    PYVERSION    python version (e.g. 3.11, 3.14t) if no BASEPYTHON is given"
+    echo "    SOURCE_DIR   source directory (default: top-level directory of the project)"
+    echo ""
+    echo "Examples:"
+    echo "    bash ${BASH_SOURCE[0]} clean build test doc"
+    echo "    PYVERSION=3.12 bash ${BASH_SOURCE[0]} all"
     echo ""
 }
 function all(){
@@ -302,16 +322,16 @@ fi
 PROJECT_ROOT=$WORKSPACE
 PROJECT_SRC=$PROJECT_ROOT/$SOURCE_DIR
 
-
-if [ -z $PYVERSION ]; then
-    PYVERSION=$(python -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")')
-    echo "building for python: $PYVERSION"
-    BASEPYTHON=python3
-else
-    echo "building for python: $PYVERSION (forced by setting PYVERSION)"
-    BASEPYTHON=python$PYVERSION
+if [ -z $BASEPYTHON ]; then
+    if [ -z $PYVERSION ]; then
+        PYVERSION=$(python -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")')
+        echo "building for python: $PYVERSION"
+        BASEPYTHON=python3
+    else
+        echo "building for python: $PYVERSION (forced by setting PYVERSION)"
+        BASEPYTHON=python$PYVERSION
+    fi
 fi
-
 
 GIMLI_NUM_THREADS=$((`nproc --all` - 2))
 
