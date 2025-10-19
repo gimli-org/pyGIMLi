@@ -52,14 +52,22 @@ else()
         COMMENT "Building python wheel package (${WHEELFILE}) for ${TARGET_NAME}"
     )
 
-    add_custom_target(whl${TARGET_NAME} DEPENDS whl${TARGET_NAME}PackageBuild)
+    # copy wheel to dist folder
+    add_custom_target(whl${TARGET_NAME}Dist DEPENDS whl${TARGET_NAME}PackageBuild
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/dist"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${WHEELHOUSE}/${WHEELFILE}" "${CMAKE_BINARY_DIR}/dist/${WHEELFILE}"
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        COMMENT "Copy python wheel package ${WHEELFILE} to 'dist' path"
+    )
+
+    add_custom_target(whl${TARGET_NAME} DEPENDS whl${TARGET_NAME}Dist)
 
     ## test the wheel: make whlTest
     # update the environment with VIRTUAL_ENV variable (mimic the activate script) and search again
     add_custom_target(whl${TARGET_NAME}TestInstall DEPENDS whl${TARGET_NAME} DEPENDS whlpgcoreTestRun
         COMMAND "${Python3_EXECUTABLE}" -m pip uninstall -y ${TARGET_NAME}
-        COMMAND "${Python3_EXECUTABLE}" -m pip install ${WHEELHOUSE}/${PY_WHEELFILE} --quiet --find-links ${WHEELHOUSE}
-        COMMENT "Installing ${TARGET_NAME} ((${WHEELFILE}) in virtual test environment"
+        COMMAND "${Python3_EXECUTABLE}" -m pip install ${CMAKE_BINARY_DIR}/dist/${WHEELFILE} --quiet --find-links ${WHEELHOUSE}
+        COMMENT "Installing ${TARGET_NAME} (${WHEELFILE}) in virtual test environment"
     )
     add_custom_target(whl${TARGET_NAME}TestRun DEPENDS whl${TARGET_NAME}TestInstall
         COMMAND ${Python3_EXECUTABLE} -c "import pygimli as pg; pg.version()"
@@ -73,8 +81,8 @@ else()
 
     ## deploy the wheel: make whlpygimliDeploy
     add_custom_target(whl${TARGET_NAME}Deploy DEPENDS whl${TARGET_NAME}Test
-        COMMAND "${Python_EXECUTABLE}" -m twine check ${WHEELHOUSE}/${WHEELFILE}
-        COMMAND "${Python_EXECUTABLE}" -m twine upload --repository pypi ${WHEELHOUSE}/${WHEELFILE}
+        COMMAND "${Python_EXECUTABLE}" -m twine check ${CMAKE_BINARY_DIR}/dist/${WHEELFILE}
+        COMMAND "${Python_EXECUTABLE}" -m twine upload --repository pypi ${CMAKE_BINARY_DIR}/dist/${WHEELFILE}
         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
         COMMENT "Upload python wheel package ${WHEELFILE} to 'pypi' repository"
     )

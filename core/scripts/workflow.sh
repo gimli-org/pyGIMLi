@@ -44,20 +44,20 @@ function use_venv(){
     local venv_path=$1
     if [ -d $venv_path ]; then
         GREEN
-        echo "*** Activating virtual environment $venv_path ***"
+        echo "Activating virtual environment $venv_path"
         NCOL
         source $venv_path/bin/activate
     else
         GREEN
-        echo "*** Virtual environment $venv_path does not exist. Creating it. ***"
+        echo "Virtual environment $venv_path does not exist. Creating it."
         NCOL
-        new_venv $venv_path
+        #new_venv $venv_path
     fi
 }
 function new_venv(){
     local venv_path=$1
     GREEN
-    echo "*** Creating fresh virtual environment $venv_path ***"
+    echo "Creating fresh virtual environment $venv_path"
     NCOL
     $BASEPYTHON --version
     deactivate 2>/dev/null || true
@@ -80,6 +80,7 @@ function clean(){
         echo "clear pygimli cache"
         rm -rf ~/.cache/pygimli
         echo "remove SOURCE_BUILDS:"
+        rm -rf $PROJECT_DIST
         rm -rf $PROJECT_SRC/build
         rm -rf $PROJECT_SRC/dist
         rm -rf $PROJECT_SRC/*.egg-info
@@ -96,11 +97,15 @@ function clean(){
 
 function build_pre(){
     GREEN
-    echo "*** Prepare building environment ***"
+    echo "*** build_pre (Prepare building environment) ***"
     NCOL
+
+    ## clean previous build, dist, and doc artifacts
+    clean
 
     pushd $PROJECT_ROOT
         new_venv $BUILD_VENV
+
         echo "pip install -e $PROJECT_SRC/[build]"
         uv pip install -e $PROJECT_SRC/[build]
         rm -rf $BUILD_DIR
@@ -110,54 +115,78 @@ function build_pre(){
 
 function build(){
     GREEN
-    echo "*** Building now ... ***"
+    echo "*** build (Building now ...) ***"
     NCOL
 
-    pushd $PROJECT_ROOT
-
-        if [ ! -d $BUILD_DIR ]; then
-            build_pre
-        fi
+    if [ ! -d $BUILD_DIR ]; then
+        echo "BUILD_DIR: $BUILD_DIR not found. Running build_pre first."
+        build_pre
+    else
         use_venv $BUILD_VENV
-        pushd $BUILD_DIR
+    fi
 
+    pushd $PROJECT_ROOT
+        use_venv $BUILD_VENV
+
+        pushd $BUILD_DIR
             cmake $PROJECT_SRC
             make -j $GIMLI_NUM_THREADS
             make pygimli J=$GIMLI_NUM_THREADS
-            make whlTest
+            # create pgcore wheel
+            make whlpgcoreTest
+        popd
+
+        # create pygimli wheel
+        pushd $PROJECT_SRC
+            python -m build
+            cp dist/pygimli*.whl $BUILD_DIR/dist/
         popd
     popd
 }
 
 function build_post(){
     GREEN
-    echo "*** Testing build ***"
+    echo "*** build_post (Testing build) ***"
     NCOL
+
+    if [ ! -f $BUILD_DIR/dist/pgcore*.whl ]; then
+        build
+    fi
+
     pushd $PROJECT_ROOT
         use_venv $BUILD_VENV
+
         python -c 'import pygimli; print(pygimli.version())'
         python -c 'import pygimli; print(pygimli.Report())'
+
+        mkdir -p $PROJECT_DIST
+
+        cp $BUILD_DIR/dist/pgcore*.whl $PROJECT_DIST/
+        cp $BUILD_DIR/dist/pygimli*.whl $PROJECT_DIST/
     popd
 }
 
 function test_pre(){
     GREEN
-    echo "*** Prepare testing environment ***"
+    echo "*** test_pre (Prepare testing environment) ***"
     NCOL
+
+    if [ ! -f $PROJECT_DIST/pgcore*.whl ]; then
+
+        echo "pgcore wheel not found in dist. Building first."
+        build_post
+    fi
 
     pushd $PROJECT_ROOT
         new_venv $TEST_VENV
-        if [ ! -d $BUILD_DIR ]; then
-            build_pre
-            build
-            build_post
-        fi
+        # not needed to install pgcore in editable after build for linux
+        #uv pip install $PROJECT_DIST/pgcore*.whl
         uv pip install -e $PROJECT_SRC/[test]
     popd
 }
 function test(){
     GREEN
-    echo "*** Testing now ... ***"
+    echo "*** test (Testing now ...) ***"
     NCOL
 
     pushd $PROJECT_ROOT
@@ -175,20 +204,22 @@ function test(){
 
 function doc_pre(){
     GREEN
-    echo "*** Preparing documentation ... ***"
+    echo "*** doc_pre (Preparing documentation ...) ***"
     NCOL
+
+    if [ ! -f $PROJECT_DIST/pgcore*.whl ]; then
+        build_post
+    fi
 
     pushd $PROJECT_ROOT
         new_venv $DOC_VENV
-        if [ ! -d $BUILD_DIR ]; then
-            build_pre
-            build
-            build_post
-        fi
+
+        # TODO find a way to install the whl file with optional deps
         uv pip install $PROJECT_SRC/[doc]
-        uv pip install pygimli ## remove rudimentary pygimli in doc venv
-        uv pip install $BUILD_DIR/wheelhouse/pgcore*manylinux*.whl
-        uv pip install $BUILD_DIR/wheelhouse/pygimli*.whl
+        uv pip uninstall pygimli ## remove rudimentary pygimli in doc venv
+        uv pip install $PROJECT_DIST/pygimli*.whl
+        uv pip install $PROJECT_DIST/pgcore*.whl
+
         python -c 'import pygimli; print(pygimli.version())'
         python -c 'import pygimli; print(pygimli.Report())'
     popd
@@ -196,20 +227,20 @@ function doc_pre(){
 
 function doc(){
     GREEN
-    echo "*** Creating documentation ***"
+    echo "*** doc (Creating documentation) ***"
     NCOL
+
+    if python -c 'import sphinx' &>/dev/null; then
+        GREEN
+        echo "sphinx is installed"
+        NCOL
+    else echo "no";
+        echo "sphinx is NOT installed"
+        doc_pre
+    fi
 
     pushd $PROJECT_ROOT
         use_venv $DOC_VENV
-
-        if python -c 'import sphinx' &>/dev/null; then
-            GREEN
-            echo "sphinx is installed"
-            NCOL
-        else echo "no";
-            echo "sphinx is NOT installed"
-            doc_pre
-        fi
 
         pushd $BUILD_DIR
             #touch CMakeCache.txt # to renew search for sphinx
@@ -227,6 +258,34 @@ function doc(){
     popd
 }
 
+function doc_post(){
+    GREEN
+    echo "*** doc_post (Deploying html) ***"
+    NCOL
+
+    if [ ! -f $PROJECT_DIST/html/index.html ]; then
+        doc
+    fi
+
+    rm -rf $PROJECT_DIST
+    mkdir -p $PROJECT_DIST
+    pushd $BUILD_DIR/doc/
+        cp -r html $PROJECT_DIST/html
+        tar -czvf $PROJECT_DIST/html.tgz html
+    popd
+
+    #rsync -aP $DISTPATH/html user@pygimli.org:DEV_HTML_PATH --delete
+
+    # SNAP_PATH=`date +"%Y%m%d"`
+    # mkdir -p ~/snapshots/$SNAP_PATH
+    # rm -f ~/snapshots/latest
+    # ln -s ~/snapshots/$SNAP_PATH ~/snapshots/latest
+    # cp $PROJECT_DIST/*.whl ~/snapshots/latest/
+    # source ~/snapshots/venv-oscar-py310/bin/activate
+    # python -m pip install --force ~/snapshots/latest/pgcore*
+    # python -m pip install --force ~/snapshots/latest/pygimli*
+}
+
 function help(){
     echo ""
     echo "run: ${BASH_SOURCE[0]} TARGET"
@@ -241,6 +300,7 @@ function help(){
     echo "    test       [test_pre] run tests"
     echo "    doc_pre    [build] prepare documentation environment"
     echo "    doc        [doc_pre] build documentation"
+    echo "    doc_post   [doc] deploy documentation"
     echo "    all        [clean build test doc]"
     echo ""
     echo "ENVIRONMENT variables:"
@@ -343,7 +403,7 @@ BUILD_VENV=$(realpath $WORKSPACE/venv-build-py$PYVERSION)
 BUILD_DIR=$(realpath $WORKSPACE/build-py$PYVERSION)
 TEST_VENV=$(realpath $WORKSPACE/venv-test-py$PYVERSION)
 DOC_VENV=$(realpath $WORKSPACE/venv-doc-py$PYVERSION)
-
+PROJECT_DIST=$(realpath $WORKSPACE/dist-py$PYVERSION)
 
 echo "WORKSPACE=$WORKSPACE"
 echo "JOB_NUM=$JOB_NUM"
@@ -355,6 +415,7 @@ echo "BUILD_VENV=$BUILD_VENV"
 echo "BUILD_DIR=$BUILD_DIR"
 echo "TEST_VENV=$TEST_VENV"
 echo "DOC_VENV=$DOC_VENV"
+echo "PROJECT_DIST=$PROJECT_DIST"
 echo "PYTHON=$BASEPYTHON"
 
 echo "Starting automatic build #$BUILD_NUMBER on" `date`
@@ -381,6 +442,8 @@ do
         doc_pre;;
     doc)
         doc;;
+    doc_post)
+        doc_post;;
     all)
         all;;
     help)
