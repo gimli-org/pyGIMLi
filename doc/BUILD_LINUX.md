@@ -25,7 +25,7 @@ e.g., ``$HOME/src/gimli`` and get the source code:
     # update pip is allways a good idea
     python -m pip install -U pip
     # install gimli as editable with its dependencies into to venv
-    pip install -e ./gimli[all]
+    pip install -e ./gimli/[build]
 ```
 
 We need to compile the C++ part of pyGIMLi, which is currently done with cmake and not with the pip internal build system.
@@ -53,7 +53,10 @@ so you can test the pygimli build with:
     python -c 'import pygimli as pg; print(pg.Report())'
 ```
 
-Note, if you test like this, ensure there is no actual path with a name `pygimli` in your current directory or he will test this path as package instead. This will probably fail.
+Note, if you test like this, ensure there is no actual path with a name 
+`pygimli` in your current directory or he will 
+test this path as package instead. This is a sideeffect of the 
+`--editable` install and such the test will probably fail.
 
 As long nothing changes in the C++ part of pygimli you can just update pyGIMLi
 but just pulling the latest changes from git.
