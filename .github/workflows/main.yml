@@ -53,10 +53,18 @@ jobs:
           run: bash ./$SOURCE_DIR/core/scripts/workflow.sh doc_pre
         - name: Running sphinx
           run: bash ./$SOURCE_DIR/core/scripts/workflow.sh doc
+  upload-html:
+    name: Upload HTML to dev.pygimli.org
+    runs-on: [self-hosted, test-runner]
+    needs: docs
+    if: github.ref == 'refs/heads/dev' # Only merge from dev
+    steps:
+      - name: Uploading built html files
+        run: bash ./$SOURCE_DIR/core/scripts/workflow.sh doc_post
   merging:
     name: Automerging
     runs-on: [self-hosted, test-runner]
-    needs: docs
+    needs: upload-html
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
       - name: Merge dev -> main (with rebase)
@@ -93,4 +101,3 @@ jobs:
     steps:
       - name: Uploading built html files
         run: bash ./$SOURCE_DIR/core/scripts/workflow.sh doc_post
-        
