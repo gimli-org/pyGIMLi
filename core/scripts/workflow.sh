@@ -217,8 +217,8 @@ function doc_pre(){
         # TODO find a way to install the whl file with optional deps
         uv pip install $PROJECT_SRC/[doc]
         uv pip uninstall pygimli ## remove rudimentary pygimli in doc venv
+        uv pip install --force-reinstall $PROJECT_DIST/pgcore*.whl
         uv pip install $PROJECT_DIST/pygimli*.whl
-        uv pip install $PROJECT_DIST/pgcore*.whl
 
         python -c 'import pygimli; print(pygimli.version())'
         python -c 'import pygimli; print(pygimli.Report())'
@@ -246,7 +246,10 @@ function doc(){
         pushd $BUILD_DIR
             #touch CMakeCache.txt # to renew search for sphinx
             cmake $PROJECT_SRC
-            make clean-gallery
+
+            python -c 'import pygimli as pg; pg.version()'
+
+            #make clean-gallery # should not be necessary
             if [ -x "$(command -v xvfb-run)" ]; then
                 # xvfb is necessary for headless display of pyvista plots
                 echo "xvfb-run available: using it to build docs"
