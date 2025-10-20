@@ -48,7 +48,7 @@ setup(
     },
     license="Apache 2.0",
     keywords=["inversion", "modelling", "geophysics"],
-    install_requires=['numpy>=2.1',
+    install_requires=['numpy<2.3,>=1.23.5',
                       ],
     distclass=BinaryDistribution,
     classifiers=CLASSIFIERS,
