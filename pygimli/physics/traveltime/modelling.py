@@ -131,9 +131,8 @@ class TravelTimeDijkstraModelling(MeshModelling):
             pg.physics.traveltime.drawFirstPicks(ax, data, **kwargs)
             return ax
         else:
-            kwargs.setdefault('label', pg.unit('va'))
-            kwargs.setdefault('cMap', pg.utils.cMap('va'))
-            gci = drawVA(ax, data, usePos=False, **kwargs)
+            kwargs.setdefault('usePos', False)
+            gci = drawVA(ax, data, **kwargs)
             cBar = createColorBar(gci, **kwargs)
 
             return gci, cBar
