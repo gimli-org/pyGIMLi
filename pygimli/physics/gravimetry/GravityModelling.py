@@ -1,3 +1,4 @@
+"""Gravimetry modelling operator."""
 import numpy as np
 import pygimli as pg
 from .kernel import SolveGravMagHolstein
@@ -6,8 +7,8 @@ from .kernel import SolveGravMagHolstein
 class GravityModelling(pg.frameworks.MeshModelling):
     """Magnetics modelling operator using Holstein (2007)."""
 
-    def __init__(self, mesh, points, cmp=["gz"]):
-        """Setup forward operator.
+    def __init__(self, mesh, points, cmp=None):
+        """Set up forward operator.
 
         Parameters
         ----------
@@ -16,7 +17,7 @@ class GravityModelling(pg.frameworks.MeshModelling):
         points : list|array of (x, y, z)
             measuring points
         cmp : list of str
-            component of: gx, gy, gz, TFA, Bx, By, Bz, Bxy, Bxz, Byy, Byz, Bzz
+            component of: gx, gy, gz
         """
         # check if components do not contain g!
         super().__init__(mesh=mesh)

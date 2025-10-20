@@ -1,9 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Gravimetrical Modelling.
-
-Some numerical and analytical tools.
-"""
+"""Gravimetrical Modelling - numerical and analytical tools."""
 
 import sys
 
@@ -186,7 +182,7 @@ def gradGZSphere(r, rad, rho, pos=(0., 0., 0.)):
     return (G * deltaMSph(rad, rho) / rabs(r - pos)**5. * gzxyz).T
 
 
-def uCylinderHoriz(pnts, rad, rho, pos=[0., 0.]):
+def uCylinderHoriz(pnts, rad, rho, pos=None):
     """Gravitational potential of horizonzal cylinder.
 
     Parameters
@@ -204,6 +200,9 @@ def uCylinderHoriz(pnts, rad, rho, pos=[0., 0.]):
     -------
     gravimetric potential at the given points
     """
+    if pos is None:
+        pos = [0., 0.]
+
     u = np.zeros(len(pnts))
     for i, r in enumerate(rabs(pnts - pos)):
         if r > rad:
@@ -451,11 +450,10 @@ def calcPolyGz(pnts, poly, density=1., openPoly=False, forceOpen=False):
     N = len(pnts)
 
     if np.size(pnts[0]) == 1:
-        qpnts = list(zip(pnts, np.zeros(N)))
+        qpnts = list(zip(pnts, np.zeros(N), strict=False))
 
-    if not forceOpen:
-        if np.linalg.norm(poly[0] - poly[-1], 2) < 1e-8:
-            openPoly = True
+    if not forceOpen and np.linalg.norm(poly[0] - poly[-1], 2) < 1e-8:
+        openPoly = True
 
     gz = np.zeros((N, 3))
     gzz = np.zeros((N, 3))
@@ -523,7 +521,7 @@ def angle(p1, p2, p3, Un):
 
     # sign of perp is -ve if points p1 p2 p3 are in cw order
     perp = np.sign(perp)
-    r = np.sum((n1 * n2))
+    r = np.sum(n1 * n2)
     ang = np.arccos(r)
 
     if perp < 0:
@@ -697,7 +695,7 @@ def solveGravimetry(mesh, dDensity=None, pnts=None, complete=False):
                     if complete:
                         dgi, dgzi = gravMagBoundarySinghGup(b)
                     else:
-                        raise Exception("TOIMPL")
+                        raise NotImplementedError("TOIMPL")
 
                 if complete:
                     dgi *= [1.0, 1.0, -1.0]
