@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-# encoding: utf-8
 r"""
 Geostatistical regularization
 =============================
 
 In this example we illustrate the use of geostatistical constraints on
-irregular meshes as presented by :cite:`jordi2018geostatistical`, compared to
+irregular meshes as presented by :cite:`Jordi2018`, compared to
 classical smoothness operators of first or second kind.
 
 The elements of the covariance matrix :math:`\textbf{C}_{\text{M}}` are defined
@@ -22,7 +21,7 @@ It defines the correlation between model cells as a function of correlation
 lenghts (ranges) :math:`I_x`, :math:`I_y`, and :math:`I_z`. Of course, the
 orientation of the coordinate axes is arbitrary and can be chosen by rotation.
 Let us illustrate this by a simple mesh:
-"""
+"""  # noqa: D205, D400
 
 # %%
 # Computing covariance and constraint matrices
@@ -93,9 +92,9 @@ cor = C * vec
 
 # %%
 # and plot it using a linear or logarithmic scale
-kwLin = dict(cMin=-1, cMax=1, cMap="bwr")
+kwLin = dict(cMin=-1, cMax=1, cMap="bwr")  # noqa: N816
 ax, cb = pg.show(mesh, cor, **kwLin)
-kwLog = dict(cMin=1e-3, cMax=1, cMap="magma_r", logScale=True)
+kwLog = dict(cMin=1e-3, cMax=1, cMap="magma_r", logScale=True)  # noqa: N816
 ax, cb = pg.show(mesh, pg.abs(cor), **kwLog)
 
 # %%
@@ -142,9 +141,9 @@ kw = dict(
 # We want to use a homogenenous starting model
 vals = np.array([30, 50, 300, 100, 200])
 # We assume a 5% relative accuracy of the values
-relError = 0.05
+relError = 0.05  # noqa: N816
 # set up data and model transformation log-scaled
-tLog = pg.trans.TransLog()
+tLog = pg.trans.TransLog()  # noqa: N816
 inv = pg.Inversion(fop=fop)
 inv.transData = tLog
 inv.transModel = tLog
