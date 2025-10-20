@@ -24,6 +24,9 @@ class GravityModelling(pg.frameworks.MeshModelling):
         self.createRefinedForwardMesh(refine=False, pRefine=False)
         self.mesh_ = mesh
         self.sensorPositions = points
+        if cmp is None:
+            cmp = ["gz"]
+
         self.components = cmp
         # self.footprint = foot
         self.kernel = None
