@@ -48,9 +48,9 @@ def SolveGravMagHolstein(mesh, pnts, cmp, igrf=None):  # , foot=np.inf):
             myigrf = np.array(igrf[3:6])
             B_dir = myigrf / np.linalg.norm(myigrf)
         else:
-            raise Exception("Could not use IGRF vector. Len must be 3 or 7!")
+            raise ValueError("Could not use IGRF vector. Len must be 3 or 7!")
     elif doB or doB:
-        raise Exception("Specify IGRF!")
+        raise KeyError("Specify IGRF!")
 
     b_list, c_list = [], []
     for bd in mesh.boundaries():
@@ -118,7 +118,7 @@ def SolveGravMagHolstein(mesh, pnts, cmp, igrf=None):  # , foot=np.inf):
                 jj += 1
 
             if doGT:
-                raise Exception("Gravity tensor not yet supported!")
+                raise NotImplementedError("Gravity tensor not yet supported!")
                 G_tens = np.zeros([3, 3, 3])
                 if 'gxx' in cmp:
                     temp[:, jj]=G_tens[:, 0, 0]

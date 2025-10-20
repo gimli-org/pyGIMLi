@@ -3,7 +3,8 @@ import numpy as np
 import pygimli as pg
 
 
-def depthWeighting(mesh, z0:float=25, height:float=0, power:float=1.5, normalize:bool=False, cell:bool=False):
+def depthWeighting(mesh, z0:float=25, height:float=0, power:float=1.5,
+                   normalize:bool=False, cell:bool=False):
     r"""Return Li&Oldenburg like depth weighting of boundaries or cells.
 
     To account for inherent ambiguity in potential field methods, a depth

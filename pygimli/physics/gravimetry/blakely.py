@@ -1,7 +1,8 @@
 """Magnetic field of a dipole according to Blakely (1996)."""
 import numpy as np
 
-def magneticDipole(Q, M, P=None, x=None, y=0., z=0., alpha=0, cylinder=False):
+def magneticDipole(Q, M, P=None, x=None, y=0., z=0.,
+                   alpha:float=0, cylinder:bool=False):
     r"""Compute magnetic field according to eq. (4.14) from Blakely (1996).
 
     The magnetic field :math:`\vec{B}` at a point P due to a dipole in Q reads
