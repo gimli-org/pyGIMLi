@@ -141,7 +141,7 @@ def drawVA(ax, data, vals=None, usePos=True, pseudosection=False, **kwargs):
     ----------
     ax : mpl.Axes
 
-    data : pg.DataContainer()
+    data : pg.physics.traveltime.DataContainerTT()
         Datacontainer with 's' and 'g' Sensorindieces and 't' traveltimes.
 
     usePos: bool [True]
@@ -169,22 +169,18 @@ def drawVA(ax, data, vals=None, usePos=True, pseudosection=False, **kwargs):
         print(vals)
         pg.error('zero traveltimes found.')
     va = offset / vals
-
+    kwargs.setdefault('squeeze', True)
+    kwargs.setdefault('logScale', False)
+    kwargs.setdefault('label', pg.unit('va'))
+    kwargs.setdefault('cMap', pg.utils.cMap('va'))
     if pseudosection:
         midpoint = (gx + sx) / 2
-        gci = pg.viewer.mpl.dataview.drawVecMatrix(ax, midpoint, offset, va,
-                                                   queeze=True,
-                                                   label=pg.unit('as'))
+        gci = pg.viewer.mpl.dataview.drawVecMatrix(ax, midpoint, offset, va, **kwargs)
     else:
-        gci = pg.viewer.mpl.dataview.drawVecMatrix(ax, data["g"], data["s"],
-                                                   va, squeeze=True,
-                                                   label=pg.unit('as'))
+        gci = pg.viewer.mpl.dataview.drawVecMatrix(ax, data["g"], data["s"], va, **kwargs)
 
-    # A = np.ones((data.sensorCount(), data.sensorCount())) * np.nan
-    # for i in range(data.size()):
-    #     A[int(data('s')[i]), int(data('g')[i])] = va[i]
-    # gci = ax.imshow(A, interpolation='nearest')
-    # ax.grid(True)
+    ax.set_xlabel('Receiver Index')
+    ax.set_ylabel('Shot Index')
 
     if usePos:
         nt = np.maximum(data.sensorCount() // 50, 10)

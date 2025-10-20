@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Import travel time data from various formats into DataContainerTT."""
 import struct
 import numpy as np
 import pygimli as pg
@@ -30,7 +30,6 @@ def load(fileName, verbose=False, **kwargs):
         data = importAsciiColumns(fileName, **kwargs)
     else:
         data = DataContainerTT(fileName)
-        # data = pg.DataContainer(fileName, sensorTokens='s g')
 
     return data
 
@@ -61,7 +60,7 @@ def importGTT(filename, return_header=False):
             nci = struct.unpack(">I", block[4:8])[0]  # channels for the shot
             spos = np.array(struct.unpack(">4f", block[8:24]))
             SPOS[i, :] = spos[:3]
-            # print(nci, spos)
+            print(spos)
             X, Y = [], []
             for j in range(nci):
                 block = fid.read(24)  # receiver information
@@ -111,7 +110,7 @@ def importGTT(filename, return_header=False):
 def importAsciiColumns(filename, ndig=2, roundto=0,
                        nS=None, nR=None, nT=None, nA=None):
     """Read in columns from ASCII file.
-    
+
     Parameters
     ----------
     filename : str
@@ -123,13 +122,13 @@ def importAsciiColumns(filename, ndig=2, roundto=0,
     """
     if nS is None:
         nS = [0, 1]
-    if nR is None: 
+    if nR is None:
         nR = [max(nS)+1, max(nS)+2]
-    
+
     A = np.genfromtxt(filename)
     if nT is None:
         nT = A.shape[1] - 1  # last one
-    
+
     posS = A[:, nS]
     posR = A[:, nR]
     # if twoD: take only receivers for defining topo
@@ -158,7 +157,7 @@ def readTOMfile(filename, ndig=2, roundto=0):
     else:
         pT = xT.round(ndig) - zT.round(ndig) * 1j
         pR = xR.round(ndig) - zR.round(ndig) * 1j
-    
+
     pU = np.unique(np.hstack((pT, pR)))
     iT = np.array([np.nonzero(pU == pi)[0][0] for pi in pT], dtype=float)
     iR = np.array([np.nonzero(pU == pi)[0][0] for pi in pR], dtype=float)
