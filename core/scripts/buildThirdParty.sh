@@ -728,7 +728,7 @@ buildTRIANGLE(){
             patch triangle.c -i $BUILDSCRIPT_HOME/patches/triangle-mingw-win64.patch
         elif [ "$SYSTEM" == "UNIX" ]; then
             echo "skipp for linux"
-            sed -i -e 's/-DLINUX/-DCPU86/g' makefile ;
+            #sed -i -e 's/-DLINUX/-DCPU86/g' makefile ;
         elif [ "$SYSTEM" == "MAC" ]; then
             sed -i -e 's/-DLINUX//g' makefile ;
         fi
