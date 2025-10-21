@@ -674,7 +674,7 @@ foreach (DTYPE ${RECDOCTYPES})
     file(GLOB_RECURSE DFILES LIST_DIRECTORIES false
              RELATIVE "${CMAKE_SOURCE_DIR}" "./doc/${DTYPE}")
         message(STATUS "Append DOC files: (${DTYPE}) " ${DFILES})
-        list(APPEND DOCFILES ${DFILES})
+        list(APPEND RDOCFILES ${DFILES})
     endforeach()
 
     foreach(DF "./AUTHORS.md"
@@ -683,10 +683,10 @@ foreach (DTYPE ${RECDOCTYPES})
                "./LICENSE.md"
                )
         message(STATUS "Append DOC files: " ${DF})
-        list(APPEND DOCFILES ${DF})
+        list(APPEND RDOCFILES ${DF})
     endforeach()
 
-    set(RSTFILES ${DOCFILES} CACHE INTERNAL "RST source file that we need to copy")
+    set(DOCFILES ${RDOCFILES} CACHE INTERNAL "RST source file that we need to copy")
 
     execute_process(COMMAND ${SPHINX_EXECUTABLE} --version
                     OUTPUT_VARIABLE SPHINX_VERSION

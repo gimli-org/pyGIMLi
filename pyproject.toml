@@ -80,7 +80,7 @@ doc = [
     "myst_nb",
     #"pydata-sphinx-theme",
     "pydata-sphinx-theme==0.15.2",
-    "sphinx>=3.1",
+    "sphinx>=7.2",
     "sphinxcontrib-bibtex",
     "sphinxcontrib-doxylink",
     "sphinxcontrib-programoutput",

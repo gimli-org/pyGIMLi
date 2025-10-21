@@ -267,12 +267,12 @@ function doc_post(){
     echo "*** doc_post (Deploying html) ***"
     NCOL
 
-    if [ ! -f $BUILD_DIR/doc/html/index.html ]; then
+    if [ ! -f $BUILD_DIR/doc/_build/html/index.html ]; then
         echo "Documentation html not found in dist. Building first."
         doc
     fi
 
-    pushd $BUILD_DIR/doc/
+    pushd $BUILD_DIR/doc/_build
         cp -r html $PROJECT_DIST/html
         tar -czvf $PROJECT_DIST/html.tgz html
     popd

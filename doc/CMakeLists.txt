@@ -31,7 +31,6 @@ set(SPHINX_SRC_DIR         ${CMAKE_SOURCE_DIR}) # configured documentation tools
 set(SPHINX_BUILD_DIR       ${CMAKE_CURRENT_BINARY_DIR}/_build) # HERE we export our rst. either copied or the original
 set(SPHINX_SRCBUILD_DIR    ${SPHINX_BUILD_DIR}) # Sphinx cache with pickled ReST documents
 set(SPHINX_CACHE_DIR       ${CMAKE_CURRENT_BINARY_DIR}/_doctrees) # HTML output directory
-set(SPHINX_HTML_DIR        ${CMAKE_CURRENT_BINARY_DIR}/html) # PDF output directory
 set(SPHINX_PDF_DIR         ${CMAKE_CURRENT_BINARY_DIR}/pdf)
 
 configure_file(
@@ -44,8 +43,8 @@ configure_file(
 # file(GLOB_RECURSE RSTFILES RELATIVE ${CMAKE_SOURCE_DIR} "*.rst")
 
 add_custom_target(sphinx_check_sources ALL)
-message(STATUS "RSTFILES: ${RSTFILES}")
-foreach(file ${RSTFILES})
+message(STATUS "DOCFILES: ${DOCFILES}")
+foreach(file ${DOCFILES})
     add_custom_command(
             COMMAND
                 cmake -E copy_if_different ${CMAKE_SOURCE_DIR}/${file} ${SPHINX_SRCBUILD_DIR}/${file}
@@ -92,37 +91,7 @@ add_custom_target(sphinxhtml ALL
      WORKING_DIRECTORY
         ${SPHINX_BUILD_DIR}/doc
      COMMAND
-        cmake -E copy_directory ${DOXYGEN_BUILD_DIR}/html ${SPHINX_HTML_DIR}/gimliapi
-     COMMAND
-        ${SPHINX_EXECUTABLE} -v
-        -D abort_on_example_error=1
-        -T
-        -b dirhtml
-        -c "${SPHINX_BUILD_DIR}/doc"
-        -d "${SPHINX_CACHE_DIR}/html"
-        "${SPHINX_BUILD_DIR}/doc"
-        "${SPHINX_HTML_DIR}"
-     COMMENT
-         "Building HTML documentation with sphinx"
-     DEPENDS
-        sphinxapi
-)
-
-add_custom_target(sphinxhtml-nogallery ALL
-     WORKING_DIRECTORY
-        ${SPHINX_BUILD_DIR}/doc
-     COMMAND
-        cmake -E copy_directory ${DOXYGEN_BUILD_DIR} ${SPHINX_HTML_DIR}/gimliapi
-     COMMAND
-        ${SPHINX_EXECUTABLE} -v
-        -D abort_on_example_error=1
-        -D plot_gallery=0
-        -T
-        -b dirhtml
-        -c "${SPHINX_BUILD_DIR}/doc"
-        -d "${SPHINX_CACHE_DIR}/html"
-        "${SPHINX_BUILD_DIR}/doc"
-        "${SPHINX_HTML_DIR}"
+        sphinx-build -M html ./ "${SPHINX_BUILD_DIR}" --jobs=auto
      COMMENT
          "Building HTML documentation with sphinx"
      DEPENDS
@@ -143,41 +112,41 @@ add_custom_target(clean-gallery ALL
          "Removing examples/tutorials cache to force rebuild of gallery."
 )
 
-add_custom_target(sphinxlatex ALL
-    WORKING_DIRECTORY
-        ${SPHINX_BUILD_DIR}/doc
-    COMMAND
-        ${SPHINX_EXECUTABLE} -v
-        -D plot_gallery=1
-        -D abort_on_example_error=1
-        -T
-        -q
-        -b latex
-        -c "${SPHINX_BUILD_DIR}/doc"
-        -d "${SPHINX_CACHE_DIR}/pdf"
-        "${SPHINX_SRCBUILD_DIR}/doc"
-        "${SPHINX_PDF_DIR}"
-    COMMENT
-        "Building PDF documentation with sphinx"
-    DEPENDS
-        sphinxapi
-)
+# add_custom_target(sphinxlatex ALL
+#     WORKING_DIRECTORY
+#         ${SPHINX_BUILD_DIR}/doc
+#     COMMAND
+#         ${SPHINX_EXECUTABLE} -v
+#         -D plot_gallery=1
+#         -D abort_on_example_error=1
+#         -T
+#         -q
+#         -b latex
+#         -c "${SPHINX_BUILD_DIR}/doc"
+#         -d "${SPHINX_CACHE_DIR}/pdf"
+#         "${SPHINX_SRCBUILD_DIR}/doc"
+#         "${SPHINX_PDF_DIR}"
+#     COMMENT
+#         "Building PDF documentation with sphinx"
+#     DEPENDS
+#         sphinxapi
+# )
 
-add_custom_target(sphinxpdf ALL
-    WORKING_DIRECTORY
-        ${SPHINX_PDF_DIR}
-    COMMAND
-        make
-    COMMAND
-        cmake -E copy_if_different gimli.pdf ${SPHINX_HTML_DIR}/GIMLi_Documentation.pdf
-    DEPENDS
-        sphinxlatex
-)
+# add_custom_target(sphinxpdf ALL
+#     WORKING_DIRECTORY
+#         ${SPHINX_PDF_DIR}
+#     COMMAND
+#         make
+#     COMMAND
+#         cmake -E copy_if_different gimli.pdf ${SPHINX_HTML_DIR}/GIMLi_Documentation.pdf
+#     DEPENDS
+#         sphinxlatex
+# )
 
-add_custom_target(pdf
-    DEPENDS
-        sphinxpdf
-)
+# add_custom_target(pdf
+#     DEPENDS
+#         sphinxpdf
+# )
 
 add_custom_target(html
     DEPENDS
