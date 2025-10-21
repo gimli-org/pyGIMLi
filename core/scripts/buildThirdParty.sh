@@ -68,7 +68,7 @@ checkTOOLSET(){
         echo "SYSTEM:" $SYSTEM
 
         SetGCC_TOOLSET
-    
+
     elif [ "$TOOLSET" == "clang" ]; then
         SetCLANG_TOOLSET
     fi
@@ -460,10 +460,10 @@ buildBOOST(){
         echo "copying sourcetree into build: $BOOST_BUILD"
         cp -r $BOOST_SRC $BOOST_BUILD
     fi
-    
+
     pushd $BOOST_BUILD
         echo "Try to build b2 for TOOLSET: $B2TOOLSET"
-        
+
         if [ "$SYSTEM" == "WIN" ]; then
             if [ ! -f ./b2.exe ]; then
                 echo "Building b2.exe for $SYSTEM"
@@ -724,10 +724,10 @@ buildTRIANGLE(){
 
     pushd $TRIANGLE_BUILD
         if [ "$SYSTEM" == "WIN" ]; then
-            echo "skipp"
             sed -i -e 's/-DLINUX/-DCPU86 -D ANSI_DECLARATORS/g' makefile ;
             patch triangle.c -i $BUILDSCRIPT_HOME/patches/triangle-mingw-win64.patch
         elif [ "$SYSTEM" == "UNIX" ]; then
+            echo "skipp for linux"
             sed -i -e 's/-DLINUX/-DCPU86/g' makefile ;
         elif [ "$SYSTEM" == "MAC" ]; then
             sed -i -e 's/-DLINUX//g' makefile ;
