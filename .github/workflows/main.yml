@@ -14,7 +14,7 @@ on:
 jobs:
   pgcore:
     name: Building pgcore & bindings
-    runs-on: [self-hosted, test-runner]
+    runs-on: self-hosted
     steps:
       - name: Getting pyGIMLi sources
         uses: actions/checkout@v4
@@ -31,7 +31,7 @@ jobs:
         run: bash ./$SOURCE_DIR/.workflow.sh build_post
   pgtest:
     name: Running tests
-    runs-on: [self-hosted, test-runner]
+    runs-on: self-hosted
     needs: pgcore
     env:
       OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
@@ -43,7 +43,7 @@ jobs:
   docs:
       name: Build website with examples
       needs: pgtest
-      runs-on: [self-hosted, test-runner]
+      runs-on: self-hosted
       env:
         DISPLAY: ":99.0"
         PYVISTA_OFF_SCREEN: True
@@ -55,7 +55,7 @@ jobs:
           run: bash ./$SOURCE_DIR/.workflow.sh doc
   upload-html:
     name: Upload HTML to dev.pygimli.org
-    runs-on: [pgserver]
+    runs-on: [self-hosted, pgserver]
     needs: docs
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
@@ -63,7 +63,7 @@ jobs:
         run: bash ./$SOURCE_DIR/.workflow.sh doc_post
   merging:
     name: Automerging
-    runs-on: [self-hosted, test-runner]
+    runs-on: self-hosted
     needs: upload-html
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
