@@ -5,28 +5,6 @@
 # leave any virtual environment
 deactivate 2>/dev/null || true
 
-if [ ! -z "$VIRTUAL_ENV" ]; then
-    RED
-    echo "active virtual environment $VIRTUAL_ENV : leave first"
-    NCOL
-    return
-fi
-
-# bash -xe ./gimli/core/scripts/jenkins-nf.sh
-if [[ $- == *i* ]]; then
-    # run with . *.sh or source *.sh
-    echo "Running in interactive mode. Aliases will work"
-else
-    # run with bash *.sh
-    echo "Running on NON interactive mode. Aliases will not work. Setting them now."
-    shopt -s expand_aliases ## else aliases will be ignored in this bash session
-
-    # make the script exit on every fail
-    set -e
-    alias python='python3'
-    alias return='exit'
-fi
-
 function GREEN(){
     echo -e '\033[0;32m'
 }
@@ -40,18 +18,46 @@ function NCOL(){
     echo -e '\033[0m'
 }
 
+if [[ $- == *i* ]]; then
+    # run with . *.sh or source *.sh
+    echo "Running in interactive mode. Aliases will work"
+else
+    # run with bash *.sh
+    echo "Running on NON interactive mode. Aliases will not work. Setting them now."
+    shopt -s expand_aliases ## else aliases will be ignored in this bash session
+
+    # make the script exit on every fail
+    set -e
+    
+    alias return='exit'
+fi
+
+if [ ! -z "$VIRTUAL_ENV" ]; then
+    RED
+    echo "active virtual environment $VIRTUAL_ENV : leave first"
+    echo "call deactivate"
+    NCOL
+    return
+fi
+
 function use_venv(){
     local venv_path=$1
     if [ -d $venv_path ]; then
         GREEN
         echo "Activating virtual environment $venv_path"
         NCOL
-        source $venv_path/bin/activate
+        if [ $OS == "Windows" ] || [ $OS == "Windows_NT" ]; then
+            # windows
+            source $venv_path/Scripts/activate
+        else
+            # linux / mac
+            source $venv_path/bin/activate
+        fi
     else
         GREEN
         echo "Virtual environment $venv_path does not exist. Creating it."
         NCOL
-        #new_venv $venv_path
+        new_venv $venv_path
     fi
 }
 function new_venv(){
@@ -92,6 +98,8 @@ function clean(){
         rm -rf $VENV_TEST
         echo "remove VENV_DOC: $VENV_DOC"
         rm -rf $VENV_DOC
+        echo "remove VENV_PYGIMLI: $VENV_PYGIMLI"
+        rm -rf $VENV_PYGIMLI
     popd
 }
 
@@ -106,7 +114,7 @@ function build_pre(){
     pushd $PROJECT_ROOT
         new_venv $VENV_BUILD
 
-        echo "pip install -e $PROJECT_SRC/[build]"
+        echo "uv pip install -e $PROJECT_SRC/[build]"
         uv pip install -e $PROJECT_SRC/[build]
         rm -rf $BUILD_DIR
         mkdir -p $BUILD_DIR
@@ -129,7 +137,13 @@ function build(){
         use_venv $VENV_BUILD
 
         pushd $BUILD_DIR
-            cmake $PROJECT_SRC
+            if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
+                # windows MSYS2
+                cmake -G "Unix Makefiles" $PROJECT_SRC
+            else
+                # Linux / Mac
+                cmake $PROJECT_SRC
+            fi
             make -j $GIMLI_NUM_THREADS
             make pygimli J=$GIMLI_NUM_THREADS
             # create pgcore wheel
@@ -150,11 +164,19 @@ function build_post(){
     NCOL
 
     if [ ! -f $BUILD_DIR/dist/pgcore*.whl ]; then
-        build
+        echo "pgcore wheel not found in build dist. Building first."
+        return
+        #build
     fi
 
     pushd $PROJECT_ROOT
         use_venv $VENV_BUILD
+
+        # special case for windows .. pgcore install to ensuse mingw runtime libs are found
+        if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
+            # windows MSYS2
+            uv pip install $BUILD_DIR/dist/pgcore*.whl
+        fi
 
         python -c 'import pygimli; print(pygimli.version())'
         python -c 'import pygimli; print(pygimli.Report())'
@@ -180,7 +202,12 @@ function test_pre(){
     pushd $PROJECT_ROOT
         new_venv $VENV_TEST
         # not needed to install pgcore in editable after build for linux
-        #uv pip install $PROJECT_DIST/pgcore*.whl
+        
+        # special case for windows .. pgcore install to ensuse mingw runtime libs are found
+        if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
+            # windows MSYS2
+            uv pip install $PROJECT_DIST/pgcore*.whl
+        fi
         uv pip install -e $PROJECT_SRC/[test]
     popd
 }
@@ -289,6 +316,33 @@ function doc_post(){
     # python -m pip install --force ~/snapshots/latest/pygimli*
 }
 
+function install(){
+    GREEN
+    echo "*** Install (Creating editable installation in build venv) ***"
+    NCOL
+
+    if [ ! -f $PROJECT_DIST/pgcore*.whl ]; then
+        build_post
+    fi
+    
+    pushd $PROJECT_ROOT
+        use_venv $VENV_PYGIMLI
+        
+        uv pip install $PROJECT_DIST/pgcore*.whl
+        uv pip install -e $PROJECT_SRC/[opt]
+
+        python -c 'import pygimli; print(pygimli.version())'
+        python -c 'import pygimli; print(pygimli.Report())'
+    popd
+
+    GREEN
+    echo "Editable installation created in venv: $VENV_PYGIMLI"
+    echo "To use it, call: "
+    echo "source $VENV_PYGIMLI/bin/activate #(linux/macos)"
+    echo "source $VENV_PYGIMLI/Scripts/activate #(windows)"
+    NCOL
+}
+
 function help(){
     echo ""
     echo "run: ${BASH_SOURCE[0]} TARGET"
@@ -304,6 +358,7 @@ function help(){
     echo "    doc_pre    [build] prepare documentation environment"
     echo "    doc        [doc_pre] build documentation"
     echo "    doc_post   [doc] deploy documentation"
+    echo "    install    [build, test] Create default editable installation in venv"
     echo "    all        [clean build test doc]"
     echo ""
     echo "ENVIRONMENT variables:"
@@ -322,11 +377,6 @@ function all(){
     test
     doc
 }
-
-# Show system information
-lsb_release -d
-uname -a
-#env
 
 JOB_NUM=0
 
@@ -347,9 +397,21 @@ if [ ! -z $GITHUB_ACTIONS ]; then
     SYSTEM=$(uname -s)
 elif [ -z $WORKSPACE ]; then
     WORKSPACE=$(realpath $(pwd))
-    OS=$(lsb_release -is)
+    if [ -z $OS ]; then
+        uname_s=$(uname -s 2>/dev/null || echo)
+        case "$uname_s" in
+            MINGW*|MSYS*|CYGWIN*|Windows_NT)
+                OS=Windows
+                ;;
+            Darwin*)
+                OS=MacOS
+                ;;
+            *)        
+                OS=Linux
+                ;;
+        esac
+    fi
     SYSTEM=$(uname -s)
-
     GREEN
     echo "Local Build (no Jenkins) on WORKSPACE=$WORKSPACE"
     NCOL
@@ -382,19 +444,61 @@ else
     echo "Using SOURCE_DIR=$SOURCE_DIR (forced by env setting SOURCE_DIR)"
 fi
 
+function abspath() {
+    local p="$1"
+    local abs
+
+    # Prefer realpath if available
+    if command -v realpath >/dev/null 2>&1; then
+        abs=$(realpath -m "$p" 2>/dev/null) || abs=$(realpath "$p" 2>/dev/null)
+    fi
+
+    # Fallback to python if realpath not present or failed
+    if [ -z "$abs" ]; then
+        RED
+        echo "Could not determine absolute path for $p"
+        return
+        NCOL
+    fi
+
+    # Normalize empty result
+    abs=${abs:-$p}
+    # Convert MSYS (/c/...) paths to Windows style (c:/...)
+    if [[ "$abs" =~ ^/([A-Za-z])/(.*) ]]; then
+        local drive="${BASH_REMATCH[1],,}"
+        local rest="${BASH_REMATCH[2]}"
+        abs="${drive}:/${rest}"
+    fi
+
+    # Normalize backslashes to forward slashes (pip accepts forward slashes on Windows)
+    abs="${abs//\\//}"
+    
+    echo "$abs"
+}
+
 PROJECT_ROOT=$WORKSPACE
-PROJECT_SRC=$PROJECT_ROOT/$SOURCE_DIR
+PROJECT_SRC=$(abspath $PROJECT_ROOT/$SOURCE_DIR)
 
 if [ -z $BASEPYTHON ]; then
     if [ -z $PYVERSION ]; then
-        PYVERSION=$(python -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")')
-        echo "building for python: $PYVERSION"
-        BASEPYTHON=python3
+        
+        if [ ! -x "$(command -v python3)" ]; then
+            RED
+            echo "python3 not found in PATH. Please install python3 or set BASEPYTHON to a valid python interpreter."
+            echo "e.g., BASEPYTHON=../../miniconda3/python bash ${BASH_SOURCE[0]}"
+            NCOL
+            return
+        else
+            echo "Using system python3 as BASEPYTHON"
+            BASEPYTHON=python3
+        fi
     else
         echo "building for python: $PYVERSION (forced by setting PYVERSION)"
         BASEPYTHON=python$PYVERSION
     fi
 fi
+
+PYVERSION=$($BASEPYTHON -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")')
 
 GIMLI_NUM_THREADS=$((`nproc --all` - 2))
 
@@ -406,20 +510,23 @@ BUILD_DIR=$(realpath $WORKSPACE/build-py$PYVERSION)
 VENV_BUILD=$(realpath $WORKSPACE/venv-build-py$PYVERSION)
 VENV_TEST=$(realpath $WORKSPACE/venv-test-py$PYVERSION)
 VENV_DOC=$(realpath $WORKSPACE/venv-doc-py$PYVERSION)
+VENV_PYGIMLI=$(realpath $WORKSPACE/venv-pygimli-py$PYVERSION)
 PROJECT_DIST=$(realpath $WORKSPACE/dist-py$PYVERSION)
 
-echo "WORKSPACE=$WORKSPACE"
 echo "JOB_NUM=$JOB_NUM"
+echo "WORKSPACE=$WORKSPACE"
 echo "PROJECT_SRC=$PROJECT_SRC"
 echo "OS=$OS"
 echo "SYSTEM=$SYSTEM"
 echo "NUM_THREADS=$GIMLI_NUM_THREADS"
+echo "PYTHON=$BASEPYTHON"
+echo "PYVERSION=$PYVERSION"
 echo "VENV_BUILD=$VENV_BUILD"
 echo "BUILD_DIR=$BUILD_DIR"
 echo "VENV_TEST=$VENV_TEST"
 echo "VENV_DOC=$VENV_DOC"
+echo "VENV_PYGIMLI=$VENV_PYGIMLI"
 echo "PROJECT_DIST=$PROJECT_DIST"
-echo "PYTHON=$BASEPYTHON"
 
 echo "Starting automatic build #$BUILD_NUMBER on" `date`
 start=$(date +"%s")
@@ -447,6 +554,8 @@ do
         doc;;
     doc_post)
         doc_post;;
+    install)
+        install;;
     all)
         all;;
     help)
