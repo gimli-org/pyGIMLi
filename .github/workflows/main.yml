@@ -67,24 +67,16 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           echo "remote"
-          git remote set-url origin https://florian-wagner:${{ secrets.SECRET }}@github.com/gimli-org/gimli.git
-
+          git remote set-url origin https://florian-wagner:${{ secrets.SECRET }}@github.com/gimli-org/pyGIMLi.git
           # Make sure to be in sync with dev on remote
-          echo "status"
+          echo "dev status"
           git status
-          echo "fetch"
-          git fetch
-          echo "clean"
-          git clean -ffdx
-          echo "reset"
-          git reset --hard HEAD
-
-          # Rebase and push to master
-          echo "stash"
-          git stash
-          echo "rebase"
-          git rebase origin/main
-          git push origin HEAD:main --force-with-lease
+          echo "main status"
+          git checkout main
+          git status
+          echo "merge"
+          git merge dev --ff-only
+          git push origin HEAD:main
   upload-html:
     name: Upload HTML to dev.pygimli.org
     runs-on: [self-hosted, pgserver]
