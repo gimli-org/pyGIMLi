@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """Class for managing first arrival travel time inversions."""
-import os
+from pathlib import Path
 import numpy as np
 
 import pygimli as pg
@@ -115,9 +114,8 @@ class TravelTimeManager(MeshMethodManager):
             secNodes = self.secNodes
 
         self.fop._refineSecNodes = secNodes
-        if secNodes > 0:
-            if ignoreRegionManager:
-                mesh = self.fop.createRefinedFwdMesh(mesh)
+        if secNodes > 0 and ignoreRegionManager:
+            mesh = self.fop.createRefinedFwdMesh(mesh)
 
         self.fop.setMesh(mesh, ignoreRegionManager=ignoreRegionManager)
         self.fop.jacobian().clear()
@@ -204,7 +202,7 @@ class TravelTimeManager(MeshMethodManager):
                 err = noiseAbs + t * noiseLevel
                 ret['err'] = err
 
-            pg.verbose("Absolute error estimates (min:max) {0}:{1}".format(
+            pg.verbose("Absolute error estimates (min:max) {}:{}".format(
                 min(ret['err']), max(ret['err'])))
 
             t += pg.randn(ret.size(), seed=seed) * ret('err')
@@ -251,13 +249,12 @@ class TravelTimeManager(MeshMethodManager):
         if secNodes is not None:
             self.secNodes = secNodes
 
-        if 'limits' in kwargs:
-            if kwargs['limits'][0] > 1:
-                tmp = kwargs['limits'][0]
-                kwargs['limits'][0] = 1.0 / kwargs['limits'][1]
-                kwargs['limits'][1] = 1.0 / tmp
-                pg.verbose('Switching velocity limits to slowness limits.',
-                           kwargs['limits'])
+        if 'limits' in kwargs and kwargs['limits'][0] > 1:
+            tmp = kwargs['limits'][0]
+            kwargs['limits'][0] = 1.0 / kwargs['limits'][1]
+            kwargs['limits'][1] = 1.0 / tmp
+            pg.verbose('Switching velocity limits to slowness limits.',
+                       kwargs['limits'])
 
         if useGradient:
             self.fop._useGradient = [vTop, vBottom]
@@ -308,7 +305,7 @@ class TravelTimeManager(MeshMethodManager):
         segs = []
         nodes = self.fop._core.mesh().positions(withSecNodes=True)
 
-        for s, g in zip(shots, recei):
+        for s, g in zip(shots, recei, strict=False):
             wi = self.fop.way(s, g)
             points = nodes[wi]
             segs.append(np.column_stack((pg.x(points), pg.y(points))))
@@ -469,34 +466,31 @@ class TravelTimeManager(MeshMethodManager):
             Name of the result path.
         """
         subfolder = self.__class__.__name__
-        path = getSavePath(folder, subfolder)
+        path = Path(getSavePath(folder, subfolder))
 
         if verbose:
-            pg.info('Saving refraction data to: {}'.format(path))
+            pg.info(f'Saving refraction data to: {path}')
 
-        np.savetxt(os.path.join(path, 'velocity.vector'),
-                   self.velocity)
-        np.savetxt(os.path.join(path, 'velocity-cov.vector'),
-                   self.rayCoverage())
-        np.savetxt(os.path.join(path, 'velocity-scov.vector'),
-                   self.standardizedCoverage())
+        np.savetxt(path / 'velocity.vector', self.velocity)
+        np.savetxt(path / 'velocity-cov.vector', self.rayCoverage())
+        np.savetxt(path / 'velocity-scov.vector', self.standardizedCoverage())
 
         m = pg.Mesh(self.paraDomain)
 
         m['Velocity'] = self.paraModel(self.velocity)
         m['Coverage'] = self.rayCoverage()
         m['S_Coverage'] = self.standardizedCoverage()
-        m.exportVTK(os.path.join(path, 'velocity'))
-        m.saveBinaryV2(os.path.join(path, 'velocity-pd'))
-        self.fop.mesh().save(os.path.join(path, 'velocity-mesh'))
+        m.exportVTK(path / 'velocity')
+        m.saveBinaryV2(path / 'velocity-pd')
+        self.fop.mesh().save(path / 'velocity-mesh')
 
-        np.savetxt(os.path.join(path, 'chi.txt'), self.inv.chi2History)
+        np.savetxt(path / 'chi.txt', self.inv.chi2History)
 
         if m.dim() == 2:
             fig, ax = pg.plt.subplots()
             self.showResult(ax=ax, cov=self.standardizedCoverage(), **kwargs)
             fig.set_size_inches(size)
-            fig.savefig(os.path.join(path, 'velocity.pdf'), bbox_inches='tight')
+            fig.savefig(path / 'velocity.pdf', bbox_inches='tight')
             pg.plt.close(fig)
 
         return path
