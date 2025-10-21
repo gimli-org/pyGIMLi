@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Plotting functions for traveltime."""
 import numpy as np
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Import travel time data from various formats into DataContainerTT."""
 import struct
+from pathlib import Path
 import numpy as np
 import pygimli as pg
 from .tt import DataContainerTT
@@ -10,9 +11,6 @@ def load(fileName, verbose=False, **kwargs):
     """Shortcut to load TravelTime data.
 
     Import Data and try to assume the file format.
-
-    TODO
-        * add RHL class importer
 
     Parameters
     ----------
@@ -37,7 +35,7 @@ def load(fileName, verbose=False, **kwargs):
 def importGTT(filename, return_header=False):
     """Import refraction data from Tomo+ GTT data file into DataContainer."""
     header = {}
-    with open(filename, 'rb') as fid:
+    with Path(filename).open('rb') as fid:
         block = fid.read(100)
         nshots = struct.unpack(">I", block[:4])[0]
         ngeoph = struct.unpack(">I", block[4:8])[0]
@@ -60,9 +58,8 @@ def importGTT(filename, return_header=False):
             nci = struct.unpack(">I", block[4:8])[0]  # channels for the shot
             spos = np.array(struct.unpack(">4f", block[8:24]))
             SPOS[i, :] = spos[:3]
-            print(spos)
             X, Y = [], []
-            for j in range(nci):
+            for _j in range(nci):
                 block = fid.read(24)  # receiver information
                 recid = struct.unpack(">I", block[:4])[0]
                 rpos = np.array(struct.unpack(">4f", block[4:20]))
@@ -137,7 +134,7 @@ def importAsciiColumns(filename, ndig=2, roundto=0,
                            return_index=True, return_inverse=True)
     uz = np.interp(ux, posR[iR, 0], posR[iR, 1])
     data = DataContainerTT()
-    for xx, zz in zip(ux, uz):
+    for xx, zz in zip(ux, uz, strict=False):
         data.createSensor(pg.Pos(xx, zz))
 
     ndata = A.shape[0]
@@ -176,7 +173,7 @@ def readTOMfile(filename, ndig=2, roundto=0):
     return data
 
 
-class ReadAHL(object):
+class ReadAHL:
     """Class reading seismic refraction format provided by Uppsala University.
 
     Supply a filename and a delimiter character. The delimiter is used to
@@ -236,7 +233,7 @@ class ReadAHL(object):
         """Search for the header and extract it."""
         # open the file and get some info out:
         # number of lines to skip and the header
-        with open(self.filename, 'r') as f:
+        with Path(self.filename).open('r') as f:
             # loop until we find the delimiter as the first character of line
             firstchar = ''
             while firstchar is not self.delimiter:
@@ -251,7 +248,7 @@ class ReadAHL(object):
         # this will determine number of leading rows and extract labels etc...
         self._extractheader()
 
-        with open(self.filename, 'r') as f:
+        with Path(self.filename).open('r') as f:
             # skip some rows as determined by _extractheader()
             for _ in range(self.skiprows):
                 f.next()
@@ -296,7 +293,8 @@ class ReadAHL(object):
                                            sensors_uniq[:, np.newaxis])))
 
         # remap the sensor ids to indices starting from 1 going to N
-        sensor_map = zip(all_uniq, np.arange(1, len(all_uniq)+1, dtype=int))
+        sensor_map = zip(all_uniq,
+                         np.arange(1, len(all_uniq)+1, dtype=int), strict=False)
         for old, new in sensor_map:
             data[data[:, sensors_col] == old, sensors_col] = new
             data[data[:, shots_col] == old, shots_col] = new
@@ -349,12 +347,9 @@ class ReadAHL(object):
         fname_in = self.filename
         fname_out = fname_in[:fname_in.rfind('.')] + '.sgt'
 
-        if desc == 'pos':
-            mode = 'w'
-        else:
-            mode = 'a'
+        mode = 'w' if desc == 'pos' else 'a'
 
-        with open(fname_out, mode) as f:
+        with Path(fname_out).open(mode) as f:
             if desc == 'pos':
                 if self.use_xz_only:
                     f.write(str(data.shape[0]) + ' # No positions\n#x z\n')
@@ -366,8 +361,7 @@ class ReadAHL(object):
                 f.write(str(data.shape[0]) + ' # Number of data\n#s g t\n')
                 np.savetxt(f, data, fmt='%i %i %.4f')
             else:
-                raise ValueError('Invalid description of\
-                data to be written: {}'.format(desc))
+                raise ValueError(f'Invalid description of data to be written: {desc}')
 
 
 if __name__ == '__main__':
