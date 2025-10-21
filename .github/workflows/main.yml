@@ -22,13 +22,13 @@ jobs:
           fetch-depth: 0 # checks out all branches and tags
           path: source
       - name: Cleaning old builds
-        run: bash ./$SOURCE_DIR/core/scripts/workflow.sh clean
+        run: bash ./$SOURCE_DIR/.workflow.sh clean
       - name: Prepare build
-        run: bash ./$SOURCE_DIR/core/scripts/workflow.sh build_pre
+        run: bash ./$SOURCE_DIR/.workflow.sh build_pre
       - name: Build libgimli
-        run: bash ./$SOURCE_DIR/core/scripts/workflow.sh build
+        run: bash ./$SOURCE_DIR/.workflow.sh build
       - name: Test bindings
-        run: bash ./$SOURCE_DIR/core/scripts/workflow.sh build_post
+        run: bash ./$SOURCE_DIR/.workflow.sh build_post
   pgtest:
     name: Running tests
     runs-on: [self-hosted, test-runner]
@@ -37,9 +37,9 @@ jobs:
       OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
     steps:
       - name: Prepare tests
-        run: bash ./$SOURCE_DIR/core/scripts/workflow.sh test_pre
+        run: bash ./$SOURCE_DIR/.workflow.sh test_pre
       - name: Run pg.test()
-        run: bash ./$SOURCE_DIR/core/scripts/workflow.sh test
+        run: bash ./$SOURCE_DIR/.workflow.sh test
   docs:
       name: Build website with examples
       needs: pgtest
@@ -50,9 +50,9 @@ jobs:
         OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
       steps:
         - name: Preparing doc build
-          run: bash ./$SOURCE_DIR/core/scripts/workflow.sh doc_pre
+          run: bash ./$SOURCE_DIR/.workflow.sh doc_pre
         - name: Running sphinx
-          run: bash ./$SOURCE_DIR/core/scripts/workflow.sh doc
+          run: bash ./$SOURCE_DIR/.workflow.sh doc
   upload-html:
     name: Upload HTML to dev.pygimli.org
     runs-on: [self-hosted, test-runner]
@@ -60,7 +60,7 @@ jobs:
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
       - name: Uploading built html files
-        run: bash ./$SOURCE_DIR/core/scripts/workflow.sh doc_post
+        run: bash ./$SOURCE_DIR/.workflow.sh doc_post
   merging:
     name: Automerging
     runs-on: [self-hosted, test-runner]
