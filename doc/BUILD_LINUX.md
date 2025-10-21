@@ -1,7 +1,36 @@
 (build_lin)=
 # Building on Linux
 
-## Compiling with a virtual environment
+## Using interal workflow
+
+We provide a workflow script for our CI pipeline/action runner which may be use
+also local for all platforms.
+
+Prepare workspace:
+
+```bash
+    mkdir -p gimli
+    git clone https://github.com/gimli-org/gimli.git
+    # optionally change to the development branch
+    git checkout dev
+```
+
+Runing workflow:
+
+```bash
+    base gimli/.workflow.sh install
+```
+
+The workflow have several targets which you might try:
+
+```bash
+    base gimli/.workflow.sh help
+```
+
+If something goes wrong you can try the manual compilation.
+
+
+## Manual compiling with a virtual environment
 
 If you don't want to use the conda environment we encourage the use of a
 virtual python environment.
@@ -53,9 +82,9 @@ so you can test the pygimli build with:
     python -c 'import pygimli as pg; print(pg.Report())'
 ```
 
-Note, if you test like this, ensure there is no actual path with a name 
-`pygimli` in your current directory or he will 
-test this path as package instead. This is a sideeffect of the 
+Note, if you test like this, ensure there is no actual path with a name
+`pygimli` in your current directory or he will
+test this path as package instead. This is a sideeffect of the
 `--editable` install and such the test will probably fail.
 
 As long nothing changes in the C++ part of pygimli you can just update pyGIMLi
