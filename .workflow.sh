@@ -170,8 +170,7 @@ function build_post(){
 
     if [ ! -f $BUILD_DIR/dist/pgcore*.whl ]; then
         echo "pgcore wheel not found in build dist. Building first."
-        return
-        #build
+        build
     fi
 
     pushd $PROJECT_ROOT
