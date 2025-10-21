@@ -18,13 +18,13 @@ Prepare workspace:
 Runing workflow:
 
 ```bash
-    base gimli/.workflow.sh install
+    bash gimli/.workflow.sh install
 ```
 
 The workflow have several targets which you might try:
 
 ```bash
-    base gimli/.workflow.sh help
+    bash gimli/.workflow.sh help
 ```
 
 If something goes wrong you can try the manual compilation.
