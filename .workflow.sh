@@ -28,7 +28,7 @@ else
 
     # make the script exit on every fail
     set -e
-    
+
     alias return='exit'
 fi
 
@@ -158,6 +158,11 @@ function build(){
     popd
 }
 
+function testReport(){
+    python -c 'import pygimli; print(pygimli.version())'
+    python -c 'import pygimli; print(pygimli.Report())'
+}
+
 function build_post(){
     GREEN
     echo "*** build_post (Testing build) ***"
@@ -178,8 +183,7 @@ function build_post(){
             uv pip install $BUILD_DIR/dist/pgcore*.whl
         fi
 
-        python -c 'import pygimli; print(pygimli.version())'
-        python -c 'import pygimli; print(pygimli.Report())'
+        testReport
 
         mkdir -p $PROJECT_DIST
 
@@ -202,7 +206,7 @@ function test_pre(){
     pushd $PROJECT_ROOT
         new_venv $VENV_TEST
         # not needed to install pgcore in editable after build for linux
-        
+
         # special case for windows .. pgcore install to ensuse mingw runtime libs are found
         if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
             # windows MSYS2
@@ -223,8 +227,7 @@ function test(){
             use_venv $VENV_TEST
         fi
 
-        python -c 'import pygimli; print(pygimli.version())'
-        python -c 'import pygimli; print(pygimli.Report())'
+        testReport
         python -c 'import pygimli; pygimli.test(show=False, abort=True)'
     popd
 }
@@ -247,8 +250,7 @@ function doc_pre(){
         uv pip install --force-reinstall $PROJECT_DIST/pgcore*.whl
         uv pip install $PROJECT_DIST/pygimli*.whl
 
-        python -c 'import pygimli; print(pygimli.version())'
-        python -c 'import pygimli; print(pygimli.Report())'
+        testReport
     popd
 }
 
@@ -324,20 +326,21 @@ function install(){
     if [ ! -f $PROJECT_DIST/pgcore*.whl ]; then
         build_post
     fi
-    
+
     pushd $PROJECT_ROOT
         use_venv $VENV_PYGIMLI
-        
+
         uv pip install $PROJECT_DIST/pgcore*.whl
         uv pip install -e $PROJECT_SRC/[opt]
 
-        python -c 'import pygimli; print(pygimli.version())'
-        python -c 'import pygimli; print(pygimli.Report())'
+        testReport
     popd
 
     GREEN
     echo "Editable installation created in venv: $VENV_PYGIMLI"
+    echo ""
     echo "To use it, call: "
+    echo ""
     echo "source $VENV_PYGIMLI/bin/activate #(linux/macos)"
     echo "source $VENV_PYGIMLI/Scripts/activate #(windows)"
     NCOL
@@ -349,7 +352,7 @@ function help(){
     echo ""
     echo "TARGETS:"
     echo "    help       show this help"
-    echo "    clean      remove build artifacts for PYTHONVERSION"
+    echo "    clean      remove build artifacts for PYVERSION"
     echo "    build_pre  prepare build environment venv"
     echo "    build      [build_pre] build project"
     echo "    build_post [build] test build"
@@ -358,7 +361,7 @@ function help(){
     echo "    doc_pre    [build] prepare documentation environment"
     echo "    doc        [doc_pre] build documentation"
     echo "    doc_post   [doc] deploy documentation"
-    echo "    install    [build, test] Create default editable installation in venv"
+    echo "    install    [build] Create default editable installation in venv"
     echo "    all        [clean build test doc]"
     echo ""
     echo "ENVIRONMENT variables:"
@@ -406,7 +409,7 @@ elif [ -z $WORKSPACE ]; then
             Darwin*)
                 OS=MacOS
                 ;;
-            *)        
+            *)
                 OS=Linux
                 ;;
         esac
@@ -472,7 +475,7 @@ function abspath() {
 
     # Normalize backslashes to forward slashes (pip accepts forward slashes on Windows)
     abs="${abs//\\//}"
-    
+
     echo "$abs"
 }
 
@@ -481,7 +484,7 @@ PROJECT_SRC=$(abspath $PROJECT_ROOT/$SOURCE_DIR)
 
 if [ -z $BASEPYTHON ]; then
     if [ -z $PYVERSION ]; then
-        
+
         if [ ! -x "$(command -v python3)" ]; then
             RED
             echo "python3 not found in PATH. Please install python3 or set BASEPYTHON to a valid python interpreter."
