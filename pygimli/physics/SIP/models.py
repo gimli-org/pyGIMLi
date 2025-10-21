@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Spectral induced polarization (SIP) relaxations models."""
 
 from math import pi
@@ -8,6 +7,7 @@ import pygimli as pg
 
 
 def ColeColeRho(f, rho, m, tau, c, a=1):
+    """Backward compatibility."""
     pg.deprecated("Please use modelColeColeRho instead of ColeColeRho.")
     return modelColeColeRho(f, rho, m, tau, c, a)
 
@@ -80,6 +80,7 @@ def modelColeColeRho(f, rho, m, tau, c, a=1):
 
 
 def ColeColeRhoDouble(f, rho, m1, t1, c1, m2, t2, c2):
+    """Backward compatibility."""
     pg.deprecated("Use modelColeColeRhoDouble instead of ColeColeRhoDouble.")
     return modelColeColeRhoDouble(f, rho, m1, t1, c1, m2, t2, c2)
 
@@ -100,6 +101,7 @@ def modelColeColeRhoDouble(f, rho, m1, t1, c1, m2, t2, c2, a=1, mult=False):
 
 
 def ColeColeSigma(f, sigma, m, tau, c, a=1):
+    """Backward compatibility."""
     pg.deprecated("Please use modelColeColeSigma instead of ColeColeSigma.")
     return modelColeColeSigma(f, sigma, m, tau, c, a)
 
@@ -172,6 +174,7 @@ def relaxationTerm(f, tau, c=1., a=1., p=1.):
 
 
 def DebyeRelaxation(f, tau, m):
+    """Backward compatibility."""
     pg.deprecated("Please use relaxationDebye instead of DebyeRelaxation.")
     return relaxationDebye(f, tau, m)
 
@@ -182,6 +185,7 @@ def relaxationDebye(f, tau, m):
 
 
 def WarbugRelaxation(f, tau, m):
+    """Backward compatibility."""
     pg.deprecated("Please use relaxationWarbug instead of WarbugRelaxation.")
     return relaxationWarbug(f, tau, m)
 
@@ -192,6 +196,7 @@ def relaxationWarbug(f, tau, m):
 
 
 def ColeColeEpsilon(f, e0, eInf, tau, alpha):
+    """Backward compatibility."""
     pg.deprecated("Use modelColeColeEpsilon instead of ColeColeEpsilon.")
     return modelColeColeEpsilon(f, e0, eInf, tau, alpha)
 
@@ -202,11 +207,13 @@ def modelColeColeEpsilon(f, e0, eInf, tau, alpha):
 
 
 def ColeCole(f, R, m, tau, c, a=1):
+    """Backward compatibility."""
     pg.deprecated("Please use modelColeColeRho instead of ColeCole.")
     return modelColeColeRho(f, R, m, tau, c, a)
 
 
 def ColeDavidson(f, R, m, tau, a=1):
+    """Backward compatibility."""
     pg.deprecated("Please use modelColeDavidson instead of ColeDavidson.")
     return modelColeDavidson(f, R, m, tau, a)
 
@@ -236,8 +243,8 @@ class ColeColePhi(pg.core.ModellingBase):
     """
 
     def __init__(self, f, verbose=False):
-        """Setup class by specifying the frequency."""
-        super(ColeColePhi, self).__init__(self, verbose)
+        """Set up class by specifying the frequency."""
+        super().__init__(self, verbose)
         self.f_ = f
         self.setMesh(pg.meshtools.createMesh1D(1, 3))
 
@@ -271,7 +278,7 @@ class DoubleColeCole(pg.Modelling):
 
     def __init__(self, f, rho=True, tauRho=True, mult=False, aphi=True,
                  verbose=False):
-        """Setup class by specifying the frequency."""
+        """Set up class by specifying the frequency."""
         super().__init__(verbose=verbose)
         self.f_ = f  # save frequencies
         self.setMesh(pg.meshtools.createMesh1D(1, 7))  # 4 single parameters
@@ -317,8 +324,8 @@ class DoubleColeColePhi(pg.core.ModellingBase):
     """
 
     def __init__(self, f, verbose=False):
-        """Setup class by specifying the frequency."""
-        super(DoubleColeColePhi, self).__init__(verbose)
+        """Set up class by specifying the frequency."""
+        super().__init__(verbose)
         self.f_ = f  # save frequencies
         self.setMesh(pg.meshtools.createMesh1D(1, 6))  # 4 single parameters
 
@@ -348,7 +355,8 @@ class ColeColeComplex(pg.core.ModellingBase):
     """Cole-Cole model with EM term after Pelton et al. (1978)."""
 
     def __init__(self, f, verbose=False):
-        super(ColeColeComplex, self).__init__(verbose)
+        """Set up instance with frequency."""
+        super().__init__(verbose)
         self.f_ = f  # save frequencies
         self.setMesh(pg.meshtools.createMesh1D(1, 4))  # 4 single parameters
 
@@ -362,7 +370,8 @@ class ColeColeComplexSigma(pg.core.ModellingBase):
     """Cole-Cole model with EM term after Pelton et al. (1978)."""
 
     def __init__(self, f, verbose=False):
-        super(ColeColeComplexSigma, self).__init__(verbose)
+        """Set up instance with frequency."""
+        super().__init__(verbose)
         self.f_ = f  # save frequencies
         self.setMesh(pg.meshtools.createMesh1D(1, 4))  # 4 single parameters
 
@@ -376,7 +385,8 @@ class PeltonPhiEM(pg.core.ModellingBase):
     """Cole-Cole model with EM term after Pelton et al. (1978)."""
 
     def __init__(self, f, verbose=False):
-        super(PeltonPhiEM, self).__init__(verbose)
+        """Set up instance with frequency."""
+        super().__init__(verbose)
         self.f_ = f  # save frequencies
         self.setMesh(pg.meshtools.createMesh1D(1, 4))  # 4 single parameters
 
@@ -392,7 +402,7 @@ class DebyePhi(pg.Modelling):
 
     def __init__(self, fvec, tvec, verbose=False):  # save reference in class
         """Init with frequency and tau vector."""
-        super(DebyePhi, self).__init__(verbose=verbose)
+        super().__init__(verbose=verbose)
         self.f_ = fvec
         self.nf_ = len(fvec)
         self.t_ = tvec
@@ -402,7 +412,7 @@ class DebyePhi(pg.Modelling):
     def response(self, par):
         """amplitude/phase spectra as function of spectral chargeabilities."""
         y = np.ones(self.nf_, dtype=np.complex)  # 1 -
-        for (tau, mk) in zip(self.t_, par):
+        for (tau, mk) in zip(self.t_, par, strict=False):
             y -= (1. - relaxationTerm(self.f_, tau)) * mk
 
         return -np.angle(y)
@@ -418,7 +428,7 @@ class DebyeComplex(pg.Modelling):
         self.t = tvec
         self.nt = len(tvec)
         mesh = pg.meshtools.createMesh1D(len(tvec))  # standard 1d mesh
-        super(DebyeComplex, self).__init__(mesh=mesh, verbose=verbose)
+        super().__init__(mesh=mesh, verbose=verbose)
         T, W = np.meshgrid(tvec, fvec * 2. * pi)
         WT = W*T
         self.A = WT**2 / (WT**2 + 1)
