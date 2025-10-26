@@ -1,6 +1,5 @@
 ﻿#!/usr/bin/env python
-# coding: utf-8
-"""Classes for modelling helicopter electromagnetics (HEM) using VMD solvers"""
+"""Modelling helicopter electromagnetics (HEM) using VMD solvers."""
 from math import sqrt, pi
 import numpy as np
 
@@ -9,38 +8,11 @@ from pygimli.physics.constants import Constants
 from pygimli.frameworks import Block1DModelling, MeshModelling
 
 
-def registerDAEROcmap():
-    """Standardized colormap from A-AERO projects (purple=0.3 to red=500).
-
-    Example
-    -------
-    >>> import pygimli as pg
-    >>> cmap = pg.physics.em.hemmodelling.registerDAEROcmap()
-    >>> mesh = pg.createGrid(20,2)
-    >>> data = pg.x(mesh.cellCenters())
-    >>> _ = pg.show(mesh, data, cMap=cmap)
-    """
-    from matplotlib.colors import LinearSegmentedColormap
-    import matplotlib as mpl
-
-    CMY = np.array([
-        [127, 255, 31], [111, 255, 47], [95, 255, 63], [79, 255, 79],
-        [63, 255, 95], [47, 255, 111], [31, 255, 127], [16, 255, 159],
-        [0, 223, 159], [0, 191, 159], [0, 159, 207], [0, 127, 175],
-        [0, 95, 175], [0, 63, 175], [0, 47, 175], [0, 31, 191], [0, 0, 255],
-        [0, 0, 159], [15, 0, 127], [47, 0, 143], [79, 0, 143], [111, 0, 143],
-        [143, 0, 127], [159, 31, 63], [175, 47, 31], [207, 63, 0],
-        [223, 111, 0], [231, 135, 0], [239, 159, 0], [255, 191, 47],
-        [239, 199, 63], [223, 207, 79], [207, 239, 111]], dtype=float)
-    RGB = 1.0 - CMY/255
-    daero = LinearSegmentedColormap.from_list('D-AERO', RGB)
-    mpl.colormaps.register(name='daero', cmap=daero)
-    return daero
-
 
 # class HEMmodelling(pg.Modelling):
 class HEMmodelling(Block1DModelling):
     """HEM Airborne modelling class based on the BGR RESOLVE system."""
+
     ep0 = Constants.e0
     mu0 = Constants.mu0
     c0 = sqrt(1. / ep0 / mu0)
@@ -68,7 +40,7 @@ class HEMmodelling(Block1DModelling):
         self.height = height
         self.f = np.asarray(f)
         if r is None:
-            raise Exception("Specify separation value or vector!")
+            raise ValueError("Specify separation value or vector!")
         if 'scaling' in kwargs:
             if kwargs['scaling'] == 'ppm':
                 self.scaling = 1e6
@@ -78,13 +50,13 @@ class HEMmodelling(Block1DModelling):
                 self.scaling = kwargs['scaling']
         if self.f is None:
             self.f = self.fdefault
-        if isinstance(r, float) or isinstance(r, int):
+        if isinstance(r, (float, int)):
             self.r = np.ones_like(f, dtype=float) * r
         else:
             if len(r) == len(self.f):
                 self.r = r
             else:
-                raise Exception('Length vector have to be matching!')
+                raise ValueError('Length vector have to be matching!')
         if self.r is None:
             self.r = self.rdefault
 
@@ -175,13 +147,11 @@ class HEMmodelling(Block1DModelling):
                     1.0 + alpha[n, :, :] * c[n+1, :, :]) * \
                     np.exp(-alpha[n, :, :] * d[n, :, :])
             # Determine layer Index where z is
+            ind = nl - 1
             for n in range(0, nl-1):
                 if np.logical_and(z >= h[n], z < h[n+1]):
                     ind = n
-            try:
-                ind
-            except NameError:
-                ind = nl - 1
+
             if (ind + 1) < nl:
                 a = np.prod(aa[:ind, :, :], 0) * 0.5 * \
                     (1.0 + b[ind, :, :] / alpha[ind, :, :]) * \
@@ -258,10 +228,8 @@ class HEMmodelling(Block1DModelling):
         # wave number in air, quasistationary approximation
         alpha0 = np.copy(lam) * complex(1, 0)  # (1, 100, nfreq)
         # wave number in air, full solution for f > 1e4
-        if quasistatic:
-            index = np.zeros(self.f.shape, np.bool)
-        else:
-            index = self.f >= 1e4
+        index = np.zeros(self.f.shape, np.bool) if quasistatic \
+            else self.f >= 10000.0
         if np.any(index):
             alpha0[:, :, index] = np.sqrt(
                 lam[:, :, index]**2 - np.tile(self.wem[index], (1, nc, 1)) +
@@ -359,8 +327,8 @@ def hankelfc(order):
             -8.48765949e-6, 5.35535110e-6, -3.37899811e-6, 2.13200368e-6,
             -1.34520338e-6, 8.48765951e-7, -5.35535110e-7, 3.37899811e-7],
             float)
-        nc = int(80)
-        nc0 = int(40)
+        nc = 80
+        nc0 = 40
     elif order == 2:  # cos
         fc = np.array([
             1.63740363e-7, 1.83719709e-7, 2.06136904e-7, 2.31289411e-7,
@@ -405,8 +373,8 @@ def hankelfc(order):
             4.33211503e-6, -2.73337979e-6, 1.72464606e-6, -1.08817810e-6,
             6.86593961e-7, -4.33211503e-7, 2.73337979e-7, -1.72464606e-7],
             float)
-        nc = int(164)
-        nc0 = int(122)
+        nc = 164
+        nc0 = 122
     elif order == 3:  # J0
         fc = np.array([
             2.89878288e-7, 3.64935144e-7, 4.59426126e-7, 5.78383226e-7,
@@ -435,8 +403,8 @@ def hankelfc(order):
             1.56774609e-6, -9.89180896e-7, 6.24130948e-7, -3.93800005e-7,
             2.48471005e-7, -1.56774605e-7, 9.89180888e-8, -6.24130946e-8],
             float)
-        nc = int(100)
-        nc0 = int(60)
+        nc = 100
+        nc0 = 60
     elif order == 4:  # J1
         fc = np.array([
             1.84909557e-13, 2.85321327e-13, 4.64471808e-13, 7.16694771e-13,
@@ -465,8 +433,8 @@ def hankelfc(order):
             -1.36997587e-5, 8.64396338e-6, -5.45397218e-6, 3.44122380e-6,
             -2.17126543e-6, 1.36997587e-6, -8.64396337e-7, 5.45397218e-7],
             float)
-        nc = int(100)
-        nc0 = int(60)
+        nc = 100
+        nc0 = 60
     return (np.reshape(fc, (-1, 1)), nc, nc0)  # (100,) -> (100, 1)
 
 
@@ -533,7 +501,7 @@ class FDEMLCIFOP(pg.core.ModellingBase):
 
     def __init__(self, data, nlay=2, verbose=False, f=None, r=None):
         """Parameters: FDEM data class and number of layers."""
-        super(FDEMLCIFOP, self).__init__(verbose)
+        super().__init__(verbose)
         self.nlay = nlay
         self.FOP = data.FOP(nlay)
         self.nx = len(data.x)
@@ -573,7 +541,7 @@ class FDEM2dFOP(pg.core.ModellingBase):
 
     def __init__(self, data, nlay=2, verbose=False):
         """Parameters: FDEM data class and number of layers."""
-        super(FDEM2dFOP, self).__init__(verbose)
+        super().__init__(verbose)
         self.nlay = nlay
         self.FOP = data.FOP(nlay)
         self.nx = len(data.x)
@@ -612,6 +580,7 @@ class FDEM2dFOP(pg.core.ModellingBase):
 
 class FDEMSmoothModelling(MeshModelling):
     """Occam-style (smooth) inversion."""
+
     def __init__(self, thk, **kwargs):
         super().__init__()
         self.thk_ = thk
@@ -627,7 +596,7 @@ class FDEMSmoothModelling(MeshModelling):
 
 if __name__ == '__main__':
     numlay = 3
-    elevation = float(30.0)
+    elevation = 30.0
     resistivity = np.array([1000.0, 100.0, 1000.0], float)
     thickness = np.array([22.0, 29.0], float)
     fop = HEMmodelling(numlay, elevation, r=10)  # frequency, separation)

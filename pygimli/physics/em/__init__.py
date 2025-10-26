@@ -12,3 +12,4 @@ TDEMOccamModelling = TDEMSmoothModelling  # alias
 
 from .hemmodelling import HEMmodelling
 from .io import readusffile, importMaxminData
+from .tools import cmapDAERO, xfplot, FDEMsystems
