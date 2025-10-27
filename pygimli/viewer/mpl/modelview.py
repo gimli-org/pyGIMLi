@@ -113,7 +113,9 @@ def drawModel1D(ax, thickness=None, values=None, model=None, depths=None,
     ax.set_ylabel(zlabel)
     ax.set_xlabel(xlabel)
     # assume positive depths pointing upward
-    ax.set_ylim(pz[-1], pz[0])
+    if plot in ['plot', 'semilogx']:
+        ax.set_ylim(pz[-1], pz[0])
+
     ax.grid(True)
 
 
