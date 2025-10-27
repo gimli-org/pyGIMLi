@@ -23,7 +23,7 @@ def registerDAEROcmap():
     Example
     -------
     >>> import pygimli as pg
-    >>> cmap = pg.physics.em.hemmodelling.registerDAEROcmap()
+    >>> cmap = pg.physics.em.tools.registerDAEROcmap()
     >>> mesh = pg.createGrid(20,2)
     >>> data = pg.x(mesh.cellCenters())
     >>> _ = pg.show(mesh, data, cMap=cmap)
