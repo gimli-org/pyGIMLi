@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Vertical electrical sounding (VES) manager class."""
 import numpy as np
-
 import pygimli as pg
 from pygimli.frameworks import MethodManager1d
 from .vesModelling import VESModelling, VESCModelling
@@ -49,6 +48,8 @@ class VESManager(MethodManager1d):
         self.dataTrans = None
         self.rhoaTrans = pg.trans.TransLog()
         self.phiaTrans = pg.trans.TransLin()
+        if "ab2" in kwargs or "data" in kwargs or "dataContainer" in kwargs:
+            self.fop.setDataSpace(**kwargs)
 
     @property
     def complex(self):
