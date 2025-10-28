@@ -6,10 +6,8 @@ import numpy as np
 import pygimli as pg
 from pygimli.physics.constants import Constants
 from pygimli.frameworks import Block1DModelling, MeshModelling
+from .tools import FDEMsystems
 
-
-
-# class HEMmodelling(pg.Modelling):
 class HEMmodelling(Block1DModelling):
     """HEM Airborne modelling class based on the BGR RESOLVE system."""
 
@@ -38,6 +36,10 @@ class HEMmodelling(Block1DModelling):
         """
         self.nlay = nlay
         self.height = height
+        syst = kwargs.pop('system', None)
+        if isinstance(syst, str):
+            f, r = FDEMsystems.getFrequenciesDistances(syst)
+
         self.f = np.asarray(f)
         if r is None:
             raise ValueError("Specify separation value or vector!")
@@ -48,6 +50,7 @@ class HEMmodelling(Block1DModelling):
                 self.scaling = 1e2
             else:
                 self.scaling = kwargs['scaling']
+
         if self.f is None:
             self.f = self.fdefault
         if isinstance(r, (float, int)):

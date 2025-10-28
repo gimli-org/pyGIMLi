@@ -1,103 +1,12 @@
 #!/usr/bin/env python
-"""Frequency Domain Electromagnetics (FDEM) functions and class."""
-
+"""Frequency Domain Electromagnetics (FDEM) class."""
 from pathlib import Path
 import numpy as np
-
 import pygimli as pg
 from pygimli.viewer.mpl import show1dmodel, drawModel1D
 from .hemmodelling import HEMmodelling
+from .fdemmodelling import FDEM2dFOP
 from .tools import xfplot
-
-class FDEM2dFOPold(pg.core.ModellingBase):
-    """Old variant of 2D FOP (to be deleted)."""
-
-    def __init__(self, data, nlay=2, verbose=False):
-        """Initialize with data and number of layers."""
-        pg.core.ModellingBase.__init__(self, verbose)
-        self.nlay = nlay
-        self.FOP1d = data.FOP(nlay)
-        self.nx = len(data.x)
-        self.nf = len(data.freq())
-        self.mesh_ = pg.meshtools.createMesh1D(self.nx, 2 * nlay - 1)
-        self.setMesh(self.mesh_)
-
-    def response(self, model):
-        """Yield forward model response."""
-        modA = np.asarray(model).reshape((self.nlay * 2 - 1, self.nx)).T
-        resp = pg.Vector(0)
-        for modi in modA:
-            resp = pg.cat(resp, self.FOP1d.response(modi))
-
-        return resp
-
-
-class FDEM2dFOP(pg.core.ModellingBase):
-    """FDEM 2d-LCI modelling class based on BlockMatrices."""
-
-    def __init__(self, data, nlay=2, verbose=False):
-        """Parameters: FDEM data class and number of layers."""
-        super().__init__(verbose)
-        self.nlay = nlay
-        self.header = {}
-        self.pos, self.z, self.topo = None, None, None
-        self.FOP = data.FOP(nlay)
-        self.nx = len(data.x)
-        self.nf = len(data.freq())
-        npar = 2 * nlay - 1
-        self.mesh1d = pg.meshtools.createMesh1D(self.nx, npar)
-        self.mesh_ = pg.meshtools.createMesh1D(self.nx, 2 * nlay - 1)
-        self.setMesh(self.mesh_)
-
-        # self.J = NDMatrix(self.nx, self.nf*2, npar)
-        self.J = pg.matrix.BlockMatrix()
-        self.FOP1d = []
-        for i in range(self.nx):
-            self.FOP1d.append(pg.core.FDEM1dModelling(
-                nlay, data.freq(), data.coilSpacing, -data.height))
-            n = self.J.addMatrix(self.FOP1d[-1].jacobian())
-            self.J.addMatrixEntry(n, self.nf * 2 * i, npar * i)
-
-        self.J.recalcMatrixSize()
-        print(self.J.rows(), self.J.cols())
-
-    def response(self, model):
-        """Cut together forward responses of all soundings."""
-        modA = np.asarray(model).reshape((self.nlay * 2 - 1, self.nx)).T
-        resp = pg.Vector(0)
-        for modi in modA:
-            resp = pg.cat(resp, self.FOP.response(modi))
-
-        return resp
-
-    def createJacobian(self, model):
-        """Create Jacobian matrix by creating individual Jacobians."""
-        modA = np.asarray(model).reshape((self.nlay * 2 - 1, self.nx)).T
-        for i in range(self.nx):
-            self.FOP1d[i].createJacobian(modA[i])
-
-
-class HEM1dWithElevation(pg.core.ModellingBase):
-    """Airborne FDEM modelling including variable bird height."""
-
-    def __init__(self, frequencies, coilspacing, nlay=2, verbose=False):
-        """Set up class by frequencies and geometries."""
-        pg.core.ModellingBase.__init__(self, verbose)
-        self.nlay_ = nlay  # real layers (actually one more!)
-        self.FOP_ = pg.core.FDEM1dModelling(nlay + 1, frequencies,
-                                            coilspacing, self.height)
-        self.mesh_ = pg.meshtools.createMesh1D(nlay, 2)
-        # thicknesses & res
-        self.mesh_.cell(0).setMarker(2)
-        self.setMesh(self.mesh_)
-
-    def response(self, model):
-        """Return forward response for a given model."""
-        thk = model(0, self.nlay)  # thicknesses including height
-        res = model(self.nlay - 1, self.nlay * 2)
-        res[0] = 10000.
-        return self.FOP_.response(pg.cat(thk, res))
-
 
 class FDEM:
     """Managing Frequency Domain EM data and their inversions."""
@@ -244,9 +153,6 @@ class FDEM:
                     break
             line = fid.readline()
             print(line)
-#            tmp = np.genfromtxt(fname=f, autostrip=True, comments='/',
-#                skip_header=0, dtype=float, names=1, case_sensitive='lower',
-#                missing_values='*', filling_values=-9999, skip_footer=1)
         tmp = np.genfromtxt(
             fname=filename, autostrip=True, comments='/',
             skip_header=i+1, dtype=float, names=True, case_sensitive='lower',
@@ -490,35 +396,23 @@ class FDEM:
             errorVec = pg.asvector(noise)
 
         # independent EM inversion
-
         if isinstance(stmod, float):  # real model given
             model = pg.Vector(nlay * 2 - 1, stmod)
             model[0] = 2.
         else:
             model = stmod if len(stmod)==nlay*2-1 else \
                 pg.Vector(nlay*2-1, 30.0)
+            pg.verbose("Model", model)
 
-            print("Model", model)
-        if 1:
-            from pygimli.frameworks import MarquardtInversion
-            self.inv = MarquardtInversion(fop=self.fop, verbose=verbose,
-                                          debug=True)
-            self.inv.dataTrans = self.transData
-            self.inv.modelTrans = self.transLog
-            # self.dataTrans = self.transData
-            self.model1d = self.inv.run(dataVec, np.abs(errorVec/dataVec),
-                                        lam=lam, startModel=model, **kwargs)
-            response = self.inv.response
-        else:
-            self.inv = pg.core.RInversion(dataVec, self.fop, self.transData,
-                                          verbose)
-            self.inv.setAbsoluteError(errorVec)
-            self.inv.setLambda(lam)
-            self.inv.setMarquardtScheme(0.8)
-            self.inv.setDeltaPhiAbortPercent(0.5)
-            self.inv.setModel(model)
-            self.model1d = self.inv.run()
-            response = self.inv.response()
+        from pygimli.frameworks import MarquardtInversion
+        self.inv = MarquardtInversion(fop=self.fop, verbose=verbose,
+                                        debug=True)
+        self.inv.dataTrans = self.transData
+        self.inv.modelTrans = self.transLog
+        # self.dataTrans = self.transData
+        self.model1d = self.inv.run(dataVec, np.abs(errorVec/dataVec),
+                                    lam=lam, startModel=model, **kwargs)
+        response = self.inv.response
 
         if show:
             self.plotData(xpos=xpos, response=response)
@@ -581,7 +475,6 @@ class FDEM:
             rop = np.asarray(response)[len(ip):]
             opax.semilogy(rop, fr, rmarker, label='syn' + addlabel)
 
-#        opax.set_axis('tight')
         if error is not None:
             opax.ylim((min(fr) * .98, max(fr) * 1.02))
 
@@ -589,46 +482,7 @@ class FDEM:
         opax.set_xlabel('outphase [ppm]')
         opax.set_ylabel('f [Hz]')
         opax.legend(loc='best')
-        # plt.subplot(1, nv, 1)
         return ax
-
-    # def plotDataOld(self, xpos=0, response=None,
-    #                 marker='bo-', rmarker='rx-', clf=True):
-    #     """Plot data as curves at given position."""
-    #     ip, op = self.selectData(xpos)
-    #     fr = self.freq()
-
-    #     if clf:
-    #         plt.clf()
-
-    #     plt.subplot(121)
-    #     plt.semilogy(ip, fr, marker, label='obs')
-    #     plt.axis('tight')
-    #     plt.grid(True)
-    #     plt.xlabel('inphase [%]')
-    #     plt.ylabel('f [Hz]')
-
-    #     if response is not None:
-    #         rip = np.asarray(response)[:len(ip)]
-    #         plt.semilogy(rip, fr, rmarker, label='syn')
-
-    #     plt.legend(loc='best')
-
-    #     plt.subplot(122)
-    #     plt.semilogy(op, fr, marker, label='obs')
-
-    #     if response is not None:
-    #         rop = np.asarray(response)[len(ip):]
-    #         plt.semilogy(rop, fr, rmarker, label='syn')
-
-    #     plt.axis('tight')
-    #     plt.grid(True)
-    #     plt.xlabel('outphase [%]')
-    #     plt.ylabel('f [Hz]')
-    #     plt.legend(loc='best')
-    #     plt.show()
-
-    #     return
 
     def showModelAndData(self, model, xpos=0, response=None, figsize=(8, 6)):
         """Show both model and data with response in subfigures."""
@@ -745,13 +599,12 @@ class FDEM:
 
         # generate starting model by repetition
         model = np.repeat(modVec, len(self.x))
-        INV = pg.core.Inversion(datvec, self.f2d, self.transData)
-        INV.setAbsoluteError(error)
-        INV.setLambda(lam)
-        INV.setModel(model)
-        INV.setReferenceModel(model)
-
-        return INV
+        self.inv2d = pg.Inversion(fop=self.f2d)
+        self.inv2d.dataTrans = self.transData
+        model = self.inv2d.run(datvec, absoluteError=error,
+                               startModel=model, isReference=True,
+                               lam=lam, verbose=True)
+        return model
 
 
 if __name__ == "__main__":
@@ -794,7 +647,6 @@ if __name__ == "__main__":
     print("thk = ", mymodel[:numlay - 1])
     print("res = ", mymodel[numlay - 1:])
     figure, axes = fdem.showModelAndData(mymodel, xvector, inv.response())
-    INV = fdem.inv2D(options.nlay)
-    INV.run()
+    model = fdem.inv2D(options.nlay)
 #    fig.savefig(name+str(xpos)+'-result.pdf', bbox_inches='tight')
     pg.plt.show()
