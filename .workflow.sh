@@ -140,6 +140,17 @@ function build(){
             if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
                 # windows MSYS2
                 cmake -G "Unix Makefiles" $PROJECT_SRC
+            elif [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
+                echo "MacOS build with custom openblas and umfpack/cholmod paths. Expecting \$CMAKE_PREFIX to be set."
+                cmake \
+                    -DNOREADPROC=1 \
+                    -DBLAS_openblas_LIBRARY=$CMAKE_PREFIX/lib/libopenblas.dylib \
+                    -DUMFPACK_LIBRARIES=$CMAKE_PREFIX/lib/libumfpack.dylib \
+                    -DUMFPACK_INCLUDES=$CMAKE_PREFIX/include/suitesparse \
+                    -DCHOLMOD_LIBRARIES=$CMAKE_PREFIX/lib/libcholmod.dylib \
+                    -DCHOLMOD_INCLUDE_DIRS=$CMAKE_PREFIX/include/suitesparse \
+                    -DOpenBLAS_INCLUDE_DIR=$CMAKE_PREFIX/include \
+                    $PROJECT_SRC
             else
                 # Linux / Mac
                 cmake $PROJECT_SRC
@@ -502,7 +513,12 @@ fi
 
 PYVERSION=$($BASEPYTHON -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")')
 
-GIMLI_NUM_THREADS=$((`nproc --all` - 2))
+if [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
+    GIMLI_NUM_THREADS=$((`sysctl -n hw.ncpu` - 2))
+    alias realpath='grealpath'
+else
+    GIMLI_NUM_THREADS=$((`nproc --all` - 2))
+fi
 
 OPENBLAS_CORETYPE="ARMV8"
 DISPLAY=':99.0'
@@ -530,7 +546,7 @@ echo "VENV_DOC=$VENV_DOC"
 echo "VENV_PYGIMLI=$VENV_PYGIMLI"
 echo "PROJECT_DIST=$PROJECT_DIST"
 
-echo "Starting automatic build #$BUILD_NUMBER on" `date`
+echo -e "\nStarting automatic build #$BUILD_NUMBER on" `date`
 start=$(date +"%s")
 
 [ $# -lt 1 ] && echo "No workflow target specified" && help
