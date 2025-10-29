@@ -71,6 +71,7 @@ else()
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Building python wheel package for ${TARGET_NAME}"
     )
+
     if (OS_VAR STREQUAL "almalinux")
         add_custom_target(whl${TARGET_NAME}PackageRepair DEPENDS whl${TARGET_NAME}PackageBuild
             COMMAND "auditwheel" repair ${WHEELHOUSE}/${PY_WHEELFILE}

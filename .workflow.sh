@@ -138,9 +138,12 @@ function build(){
 
         pushd $BUILD_DIR
             if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
-                # windows MSYS2
+
+                ### windows MSYS2 configuration
                 cmake -G "Unix Makefiles" $PROJECT_SRC
             elif [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
+
+                ### MacOS configuration
                 echo "MacOS build with custom openblas and umfpack/cholmod paths. Expecting \$CMAKE_PREFIX to be set."
                 cmake \
                     -DNOREADPROC=1 \
@@ -152,16 +155,51 @@ function build(){
                     -DOpenBLAS_INCLUDE_DIR=$CMAKE_PREFIX/include \
                     $PROJECT_SRC
             else
-                # Linux / Mac
+
+                ### Linux configuration
                 cmake $PROJECT_SRC
             fi
-            make -j $GIMLI_NUM_THREADS
-            make pygimli J=$GIMLI_NUM_THREADS
+
+            # make -j $GIMLI_NUM_THREADS
+            # make pygimli J=$GIMLI_NUM_THREADS
+
             # create pgcore wheel
-            make whlpgcoreTest
+            make whlpgcoreCopyLibs
+
+            pushd $BUILD_DIR/core/pgcore
+                WHEELHOUSE=$BUILD_DIR/wheelhouse
+                mkdir -p $WHEELHOUSE
+                mkdir -p $BUILD_DIR/dist/
+
+                python -m pip wheel --wheel-dir=$WHEELHOUSE .
+
+                WHLFILE=$(ls $WHEELHOUSE/pgcore*.whl | head -n 1)
+
+                if [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
+                    BLUE
+                    echo "repairing pgcore whl for MacOS ($WHLFILE)"
+                    NCOL
+                    delocate-wheel -v $WHLFILE
+
+                elif [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
+                    BLUE
+                    echo "repairing pgcore whl for Windows ($WHLFILE)"
+                    NCOL
+                    delvewheel repair $WHLFILE --add-path $BUILD_DIR/bin/
+
+                else
+                    BLUE
+                    echo "Repairing pgcore whl for Linux ($WHLFILE)"
+                    NCOL
+                    echo "Build pgcore whl for Linux"
+                fi
+            popd
+
+            cp $WHLFILE $BUILD_DIR/dist/
+            return
         popd
 
-        # create pygimli wheel
+        ### create pygimli wheel
         pushd $PROJECT_SRC
             python -m build
             cp dist/pygimli*.whl $BUILD_DIR/dist/
