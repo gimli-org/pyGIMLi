@@ -816,14 +816,6 @@ pgcore.R3Vector.append = pgcore.R3Vector.push_back
 pgcore.CVector.__array__ = __CVectorArrayCall__
 
 
-# # hackish until stdVectorRVector3 will be removed 23_08_28
-# def __stdVectorRVector3ArrayCall(self, dtype=None):
-#     # if idx is not None:
-#     # print(self)
-#     # print(idx)
-#     return pgcore.stdVectorRVector3ToR3Vector(self).array()
-# pgcore.stdVectorRVector3.__array__ = __stdVectorRVector3ArrayCall
-
 ##################################
 # stdVectorRVector operators
 # Check why they are not exposed by generator!!
@@ -977,10 +969,6 @@ def __stdVectorR3Vector_ABS__(self):
 
 pgcore.stdVectorR3Vector.__abs__ = __stdVectorR3Vector_ABS__
 
-# for _OP in __IOP__:
-#     def _closure(OP):
-#         return lambda a, b: __stdVector3RVector_IOP__(a, b, OP)
-#     setattr(pgcore.stdVector3RVector, _OP, _closure(_OP))
 
 for _OP in __BINOP__:
     def _closure(OP):

@@ -578,17 +578,17 @@ struct PySequence2BVector{
     }
 };
 
-struct PySequence2StdVectorRVector3{
+struct PySequence2StdVectorR3Vector{
 
     /*! Check if the object is convertible */
     static void * convertible(PyObject * obj){
-         __DC(obj, "check convertible (", obj->ob_type->tp_name, ") -> StdVectorRVector3")
+         __DC(obj, "check convertible (", obj->ob_type->tp_name, ") -> StdVectorR3Vector")
         return checkConvertibleSequenz< GIMLI::Pos, std::vector< GIMLI::Pos > >(obj);
     }
 
     /*! Convert obj into RVector */
     static void construct(PyObject* obj, bp::converter::rvalue_from_python_stage1_data * data){
-        __DC(obj, "\t constructing stdVectorRVector3")
+        __DC(obj, "\t constructing stdVectorR3Vector")
         bp::object py_sequence(bp::handle<>(bp::borrowed(obj)));
 
         typedef bp::converter::rvalue_from_python_storage< std::vector < GIMLI::Pos > > storage_t;
@@ -982,10 +982,10 @@ void register_pysequence_to_bvector_conversion(){
                             & r_values_impl::PySequence2BVector::construct,
                             bp::type_id< GIMLI::Vector< bool > >());
 }
-void register_pysequence_to_StdVectorRVector3_conversion(){
+void register_pysequence_to_StdVectorR3Vector_conversion(){
     bp::converter::registry::push_back(
-                            & r_values_impl::PySequence2StdVectorRVector3::convertible,
-                            & r_values_impl::PySequence2StdVectorRVector3::construct,
+                            & r_values_impl::PySequence2StdVectorR3Vector::convertible,
+                            & r_values_impl::PySequence2StdVectorR3Vector::construct,
                             bp::type_id< std::vector< GIMLI::Pos > >());
 }
 void register_pysequence_to_r3vector_conversion(){

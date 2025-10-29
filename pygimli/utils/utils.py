@@ -37,7 +37,9 @@ class ProgressBar:
     console. In IPython Notebooks a 'tqdm' progressbar instance is created and
     can be configured with appropriate keyword arguments.
     """
+
     def __init__(self, its, width=60, sign=":", **kwargs):
+        #ruff: noqa: D301
         """Create animated text-based progress bar.
 
         Todo
@@ -65,7 +67,6 @@ class ProgressBar:
         >>> pBar.update(5) # doctest: +ELLIPSIS
         \r[+++++++++++       30%                 ] 6 of 20 complete
         """
-
         self.its = int(its)
         self.width = width
         self.sign = sign[0]  # take first character only if sign is longer
@@ -102,8 +103,10 @@ class ProgressBar:
         return self._swatch.stored().last() - self._swatch.stored().last(1)
 
     def update(self, iteration, msg=""):
-        """Update ProgressBar by iteration number starting at 0 with optional
-        message."""
+        """Update ProgressBar by iteration number.
+
+        Starting at 0 with optional message.
+        """
         if iteration == 0:
             self._swatch.start()
         self._swatch.store()
@@ -127,10 +130,12 @@ class ProgressBar:
 
         self._iter = iteration
 
+
     def _setbar(self, elapsed_it):
         """Reset pBar based on current iteration number."""
         self._amount((elapsed_it / float(self.its)) * 100.0)
         self.pBar += f" {int(elapsed_it)} of {self.its} complete"
+
 
     def _amount(self, new_amount):
         """Calculate amount by which to update the pBar."""
@@ -582,7 +587,7 @@ def diff(v):
     elif isinstance(v, list):
         v = pg.PosVector(v)
 
-    if isinstance(v, pg.PosVector | pg.core.stdVectorRVector3):
+    if isinstance(v, pg.PosVector):
         d = pg.PosVector(len(v) - 1)
     else:
         d = pg.Vector(len(v) - 1)

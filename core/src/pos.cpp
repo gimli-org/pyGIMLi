@@ -339,13 +339,13 @@ RMatrix toMatrix(const R3Vector & vec){
     return ret;
 }
 
-R3Vector stdVectorRVector3ToR3Vector(const std::vector < Pos > & rv){
+R3Vector stdVectorR3VectorToR3Vector(const std::vector < Pos > & rv){
     R3Vector ret(rv.size());
     for (Index i = 0; i < rv.size(); i ++) ret[i] = rv[i];
     return ret;
 }
 
-std::vector < Pos > R3VectorTostdVectorRVector3(const R3Vector & rv){
+std::vector < Pos > R3VectorTostdVectorR3Vector(const R3Vector & rv){
     std::vector < Pos > ret(rv.size());
     for (Index i = 0; i < rv.size(); i ++) ret[i] = rv[i];
     return ret;

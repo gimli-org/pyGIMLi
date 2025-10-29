@@ -114,8 +114,8 @@ def load(fname, verbose=False, testAll=True, realName=None):
     >>> import os, tempfile
     >>> import pygimli as pg
     >>> fname = tempfile.mktemp(suffix=".bms")
-    >>> pg.createGrid(range(3), range(3)).save(fname)
-    1
+    >>> outname = pg.createGrid(range(3), range(3)).save(fname)
+    >>> assert fname == outname
     >>> mesh = pg.load(fname)
     >>> os.remove(fname)
     >>> mesh.cellCount()

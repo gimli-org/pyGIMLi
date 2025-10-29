@@ -325,7 +325,7 @@ def generate(defined_symbols, extraIncludes):
         'register_pysequence_to_ivector_conversion',
         'register_pysequence_to_bvector_conversion',
         'register_pysequence_to_r3vector_conversion',
-        'register_pysequence_to_StdVectorRVector3_conversion',
+        'register_pysequence_to_StdVectorR3Vector_conversion',
         'register_pytuple_to_pos_conversion',
         'register_numpy_to_int64_conversion',
         'register_numpy_to_uint64_conversion',

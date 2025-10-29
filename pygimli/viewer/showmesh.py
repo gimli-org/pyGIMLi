@@ -258,9 +258,6 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
         . pg.PosVector -- vector field
             forward to :py:mod:`pygimli.viewer.mpl.drawStreams`
 
-        . pg.core.stdVectorRVector3 -- sensor positions
-            DEPRECATED from remove of pg.core.stdVectorRVector3
-            forward to :py:mod:`pygimli.viewer.mpl.drawSensors`
     block: bool [False]
         Force to open the Figure of your content and blocks the script until
         you close the current figure. Same like pg.show(); pg.wait()

@@ -125,10 +125,10 @@ DLLEXPORT RVector toArray(const R3Vector & vec);
 DLLEXPORT RMatrix toMatrix(const R3Vector & vec);
 
 /*! Temporary transformation vor R3Vector until std::vector < RVector3 > will be removed. */
-DLLEXPORT R3Vector stdVectorRVector3ToR3Vector(const std::vector < RVector3 > & rv);
+DLLEXPORT R3Vector stdVectorR3VectorToR3Vector(const std::vector < RVector3 > & rv);
 
 /*! Temporary transformation vor R3Vector until std::vector < RVector3 > will be removed. */
-DLLEXPORT std::vector < RVector3 > R3VectorTostdVectorRVector3(const R3Vector & rv);
+DLLEXPORT std::vector < RVector3 > R3VectorTostdVectorR3Vector(const R3Vector & rv);
 
 //! 3 dimensional vector
 /*! 3 dimensional vector */

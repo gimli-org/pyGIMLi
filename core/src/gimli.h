@@ -316,7 +316,7 @@ class Stopwatch;
 class Pos;
 class SolverWrapper;
 
-typedef Pos RVector3;
+typedef Pos RVector3; // deprecated
 typedef std::complex < double > Complex;
 
 template < class ValueType >        class SparseMatrix;

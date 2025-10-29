@@ -312,6 +312,7 @@ Mesh.holeMarkers = __MeshHoleMarkers__
 
 def __createSecondaryNodes__(self, n=3, verbose=False):
     """Create `n` equally distributed secondary nodes on the mesh boundaries.
+
     This is useful to increase the accuracy of travel time calculations.
 
     Parameters
