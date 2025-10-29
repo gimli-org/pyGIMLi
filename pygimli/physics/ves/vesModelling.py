@@ -54,21 +54,16 @@ class VESModelling(Block1DModelling):
         self.ab2 = ab2
         self.mn2 = mn2
 
-
-        if 'dataContainerERT' in kwargs or 'data' in kwargs:
-            if 'data' in kwargs:
-                data = kwargs['data']
-            else:
-                data = kwargs['dataContainerERT']
-            if isinstance(data, pg.DataContainerERT):
-                kwargs['am'] = [data.sensorPosition(data('a')[i]).distance(
-                    data('m')[i]) for i in range(data.size())]
-                kwargs['an'] = [data.sensorPosition(data('a')[i]).distance(
-                    data('n')[i]) for i in range(data.size())]
-                kwargs['bm'] = [data.sensorPosition(data('b')[i]).distance(
-                    data('m')[i]) for i in range(data.size())]
-                kwargs['bn'] = [data.sensorPosition(data('b')[i]).distance(
-                    data('n')[i]) for i in range(data.size())]
+        data = kwargs.pop('data', kwargs.pop('dataContainerERT', None))
+        if isinstance(data, pg.DataContainerERT):
+            kwargs['am'] = [data.sensorPosition(data('a')[i]).distance(
+                data('m')[i]) for i in range(data.size())]
+            kwargs['an'] = [data.sensorPosition(data('a')[i]).distance(
+                data('n')[i]) for i in range(data.size())]
+            kwargs['bm'] = [data.sensorPosition(data('b')[i]).distance(
+                data('m')[i]) for i in range(data.size())]
+            kwargs['bn'] = [data.sensorPosition(data('b')[i]).distance(
+                data('n')[i]) for i in range(data.size())]
 
         self.setDataSpace(ab2=ab2, mn2=mn2,
                           am=self.am, an=self.an, bm=self.bm, bn=self.bn)
@@ -457,3 +452,14 @@ class VESRhoModelling(pg.frameworks.MeshModelling):
     def createStartModel(self, rhoa):
         """Create starting model."""
         return pg.Vector(len(self.thk)+1, np.median(rhoa))
+
+    def drawModel(self, ax, model, **kwargs):
+        """Draw model as 1D multi-layered model."""
+        kwargs.setdefault('plot', 'loglog')
+        pg.viewer.mpl.drawModel1D(ax=ax, thickness=self.thk, values=model,
+                                  xlabel=r'Resistivity ($\Omega$m)', **kwargs)
+        ax.set_ylabel('Depth in (m)')
+        return ax, None  # should return gci and not ax
+
+
+VESRhoModelling.drawData = VESModelling.drawData

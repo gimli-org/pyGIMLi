@@ -105,7 +105,7 @@ class ERTIPManager(ERTManager):
 
         return self.showModel(self.modelIP*1000, **kwargs)
 
-    def showResults(self, reskw={}, ipkw={}, **kwargs):
+    def showResults(self, **kwargs):
         """Show DC and IP results.
 
         Parameters
@@ -117,6 +117,8 @@ class ERTIPManager(ERTManager):
         **kwargs : dict
             keyword arguments for showing resistivity image
         """
+        reskw = kwargs.pop("reskw", {})
+        ipkw = kwargs.pop("ipkw", {})
         _, ax = pg.plt.subplots(nrows=2, sharex=True)
         kwargs.setdefault("orientation", "vertical")
         kwargs.setdefault("xlabel", "x (m)")
@@ -142,11 +144,12 @@ class ERTIPManager(ERTManager):
             self.invertTDIP(**kwargs)
 
     def invertDC(self, *args, **kwargs):
+        """Pure direct-current (DC) inversion."""
         # Needed if we want to do ERT first without the IP and do IP later
         super().invert(*args, **kwargs)
 
     def simulate(self, mesh, res, m, scheme=None, **kwargs):
-        """."""
+        """Forward simulation (synthetic modelling)."""
         from pygimli.physics.ert import ERTModelling
         data = scheme or pg.DataContainerERT(self.data)
         if hasattr(res[0], '__iter__'):  # ndim == 2
@@ -182,8 +185,21 @@ class ERTIPManager(ERTManager):
         """Save all results in given or date-based folder."""
         super().saveResult(folder=folder, **kwargs, ip=self.modelIP*1000)
 
-    def showFit(self, ipkw={}, **kwargs):
-        """Show data fit for both app. res and IP."""
+    def showFit(self, **kwargs):
+        """Show data fit for both app. res and IP.
+
+        Forwards to showDCFit and showIPFit
+
+        Parameters
+        ----------
+        ipkw : dict
+            dictionary forwarded to showIPFit
+
+        Keywords
+        --------
+        dictionary forwarded to showDCFit
+        """
+        ipkw = kwargs.pop("ipkw", {})
         self.showDCFit(**kwargs)
         self.showIPFit(**ipkw)
 
@@ -192,6 +208,7 @@ class ERTIPManager(ERTManager):
         return super().showFit(**kw)
 
     def showIPFit(self, **kw):
+        """Show fit of IP data."""
         fig, ax = pg.plt.subplots(nrows=1, ncols=2)
         label = "chargeability (mV/V)"
         if self.isfd:

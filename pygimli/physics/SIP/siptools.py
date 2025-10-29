@@ -1,18 +1,16 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """pygimli functions for dc resistivity / SIP data."""
 
-# TODO Please sort the content into SIP package!
-
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
 import pygimli as pg
 from pygimli.utils import rndig
-
+from .importData import load
 
 def astausgleich(ab2org, mn2org, rhoaorg):
-    """shifts the branches of a dc sounding to generate a matching curve."""
+    """Shift the branches of a dc sounding to generate a matching curve."""
     ab2 = np.asarray(ab2org)
     mn2 = np.asarray(mn2org)
     rhoa = np.asarray(rhoaorg)
@@ -34,8 +32,10 @@ def astausgleich(ab2org, mn2org, rhoaorg):
 
 
 def loadSIPallData(filename, outnumpy=False):
-    """load SIP data with the columns ab/2,mn/2,rhoa and PHI with the
-    corresponding frequencies in the first row."""
+    """Load SIP data with the columns ab/2,mn/2,rhoa and PHI.
+
+    with the corresponding frequencies in the first row.
+    """
     if outnumpy:
         A = np.loadtxt(filename)
         fr = A[0, 3:]
@@ -59,7 +59,7 @@ def loadSIPallData(filename, outnumpy=False):
 
 
 def makeSlmData(ab2, mn2, rhoa=None, filename=None):
-    """generate a pygimli data container from ab/2 and mn/2 array."""
+    """Generate a pygimli data container from ab/2 and mn/2 array."""
     data = pg.DataContainer()
     data.resize(len(ab2))
     pos = np.unique(np.hstack((ab2, mn2)))
@@ -68,11 +68,11 @@ def makeSlmData(ab2, mn2, rhoa=None, filename=None):
         data.createElectrode(elx, 0., 0.)
 
     if filename is not None:
-        f = open(filename, 'w')
-        f.write(str(len(pos) * 2) + '\n#x y z\n')
-        for elx in np.hstack((-pos[::-1], pos)):
-            f.write(str(elx) + '\t0\t0\n')
-            f.write(str(len(ab2)) + '\n#a\tb\tm\tn\tk\trhoa\n')
+        with Path(filename).open('w') as f:
+            f.write(str(len(pos) * 2) + '\n#x y z\n')
+            for elx in np.hstack((-pos[::-1], pos)):
+                f.write(str(elx) + '\t0\t0\n')
+                f.write(str(len(ab2)) + '\n#a\tb\tm\tn\tk\trhoa\n')
 
     lpos = len(pos)
     iab = pos.searchsorted(ab2)
@@ -99,9 +99,7 @@ def makeSlmData(ab2, mn2, rhoa=None, filename=None):
 
 
 def showsounding(ab2, rhoa, resp=None, mn2=None, islog=True, xlab=None):
-    """
-        Display a sounding curve (rhoa over ab/2) and an additional response.
-    """
+    """Display a sounding curve (rhoa over ab/2) and an additional response."""
     if xlab is None:
         xlab = r'$\rho_a$ in $\Omega$m'
 
@@ -146,13 +144,13 @@ def showsounding(ab2, rhoa, resp=None, mn2=None, islog=True, xlab=None):
 
     a = []
     for l in locs:
-        a.append('%g' % rndig(l))
+        a.append(f'{rndig(l):g}')
 
     ax.set_yticks(locs, a)
     locs = ax.get_xticks()[0]
     a = []
     for l in locs:
-        a.append('%g' % rndig(l))
+        a.append(f'{rndig(l):g}')
 
     ax.set_xticks(locs, a)
     ax.grid(which='both')
@@ -163,8 +161,8 @@ def showsounding(ab2, rhoa, resp=None, mn2=None, islog=True, xlab=None):
 
 
 def showsip1ddata(PHI, fr, ab2, mn2=None, cmax=None, ylab=True, cbar=True):
-    """display SIP phase data as image plot."""
-    _, ax = plt.subplots()
+    """Display SIP phase data as image plot."""
+    fig, ax = plt.subplots()
     pal = plt.cm.get_cmap()
     pal.set_under('w')
     pal.set_bad('w')
@@ -184,11 +182,11 @@ def showsip1ddata(PHI, fr, ab2, mn2=None, cmax=None, ylab=True, cbar=True):
     a = []
     df = 1
     for f in fr[::df]:
-        a.append("%g" % rndig(f))
+        a.append(f"{rndig(f):g}")
 
     ax.set_xticks(np.arange(0, len(fr), df), a)
     xtl = ax.get_xticklabels()
-    for i, xtli in enumerate(xtl):
+    for xtli in xtl:
         xtli.set_rotation('vertical')
 
     if ylab:
@@ -200,7 +198,7 @@ def showsip1ddata(PHI, fr, ab2, mn2=None, cmax=None, ylab=True, cbar=True):
         else:
             yla = yla + '-MN/2'
             for i in range(len(ab2)):
-                a.append('%g%g' % (rndig(ab2[i]), rndig(mn2[i])))
+                a.append(f'{rndig(ab2[i]):g}{rndig(mn2[i]):g}')
 
         ax.set_yticks(np.arange(len(ab2)), a)
         ax.set_ylabel(yla + ' in m')
@@ -216,9 +214,7 @@ def showsip1ddata(PHI, fr, ab2, mn2=None, cmax=None, ylab=True, cbar=True):
 
 def showsip1dmodel(M, tau, thk, res=None, z=None,
                    cmin=None, cmax=None, islog=True):
-    """
-        Display an SIP Debye block model as image.
-    """
+    """Display an SIP Debye block model as image."""
     if z is None:
         z = np.cumsum(np.hstack((0., thk)))
 
@@ -244,7 +240,7 @@ def showsip1dmodel(M, tau, thk, res=None, z=None,
 
     a = []
     for t in tau[::2]:
-        a.append("%g" % rndig(t * 1000, 2))
+        a.append(f"{rndig(t * 1000, 2):g}")
 
     plt.xticks(np.arange(0, len(tau), 2), a)
 
@@ -261,7 +257,7 @@ def showsip1dmodel(M, tau, thk, res=None, z=None,
     if res is not None:
         xl = plt.xlim()[1]
         for i in range(len(res)):
-            plt.text(xl, i, r' %g $\Omega$m' % rndig(res[i], 2))
+            plt.text(xl, i, rf' {rndig(res[i], 2):g} $\Omega$m')
 
     lgm = np.zeros((len(z), 1))
     tch = np.zeros((len(z), 1))
@@ -283,8 +279,7 @@ def showsip1dmodel(M, tau, thk, res=None, z=None,
 
 
 class DebyeModelling(pg.core.ModellingBase):
-
-    """forward operator for Debye decomposition."""
+    """Forward operator for Debye decomposition."""
 
     def __init__(self, fvec, tvec=None, zero=False, verbose=False):
 
@@ -303,9 +298,9 @@ class DebyeModelling(pg.core.ModellingBase):
         self.zero_ = zero
 
     def response(self, par):
-        """phase spectrum as function of spectral chargeabilities."""
+        """Phase spectrum as function of spectral chargeabilities."""
         y = pg.Vector(len(self.f_), 0.0)
-        for (t, p) in zip(self.t_, par):
+        for (t, p) in zip(self.t_, par, strict=False):
             wt = self.f_ * 2.0 * np.pi * t
             y = y + wt / (wt * wt + 1.) * p
 
@@ -366,10 +361,7 @@ def DebyeDecomposition(fr, phi, maxfr=None, tv=None, verbose=False,
 
 
 class DoubleColeColeModelling(pg.core.ModellingBase):
-
-    """
-        Modelling using two Cole-Cole terms
-    """
+    """Modelling using two Cole-Cole terms."""
 
     def __init__(self, mesh, fvec, si=1.0, verbose=False):
         pg.core.ModellingBase.__init__(self, mesh, verbose)
@@ -377,7 +369,7 @@ class DoubleColeColeModelling(pg.core.ModellingBase):
         self.si_ = si
 
     def response(self, par):
-        """yields phase response response of double Cole Cole model."""
+        """Phase response response of double Cole Cole model."""
         y = pg.Vector(self.f_.size(), 0.0)
         wti = self.f_ * par[1] * 2.0 * np.pi
         wte = self.f_ * par[4] * 2.0 * np.pi
@@ -389,15 +381,14 @@ class DoubleColeColeModelling(pg.core.ModellingBase):
 
         return y
 
-def ReadAndRemoveEM(filename, readsecond=False, doplot=False,
-                    dellast=True, ePhi=0.5, ePerc=1., lam=2000.):
-    """
-        Read res1file and remove EM effects using a double-Cole-Cole model
-        fr,rhoa,phi,dphi = ReadAndRemoveEM(filename, readsecond/doplot bools)
-    """
-    fr, rhoa, phi, drhoa, dphi = read1resfile(filename,
-                                              readsecond,
-                                              dellast=dellast)
+# can very probably be deleted
+def ReadAndRemoveEM(filename, readsecond:bool=False, doplot:bool=False,
+                    dellast:bool=True, ePhi:float=0.5, ePerc:float=1,
+                    lam:float=2000):
+    """Read res1file and remove EM effects using a double-Cole-Cole model."""
+    fr, rhoa, phi, _drhoa, dphi = load(filename),
+                                            #   readsecond,
+                                            #   dellast=dellast)
     # forward problem
     mesh = pg.meshtools.createMesh1D(1, 6)  # 6 independent parameters
     f = DoubleColeColeModelling(mesh, pg.asvector(fr), phi[2] / abs(phi[2]))

@@ -60,7 +60,8 @@ class MagManager(MeshMethodManager):
         if self.DATA is not None:
             out += f"\nData fields: {self.DATA.dtype.names}"
         if self.mesh_ is not None:
-            out += f"\nMesh: {self.mesh_.cellCount()} cells, {self.mesh_.nodeCount()} nodes."
+            out += f"\nMesh: {self.mesh_.cellCount()} cells"
+            out += f", {self.mesh_.nodeCount()} nodes."
         if self.igrf is not None:
             out += f"\nIGRF: {self.igrf}"
         if self.dem is not None:

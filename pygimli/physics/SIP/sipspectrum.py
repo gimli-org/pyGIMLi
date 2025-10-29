@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Spectral induced polarization (SIP) spectrum class and modules."""
 
 import sys
@@ -46,7 +45,7 @@ class SpectrumModelling(ParameterModelling):
             frequency vector
         """
         self._complex = kwargs.pop("complex", False)
-        super(SpectrumModelling, self).__init__(funct=funct, **kwargs)
+        super().__init__(funct=funct, **kwargs)
         self.defaultModelTrans = 'log'
         self._freqs = kwargs.pop("frequencies", None)
 
@@ -116,7 +115,7 @@ class SpectrumManager(MethodManager):
 
         """
         self._funct = fop
-        super(SpectrumManager, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def setFunct(self, fop, **kwargs):
         """Set forward modelling function."""
@@ -166,10 +165,7 @@ class SpectrumManager(MethodManager):
         if isinstance(eAmp, float):
             eAmp = np.ones(len(freqs)) * eAmp
 
-        if phi is not None:
-            err = np.asarray([*eAmp, *ePhi])
-        else:
-            err = eAmp
+        err = np.asarray([*eAmp, *ePhi]) if phi is not None else eAmp
 
         self.fw.errorVals = self._ensureError(err, self.fw.dataVals)
 
@@ -228,7 +224,7 @@ class SpectrumManager(MethodManager):
 
                 self.fop.setRegionProperties(k, startModel=sm)
 
-        return super(SpectrumManager, self).invert(data, **kwargs)
+        return super().invert(data, **kwargs)
 
     def showResult(self):
         """Show resulting data."""
@@ -245,7 +241,7 @@ class SpectrumManager(MethodManager):
         return ax
 
 
-class SIPSpectrum(object):
+class SIPSpectrum:
     """SIP spectrum data analysis."""
 
     def __init__(self, filename=None, unify=False, onlydown=True,
@@ -296,10 +292,9 @@ class SIPSpectrum(object):
     def __repr__(self):
         """Human readable string representation of the class."""
         out = self.__class__.__name__ + " object"
-        if self.f is not None:
-            if hasattr(self.f, '__iter__'):
-                out += "\nnf=" + str(len(self.f)) + " min/max="
-                out += str(min(self.f)) + "/" + str(max(self.f))
+        if self.f is not None and hasattr(self.f, '__iter__'):
+            out += "\nnf=" + str(len(self.f)) + " min/max="
+            out += str(min(self.f)) + "/" + str(max(self.f))
         return out
 
     def loadData(self, filename, **kwargs):
@@ -343,8 +338,8 @@ class SIPSpectrum(object):
                 self.f = out["FreqHz"]
                 self.amp = out["AppResOhmm"]
                 self.phi = -out["Phasedeg"] * np.pi / 180
-            except BaseException:
-                raise Exception("Don't know how to read data.")
+            except BaseException as e:
+                raise ValueError("Don't know how to read data.") from e
 
         self.amp *= self.k
         return self.f, self.amp, self.phi
@@ -387,10 +382,7 @@ class SIPSpectrum(object):
 
     def cutF(self, fcut=1e99, down=False):
         """Cut (delete) frequencies above a certain value fcut."""
-        if down:
-            ind = self.f >= fcut
-        else:
-            ind = self.f <= fcut
+        ind = self.f >= fcut if down else self.f <= fcut
 
         self.amp = self.amp[ind]
         self.phi = self.phi[ind]
@@ -413,14 +405,11 @@ class SIPSpectrum(object):
 
     def realimag(self, cond=False):
         """Real and imaginary part of resistivity/conductivity (cond=True)."""
-        if cond:
-            amp = 1. / self.amp
-        else:
-            amp = self.amp
+        amp = 1.0 / self.amp if cond else self.amp
         return amp * np.cos(self.phi), amp * np.sin(self.phi)
 
     def zNorm(self):
-        """Normalized real (difference) and imag. z :cite:`NordsiekWel2008`."""
+        """Normalize real (difference) and imag. z :cite:`NordsiekWel2008`."""
         re, im = self.realimag()
         R0 = max(self.amp)
         zNormRe = 1. - re / R0
@@ -855,7 +844,7 @@ class SIPSpectrum(object):
         if new:
             if verbose:
                 pg.info("ARMS=", IDD.absrms(), "RRMS=", IDD.absrms()/max(Znorm)*100)
-            
+
             resp = np.array(IDD.response)
             respRe = resp[:nf]
             respIm = resp[nf:]
@@ -892,9 +881,9 @@ class SIPSpectrum(object):
     def createDecay(self, t=None):
         """Create decay from Debye decomposition."""
         v = np.zeros(len(t))
-        for tau, m in zip(self.tau, self.mDD):
+        for tau, m in zip(self.tau, self.mDD, strict=False):
             v += np.exp(-t/tau) * m
-        
+
         return v
 
     def showAll(self, save=False, ax=None):
@@ -952,7 +941,7 @@ class SIPSpectrum(object):
         if np.any(self.mDD):
             mtot = self.totalChargeability()
             lmtau = self.logMeanTau()
-            tDD = r'DD: m={:.3f} $\tau$={:.1e}s'.format(mtot, lmtau)
+            tDD = rf'DD: m={mtot:.3f} $\tau$={lmtau:.1e}s'
             ax[2].semilogx(self.tau, self.mDD * 1e3)
             ax[2].set_xlim(ax[2].get_xlim()[::-1])
             ax[2].grid(True)
@@ -961,10 +950,7 @@ class SIPSpectrum(object):
             ax[2].set_title(tDD, loc='left')
 
         if save:
-            if isinstance(save, str):
-                savename = save
-            else:
-                savename = self.basename + '.pdf'
+            savename = save if isinstance(save, str) else self.basename + '.pdf'
 
             fig.savefig(savename, bbox_inches='tight')
 

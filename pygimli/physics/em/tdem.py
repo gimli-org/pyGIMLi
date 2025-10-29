@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Time Domain Electromagnetics (TDEM) functions and class"""
+"""Time Domain Electromagnetics (TDEM) functions and class."""
 import sys
+from pathlib import Path
 from math import pi
 import numpy as np
 #import matplotlib.pyplot as plt
@@ -11,7 +11,7 @@ from . vmd import VMDTimeDomainModelling
 
 
 def rhoafromU(U, t, Tx, current=1.0, Rx=None):
-    r"""Apparent resistivity curve from classical TEM (U or dB/dt)
+    r"""Apparent resistivity curve from classical TEM (U or dB/dt).
 
     rhoafromU(U/I, t, TXarea[, RXarea])
 
@@ -30,7 +30,7 @@ def rhoafromU(U, t, Tx, current=1.0, Rx=None):
 
 
 def rhoafromB(B, t, Tx, current=1):
-    r"""Apparent resistivity from B-field TEM
+    r"""Apparent resistivity from B-field TEM.
 
     .. math::
 
@@ -43,7 +43,7 @@ def rhoafromB(B, t, Tx, current=1):
 
 # TODO: better derive a class TEMsounding from dict and put functions in there
 def TxArea(snd):
-    """ return effective transmitter area """
+    """Effective transmitter area."""
     if isinstance(snd['LOOP_SIZE'], str):
         Tx = np.prod([float(a) for a in snd['LOOP_SIZE'].split()])
     else:
@@ -68,13 +68,11 @@ def get_rhoa(snd, cal=260e-9, corrramp=False, verbose=False):
     """Compute apparent resistivity from sounding (usf) dict."""
     Tx = TxArea(snd)
     Rx = RxArea(snd)
-    if 'COIL_SIZE' in snd:
-        Rx = snd['COIL_SIZE']
-    else:
-        Rx = Tx
+    Rx = snd.get('COIL_SIZE', Tx)
 
     if verbose:
         print("Tx/Rx", Tx, Rx)
+
     v = snd['VOLTAGE']
     istart, istop = 0, len(v)  # default: take all
     mav = np.arange(len(v))[v == max(v)]
@@ -86,11 +84,9 @@ def get_rhoa(snd, cal=260e-9, corrramp=False, verbose=False):
 
     if verbose:
         print(istart, istop)
+
     v = v[istart:istop]
-    if 'ST_DEV' in snd:
-        dv = snd['ST_DEV'][istart:istop]  # / snd['CURRENT']
-    else:
-        dv = v * 0.01
+    dv = snd['ST_DEV'][istart:istop] if 'ST_DEV' in snd else v * 0.01
 
     t = snd['TIME'][istart:istop] * 1.0
     if corrramp and 'RAMP_TIME' in snd:
@@ -110,14 +106,13 @@ def get_rhoa(snd, cal=260e-9, corrramp=False, verbose=False):
 
 
 def readusffile(filename, stripnoise=True):
-    """Read data from single USF (universal sounding file) file
+    """Read data from single USF (universal sounding file) file.
 
     Examples
     --------
         DATA = readusffile(filename)
         DATA = readusffile(filename, DATA) will append to DATA
     """
-
     DATA = []
     columns = []
     nr = 0
@@ -125,69 +120,68 @@ def readusffile(filename, stripnoise=True):
     sounding = {}
     sounding['FILENAME'] = filename
     isdata = False
-    fid = open(filename)
-    for line in fid:
-        zeile = line.rstrip('\n').replace(',', ' ')  # commas useless here
-        if zeile:  # anything at all
-            if zeile[0] == '/':  # comment-like
-                if zeile[1:4] == 'END':  # end of a sounding
-                    if isdata:  # already read some data
-                        sounding['data'] = columns
-                        for i, cn in enumerate(sounding['column_names']):
-                            sounding[cn] = columns[:, i]
+    with Path(filename).open() as fid:
+        for line in fid:
+            zeile = line.rstrip('\n').replace(',', ' ')  # commas useless here
+            if zeile:  # anything at all
+                if zeile[0] == '/':  # comment-like
+                    if zeile[1:4] == 'END':  # end of a sounding
+                        if isdata:  # already read some data
+                            sounding['data'] = columns
+                            for i, cn in enumerate(sounding['column_names']):
+                                sounding[cn] = columns[:, i]
 
-                        sounding['FILENAME'] = filename
-                        if 'INSTRUMENT' in sounding and 'ST_DEV' in sounding:
-                            if 'terraTEM' in sounding['INSTRUMENT']:
-                                sounding['ST_DEV'] *= 0.01
-                                print('taking default stdev')
+                            sounding['FILENAME'] = filename
+                            if 'INSTRUMENT' in sounding and 'ST_DEV' in sounding:
+                                if 'terraTEM' in sounding['INSTRUMENT']:
+                                    sounding['ST_DEV'] *= 0.01
+                                    print('taking default stdev')
 
-                        sounding.update(station)
-                        if not(stripnoise and 'SWEEP_IS_NOISE' in sounding and
-                               sounding['SWEEP_IS_NOISE'] == 1):
-                            DATA.append(sounding)
+                            sounding.update(station)
+                            if not(stripnoise and 'SWEEP_IS_NOISE' in sounding and
+                                sounding['SWEEP_IS_NOISE'] == 1):
+                                DATA.append(sounding)
 
-                        sounding = {}
+                            sounding = {}
 
-                    isdata = not isdata  # turn off data mode
-                elif zeile.find(':') > 0:  # key-value pair
-                    key, value = zeile[1:].split(':')
-                    try:
-                        val = float(value)
-                        sounding[key] = val
-                    except:
-                        sounding[key] = value
+                        isdata = not isdata  # turn off data mode
+                    elif zeile.find(':') > 0:  # key-value pair
+                        key, value = zeile[1:].split(':')
+                        try:
+                            val = float(value)
+                            sounding[key] = val
+                        except:
+                            sounding[key] = value
 
-                    if 'SWEEP' in key and len(station) == 0:  # first sweep
-                        station = sounding.copy()  # save global settings
-            else:
-                if isdata:
-                    values = zeile.split()
-                    try:
-                        for i, v in enumerate(values):
-                            columns[nr, i] = float(v)
+                        if 'SWEEP' in key and len(station) == 0:  # first sweep
+                            station = sounding.copy()  # save global settings
+                else:
+                    if isdata:
+                        values = zeile.split()
+                        try:
+                            for i, v in enumerate(values):
+                                columns[nr, i] = float(v)
 
-                        nr += 1
-                    except:
-                        sounding['column_names'] = values
-                        columns = np.zeros((int(sounding['POINTS']),
-                                            len(values)))
-                        nr = 0
+                            nr += 1
+                        except:
+                            sounding['column_names'] = values
+                            columns = np.zeros((int(sounding['POINTS']),
+                                                len(values)))
+                            nr = 0
 
-    fid.close()
     return DATA
 
 
 def readusffiles(filenames):
-    """Read all soundings data from a list of usf files
+    """Read all soundings data from a list of usf files.
 
     Example
     -------
         DATA = readusffiles(filenames)
     """
-    from glob import glob
     if isinstance(filenames, str):
         if filenames.find('*') >= 0:
+            from glob import glob
             filenames = glob(filenames)
         else:
             filenames = [filenames]
@@ -203,23 +197,23 @@ def readTEMfastFile(temfile):
     """ReadTEMfastFile(filename) reads TEM-fast file into usf sounding."""
     snd = {}
     snd['FILENAME'] = temfile
-    fid = open(temfile)
-    for i in range(4):
+    with Path(temfile).open() as fid:
+        for _ in range(4):
+            zeile = fid.readline()
+
+        snd['STACK_SIZE'] = int(zeile.split()[3])
+        snd['RAMP_TIME'] = float(zeile.split()[5])*1e-6
+        snd['CURRENT'] = float(zeile.split()[7][2:])
         zeile = fid.readline()
-    snd['STACK_SIZE'] = int(zeile.split()[3])
-    snd['RAMP_TIME'] = float(zeile.split()[5])*1e-6
-    snd['CURRENT'] = float(zeile.split()[7][2:])
-    zeile = fid.readline()
-    fid.close()
-    snd['LOOP_SIZE'] = float(zeile.split()[2])**2
-    snd['COIL_SIZE'] = float(zeile.split()[5])**2
-    t, v, e, r = np.loadtxt(temfile, skiprows=8, usecols=(1, 2, 3, 4),
-                            unpack=True)
-    ind = np.nonzero((r > 0) * (v > 0) * (t > snd['RAMP_TIME']*1.2e6))  # us
-    snd['TIME'] = t[ind] * 1e-6  # us
-    snd['VOLTAGE'] = v[ind]
-    snd['ST_DEV'] = e[ind]
-    snd['RHOA'] = r[ind]
+        snd['LOOP_SIZE'] = float(zeile.split()[2])**2
+        snd['COIL_SIZE'] = float(zeile.split()[5])**2
+        t, v, e, r = np.loadtxt(temfile, skiprows=8, usecols=(1, 2, 3, 4),
+                                unpack=True)
+        ind = np.nonzero((r > 0) * (v > 0) * (t > snd['RAMP_TIME']*1.2e6))  # us
+        snd['TIME'] = t[ind] * 1e-6  # us
+        snd['VOLTAGE'] = v[ind]
+        snd['ST_DEV'] = e[ind]
+        snd['RHOA'] = r[ind]
 
     return snd
 
@@ -269,62 +263,61 @@ def readSiroTEMData(fname):
                         108.575, 121.375, 140.575, 166.175, 191.775, 217.375,
                         242.975, 281.375, 332.575])
 
-    fid = open(fname)
-    # read in file header until : sign
-    line = 'a'
-    while len(line) > 0 and line[0] != ':':
+    with Path(fname).open() as fid:
+        # read in file header until : sign
+        line = 'a'
+        while len(line) > 0 and line[0] != ':':
+            line = fid.readline()
+
+        DATA = []
         line = fid.readline()
+        while line[0] != ';':
+            header = line[1:-6].split(',')
 
-    DATA = []
-    line = fid.readline()
-    while line[0] != ';':
-        header = line[1:-6].split(',')
+            snd = {}  # dictionary, uppercase corresponds to USF format keys
+            snd['INSTRUMENT'] = 'siroTEM'
+            snd['dtype'] = int(header[3])
+            dstring = header[1]
+            snd['DATE'] = int('20' + dstring[6:8] + dstring[3:4] + dstring[0:1])
+            snd['win0'], snd['win1'], ngain, snd['conf'], snd['nch'] = \
+                [int(h) for h in header[5:10]]
+            snd['SOUNDING_NUMBER'] = int(header[10])
 
-        snd = {}  # dictionary, uppercase corresponds to USF format keys
-        snd['INSTRUMENT'] = 'siroTEM'
-        snd['dtype'] = int(header[3])
-        dstring = header[1]
-        snd['DATE'] = int('20' + dstring[6:8] + dstring[3:4] + dstring[0:1])
-        snd['win0'], snd['win1'], ngain, snd['conf'], snd['nch'] = \
-            [int(h) for h in header[5:10]]
-        snd['SOUNDING_NUMBER'] = int(header[10])
+            snd['GAIN_FACTOR'] = [0.1, 1.0, 10.0, 100.0][ngain]  # predefined gains
+            snd['STACK_SIZE'] = int(header[14])
+            snd['ttype'] = int(header[20])
+            # 1=composite, 2=earlytime, 3=standard, 4=highresolution
+            snd['CURRENT'] = float(header[17])
+            snd['RAMP_TIME'] = float(header[18]) * 1e-6
+            snd['TIME_DELAY'] = float(header[19])
+            snd['LOOP_SIZE'] = float(header[21])
+            snd['COIL_SIZE'] = float(header[22])
 
-        snd['GAIN_FACTOR'] = [0.1, 1.0, 10.0, 100.0][ngain]  # predefined gains
-        snd['STACK_SIZE'] = int(header[14])
-        snd['ttype'] = int(header[20])
-        # 1=composite, 2=earlytime, 3=standard, 4=highresolution
-        snd['CURRENT'] = float(header[17])
-        snd['RAMP_TIME'] = float(header[18]) * 1e-6
-        snd['TIME_DELAY'] = float(header[19])
-        snd['LOOP_SIZE'] = float(header[21])
-        snd['COIL_SIZE'] = float(header[22])
+            fid.readline()
+            data = []
+            line = fid.readline()[:-1]  # trim CR+LF newline
+            while len(line) > 0:
+                while line[-1] == '/':
+                    line = line[:-1] + fid.readline()[:-1].replace('\t', '')
+    #                aline = line
 
-        fid.readline()
-        data = []
-        line = fid.readline()[:-1]  # trim CR+LF newline
-        while len(line) > 0:
-            while line[-1] == '/':
-                line = line[:-1] + fid.readline()[:-1].replace('\t', '')
-#                aline = line
+                nums = [float(el[-7:-2]) * 10**(float(el[-2:])) for el in
+                        line[1:-5].split(',')[1:]]
+                data.append(np.array(nums))
+                line = fid.readline().rstrip('\n').rstrip('\r')
 
-            nums = [float(el[-7:-2]) * 10**(float(el[-2:])) for el in
-                    line[1:-5].split(',')[1:]]
-            data.append(np.array(nums))
-            line = fid.readline().rstrip('\n').rstrip('\r')
+            snd['VOLTAGE'] = data[0]
+            if snd['ttype'] == 2:  # early time
+                snd['TIME'] = Time_ET[snd['win0'] - 1:snd['win1']] * 1e-3
+            if snd['ttype'] == 3:  # standard time
+                snd['TIME'] = Time_ST[snd['win0'] - 1:snd['win1']] * 1e-6
 
-        snd['VOLTAGE'] = data[0]
-        if snd['ttype'] == 2:  # early time
-            snd['TIME'] = Time_ET[snd['win0'] - 1:snd['win1']] * 1e-3
-        if snd['ttype'] == 3:  # standard time
-            snd['TIME'] = Time_ST[snd['win0'] - 1:snd['win1']] * 1e-6
+            snd['ST_DEV'] = data[1]
+            if snd['dtype'] > 0:  # normal measurement
+                DATA.append(snd)
 
-        snd['ST_DEV'] = data[1]
-        if snd['dtype'] > 0:  # normal measurement
-            DATA.append(snd)
+            line = fid.readline()
 
-        line = fid.readline()
-
-    fid.close()
 #    DATA['FILENAME'] = fname  # makes no sense as DATA is an array->snd?
     return DATA
 
@@ -339,12 +332,13 @@ def getname(snd):
     return name
 
 
-class TDEM():
+class TDEM:
     """TEM class mainly for holding data etc."""
+
     basename = "new"
 
     def __init__(self, filename=None):
-        """Initialize class and (optionally) load data"""
+        """Initialize class and (optionally) load data."""
         self.DATA = []
         self.names = []
 
@@ -365,9 +359,11 @@ class TDEM():
         self.basename = filename  # .rstrip()
 
     def __repr__(self):
-        return "<TDEMdata: %d soundings>" % (len(self.DATA))
+        """Return string representation."""
+        return "<TDEMdata: %d soundings>" % (len(self.DATA))  # noqa: UP031
 
     def showInfos(self):  # only for old scripts using it
+        """Show class infos."""
         print(self.__repr__)
 
     def gather(self, token):
@@ -399,7 +395,8 @@ class TDEM():
                 snd[col] = snd[col][bind]
 
     def plotTransients(self, ax=None, **kwargs):
-        """Plot all transients into one window"""
+        """Plot all transients into one window."""
+        from matplotlib.pyplot import plt
         if ax is None:
             fig, ax = plt.subplots()
         else:
@@ -435,6 +432,7 @@ class TDEM():
 
     def plotRhoa(self, ax=None, ploterror=False, corrramp=False, **kwargs):
         """Plot all apparent resistivity curves into one window."""
+        from matplotlib.pyplot import plt
         if ax is None:
             fig, ax = plt.subplots()
 
@@ -495,7 +493,7 @@ class TDEM():
                 sumstacks += stacks
                 V[:, i] = snd['VOLTAGE']
             else:
-                print("sounding {} does not have the same time!".format(i))
+                print(f"sounding {i} does not have the same time!")
 
         v /= sumstacks
         VM = np.ma.masked_less_equal(V, 0)
@@ -514,6 +512,7 @@ class TDEM():
 
 class TDEMSmoothModelling(MeshModelling):
     """Occam-style (smooth) inversion."""
+
     def __init__(self, thk, **kwargs):
         super().__init__()
         self.thk_ = thk

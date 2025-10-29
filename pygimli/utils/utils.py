@@ -42,12 +42,11 @@ class ProgressBar:
         #ruff: noqa: D301
         """Create animated text-based progress bar.
 
-        Todo
-        ----
+        TODO
         * optional: 'estimated time' instead of 'x of y complete'
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         its : int
             Number of iterations of the process.
         width : int
@@ -55,8 +54,8 @@ class ProgressBar:
         sign : str
             Sign used to fill the bar.
 
-        Additional Args
-        ---------------
+        Keyword Args
+        ------------
         Forwarded to create the tqdm progressbar instance. See
         https://tqdm.github.io/docs/tqdm/
 

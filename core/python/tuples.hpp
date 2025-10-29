@@ -157,7 +157,7 @@ struct from_py_sequence{
         }
 
         python::object py_sequence( handle<>( borrowed( py_obj ) ) );
-    
+
         if( tuples::length< TTuple >::value != len( py_sequence ) ){
             return 0;
         }
@@ -243,7 +243,7 @@ void register_tuple(){
     converter::registry::push_back( &from_py_sequence<TTuple>::convertible
                                     , &from_py_sequence<TTuple>::construct
                                     , type_id<TTuple>() );
-}
+};
 
 } } //boost::python
 
