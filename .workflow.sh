@@ -177,13 +177,13 @@ function build(){
 
                 if [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
                     BLUE
-                    echo "repairing pgcore whl for MacOS ($WHLFILE)"
+                    echo "Repairing pgcore whl for MacOS ($WHLFILE)"
                     NCOL
                     delocate-wheel -v $WHLFILE
 
                 elif [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
                     BLUE
-                    echo "repairing pgcore whl for Windows ($WHLFILE)"
+                    echo "Repairing pgcore whl for Windows ($WHLFILE)"
                     NCOL
                     delvewheel repair $WHLFILE --add-path $BUILD_DIR/bin/
 
@@ -196,7 +196,6 @@ function build(){
             popd
 
             cp $WHLFILE $BUILD_DIR/dist/
-            return
         popd
 
         ### create pygimli wheel
