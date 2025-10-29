@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""Modelling classes for managing first arrival travel-time problems"""
+"""Modelling classes for managing first arrival travel-time problems."""
 
 import numpy as np
 import pygimli as pg
@@ -44,8 +42,8 @@ class TravelTimeDijkstraModelling(MeshModelling):
         This is called automatic when accesing self.mesh() so it ensures any
         effect of changing region properties (background, single).
         """
-        pg.info("Creating refined mesh (secnodes: {0}) to "
-                "solve forward task.".format(self._refineSecNodes))
+        pg.info(f"Creating refined mesh (secnodes: {self._refineSecNodes}) to "
+                "solve forward task.")
         self.meshNoSec = pg.Mesh(mesh)
         m = mesh.createMeshWithSecondaryNodes(self._refineSecNodes)
         pg.verbose(m)
@@ -69,8 +67,7 @@ class TravelTimeDijkstraModelling(MeshModelling):
 
         if self._useGradient is not None:
             [vTop, vBot] = self._useGradient  # something strange here!!!
-            pg.info('Create gradient starting model. {0}: {1}'.format(vTop,
-                                                                      vBot))
+            pg.info(f'Create gradient starting model. {vTop}: {vBot}')
             sm = createGradientModel2D(self.data,
                                        self.paraDomain,
                                        vTop, vBot)
@@ -131,9 +128,8 @@ class TravelTimeDijkstraModelling(MeshModelling):
             pg.physics.traveltime.drawFirstPicks(ax, data, **kwargs)
             return ax
         else:
-            kwargs.setdefault('label', pg.unit('va'))
-            kwargs.setdefault('cMap', pg.utils.cMap('va'))
-            gci = drawVA(ax, data, usePos=False, **kwargs)
+            kwargs.setdefault('usePos', False)
+            gci = drawVA(ax, data, **kwargs)
             cBar = createColorBar(gci, **kwargs)
 
             return gci, cBar

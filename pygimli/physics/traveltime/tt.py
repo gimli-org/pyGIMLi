@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """General convenience functions for traveltime module."""
 
 # general purpose
@@ -7,9 +6,8 @@ import numpy as np
 import pygimli as pg
 from pygimli.viewer.mpl import createColorBar
 from .TravelTimeManager import TravelTimeManager
-from .utils import createCrossholeData, createRAData
-from .plotting import drawTravelTimeData, drawVA, drawFirstPicks
-# Manager = TravelTimeManager  # convenience alias
+from .plotting import drawVA, drawFirstPicks
+Manager = TravelTimeManager  # convenience alias
 
 
 def simulate(mesh, scheme, slowness=None, **kwargs):

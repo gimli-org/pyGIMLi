@@ -98,10 +98,18 @@ else()
         add_custom_target(whl${TARGET_NAME} DEPENDS whl${TARGET_NAME}PackageBuild)
     endif()
 
+    # copy wheel to dist folder
+     add_custom_target(whl${TARGET_NAME}Dist DEPENDS whl${TARGET_NAME}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/dist"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${WHEELHOUSE}/${PY_WHEELFILE}" "${CMAKE_BINARY_DIR}/dist/${PY_WHEELFILE}"
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        COMMENT "Copy python wheel package ${PY_WHEELFILE} to 'dist' path"
+    )
+
     ## test the wheel: make whlTest
-    add_custom_target(whl${TARGET_NAME}TestInstall DEPENDS whl${TARGET_NAME}
+    add_custom_target(whl${TARGET_NAME}TestInstall DEPENDS whl${TARGET_NAME}Dist
         COMMAND "${Python3_EXECUTABLE}" -m pip uninstall -y ${TARGET_NAME}
-        COMMAND "${Python3_EXECUTABLE}" -m pip install ${WHEELHOUSE}/${PY_WHEELFILE} --find-links ${WHEELHOUSE}
+        COMMAND "${Python3_EXECUTABLE}" -m pip install dist/${PY_WHEELFILE} --find-links ${WHEELHOUSE}
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         COMMENT "Installing ${TARGET_NAME} in virtual test environment"
     )

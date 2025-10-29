@@ -1,156 +1,15 @@
 #!/usr/bin/env python
-"""Frequency Domain Electromagnetics (FDEM) functions and class."""
-
+"""Frequency Domain Electromagnetics (FDEM) class."""
+from pathlib import Path
 import numpy as np
-
 import pygimli as pg
 from pygimli.viewer.mpl import show1dmodel, drawModel1D
 from .hemmodelling import HEMmodelling
+from .fdemmodelling import FDEM2dFOP
+from .tools import xfplot
 
-freqMaxMin10 = 2**np.arange(10) * 110.
-freqMaxMin8 = 2**np.arange(8) * 110.
-freqResolveHCP = np.array([387., 1820., 8330., 41500., 133400.])
-freqResolveVCX = 5410.
-freqResolveHCPOld = np.array([380., 1770., 8300., 41000., 129500.])
-
-fBKS36a = np.array([386, 1817, 8360, 41420, 133200, 5390])
-rBKS36a = np.array([7.938, 7.931, 7.925, 7.912, 7.918, 9.055])
-fBKS60 = np.array([380, 1773, 8300, 41000, 129500, 5410])
-rBKS60 = np.array([7.918, 7.918, 7.957, 8.033, 7.906, 9.042])
-
-
-def cmapDAERO():
-    """Standardized colormap from A-AERO projects (purple=0.3 to red=500)."""
-    from matplotlib.colors import LinearSegmentedColormap
-    CMY = np.array([
-        [127, 255, 31], [111, 255, 47], [95, 255, 63], [79, 255, 79],
-        [63, 255, 95], [47, 255, 111], [31, 255, 127], [16, 255, 159],
-        [0, 223, 159], [0, 191, 159], [0, 159, 207], [0, 127, 175],
-        [0, 95, 175], [0, 63, 175], [0, 47, 175], [0, 31, 191], [0, 0, 255],
-        [0, 0, 159], [15, 0, 127], [47, 0, 143], [79, 0, 143], [111, 0, 143],
-        [143, 0, 127], [159, 31, 63], [175, 47, 31], [207, 63, 0],
-        [223, 111, 0], [231, 135, 0], [239, 159, 0], [255, 191, 47],
-        [239, 199, 63], [223, 207, 79], [207, 239, 111]], dtype=float)
-    RGB = 1.0 - CMY/255
-    return LinearSegmentedColormap.from_list('D-AERO', RGB)
-
-
-def xfplot(ax, DATA, x, freq, everyx=5, orientation='horizontal', aspect=30,
-           label=None, cMap="Spectral_r"):
-    """Plot a matrix according to x and frequencies."""
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-    nt = list(range(0, len(x), everyx))
-    im = ax.matshow(DATA.T, interpolation='nearest', cmap=cMap)
-    ax.set_ylim(ax.get_ylim()[::-1])
-    ax.set_xticks(nt)
-    ax.set_xticklabels(["%g" % xi for xi in x[nt]])
-    ax.set_yticks(list(range(0, len(freq) + 1, 2)))
-    ax.set_yticklabels(["%g" % freq[i] for i in range(0, len(freq), 2)])
-    ax.set_xlabel('x [m]')
-    ax.set_ylabel('f [Hz]')
-    ax.xaxis.set_label_position('top')
-    ax.set_aspect("auto")
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes('bottom', size='5%', pad=0.3)
-    pg.plt.colorbar(im, ax=ax, cax=cax, orientation=orientation, aspect=aspect)
-    if label is not None:
-        cax.set_title(label)
-    # plt.colorbar(im, ax=ax, orientation=orientation, aspect=aspect)
-    return im
-
-
-class FDEM2dFOPold(pg.core.ModellingBase):
-    """Old variant of 2D FOP (to be deleted)."""
-
-    def __init__(self, data, nlay=2, verbose=False):
-        """Initialize with data and number of layers."""
-        pg.core.ModellingBase.__init__(self, verbose)
-        self.nlay = nlay
-        self.FOP1d = data.FOP(nlay)
-        self.nx = len(data.x)
-        self.nf = len(data.freq())
-        self.mesh_ = pg.meshtools.createMesh1D(self.nx, 2 * nlay - 1)
-        self.setMesh(self.mesh_)
-
-    def response(self, model):
-        """Yield forward model response."""
-        modA = np.asarray(model).reshape((self.nlay * 2 - 1, self.nx)).T
-        resp = pg.Vector(0)
-        for modi in modA:
-            resp = pg.cat(resp, self.FOP1d.response(modi))
-
-        return resp
-
-
-class FDEM2dFOP(pg.core.ModellingBase):
-    """FDEM 2d-LCI modelling class based on BlockMatrices."""
-
-    def __init__(self, data, nlay=2, verbose=False):
-        """Parameters: FDEM data class and number of layers."""
-        super(FDEM2dFOP, self).__init__(verbose)
-        self.nlay = nlay
-        self.header = {}
-        self.pos, self.z, self.topo = None, None, None
-        self.FOP = data.FOP(nlay)
-        self.nx = len(data.x)
-        self.nf = len(data.freq())
-        npar = 2 * nlay - 1
-        self.mesh1d = pg.meshtools.createMesh1D(self.nx, npar)
-        self.mesh_ = pg.meshtools.createMesh1D(self.nx, 2 * nlay - 1)
-        self.setMesh(self.mesh_)
-
-        # self.J = NDMatrix(self.nx, self.nf*2, npar)
-        self.J = pg.matrix.BlockMatrix()
-        self.FOP1d = []
-        for i in range(self.nx):
-            self.FOP1d.append(pg.core.FDEM1dModelling(
-                nlay, data.freq(), data.coilSpacing, -data.height))
-            n = self.J.addMatrix(self.FOP1d[-1].jacobian())
-            self.J.addMatrixEntry(n, self.nf * 2 * i, npar * i)
-
-        self.J.recalcMatrixSize()
-        print(self.J.rows(), self.J.cols())
-
-    def response(self, model):
-        """Cut together forward responses of all soundings."""
-        modA = np.asarray(model).reshape((self.nlay * 2 - 1, self.nx)).T
-        resp = pg.Vector(0)
-        for modi in modA:
-            resp = pg.cat(resp, self.FOP.response(modi))
-
-        return resp
-
-    def createJacobian(self, model):
-        """Create Jacobian matrix by creating individual Jacobians."""
-        modA = np.asarray(model).reshape((self.nlay * 2 - 1, self.nx)).T
-        for i in range(self.nx):
-            self.FOP1d[i].createJacobian(modA[i])
-
-
-class HEM1dWithElevation(pg.core.ModellingBase):
-    """Airborne FDEM modelling including variable bird height."""
-
-    def __init__(self, frequencies, coilspacing, nlay=2, verbose=False):
-        """Set up class by frequencies and geometries."""
-        pg.core.ModellingBase.__init__(self, verbose)
-        self.nlay_ = nlay  # real layers (actually one more!)
-        self.FOP_ = pg.core.FDEM1dModelling(nlay + 1, frequencies,
-                                            coilspacing, self.height)
-        self.mesh_ = pg.meshtools.createMesh1D(nlay, 2)  # thicknesses & res
-        self.mesh_.cell(0).setMarker(2)
-        self.setMesh(self.mesh_)
-
-    def response(self, model):
-        """Return forward response for a given model."""
-        thk = model(0, self.nlay)  # all thicknesses including bird height
-        res = model(self.nlay - 1, self.nlay * 2)
-        res[0] = 10000.
-        return self.FOP_.response(pg.cat(thk, res))
-
-
-class FDEM():
-    """Class for managing Frequency Domain EM data and their inversions."""
+class FDEM:
+    """Managing Frequency Domain EM data and their inversions."""
 
     def __init__(self, x=None, freqs=None,
                  coilSpacing=None, inphase=None, outphase=None,
@@ -221,19 +80,18 @@ class FDEM():
     def __repr__(self):
         """Create string representation."""
         if self.x is None:
-            part1 = "<FDEMdata: sounding with {:d} frequencies".format(
-                len(self.frequencies))
+            part1 = "<FDEMdata: sounding with" + \
+                f" {len(self.frequencies):d} frequencies"
         else:
-            part1 = "<FDEMdata: {:d} soundings with {:d} frequencies".format(
-                len(self.x), len(self.frequencies))
+            part1 = f"<FDEMdata: {len(self.x):d} soundings" + \
+                "with {len(self.frequencies):d} frequencies"
         if self.coilSpacing is not None:
             cs = self.coilSpacing
             if hasattr(cs, '__iter__'):
                 if len(cs) > 1:
-                    part2 = "coil spacing is {:f}-{:f} m>".format(min(cs),
-                                                                  max(cs))
+                    part2 = f"coil spacing is {min(cs):f}-{max(cs):f} m>"
             else:
-                part2 = "coil spacing is {:f} m".format(cs)
+                part2 = f"coil spacing is {cs:f} m"
             return part1 + ' , ' + part2
         else:
             return part1
@@ -246,8 +104,8 @@ class FDEM():
         reads: positions, data, frequencies, error and geometry
         """
         cols = (1, 4, 6, 8, 9, 12, 15, 16)
-        xx, sep, f, pf, ip, op, hmod, q = np.loadtxt(filename, skiprows=1,
-                                                     usecols=cols, unpack=True)
+        xx, sep, f, pf, ip, op, hmod, q = np.loadtxt(
+            filename, skiprows=1, usecols=cols, unpack=True)
         err = q / pf * 100.  # percentage of primary field
 
         if len(np.unique(sep)) > 1:
@@ -271,11 +129,11 @@ class FDEM():
         self.header = {}
         keyword = ''
         i = 0
-        with open(filename) as f:
-            for i, line in enumerate(f):
+        with Path(filename).open() as fid:
+            for line in fid:
                 if line[0] == '/':
-                    line = line[1:].strip('\n').replace(',', '').replace('AND',
-                                                                         '')
+                    line = line[1:].strip('\n').replace(
+                        ',', '').replace('AND', '')
                     try:
                         result = [float(co) for co in line.split()]
                     except ValueError:
@@ -284,7 +142,7 @@ class FDEM():
                         result = result[0]
                     if keyword:
                         if isinstance(keyword, list):
-                            for kw, res in zip(keyword, result):
+                            for kw, res in zip(keyword, result, strict=False):
                                 self.header[kw] = res
                         else:
                             self.header[keyword] = result
@@ -293,11 +151,8 @@ class FDEM():
                         keyword = result
                 else:
                     break
-            line = f.readline()
+            line = fid.readline()
             print(line)
-#            tmp = np.genfromtxt(fname=f, autostrip=True, comments='/',
-#                skip_header=0, dtype=float, names=1, case_sensitive='lower',
-#                missing_values='*', filling_values=-9999, skip_footer=1)
         tmp = np.genfromtxt(
             fname=filename, autostrip=True, comments='/',
             skip_header=i+1, dtype=float, names=True, case_sensitive='lower',
@@ -334,25 +189,24 @@ class FDEM():
     def importIPXData(self, filename, verbose=False):
         """Import MaxMin IPX format with pos, data, frequencies & geometry."""
         delim = None
-        fid = open(filename)
-        aline = ''
-        i = 0  # just in case there is no header
-        for i, aline in enumerate(fid):
-            if aline.split()[0][0].isdigit():  # number found
-                break
-            elif aline.find('COIL') > 0:  # [:6] == '/ COIL':
-                self.coilSpacing = float(aline.replace(':', ': ').split()[-2])
-            elif aline.find('FREQ') > 0:  # [:6] == '/ FREQ':
-                mya = aline[aline.find(':') + 1:].replace(',', ' ').split()
-                myf = [float(aa) for aa in mya if aa[0].isdigit()]
-                self.frequencies = np.array(myf)
+        with Path(filename).open() as fid:
+            aline = ''
+            i = 0  # just in case there is no header
+            for aline in fid:
+                if aline.split()[0][0].isdigit():  # number found
+                    break
+                elif aline.find('COIL') > 0:  # [:6] == '/ COIL':
+                    self.coilSpacing = float(aline.replace(':', ': ').split()[-2])
+                elif aline.find('FREQ') > 0:  # [:6] == '/ FREQ':
+                    mya = aline[aline.find(':') + 1:].replace(',', ' ').split()
+                    myf = [float(aa) for aa in mya if aa[0].isdigit()]
+                    self.frequencies = np.array(myf)
 
-        fid.close()
+            if verbose:
+                print("CS=", self.coilSpacing, "F=", self.frequencies)
 
-        if verbose:
-            print("CS=", self.coilSpacing, "F=", self.frequencies)
-        if aline.find(',') > 0:
-            delim = ','
+            if aline.find(',') > 0:
+                delim = ','
 
         nf = len(self.frequencies)
         if verbose:
@@ -367,43 +221,42 @@ class FDEM():
 
     def importMaxMinData(self, filename, verbose=False):
         """Import MaxMin ASCII export (.txt) data."""
-        with open(filename) as fid:
-            lines = fid.readlines()
-
         self.coilSpacing = 99.9
         f, re, im, err, cond = [], [], [], [], []
         x, RE, IM, ERR, COND = [], [], [], [], []
-        for i, line in enumerate(lines):
-            stline = line.split()
-            if line.startswith("Coil Sep"):
-                self.coilSpacing = float(stline[-1])
-            if len(stline) > 3 and stline[3].find("Stn") >= 0:
-                x.append(float(stline[4]))
-                if len(re) > 0:
-                    RE.append(np.array(re))
-                    IM.append(np.array(im))
-                    ERR.append(np.array(err))
-                    COND.append(np.array(cond))
-                    f, re, im, err, cond = [], [], [], [], []
+        with Path(filename).open() as fid:
+            lines = fid.readlines()
+            for line in lines:
+                stline = line.split()
+                if line.startswith("Coil Sep"):
+                    self.coilSpacing = float(stline[-1])
+                if len(stline) > 3 and stline[3].find("Stn") >= 0:
+                    x.append(float(stline[4]))
+                    if len(re) > 0:
+                        RE.append(np.array(re))
+                        IM.append(np.array(im))
+                        ERR.append(np.array(err))
+                        COND.append(np.array(cond))
+                        f, re, im, err, cond = [], [], [], [], []
 
-            if len(stline) > 0 and stline[0] == "MAX1":  # data
-                f.append(float(stline[1]))
-                re.append(float(stline[3]))
-                im.append(float(stline[5]))
-                err.append(float(stline[7]))
-                cond.append(float(stline[9]))
+                if len(stline) > 0 and stline[0] == "MAX1":  # data
+                    f.append(float(stline[1]))
+                    re.append(float(stline[3]))
+                    im.append(float(stline[5]))
+                    err.append(float(stline[7]))
+                    cond.append(float(stline[9]))
 
-        if len(re) > 0:
-            RE.append(np.array(re))
-            IM.append(np.array(im))
-            ERR.append(np.array(err))
-            COND.append(np.array(cond))
+            if len(re) > 0:
+                RE.append(np.array(re))
+                IM.append(np.array(im))
+                ERR.append(np.array(err))
+                COND.append(np.array(cond))
 
-        self.x = np.array(x)
-        self.frequencies = np.array(f)
-        self.IP = np.array(RE)
-        self.OP = np.array(IM)
-        self.ERR = np.array(ERR)
+            self.x = np.array(x)
+            self.frequencies = np.array(f)
+            self.IP = np.array(RE)
+            self.OP = np.array(IM)
+            self.ERR = np.array(ERR)
 
     def deactivate(self, fr):
         """Deactivate a single frequency."""
@@ -543,37 +396,23 @@ class FDEM():
             errorVec = pg.asvector(noise)
 
         # independent EM inversion
-
         if isinstance(stmod, float):  # real model given
             model = pg.Vector(nlay * 2 - 1, stmod)
             model[0] = 2.
         else:
-            if len(stmod) == nlay * 2 - 1:
-                model = stmod
-            else:
-                model = pg.Vector(nlay * 2 - 1, 30.)
+            model = stmod if len(stmod)==nlay*2-1 else \
+                pg.Vector(nlay*2-1, 30.0)
+            pg.verbose("Model", model)
 
-            print("Model", model)
-        if 1:
-            from pygimli.frameworks import MarquardtInversion
-            self.inv = MarquardtInversion(fop=self.fop, verbose=verbose,
-                                          debug=True)
-            self.inv.dataTrans = self.transData
-            self.inv.modelTrans = self.transLog
-            # self.dataTrans = self.transData
-            self.model1d = self.inv.run(dataVec, np.abs(errorVec/dataVec),
-                                        lam=lam, startModel=model, **kwargs)
-            response = self.inv.response
-        else:
-            self.inv = pg.core.RInversion(dataVec, self.fop, self.transData,
-                                          verbose)
-            self.inv.setAbsoluteError(errorVec)
-            self.inv.setLambda(lam)
-            self.inv.setMarquardtScheme(0.8)
-            self.inv.setDeltaPhiAbortPercent(0.5)
-            self.inv.setModel(model)
-            self.model1d = self.inv.run()
-            response = self.inv.response()
+        from pygimli.frameworks import MarquardtInversion
+        self.inv = MarquardtInversion(fop=self.fop, verbose=verbose,
+                                        debug=True)
+        self.inv.dataTrans = self.transData
+        self.inv.modelTrans = self.transLog
+        # self.dataTrans = self.transData
+        self.model1d = self.inv.run(dataVec, np.abs(errorVec/dataVec),
+                                    lam=lam, startModel=model, **kwargs)
+        response = self.inv.response
 
         if show:
             self.plotData(xpos=xpos, response=response)
@@ -624,10 +463,7 @@ class FDEM():
 
         opax = None
 
-        if ax is None:
-            opax = pg.plt.subplot(1, nv, nv)
-        else:
-            opax = ax[-1]
+        opax = pg.plt.subplot(1, nv, nv) if ax is None else ax[-1]
 
         opax.semilogy(op, fr, marker, label='obs' + addlabel,
                       markersize=markersize)
@@ -639,7 +475,6 @@ class FDEM():
             rop = np.asarray(response)[len(ip):]
             opax.semilogy(rop, fr, rmarker, label='syn' + addlabel)
 
-#        opax.set_axis('tight')
         if error is not None:
             opax.ylim((min(fr) * .98, max(fr) * 1.02))
 
@@ -647,46 +482,7 @@ class FDEM():
         opax.set_xlabel('outphase [ppm]')
         opax.set_ylabel('f [Hz]')
         opax.legend(loc='best')
-        # plt.subplot(1, nv, 1)
         return ax
-
-    # def plotDataOld(self, xpos=0, response=None,
-    #                 marker='bo-', rmarker='rx-', clf=True):
-    #     """Plot data as curves at given position."""
-    #     ip, op = self.selectData(xpos)
-    #     fr = self.freq()
-
-    #     if clf:
-    #         plt.clf()
-
-    #     plt.subplot(121)
-    #     plt.semilogy(ip, fr, marker, label='obs')
-    #     plt.axis('tight')
-    #     plt.grid(True)
-    #     plt.xlabel('inphase [%]')
-    #     plt.ylabel('f [Hz]')
-
-    #     if response is not None:
-    #         rip = np.asarray(response)[:len(ip)]
-    #         plt.semilogy(rip, fr, rmarker, label='syn')
-
-    #     plt.legend(loc='best')
-
-    #     plt.subplot(122)
-    #     plt.semilogy(op, fr, marker, label='obs')
-
-    #     if response is not None:
-    #         rop = np.asarray(response)[len(ip):]
-    #         plt.semilogy(rop, fr, rmarker, label='syn')
-
-    #     plt.axis('tight')
-    #     plt.grid(True)
-    #     plt.xlabel('outphase [%]')
-    #     plt.ylabel('f [Hz]')
-    #     plt.legend(loc='best')
-    #     plt.show()
-
-    #     return
 
     def showModelAndData(self, model, xpos=0, response=None, figsize=(8, 6)):
         """Show both model and data with response in subfigures."""
@@ -707,7 +503,7 @@ class FDEM():
                     outname=None, show=False, figsize=(11, 8), everyx=None):
         """Plot data along a profile as image plots for IP and OP."""
         if self.x is None:
-            raise Exception("No measurement position array x given")
+            raise ValueError("No measurement position array x given")
 
         freq = self.freq()
         nr = 2
@@ -803,13 +599,12 @@ class FDEM():
 
         # generate starting model by repetition
         model = np.repeat(modVec, len(self.x))
-        INV = pg.core.Inversion(datvec, self.f2d, self.transData)
-        INV.setAbsoluteError(error)
-        INV.setLambda(lam)
-        INV.setModel(model)
-        INV.setReferenceModel(model)
-
-        return INV
+        self.inv2d = pg.Inversion(fop=self.f2d)
+        self.inv2d.dataTrans = self.transData
+        model = self.inv2d.run(datvec, absoluteError=error,
+                               startModel=model, isReference=True,
+                               lam=lam, verbose=True)
+        return model
 
 
 if __name__ == "__main__":
@@ -852,7 +647,6 @@ if __name__ == "__main__":
     print("thk = ", mymodel[:numlay - 1])
     print("res = ", mymodel[numlay - 1:])
     figure, axes = fdem.showModelAndData(mymodel, xvector, inv.response())
-    INV = fdem.inv2D(options.nlay)
-    INV.run()
+    model = fdem.inv2D(options.nlay)
 #    fig.savefig(name+str(xpos)+'-result.pdf', bbox_inches='tight')
     pg.plt.show()

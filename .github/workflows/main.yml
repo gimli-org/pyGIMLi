@@ -1,5 +1,8 @@
 name: pyGIMLi CI
 
+env:
+    SOURCE_DIR: source
+
 on:
   push:
     branches:
@@ -11,113 +14,52 @@ on:
 jobs:
   pgcore:
     name: Building pgcore & bindings
-    runs-on: [self-hosted, test-runner]
+    runs-on: self-hosted
     steps:
-      - name: Clean-up
-        run: rm -rf ~/.cache/pygimli
       - name: Getting pyGIMLi sources
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # checks out all branches and tags
           path: source
-      - name: Creating virtual environment for the build
-        run: |
-          env
-          rm -rf venv-build/
-          /usr/bin/python3 -m venv venv-build
-          source ./venv-build/bin/activate
-          pip install -U pip
-          # run once for the deps
-          pip install -e source/.[build]
-          #pip uninstall -y pygimli
-          pip list
-      - name: Running cmake
-        run: |
-          source venv-build/bin/activate
-          mkdir -p build
-          cd build
-          # CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake ../source
-          rm -f CMakeCache.txt   # ensure cmake setting fits the venv
-          cmake ../source
+      - name: Cleaning old builds
+        run: bash ./$SOURCE_DIR/.workflow.sh clean
+      - name: Prepare build
+        run: bash ./$SOURCE_DIR/.workflow.sh build_pre
       - name: Build libgimli
-        working-directory: build
-        run: |
-          source ../venv-build/bin/activate
-          make -j 8 gimli
-      - name: Build Python bindings
-        working-directory: build
-        run: |
-          source ../venv-build/bin/activate
-          make pygimli J=4
-          rm -f wheelhouse/pgcore*.whl # remove old wheels
-          make whlpgcoreTest
-          # install the wheel to ensure copying all *.so
-          # pip install --force-reinstall wheelhouse/pgcore*linux*.whl
-          # rm -f wheelhouse/pygimli*.whl # remove old wheels
-          # make whlpygimliTest
-          # pip install --force-reinstall wheelhouse/pygimli*.whl
+        run: bash ./$SOURCE_DIR/.workflow.sh build
       - name: Test bindings
-        run: |
-          source venv-build/bin/activate
-          python -c 'import pygimli; print(pygimli.version())'
-          python -c 'import pygimli; print(pygimli.Report())'
-  pgtest:
+        run: bash ./$SOURCE_DIR/.workflow.sh build_post
+  tests:
     name: Running tests
-    runs-on: [self-hosted, test-runner]
+    runs-on: self-hosted
     needs: pgcore
     env:
       OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
     steps:
-      - name: Creating virtual environment for tests
-        run: |
-          rm -rf venv-test/
-          /usr/bin/python3 -m venv venv-test
-          source venv-test/bin/activate
-          which python
-          pip install -U pip
-          pip install -e source/.[test]
-          pip install build/wheelhouse/pgcore*linux*.whl
+      - name: Prepare tests
+        run: bash ./$SOURCE_DIR/.workflow.sh test_pre
       - name: Run pg.test()
-        run: |
-          source venv-test/bin/activate
-          which python
-          python -c 'import pygimli; print(pygimli.version())'
-          python -c 'import pygimli; print(pygimli.Report())'
-          python -c 'import pygimli; pygimli.test(show=False, abort=True)'
+        run: bash ./$SOURCE_DIR/.workflow.sh test
   docs:
       name: Build website with examples
-      needs: pgtest
-      runs-on: [self-hosted, test-runner]
+      needs: pgcore
+      runs-on: self-hosted
       env:
         DISPLAY: ":99.0"
         PYVISTA_OFF_SCREEN: True
         OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
       steps:
-        - name: Creating virtual environment for docs
-          run: |
-            source venv-test/bin/activate
-            pip install -e source/.[doc]
-        - name: Clean gallery
-          working-directory: build
-          run: |
-            source ../venv-test/bin/activate
-            make clean-gallery
+        - name: Preparing doc build
+          run: bash ./$SOURCE_DIR/.workflow.sh doc_pre
         - name: Running sphinx
-          working-directory: build
-          run: |
-            source ../venv-test/bin/activate
-            # rm -rf doc
-            rm -f CMakeCache.txt
-            cmake ../source/ # to find the correct sphinx from the current venv
-            rm -rf pygimli # for some weird reasons its importing this instead of the installed
-            xvfb-run make doc # xvfb is necessary for headless display of pyvista plots
+          run: bash ./$SOURCE_DIR/.workflow.sh doc
   merging:
     name: Automerging
-    runs-on: [self-hosted, test-runner]
-    needs: docs
+    needs: [tests,docs]
+    runs-on: self-hosted
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
-      - name: Merge dev -> master (with rebase)
+      - name: Merge dev -> main (with rebase)
         working-directory: source
         run: |
           # Authorize with personal access token
@@ -125,30 +67,21 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           echo "remote"
-          git remote set-url origin https://florian-wagner:${{ secrets.SECRET }}@github.com/gimli-org/gimli.git
-
+          git remote set-url origin https://florian-wagner:${{ secrets.SECRET }}@github.com/gimli-org/pyGIMLi.git
           # Make sure to be in sync with dev on remote
-          echo "status"
+          echo "dev status"
           git status
-          echo "fetch"
-          git fetch
-          echo "clean"
-          git clean -ffdx
-          echo "reset"
-          git reset --hard HEAD
-
-          # Rebase and push to master
-          echo "stash"
-          git stash
-          echo "rebase"
-          git rebase origin/master
-          git push origin HEAD:master --force-with-lease
+          echo "main status"
+          git checkout main
+          git status
+          echo "merge"
+          git merge dev --ff-only
+          git push origin HEAD:main
   upload-html:
     name: Upload HTML to dev.pygimli.org
-    runs-on: [self-hosted, test-runner]
-    needs: docs
+    runs-on: [self-hosted, pgserver]
+    needs: [tests,docs]
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
       - name: Uploading built html files
-        working-directory: build
-        run: rsync -avP --delete doc/html/ /var/www/html
+        run: bash ./$SOURCE_DIR/.workflow.sh doc_post

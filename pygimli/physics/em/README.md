@@ -1,16 +1,11 @@
 Electromagnetics
 ================
+
 This module contains different solutions for electromagnetic measurements over laterally layered (VTI) media in either the frequency domain (FD) or time domain (TD).
 
 * FDEM sounding (ground or airborne) using VMD (or possible HMD) sources and receivers, e.g. RESOLVE airborne receiver or MaxMin ground system
 * CSEM (FD) sounding with grounded bipole transmitter and magnetic (or optionally electric) field receivers
 * TDEM sounding with loop responses (either impulse or step)
-
-
-
-
-
-
 
 For 3D (or 2D) EM inversion, we refer to the packages custEM (Rochlitz et al., 2023) and SAEM.
 

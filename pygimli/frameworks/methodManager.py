@@ -1,14 +1,11 @@
-#!/usr/bin/env python
 """Method Manager.
 
-Provide the end user interface for method (geophysical) dependent
+Provide the end user interface with (geophysical) method-dependent
 modelling and inversion as well as data and model visualization.
 """
 
 import numpy as np
 import pygimli as pg
-
-from pygimli.utils import prettyFloat as pf
 
 
 def fit(funct, data, err=None, **kwargs):
@@ -73,7 +70,7 @@ def fit(funct, data, err=None, **kwargs):
 
 # Discuss .. rename to Framework or InversionFramework since he only manages
 # the union of Inversion/Modelling and RegionManager(later)
-class MethodManager(object):
+class MethodManager:
     """General manager to maintenance a measurement method.
 
     Method Manager are the interface to end-user interaction and can be seen as
@@ -198,10 +195,7 @@ class MethodManager(object):
         changed the mangers own forward operator object. If you want an own
         instance of a valid FOP call createForwardOperator.
         """
-        if self._fop is not None:
-            fop = self._fop
-        else:
-            fop = self.createForwardOperator(**kwargs)
+        fop = self._fop if self._fop is not None else self.createForwardOperator(**kwargs)
 
         if fop is None:
             pg.critical("It seems that createForwardOperator method "
@@ -316,6 +310,7 @@ class MethodManager(object):
 
     @property
     def data(self):
+        """Return data vector."""
         return self._data
 
     @data.setter
@@ -528,8 +523,8 @@ class MethodManager(object):
                                  ax=ax, **kwargs)
 
         if not kwargs.pop('hideFittingAnnotation', False):
-            fittext = r"rrms: {0}, $\chi^2$: {1}".format(
-                pf(self.fw.inv.relrms()), pf(self.fw.inv.chi2()))
+            fittext = rf"rrms: {self.fw.inv.relrms():.2f}," + \
+                rf" $\chi^2$: {self.fw.inv.chi2():.2f}"
             ax.text(0.99, 0.005, fittext,
                     transform=ax.transAxes,
                     horizontalalignment='right',
@@ -642,7 +637,7 @@ class ParameterInversionManager(MethodManager):
             pg.critical("you should either give a valid fop or a function so "
                         "I can create the fop for you")
 
-        super(ParameterInversionManager, self).__init__(fop, **kwargs)
+        super().__init__(fop, **kwargs)
 
     def createInversionFramework(self, **kwargs):
         """Create a Marquardt-type inversion framework instance."""
@@ -678,7 +673,7 @@ class ParameterInversionManager(MethodManager):
         else:
             kwargs['startModel'] = startModel
 
-        return super(ParameterInversionManager, self).invert(data=data,
+        return super().invert(data=data,
                                                              err=err,
                                                              **kwargs)
 
@@ -688,7 +683,7 @@ class MethodManager1d(MethodManager):
 
     def __init__(self, fop=None, **kwargs):
         """Initialize with fop."""
-        super(MethodManager1d, self).__init__(fop, **kwargs)
+        super().__init__(fop, **kwargs)
 
     def createInversionFramework(self, **kwargs):
         """Create inversion with block discretization."""
@@ -696,7 +691,7 @@ class MethodManager1d(MethodManager):
 
     def invert(self, data=None, err=None, **kwargs):
         """Run inversion."""
-        return super(MethodManager1d, self).invert(data=data, err=err,
+        return super().invert(data=data, err=err,
                                                    **kwargs)
 
 
@@ -893,9 +888,8 @@ class MeshMethodManager(MethodManager):
                     horizontalalignment='left',
                     verticalalignment='center')
 
-        fittext = r"rrms: {0}%, $\chi^2$: {1}".format(
-            pg.pf(pg.utils.rrms(data, resp)*100),
-            pg.pf(self.fw.chi2History[-1]))
+        fittext = rf"rrms: {pg.utils.rrms(data, resp)*100:.2f}%, " + \
+            rf"$\chi^2$: {self.fw.chi2History[-1]:.2f}"
         axs[1].text(1.0, 1.03, fittext,
                     transform=axs[1].transAxes,
                     horizontalalignment='right',
@@ -934,9 +928,8 @@ class PetroInversionManager(MeshMethodManager):
                 self.checkData = mgr.checkData
                 self.checkError = mgr.checkError
 
-            if fop is not None:
-                if not isinstance(fop, pg.frameworks.PetroModelling):
-                    petrofop = pg.frameworks.PetroModelling(fop, petro)
+            if fop is not None and not isinstance(fop, pg.frameworks.PetroModelling):
+                petrofop = pg.frameworks.PetroModelling(fop, petro)
 
         if petrofop is None:
             print(mgr)
@@ -959,7 +952,7 @@ class JointPetroInversionManager(MeshMethodManager):
         self.mgrs = mgrs
 
         self.fops = [pg.frameworks.PetroModelling(m.fop, p)
-                     for p, m in zip(petros, mgrs)]
+                     for p, m in zip(petros, mgrs, strict=False)]
 
         super().__init__(fop=pg.frameworks.JointModelling(self.fops))
 

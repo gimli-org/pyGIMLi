@@ -1,16 +1,17 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Spectral induced polarization (SIP) plotting tools"""
+"""Spectral induced polarization (SIP) plotting tools."""
 
 import pygimli as pg
 
 
 def showAmplitudeSpectrum(*args, **kwargs):
+    """Backward compatibility."""
     pg.deprecated('drawAmplitudeSpectrum')
     return drawAmplitudeSpectrum(*args, **kwargs)
 
 
 def showPhaseSpectrum(*args, **kwargs):
+    """Backward compatibility."""
     pg.deprecated('drawPhaseSpectrum')
     return drawPhaseSpectrum(*args, **kwargs)
 
@@ -63,9 +64,7 @@ def showSpectrum(freq, amp, phi, nrows=2, ylog=None, axs=None, **kwargs):
 
 def plotSpectrum(ax, freq, vals, ylabel=r'$-\phi$ (mrad)',
                  grid=True, marker='+', ylog=True, **kwargs):
-    """Plot some spectrum (redundant).
-    DEPRECATED
-    """
+    """Plot some spectrum (redundant)."""
     pg.deprecated('drawSpectrum')
     if 'label' not in kwargs:
         kwargs['label'] = 'obs'

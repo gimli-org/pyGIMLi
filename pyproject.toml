@@ -1,15 +1,20 @@
 [build-system]
-requires = ["setuptools", "versioneer[toml]==0.29"]
-#requires = ["setuptools"]
+requires = ["setuptools",
+	        "versioneer[toml]==0.29"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["pygimli"]
+#packages = ["pygimli"]
+
+[tool.setuptools.packages.find]
+#where = ["pygimli"]  # list of folders that contain the packages (["."] by default)
+exclude = ["core","apps"]
 
 [project]
 name = "pygimli"
+dynamic = ["version"]
 #dynamic = ["version"] ## versioneer does not yet seems to work
-version = "1.5.4"
+#version = "1.5.4"
 requires-python = ">=3.10"
 authors = [
   { name = "Carsten Rücker" },
@@ -34,7 +39,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=2.1.3",
-    "setuptools",
+    "setuptools>=75.8.2",
 ]
 
 [project.optional-dependencies]
@@ -54,13 +59,12 @@ opt = [
     "matplotlib>3.7",
     "meshio",
     "pyvista[all]",
-    "pyqt5",
     "scipy>=1.14,<1.15",
     "tetgen>=0.6.5",
     "tqdm",
 ]
 test = [
-    "pygimli[opt]",
+    "pygimli[build,opt]",
     "tox",
     "ruff",
     "coverage[toml]",
@@ -75,9 +79,9 @@ doc = [
     "jupytext",
     "linkify-it-py",
     "myst_nb",
-    #"pydata-sphinx-theme",
-    "pydata-sphinx-theme==0.15.2",
-    "sphinx>=3.1",
+    "pydata-sphinx-theme",
+    "gmsh",
+    "sphinx>=7.2",
     "sphinxcontrib-bibtex",
     "sphinxcontrib-doxylink",
     "sphinxcontrib-programoutput",
@@ -85,7 +89,7 @@ doc = [
     "sphinx-design",
 ]
 dev = [
-    "pygimli[opt, test, doc, build]",
+    "pygimli[build, opt, test, doc]",
 ]
 all = [
     "pygimli[dev]",

@@ -1,3 +1,4 @@
+"""Refraction for 1D layered Earth models."""
 from math import sqrt
 import numpy as np
 import pygimli as pg
@@ -29,7 +30,7 @@ def simulateNlayerRefraction(offsets, thk, vel, muteDirect=False):
     """
     s = 1. / np.array(vel)
     tt = offsets * s[0]
-    
+
     if muteDirect:
         tt[:] = max(tt)
 
@@ -47,6 +48,7 @@ def simulateNlayerRefraction(offsets, thk, vel, muteDirect=False):
 
 class RefractionNLayer(pg.core.ModellingBase):
     """Forward operator for 1D Refraction seismic with layered model."""
+
     def __init__(self, offset=0, nlay=3, vbase=1100, verbose=True):
         """Init forward operator. Model are velocity increases.
 
@@ -69,17 +71,19 @@ class RefractionNLayer(pg.core.ModellingBase):
     def thkVel(self, model):
         """Return thickness and velocity vectors from model."""
         return model(0, self.nlay-1), \
-               np.cumprod(model(self.nlay-1, 
+               np.cumprod(model(self.nlay-1,
                                 self.nlay*2-1)) * self.vbase
 
     def response(self, model):
         """Return forward response f(m)."""
-        assert len(model) == self.nlay*2-1
+        if len(model) != self.nlay*2-1:
+            raise IndexError("Length of model does not match!")
         return simulateNlayerRefraction(self.offset, *self.thkVel(model))
 
 
 class RefractionNLayerFix1stLayer(pg.core.ModellingBase):
     """FOP for 1D Refraction seismic with layered model (e.g. water layer)."""
+
     def __init__(self, offset=0, nlay=3, v0=1465, d0=200, muteDirect=False,
                  verbose=True):
         """Init forward operator for velocity increases with fixed 1st layer.
@@ -115,8 +119,10 @@ class RefractionNLayerFix1stLayer(pg.core.ModellingBase):
 
     def response(self, model):
         """Return forward response f(m)."""
-        assert len(model) == self.nlay*2-1
-        return simulateNlayerRefraction(self.offset, *self.thkVel(model), 
+        if len(model) != self.nlay*2-1:
+            raise IndexError("Length of model does not match!")
+
+        return simulateNlayerRefraction(self.offset, *self.thkVel(model),
                                         muteDirect=self.mDirect)
 
 

@@ -113,15 +113,13 @@ class ERTModelling(ERTModellingBase):
 
 
     def setVerbose(self, v):
-        """ Set verbosity.
-        """
+        """Set verbosity."""
         super().setVerbose(v)
         self._core.setVerbose(v)
 
 
     def setDefaultBackground(self):
-        """ Set the default background behavior.
-        """
+        """Set the default background behavior."""
         # if self.complex(): # deactivated, do it by hand
         #     self.regionManager().addRegion(3, self._baseMesh, 2)
         super().setDefaultBackground()
@@ -137,14 +135,12 @@ class ERTModelling(ERTModellingBase):
 
     @property
     def parameterCount(self):
-        """ Return number of parameters.
-        """
+        """Return number of parameters."""
         return self.regionManager().parameterCount() * (1 + self.complex())
 
 
     def createConstraints(self, C=None):
-        """ Create constraint matrix (special type for this).
-        """
+        """Create constraint matrix (special type for this)."""
         super().createConstraints()  # standard C
         if self.complex():
             if C is not None:
@@ -160,8 +156,7 @@ class ERTModelling(ERTModellingBase):
 
 
     def createStartModel(self, dataVals):
-        """ Create Starting model for ERT inversion.
-        """
+        """Create Starting model for ERT inversion."""
         if self.complex():
             dataC = pg.utils.toComplex(dataVals)
             nModel = self.parameterCount // 2
@@ -183,7 +178,7 @@ class ERTModelling(ERTModellingBase):
     def flipImagPart(self, v):
         """Flip imaginary port (convention)."""
         z = pg.utils.toComplex(v)
-        pg.warn('pre min/max={0} / {1} im: {2} / {3}'.format(
+        pg.warn('pre min/max={} / {} im: {} / {}'.format(
             pf(min(z.real)), pf(max(z.real)),
             pf(min(z.imag)), pf(max(z.imag))))
 
@@ -191,7 +186,7 @@ class ERTModelling(ERTModellingBase):
                                     conj=self._conjImag)
 
         z = pg.utils.toComplex(v)
-        pg.warn('pos min/max={0} / {1} im: {2} / {3}'.format(
+        pg.warn('pos min/max={} / {} im: {} / {}'.format(
             pf(min(z.real)), pf(max(z.real)),
             pf(min(z.imag)), pf(max(z.imag))))
         return v
@@ -327,9 +322,8 @@ class ERTModellingReference(ERTModellingBase):
         self.lastResponse = r * self.data['k']
 
         if self.verbose:
-            print("Resp min/max: {0} {1} {2}s".format(min(self.lastResponse),
-                                                      max(self.lastResponse),
-                                                      pg.dur()))
+            print("Resp min/max: {} {} {}s".format(
+                min(self.lastResponse), max(self.lastResponse), pg.dur()))
 
         return self.lastResponse
 
@@ -361,7 +355,7 @@ class ERTModellingReference(ERTModellingBase):
             Jt *= 0.
             A = pg.matrix.ElementMatrixMap()
 
-            for i, c in enumerate(cells):
+            for c in cells:
                 modelIdx = c.marker()
 
                 # 2.5D
@@ -412,8 +406,8 @@ class ERTModellingReference(ERTModellingBase):
                                         1./b.dist(m) + 1./b.dist(n))
             return k
         else:
-            raise BaseException("Please use BERT for non-standard "
-                                "data sets" + str(data))
+            raise ImportError("Please use BERT for non-standard "
+                              "data sets" + str(data))
 
     def uAnalytical(self, p, sourcePos, k):
         """
@@ -433,7 +427,7 @@ class ERTModellingReference(ERTModellingBase):
 
     def getIntegrationWeights(self, rMin, rMax):
         """TODO WRITEME."""
-        nGauLegendre = max(int((6.0 * np.log10(rMax / rMin))), 4)
+        nGauLegendre = max(int(6.0 * np.log10(rMax / rMin)), 4)
         nGauLaguerre = 4
 
         k = pg.Vector()
