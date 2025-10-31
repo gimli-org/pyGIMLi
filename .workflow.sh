@@ -160,8 +160,8 @@ function build(){
                 cmake $PROJECT_SRC
             fi
 
-            # make -j $GIMLI_NUM_THREADS
-            # make pygimli J=$GIMLI_NUM_THREADS
+            make -j $GIMLI_NUM_THREADS
+            make pygimli J=$GIMLI_NUM_THREADS
 
             # create pgcore wheel
             make whlpgcoreCopyLibs
