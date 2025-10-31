@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 exclude = ["core","apps"]
 
 [tool.setuptools.dynamic]
-version = {attr = "pygimli.__dist_version__"}
+version = {attr = "pygimli._version.__version__"}
 
 [project]
 name = "pygimli"
@@ -36,6 +36,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering",
 ]
+
 dependencies = [
     "numpy>=2.1.3",
     "setuptools>=75.8.2",
@@ -100,6 +101,9 @@ Documentation = "https://www.pygimli.org/documentation.html"
 Repository = "https://github.com/gimli-org/gimli"
 "Bug Tracker" = "https://github.com/gimli-org/gimli/issues"
 Changelog = "https://github.com/gimli-org/gimli/releases"
+
+[tool.uv.extra-build-dependencies]
+pygimli = ["numpy"]
 
 [tool.versioneer]
 VCS = "git"
