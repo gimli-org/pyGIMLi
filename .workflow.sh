@@ -5,11 +5,14 @@
 # leave any virtual environment
 deactivate 2>/dev/null || true
 
+function BLUE(){
+    echo -e '\033[0;34;49m'
+}
 function GREEN(){
     echo -e '\033[0;32m'
 }
-function BLUE(){
-    echo -e '\033[0;34;49m'
+function YELLOW(){
+    echo -e '\033[0;33;49m'
 }
 function RED(){
     echo -e '\033[0;31;49m'
@@ -60,6 +63,8 @@ function use_venv(){
         new_venv $venv_path
     fi
 }
+
+
 function new_venv(){
     local venv_path=$1
     GREEN
@@ -76,6 +81,25 @@ function new_venv(){
     python -m pip install --upgrade pip
     pip install uv
 }
+
+
+function testReport(){
+    if [ -n "$VIRTUAL_ENV" ]; then
+        GREEN
+        echo "Testing build in active virtual environment: $VIRTUAL_ENV"
+        echo "Python: $(python -V 2>&1) ($(python -c 'import sys; print(sys.executable)'))"
+        NCOL
+    else
+        YELLOW
+        echo "No active virtual environment."
+        echo "Python: $(python -V 2>&1) ($(python -c 'import sys; print(sys.executable)'))"
+        NCOL
+    fi
+
+    python -c 'import pygimli; print(pygimli.version())'
+    python -c 'import pygimli; print(pygimli.Report())'
+}
+
 
 function clean(){
     GREEN
@@ -103,6 +127,7 @@ function clean(){
     popd
 }
 
+
 function build_pre(){
     GREEN
     echo "*** build_pre (Prepare building environment) ***"
@@ -121,16 +146,17 @@ function build_pre(){
     popd
 }
 
+
 function build(){
     GREEN
     echo "*** build (Building now ...) ***"
     NCOL
 
     if [ ! -d $BUILD_DIR ]; then
-        echo "BUILD_DIR: $BUILD_DIR not found. Running build_pre first."
+        YELLOW
+        echo "BUILD_DIR: $BUILD_DIR not found. Preparing now (build_pre)."
+        NCOL
         build_pre
-    else
-        use_venv $VENV_BUILD
     fi
 
     pushd $PROJECT_ROOT
@@ -163,7 +189,44 @@ function build(){
             make -j $GIMLI_NUM_THREADS
             make pygimli J=$GIMLI_NUM_THREADS
 
-            # create pgcore wheel
+            build_whls
+    popd
+}
+
+
+function build_whls(){
+    GREEN
+    echo "*** build_wheels (Building wheels now ...) ***"
+    NCOL
+
+    if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
+        LIBGIMLI=$(ls $BUILD_DIR/bin/libgimli.dll | head -n 1)
+        echo "Checking for libgimli in $BUILD_DIR/bin: $LIBGIMLI"
+    elif [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
+        LIBGIMLI=$(ls $BUILD_DIR/lib/libgimli.dylib | head -n 1)
+        echo "Checking for libgimli in $BUILD_DIR/lib: $LIBGIMLI"
+    else
+        LIBGIMLI=$(ls $BUILD_DIR/lib/libgimli.so | head -n 1)
+        echo "Checking for libgimli in $BUILD_DIR/lib: $LIBGIMLI"
+    fi
+
+    if [ -z $LIBGIMLI ]; then
+        YELLOW
+        echo "libgimli not found in $BUILD_DIR/lib. Building now (build)."
+        NCOL
+        build
+    else
+        GREEN
+        echo "libgimli found: $LIBGIMLI."
+        NCOL
+    fi
+
+    pushd $PROJECT_ROOT
+        use_venv $VENV_BUILD
+
+        pushd $BUILD_DIR
+
+        # create pgcore wheel
             make whlpgcoreCopyLibs
 
             pushd $BUILD_DIR/core/pgcore
@@ -195,30 +258,39 @@ function build(){
                 fi
             popd
 
+            GREEN
+            echo "Copying pgcore whl ($WHLFILE) to build dist $BUILD_DIR/dist/"
             cp $WHLFILE $BUILD_DIR/dist/
+            NCOL
         popd
 
         ### create pygimli wheel
         pushd $PROJECT_SRC
-            python -m build
-            cp dist/pygimli*.whl $BUILD_DIR/dist/
+            python -m build --wheel --no-isolation --outdir $BUILD_DIR/dist/
         popd
     popd
 }
 
-function testReport(){
-    python -c 'import pygimli; print(pygimli.version())'
-    python -c 'import pygimli; print(pygimli.Report())'
-}
 
 function build_post(){
     GREEN
     echo "*** build_post (Testing build) ***"
     NCOL
 
-    if [ ! -f $BUILD_DIR/dist/pgcore*.whl ]; then
-        echo "pgcore wheel not found in build dist. Building first."
-        build
+    PGCORE_WHL=$(ls $BUILD_DIR/dist/pgcore*.whl | head -n 1)
+    PG_WHL=$(ls $BUILD_DIR/dist/pygimli*.whl | head -n 1)
+
+    if [ -z $PGCORE_WHL ] || [ -z $PG_WHL ]; then
+        YELLOW
+        echo "pgcore or pygimli whl's not found in $BUILD_DIR/dist. Building now (build_whls)"
+        NCOL
+        build_whls
+    else
+        GREEN
+        echo "Whl's found in build dist:"
+        echo -e "\t pgcore: $PGCORE_WHL"
+        echo -e "\t pygimli: $PG_WHL"
+        NCOL
     fi
 
     pushd $PROJECT_ROOT
@@ -234,10 +306,14 @@ function build_post(){
 
         mkdir -p $PROJECT_DIST
 
+        GREEN
+        echo "Copying built whl files to project dist: $PROJECT_DIST"
+        NCOL
         cp $BUILD_DIR/dist/pgcore*.whl $PROJECT_DIST/
         cp $BUILD_DIR/dist/pygimli*.whl $PROJECT_DIST/
     popd
 }
+
 
 function test_pre(){
     GREEN
@@ -245,8 +321,9 @@ function test_pre(){
     NCOL
 
     if [ ! -f $PROJECT_DIST/pgcore*.whl ]; then
-
-        echo "pgcore wheel not found in dist. Building first."
+        YELLOW
+        echo "pgcore wheel not found in project dist. Building first. (build_post)"
+        NCOL
         build_post
     fi
 
@@ -262,6 +339,8 @@ function test_pre(){
         uv pip install -e $PROJECT_SRC/[test]
     popd
 }
+
+
 function test(){
     GREEN
     echo "*** test (Testing now ...) ***"
@@ -279,12 +358,16 @@ function test(){
     popd
 }
 
+
 function doc_pre(){
     GREEN
     echo "*** doc_pre (Preparing documentation ...) ***"
     NCOL
 
     if [ ! -f $PROJECT_DIST/pgcore*.whl ]; then
+        YELLOW
+        echo "pgcore wheel not found in project dist. Building first. (build_post)"
+        NCOL
         build_post
     fi
 
@@ -312,7 +395,9 @@ function doc(){
         echo "sphinx is installed"
         NCOL
     else
+        YELLOW
         echo "sphinx is NOT installed (calling doc_pre)"
+        NCOL
         doc_pre
     fi
 
@@ -344,7 +429,9 @@ function doc_post(){
     NCOL
 
     if [ ! -f $BUILD_DIR/doc/_build/html/index.html ]; then
-        echo "Documentation html not found in dist. Building first."
+        YELLOW
+        echo "Documentation html not found in dist. Building first. (doc)"
+        NCOL
         doc
     fi
 
@@ -371,6 +458,9 @@ function install(){
     NCOL
 
     if [ ! -f $PROJECT_DIST/pgcore*.whl ]; then
+        YELLOW
+        echo "pgcore wheel not found in project dist. Building first.(build_post)"
+        NCOL
         build_post
     fi
 
@@ -402,6 +492,7 @@ function help(){
     echo "    clean      remove build artifacts for PYVERSION"
     echo "    build_pre  prepare build environment venv"
     echo "    build      [build_pre] build project"
+    echo "    build_whls [build] build whl files for pgcore and pygimli"
     echo "    build_post [build] test build"
     echo "    test_pre   [build] prepare test environment"
     echo "    test       [test_pre] run tests"
@@ -423,7 +514,7 @@ function help(){
 }
 function all(){
     clean
-    build
+    build_post
     test
     doc
 }
@@ -597,6 +688,8 @@ do
         build_pre;;
     build)
         build;;
+    build_whls)
+        build_whls;;
     build_post)
         build_post;;
     test_pre)

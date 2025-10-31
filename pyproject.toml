@@ -1,20 +1,19 @@
 [build-system]
-requires = ["setuptools",
-	        "versioneer[toml]==0.29"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-#packages = ["pygimli"]
 
 [tool.setuptools.packages.find]
 #where = ["pygimli"]  # list of folders that contain the packages (["."] by default)
 exclude = ["core","apps"]
 
+[tool.setuptools.dynamic]
+version = {attr = "pygimli.__dist_version__"}
+
 [project]
 name = "pygimli"
 dynamic = ["version"]
-#dynamic = ["version"] ## versioneer does not yet seems to work
-#version = "1.5.4"
+
 requires-python = ">=3.10"
 authors = [
   { name = "Carsten Rücker" },
@@ -46,6 +45,7 @@ dependencies = [
 build = [
     "pygccxml==2.5.0",
     "pyplusplus==1.8.5",
+    #"versioneer>=0.29[toml]",
     "build",
     "scooby",
     "twine",
