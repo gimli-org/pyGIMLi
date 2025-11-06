@@ -45,7 +45,7 @@ else()
         COMMAND ${CMAKE_COMMAND} -E make_directory ${WHEEL_LIBRARIES_DIR}
         COMMENT "Create target dir to copy libraries: ${WHEEL_LIBRARIES_DIR}"
     )
-    if (OS_VAR STREQUAL "almalinux" OR OS_VAR STREQUAL "Windows" OR OS_VAR STREQUAL "MAC")
+    if (OS_VAR STREQUAL "almalinux" OR OS_VAR STREQUAL "Windows" OR OS_VAR STREQUAL "Darwin")
         ## all other libs ar copied by auditwheel, delvewheel or delocate
         set(BINDEPS_LIBS $<TARGET_FILE:_pygimli_>)
     else()
@@ -86,9 +86,9 @@ else()
             COMMENT "Repairing python wheel package at: ${CMAKE_BINARY_DIR}"
         )
         add_custom_target(whl${TARGET_NAME} DEPENDS whl${TARGET_NAME}PackageRepair)
-    elseif (OS_VAR STREQUAL "MAC")
+    elseif (OS_VAR STREQUAL "Darwin")
         add_custom_target(whl${TARGET_NAME}PackageRepair DEPENDS whl${TARGET_NAME}PackageBuild
-            COMMAND "delocate" repair ${WHEELHOUSE}/${PY_WHEELFILE}
+            COMMAND "delocate-wheel" -v ${WHEELHOUSE}/${PY_WHEELFILE}
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
             COMMENT "Repairing python wheel package at: ${CMAKE_BINARY_DIR}"
         )
