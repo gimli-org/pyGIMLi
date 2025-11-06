@@ -745,8 +745,7 @@ def showBoundaryNorm(mesh, normMap=None, **kwargs):
 
 
 def show1D(mesh, obj, **kwargs):
-    """Show simple plot for 1D modelling results
-    """
+    """Show simple plot for 1D modelling results."""
     kwargs.pop('hold', None)
     kwargs.pop('fitView', None)
 
@@ -790,7 +789,6 @@ def show1D(mesh, obj, **kwargs):
                                                      color='k', linewidth=0.3,
                                                      linestyle="-", **kwargs)
 
-
         pg.viewer.mpl.drawPLC(ax, mesh, showNodes=True,
                               fillRegion=False,
                               showBoundary=False,
@@ -810,6 +808,9 @@ def show1D(mesh, obj, **kwargs):
         label = obj.__str__()
 
     grid = kwargs.pop('grid', True)
+
+    if 'xlabel' in kwargs:
+        kwargs['xl'] = kwargs.pop('xlabel')
     xLabel = kwargs.pop('xl', 'Depth in m')
 
     if swapAxes is True:
@@ -817,6 +818,9 @@ def show1D(mesh, obj, **kwargs):
         pg.viewer.mpl.renameDepthTicks(ax)
     else:
         ax.set_xlabel(xLabel)
+
+    if 'ylabel' in kwargs:
+        kwargs['yl'] = kwargs.pop('ylabel')
 
     if 'yl' in kwargs:
         if not isinstance(obj, (list, np.ndarray)):

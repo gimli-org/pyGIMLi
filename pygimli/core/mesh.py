@@ -3,7 +3,7 @@
 from math import ceil
 import numpy as np
 from .core import (cat, HexahedronShape, Line,
-                   Mesh, MeshEntity, Node, Boundary, RVector, Pos,
+                   Mesh, MeshEntity, Node, Boundary, RVector, RMatrix, Pos,
                    PolygonFace, TetrahedronShape, TriangleFace)
 
 from .logger import error, info, warn, critical, _r
@@ -176,10 +176,7 @@ def __Mesh_setVal(self, key, val):
     Multiple arrays via matrix will be saved too.
     """
     def _matchSize(val, v=None):
-        if v is not None:
-            _v = v
-        else:
-            _v = val.values
+        _v = v if v is not None else val.values
 
         if len(_v) == self.nodeCount() or \
             len(_v) == self.cellCount() or \
@@ -221,9 +218,10 @@ def __Mesh_setVal(self, key, val):
     if isR3Array(val):
         return self.addData(key, val)
 
-    if (isinstance(val, list) and len(val) > 0) and \
-       isinstance(val[0], (RVector, np.ndarray)) or \
-        (isinstance(val, np.ndarray) and (val.ndim == 2 or val.ndim == 3)):
+    if (isinstance(val, list) and len(val) > 0) \
+            and isinstance(val[0], (RVector, RMatrix, np.ndarray)) \
+        or (isinstance(val, np.ndarray) \
+            and (val.ndim == 2 or val.ndim == 3)):
 
         maxDigit = ceil(np.log10(len(val)))
 
@@ -237,6 +235,11 @@ def __Mesh_setVal(self, key, val):
             else:
                 self.addData(key, val)
         except BaseException as e:
+            if (isinstance(val, list) and len(val) > 0):
+                _r(type(val[0]), val[0].shape)
+            if isinstance(val, np.ndarray):
+                _r(val.ndim, val.shape)
+
             raise ValueError(f"Could not add data with key {key} "
                              f"of shape {np.shape(val)}") from e
 
