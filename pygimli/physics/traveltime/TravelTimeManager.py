@@ -480,9 +480,9 @@ class TravelTimeManager(MeshMethodManager):
         m['Velocity'] = self.paraModel(self.velocity)
         m['Coverage'] = self.rayCoverage()
         m['S_Coverage'] = self.standardizedCoverage()
-        m.exportVTK(path / 'velocity')
-        m.saveBinaryV2(path / 'velocity-pd')
-        self.fop.mesh().save(path / 'velocity-mesh')
+        m.exportVTK(str(path / 'velocity'))
+        m.saveBinaryV2(str(path / 'velocity-pd'))
+        self.fop.mesh().save(str(path / 'velocity-mesh'))
 
         np.savetxt(path / 'chi.txt', self.inv.chi2History)
 

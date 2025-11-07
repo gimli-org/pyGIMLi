@@ -408,12 +408,12 @@ class ERTManager(MeshMethodManager):
         subfolder = self.__class__.__name__
         path = Path(getSavePath(folder, subfolder))
         pg.info(f'Saving inversion results to: {path}')
-        np.savetxt(path / '/resistivity.vector', self.model)
-        np.savetxt(path / '/resistivity-cov.vector', self.coverage())
-        np.savetxt(path / '/resistivity-scov.vector',
+        np.savetxt(path / 'resistivity.vector', self.model)
+        np.savetxt(path / 'resistivity-cov.vector', self.coverage())
+        np.savetxt(path / 'resistivity-scov.vector',
                    self.standardizedCoverage())
 
-        self.mesh.save(path / 'mesh.bms')
+        self.mesh.save(str(path / 'mesh.bms'))
 
         m = pg.Mesh(self.paraDomain)
         m['Resistivity'] = self.model
@@ -425,9 +425,9 @@ class ERTManager(MeshMethodManager):
             if hasattr(v, "__iter__") and len(v) == nM:
                 m[k] = v
 
-        m.exportVTK(path / 'resistivity.vtk')
-        m.saveBinaryV2(path / 'resistivity-pd.bms')
-        self.fop.mesh().save(path / 'resistivity-mesh')
+        m.exportVTK(str(path / 'resistivity.vtk'))
+        m.saveBinaryV2(str(path / 'resistivity-pd.bms'))
+        self.fop.mesh().save(str(path / 'resistivity-mesh'))
 
         np.savetxt(path / 'response.vector', self.inv.response)
         residual = self.inv.residual()  # includes error-(re)weighting
@@ -435,13 +435,13 @@ class ERTManager(MeshMethodManager):
         data = self.fop.data.copy()
         data['response'] = self.inv.response
         data['residual'] = residual
-        data.save(path / 'data.dat',
+        data.save(str(path / 'data.dat'),
                   'a b m n rhoa k err ip iperr response residual')
 
         if self.paraDomain.dim() == 2:
             fig, ax = pg.plt.subplots(figsize=size)
             self.showModel(ax=ax, **kwargs)
-            fig.savefig(path + '/resistivity.pdf', bbox_inches="tight")
+            fig.savefig(path / 'resistivity.pdf', bbox_inches="tight")
             return path, fig, ax
 
         return path
