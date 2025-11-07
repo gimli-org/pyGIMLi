@@ -17,8 +17,8 @@ dynamic = ["version"]
 requires-python = ">=3.10"
 authors = [
   { name = "Carsten Rücker" },
-  { name= "Thomas Günther" },
-  { name= "Florian Wagner" },
+  { name = "Thomas Günther" },
+  { name = "Florian Wagner" },
   { email = "mail@pygimli.org" },
 ]
 description = "Geophysical Inversion and Modelling Library"
