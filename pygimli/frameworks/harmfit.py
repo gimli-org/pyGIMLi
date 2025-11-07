@@ -55,8 +55,8 @@ class HarmonicModelling(Modelling):
         xrs = (xr - self.xmin) / self.xspread
         out = par[0] + par[1] * xrs
         for i in range(self.nc):
-            out += np.sin(2.0 * np.pi * (i+1) * xrs)
-            out += np.cos(2.0 * np.pi * (i+1) * xrs)
+            out += np.sin(2.0 * np.pi * (i+1) * xrs) * par[i*2+2]
+            out += np.cos(2.0 * np.pi * (i+1) * xrs) * par[i*2+3]
 
         return out
 
