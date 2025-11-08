@@ -10,21 +10,24 @@ on:
   pull_request:
     branches:
       - dev
-  workflow_call:
-    inputs:
-      runner:
-        description: The runner
-        required: true
-        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  get-runner:
+    name: Choose runner
+    if: ${{ always() }}
+    runs-on: self-hosted
+    outputs:
+     RUNNER: ${{ runner.name }}
+    steps:
+      - run: echo "Selected runner = ${{ runner.name }}"
   pgcore:
     name: Building pgcore & bindings
-    runs-on: [self-hosted, '${{ inputs.runner }}']
+    needs: get-runner
+    runs-on: ${{needs.get-runner.outputs.RUNNER}}
     steps:
       - name: Getting pyGIMLi sources
         uses: actions/checkout@v4
@@ -41,8 +44,8 @@ jobs:
         run: bash ./$SOURCE_DIR/.workflow.sh build_post
   tests:
     name: Running tests
-    runs-on: [self-hosted, '${{ inputs.runner }}']
-    needs: pgcore
+    needs: [get-runner, pgcore]
+    runs-on: ${{needs.get-runner.outputs.RUNNER}}
     env:
       OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
     steps:
@@ -52,8 +55,8 @@ jobs:
         run: bash ./$SOURCE_DIR/.workflow.sh test
   docs:
       name: Build website with examples
-      needs: pgcore
-      runs-on: [self-hosted, '${{ inputs.runner }}']
+      needs: [get-runner, pgcore]
+      runs-on: ${{needs.get-runner.outputs.RUNNER}}
       env:
         DISPLAY: ":99.0"
         PYVISTA_OFF_SCREEN: True
@@ -65,8 +68,8 @@ jobs:
           run: bash ./$SOURCE_DIR/.workflow.sh doc
   merging:
     name: Automerging
-    needs: [tests,docs]
-    runs-on: [self-hosted, '${{ inputs.runner }}']
+    needs: [get-runner,tests,docs]
+    runs-on: ${{needs.get-runner.outputs.RUNNER}}
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
       - name: Merge dev -> main (with rebase)
@@ -89,9 +92,10 @@ jobs:
           git push origin HEAD:main
   upload-html:
     name: Upload HTML to dev.pygimli.org
-    runs-on: [self-hosted, pgserver, '${{ inputs.runner }}']
+    runs-on: pgserver
     needs: [tests,docs]
-    if: github.ref == 'refs/heads/dev' # Only merge from dev
+    if:
+      - github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
       - name: Uploading built html files
         run: bash ./$SOURCE_DIR/.workflow.sh doc_post

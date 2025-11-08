@@ -435,10 +435,13 @@ function doc_post(){
         doc
     fi
 
-    pushd $BUILD_DIR/doc/_build
-        cp -r html $PROJECT_DIST/html
-        tar -czvf $PROJECT_DIST/html.tgz html
-    popd
+    # Should only run on pgserver
+    rsync -avP --delete $BUILD_DIR/doc/_build/html/ /var/www/html
+
+    #pushd $BUILD_DIR/doc/_build
+        #cp -r html $PROJECT_DIST/html
+        #tar -czvf $PROJECT_DIST/html.tgz html
+    #popd
 
     #rsync -aP $DISTPATH/html user@pygimli.org:DEV_HTML_PATH --delete
 
