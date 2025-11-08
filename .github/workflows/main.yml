@@ -94,8 +94,7 @@ jobs:
     name: Upload HTML to dev.pygimli.org
     runs-on: pgserver
     needs: [tests,docs]
-    if:
-      - github.ref == 'refs/heads/dev' # Only merge from dev
+    if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
       - name: Uploading built html files
         run: bash ./$SOURCE_DIR/.workflow.sh doc_post
