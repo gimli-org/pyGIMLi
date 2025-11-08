@@ -10,11 +10,23 @@ on:
   pull_request:
     branches:
       - dev
+  workflow_call:
+    inputs:
+      runner:
+        description: The runner
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
 
 jobs:
   pgcore:
     name: Building pgcore & bindings
-    runs-on: self-hosted
+    runs-on: [self-hosted, '${{ inputs.runner }}']
     steps:
       - name: Getting pyGIMLi sources
         uses: actions/checkout@v4
@@ -31,7 +43,7 @@ jobs:
         run: bash ./$SOURCE_DIR/.workflow.sh build_post
   tests:
     name: Running tests
-    runs-on: self-hosted
+    runs-on: [self-hosted, '${{ inputs.runner }}']
     needs: pgcore
     env:
       OPENBLAS_CORETYPE: "ARMV8" # current bug in OpenBlas core detection
@@ -43,7 +55,7 @@ jobs:
   docs:
       name: Build website with examples
       needs: pgcore
-      runs-on: self-hosted
+      runs-on: [self-hosted, '${{ inputs.runner }}']
       env:
         DISPLAY: ":99.0"
         PYVISTA_OFF_SCREEN: True
@@ -56,7 +68,7 @@ jobs:
   merging:
     name: Automerging
     needs: [tests,docs]
-    runs-on: self-hosted
+    runs-on: [self-hosted, '${{ inputs.runner }}']
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
       - name: Merge dev -> main (with rebase)
@@ -79,7 +91,7 @@ jobs:
           git push origin HEAD:main
   upload-html:
     name: Upload HTML to dev.pygimli.org
-    runs-on: [self-hosted, pgserver]
+    runs-on: [self-hosted, pgserver, '${{ inputs.runner }}']
     needs: [tests,docs]
     if: github.ref == 'refs/heads/dev' # Only merge from dev
     steps:
