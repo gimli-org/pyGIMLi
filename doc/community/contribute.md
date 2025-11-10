@@ -3,7 +3,7 @@
 # How to contribute
 
 As an open-source project, pyGIMLi always welcomes contributions from the
-community. Here, we offer guidance for 4 different ways of contributing with
+community. Here, we offer guidance for four different ways of contributing with
 increasing levels of required coding proficiency (A-D).
 
 ## A. Submit a bug report
@@ -23,18 +23,17 @@ Make sure that your Python script is documented according to the [sphinx-gallery
 If you would like to edit a typo or improve the documentation on our website, you can submit fixes to the
 documentation page by clicking on "Improve this page" under the quick links menu on every page in the right sidebar.
 This will direct you to the Github page to make the edits directly on the ".rst" using Github (you will need a Github account, see step A).
-Once you make your edits, fill out the fields under "Commit changes" (make sure to provide a good overview of the changes you have made).
+Once you made your edits, fill out the fields under "Commit changes" (provide an overview of the changes you have made).
 Note that you will make changes to a new branch under your fork since you will not have access to make changes in the existing branch.
-Once you click "Commit changes" this automatically creates a pull request which we will review and then merge, if everything is good to go!
+Once you click "Commit changes", this automatically creates a pull request which we will review and then merge, if everything is good to go!
 
 If you would like to contribute to the API or make changes offline to the files under `doc`, see following *Contribute to Code* and *Documentation* for more information.
 
 ## D. Contribute to code
 
 :::{note}
-To avoid redundant work, please [contact us](mailto:mail@pygimli.org)
-or check the [current issues](https://github.com/gimli-org/gimli/issues)
-before you start working on a non-trivial feature.
+Before you start working on a non-trivial feature, consider [contacting us](mailto:mail@pygimli.org)
+or check the [current issues](https://github.com/gimli-org/gimli/issues) to avoid redundant work
 :::
 
 The preferred way to contribute to the pygimli code base is via a pull request
@@ -43,20 +42,20 @@ The preferred way to contribute to the pygimli code base is via a pull request
 ### 1. Fork and clone the repository
 
 If you are a first-time contributor, you need [a GitHub account](https://github.com/join) and your own copy ("fork") of the code. To do so, go
-to <https://github.com/gimli-org/gimli> and click the "Fork button" in the upper
-right corner. This will create an identical copy of the complete code base under
-your username on the GitHub server. You can navigate to this repository and clone it to your local disk:
+to <https://github.com/gimli-org/pyGIMLi> and click the "Fork button" in the upper right corner.
+This will create a copy of the complete code base under your username on the GitHub server.
+You can navigate to this repository and clone it to your local disk:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/gimli
+git clone https://github.com/YOUR_USERNAME/pyGIMLi
 ```
 
 ### 2. Prepare your environment
 
-To install the neccesary Python requirements on your computer, we recommend the Anaconda Python distribution and the conda package manager.
-The cloned and forked repository contains an *environment.yml* file with the specification for all package requirements to build
-and test pyGIMLi. This file should exist in the directory where you have cloned the repository. In order to create a separate environment
-where you will work, run the following command in the same directory of the repository in your terminal:
+To install the neccesary Python requirements on your computer, we recommend the conda package manager in a lightweight installation such as Miniforge.
+The cloned and forked repository contains an *environment.yml* file with the specification for all package requirements to build and test pyGIMLi.
+This file should exist in the directory where you have cloned the repository. In order to create a separate environment where you will work,
+run the following command in the same directory of the repository in your terminal:
 
 ```bash
 conda env create # Creates the environment (only once)
@@ -65,13 +64,13 @@ conda develop . # Installs your git-version of pygimli (only once)
 python -c "import pygimli; pygimli.test()" # Make sure that everything works (also after adding new code)
 ```
 
-You will need to do the last step (`conda activate pgdev`) everytime you start a terminal or put it in your `.bashrc`.
+You will need to do the last step (`conda activate pgdev`) everytime you start a terminal (or put it in your `.bashrc` startup file).
 The prompt `(pgdev)` should appear before your terminal location.
 
 ### 3. Create a feature branch
 
 Go to the source folder and create a feature branch to hold your changes. It is
-advisable to give it a sensible name such as `adaptive_meshes`.
+advisable to give it a meaningful name, e.g. `adaptive_meshes`.
 
 ```bash
 cd gimli
@@ -87,7 +86,7 @@ to follow a few {ref}`sec-coding-rules`.
 
 ```bash
 git add new_file1 new_file2 modified_file1
-git commit -m "Implemented adaptive meshes."
+git commit -m "ADD: Implemented adaptive meshes."
 ```
 
 ### 5. Test your code
@@ -115,7 +114,7 @@ section on {ref}`sec-testing`.
 ### 6. Documentation
 
 We use sphinx to build the web pages from these sources. To edit HTML file, navigate to the doc folder in the repository.
-Once you have made edits. Run the following commands on your terminal.
+Once you're done making edits, run the following commands on your terminal.
 
 ```bash
 make html
@@ -141,5 +140,5 @@ your changes in more detail. Once reviewed by the core developers, your PR will
 be merged to the main repository.
 
 :::{note}
-Please see <https://pygimli.org/dev> for additional notes on coding rules, testing, etc.
+Please see {ref}`sec-coding-guidelines` for additional notes on coding rules, testing, etc.
 :::

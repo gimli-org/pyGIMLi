@@ -153,13 +153,13 @@ git push --tags # pushes tags to GitHub
 To see the commits since the last tag/release, you can use:
 
 ```bash
-git log v1.3.0...HEAD --oneline
+git log v1.5.0...HEAD --oneline
 ```
 
 Or to see commits between specific versions:
 
 ```bash
-git log v1.2.5...v1.2.6 --oneline
+git log v1.5.3...v1.5.4 --oneline
 ```
 
 Alternatively, this information can also be obtained [via GitHub](http://github.com/gimli-org/gimli/compare/v1.4.0...v1.4.1).
@@ -172,13 +172,13 @@ Run specific API examples from shell:
 python -c "import pygimli as pg; pg.test(pg.meshtools.createCircle, show=True)"
 ```
 
-Run a specific test from shell.
+Run a specific test from shell:
 
 ```bash
 python -c "import pygimli; from pygimli.physics.petro.resistivity import *; test_Archie()"
 ```
 
-Run all tests
+Run all tests:
 
 ```bash
 python -c "import pygimli; pygimli.test(show=True)"
@@ -224,13 +224,12 @@ dict(img="jordi2018.jpg",
 
 ## Coding Guidelines
 
-- Generally we try to use PEP 8 <https://www.python.org/dev/peps/pep-0008/>?
+- Generally, we use PEP 8 <https://www.python.org/dev/peps/pep-0008/>?
 - All names should be literally and in CamelShape style.
-- Classes starts with Upper-case Letters.
-- Members and Methods always starts with Lower-case Letters.
+- Classes starts with upper-case letters, members and methods start with lower-case letters.
 - All class members (self.member) need to be initialized in the init.
-- (ugly²) Do not use multi initialize in one line, e.g., a, b, c = 0, 0, 0
-- check for data types with 'if isinstance(var, type):' instead 'if type(var) == type:'
+- (ugly²) Do not use multi initialize in one line, e.g., `a, b, c = 0, 0, 0`
+- check for data types with `if isinstance(var, type):` instead `if type(var) == type:`
 
 (sec-coding-guidelines-1)=
 
@@ -243,55 +242,48 @@ We use: (exceptions in .landscape.yml and .pylintrc)
 - pylint
 - pyflakes
 
-We encurage to add 2 BLANKLINE between classes and methods and never use 2 BLANKLINES in the code itself.
+Add two blank lines between classes and methods but never use two blank lines otherwise.
 
-
-### Behavior by name for global functions:
+### Behavior by name for global functions
 
 ```python
 createFOO(...)
-    """ Always needs to return an instance of FOO.
-    ""
+    """Return an instance of FOO."""
 ```
 
 ```python
 showFOO(Bar, ...)
-    """ Always open a window or optionally use a given Axes to show Bar as Foo."""
+    """Open a window or optionally use a given xxes to show Bar as Foo."""
     return ax, cbar
 ```
 
 ```python
 drawFOO(ax, Bar...)
-    """ Always needs an Axes ax to draw Bar as Foo.
-    """
+    """Always needs an axes object ax first argument to draw Bar as Foo."""
     return graphics_object
 ```
 
 ```python
 readFOO(fileName, *args):
-    """ Read object from disc.
-    """
+    """Read object from disc."""
     return obj
 ```
 
 ```python
 importFOO(fileName, obj, *args):
-    """ Import object from disc into an existing object.
-    """
+    """Import object from disc into an existing object."""
     return obj
 ```
 
 ```python
 exportFOO(obj, fileName):
-    """ Export object to disc in foreign (FOOs) format.
-    """
+    """Export object to disc in foreign (FOOs) format."""
     return true
 ```
 
 ```python
 convertFOO(fooObj):
-    """ Convert Foo obj into gimli Obj.
-    """
+    """Convert Foo obj into pyGIMLi Obj."""
     return gimliObj
 ```
 
@@ -302,7 +294,7 @@ Use the following documentation syntax or see:
 
 ```python
 def foo(arg1:type, arg2:type=Default, *args, **kwargs) -> ReturnType:
-""" Short description, i.e., one line to explain what foo does. [DOT_AT_END]
+"""Short description, i.e., one line to explain what foo does. [PERIOD_AT_END]
   [ONE BLANKLINE]
   Explain a little more verbose was foo does. Use references :cite:`Archie1942`
   Use links to pygimli api :gimliapi:`GIMLI::Mesh`, `:py:mod:pygimli.manager`
@@ -346,16 +338,14 @@ def foo(arg1:type, arg2:type=Default, *args, **kwargs) -> ReturnType:
   >>> ...
   expected output  # for doctest to pass
 
-
   See Also
   --------
       average: Weighted average,
-      e.g., Link to tutorials :ref:`tut:Modelling_BC` assuming there
-      has been set an appropriate label in the tutorial.
+      e.g., Link to tutorials :ref:`tut:Modelling_BC` assuming
+      an appropriate label in the tutorial.
 
   References
   ----------
-  If not in global bib file.
+  If not already in the global bib file.
   """
 ```
-
