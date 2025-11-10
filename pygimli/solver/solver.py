@@ -294,7 +294,7 @@ def parseArgToArray(arg, nDof, mesh=None, userData={}):
             return parseMapToCellArray(arg, mesh)
         except BaseException:
             raise ValueError("Array 'arg' has the wrong size: " +
-                            str(len(arg)) + " != " + str(nDof))
+                             str(len(arg)) + " != " + str(nDof))
     elif callable(arg):
         ret = pg.Vector(nDof[0], 0.0)
 
@@ -607,9 +607,8 @@ def parseArgToBoundaries(args, mesh):
 
     if callable(args) or isinstance(args, (float, int)):
         return parseArgToBoundaries({'*': args}, mesh)
-
     else:
-        raise Exception('cannot interpret boundary token', args)
+        raise TypeError('cannot interpret boundary token', args)
 
     return boundaries
 
@@ -898,9 +897,9 @@ def div(mesh, v):
                                           CtB*pg.z(v)]).T)
         else:
             print(len(v), mesh)
-            raise BaseException("implement me")
+            raise NotImplementedError("implement me")
     elif callable(v):
-        raise BaseException("implement me")
+        raise NotImplementedError("implement me")
 
     return d
 
@@ -1336,8 +1335,7 @@ def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
         Offset for matrix index.
     """
     if not hasattr(boundaryPairs, '__getitem__'):
-        raise BaseException("Boundary pairs need to be a list of "
-                            "[boundary, value]")
+        raise AttributeError("Boundary pairs need to be a list of [boundary, value]")
 
     # uDirNodes = []   # []
     uDirVal = dict()  # {nID: val}
@@ -1347,10 +1345,7 @@ def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
         if callable(ud):
             pg.error("callable node pairs need to be implemented.")
 
-        if isinstance(n, pg.core.Node):
-            idx = dofOffset + n.id()
-        else:
-            idx = dofOffset + n
+        idx = dofOffset + n.id() if isinstance(n, pg.core.Node) else dofOffset + n
 
         if hasattr(ud, '__iter__'):
             # vector valued problem
@@ -1417,8 +1412,7 @@ def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
 
 
 def assembleDirichletBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
-                        nodePairs=None,
-                        dofOffset=0, nCoeff=1, dofPerCoeff=None):
+                        nodePairs=None, dofOffset=0, nCoeff=1, dofPerCoeff=None):
     r"""Apply Dirichlet boundary condition.
 
     Args
