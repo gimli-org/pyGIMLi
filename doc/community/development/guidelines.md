@@ -7,7 +7,7 @@
 :::{note}
 These steps are only relevant if you have write privileges to the main
 GitHub repository. The general contribution guidelines can be found in
-{ref}`sec:contributing`.
+{ref}`sec-contributing`.
 :::
 
 1. Clone the GIMLi repository:

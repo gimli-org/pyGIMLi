@@ -65,7 +65,8 @@ conda develop . # Installs your git-version of pygimli (only once)
 python -c "import pygimli; pygimli.test()" # Make sure that everything works (also after adding new code)
 ```
 
-You will need to do the last step (`conda activate pgdev`) everytime you start a terminal or put it in your `.bashrc`. `(pgdev)` should appear before your terminal location.
+You will need to do the last step (`conda activate pgdev`) everytime you start a terminal or put it in your `.bashrc`.
+The prompt `(pgdev)` should appear before your terminal location.
 
 ### 3. Create a feature branch
 
@@ -82,7 +83,7 @@ git checkout -b adaptive_meshes
 Go nuts! Add and modify files and regularly commit your changes with meaningful
 commit messages. Remember that you are working in your own personal copy and in
 case you break something, you can always go back. While coding, we encourage you
-to follow a few {ref}`sec:Coding_rules`.
+to follow a few {ref}`sec-coding-rules`.
 
 ```bash
 git add new_file1 new_file2 modified_file1
@@ -109,7 +110,7 @@ def sum(a, b):
 ```
 
 When you run `pg.test()` the docstring test will be evaluated. See also the
-section on {ref}`sec:testing`.
+section on {ref}`sec-testing`.
 
 ### 6. Documentation
 
