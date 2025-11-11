@@ -1,14 +1,11 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "versioneer[toml]"]
 build-backend = "setuptools.build_meta"
 
 
 [tool.setuptools.packages.find]
 #where = ["pygimli"]  # list of folders that contain the packages (["."] by default)
 exclude = ["core","apps"]
-
-[tool.setuptools.dynamic]
-version = {attr = "pygimli._version.__version__"}
 
 [project]
 name = "pygimli"
@@ -46,7 +43,6 @@ dependencies = [
 build = [
     "pygccxml==2.5.0",
     "pyplusplus==1.8.5",
-    #"versioneer>=0.29[toml]",
     "build",
     "scooby",
     "twine",
