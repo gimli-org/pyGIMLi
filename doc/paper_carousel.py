@@ -1,6 +1,14 @@
 # Paper examples on start page. Images have to be in _static/usecases.
 # Order does not matter, will be shuffled on doc build.
 showcase = [
+    dict(img="rochlitz2025.png",
+         link="http://dx.doi.org/10.1190/geo2024-0448.1",
+         title="SAEM resolution analysis",
+         subtitle="Rochlitz et al. (2025), Geophysics"),
+    dict(img="skibbe2024.jpg",
+         link="http://dx.doi.org/10.1016/j.jhydrol.2024.131905",
+         title="Multi-scale salinity mapping",
+         subtitle="Skibbe et al. (2024), Journal of Hydrology"),
     dict(img="uecker2022.png",
          link="https://doi.org/10.3389/frwa.2023.1057725",
          title="Mapping bedrock topography",
