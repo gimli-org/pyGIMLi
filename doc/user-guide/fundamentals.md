@@ -7,6 +7,7 @@ kernelspec:
 # Fundamentals
 
 ## Software design
+
 In applied geophysics, a lot of research efforts are directed towards the
 integration of different physical models and combined inversion approaches to
 estimate multi-physical subsurface parameters. Such approaches often require
@@ -29,9 +30,7 @@ solvers as well as reordering algorithms.
 :class: wrap-fig
 :::
 
-
 pyGIMLi is organized in three different abstraction levels:
-
 
 ::::{tab-set}
 :::{tab-item} **Application level**
@@ -70,7 +69,6 @@ The underlying equation level allows to directly access the finite element (`pyg
     pygimli.physics.ves
 ```
 
-
 | method  | Forward | Inverse  |  Dimension  |
 | :---------------- | :------: |:--------:|:--------:|
 | {py:class}`em <pygimli.physics.em>`     | **✓** | **✓** | *1D* |
@@ -83,8 +81,6 @@ The underlying equation level allows to directly access the finite element (`pyg
 | {py:class}`sNMR <pygimli.physics.sNMR>` | **✓** | **✓** | *1D* |
 | {py:class}`traveltime <pygimli.physics.traveltime>` | **✓** | **✓** | *2D, (3D)* |
 | {py:class}`ves <pygimli.physics.ves>` | **✓** | **✓** | *1D* |
-:::
-
 
 ## Basic pyGIMLi classes
 
@@ -99,22 +95,18 @@ The underlying equation level allows to directly access the finite element (`pyg
     pygimli.DataContainer
 ```
 
-
 ```{note}
 
 Please add docstrings for abovementioned classes and then use autosummary function for user guide!
 ```
 
-
 | pyGIMLi class              | Description |
 | :---------------- | :------: |
-| {py:class}` Matrix <pygimli.Matrix>` | All elements are stored column-wise, i.e. all rows *A[i]* are of type `pg.Vector`. This matrix is used for storing dense data (like ERT Jacobians) and doing simple algebra.   |
-| {py:class}` Vector <pygimli.Vector>` |  One dimensional array aka Vector of limited size to store data, like ERT sensitivities.   |
+| {py:class}`Matrix <pygimli.Matrix>` | All elements are stored column-wise, i.e. all rows *A[i]* are of type `pg.Vector`. This matrix is used for storing dense data (like ERT Jacobians) and doing simple algebra.   |
+| {py:class}`Vector <pygimli.Vector>` |  One dimensional array aka Vector of limited size to store data, like ERT sensitivities.   |
 | {py:class}`SparseMatrix <pygimli.SparseMatrix>` |  Used for numerical approximation of partial differential equations like finite-element or finite volume. Not typically used unless efficiency is of importance. It exists also complex-valued as pg.matrix.CSparseMatrix  |
-| {py:class}` BlockMatrix <pygimli.BlockMatrix>`     |   Arbitrary matrices are combined into a logical matrix. This is of importance for inversion frameworks, e.g., concatenated Jacobian matrices during joint inversions.   |
+| {py:class}`BlockMatrix <pygimli.BlockMatrix>`     |   Arbitrary matrices are combined into a logical matrix. This is of importance for inversion frameworks, e.g., concatenated Jacobian matrices during joint inversions.   |
 | {py:class}`DataContainer <pygimli.DataContainer>`     |   Data container storing the individual data values as well as any description how they were obtained, e.g. the geometry of source and receivers.   |
-:::
-
 
 ## Viewer interface
 
@@ -130,7 +122,6 @@ However, the underlying `show` functions only provide an input instance and are 
 | Iterable of type `[float,float]` - *vector field* | {py:class}`drawStreams <pygimli.viewer.mpl.drawStreams>` |
 | {py:class}`PosVector <pg.PosVector>` - vector field | {py:class}`drawStreams <pygimli.viewer.mpl.drawStreams>` |
 | {py:class}`Pos <pg.core.Pos>` - sensor position vector | {py:class}`drawSensors <pygimli.viewer.mpl.drawSensors>` |
-
 
 An empty show call creates an empty ax window:
 
@@ -184,7 +175,6 @@ ax.set_title("Electrical resistivities as node data", fontweight="bold")
 ax.set_xlabel("x [m]")
 ax.set_ylabel("y [m]")
 ```
-
 
 :::{admonition} Convert cell to node data
 :class: info

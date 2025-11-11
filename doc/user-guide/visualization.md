@@ -50,7 +50,6 @@ For plotting in 2D, the method `pygimli.viewer.showMesh()` is called, which crea
 
 ```
 
-
 ### Plotting meshes and models
 
 As described in the [Fundamentals](fundamentals.md) section, `pygimli.viewer.show()` and `pygimli.viewer.showMesh()` utilize a variety of drawing functions, depending on the input data provided. In the following, we will take a look at how to manually access the necessary drawing functions to plot an empty mesh, as well as cell-based and node-based data.
@@ -117,7 +116,6 @@ ax.set_aspect('equal')
 pg.wait()
 ```
 
-
 ## Plotting in 3D
 
 For plotting in 3D, pyGIMLi utilizes the `pygimli.viewer.pv` module, which leverages the capabilities of pyVista for rendering. The primary function for visualizing 3D meshes is `pygimli.viewer.pv.drawMesh()`, which can handle various types of 3D data, including cell-based and node-based data. Similar to 2D plotting, the type of data provided determines the appropriate drawing method. As for the 2D plots, we can fine-tune the 3D plots by referring to the [`pyvista.Plotter` functions](https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter)
@@ -144,11 +142,10 @@ mx = pg.x(mesh.cellCenter())
 my = pg.y(mesh.cellCenter())
 mz = pg.z(mesh.cellCenter())
 
-data = mx 
+data = mx
 
 pg.show(mesh, data, label="Cell position x (m)")
 ```
-
 
 As for the 2D section, pyVista also allows to plot streams by taking vector field of gradient data per cell. The according function is utilized in the example below:
 
