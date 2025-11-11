@@ -7,8 +7,8 @@ kernelspec:
 (first-modelling)=
 # First modelling
 
-This first modeling tutorial solves the stationary heat equation in 2D. The example is
-taken from the pyGIMLi paper (<https://cg17.pygimli.org>).
+This first modeling tutorial solves the stationary heat equation in 2D, an example from
+the pyGIMLi paper {cite}`rueckerRuecker2017`, [Examples here](https://cg17.pygimli.org).
 
 ```{code-cell} ipython3
 import pygimli as pg
@@ -31,7 +31,7 @@ ax, cb = pg.show(geom, markers=True)
 Create a mesh from based on the geometry definition.
 When calling the {func}`pg.meshtools.createMesh` function, a quality parameter
 can be forwarded to Triangle, which prescribes the minimum angle allowed in
-the final mesh. 
+the final mesh.
 
 ```{code-cell} ipython3
 mesh = mt.createMesh(geom, quality=33, area=0.2, smooth=[1, 10])
