@@ -284,7 +284,7 @@ function install_WHL_E(){
             # windows MSYS2
             uv pip install $PROJECT_DIST/pgcore*.whl
         fi
-        uv pip install -e ./gimli$opt
+        uv pip install -e $PROJECT_SRC$opt
 
     popd
     testReport
@@ -496,10 +496,7 @@ function install(){
 
     pushd $PROJECT_ROOT
         use_venv $VENV_PYGIMLI
-
-        uv pip install $PROJECT_DIST/pgcore*.whl
-        uv pip install -e $PROJECT_SRC/[opt]
-
+        install_WHL_E [opt]
         testReport
     popd
 
