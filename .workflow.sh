@@ -430,10 +430,6 @@ function doc(){
             #touch CMakeCache.txt # to renew search for sphinx
             cmake $PROJECT_SRC
 
-            # temporarily move pygimli to avoid import of installed version during doc build
-            mv pygimli _pygimli
-            testReport
-
             #make clean-gallery # should not be necessary
             if [ -x "$(command -v xvfb-run)" ]; then
                 # xvfb is necessary for headless display of pyvista plots
@@ -443,8 +439,6 @@ function doc(){
                 echo "xvfb-run not available: building docs without it"
                 make doc
             fi
-            # move back pygimli
-            mv _pygimli pygimli
         popd
     popd
 }

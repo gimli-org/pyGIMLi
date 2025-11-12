@@ -59,13 +59,14 @@ copyright = f"{year} - pyGIMLi Development Team"
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-# The short X.Y version.
+# The full version, including alpha/beta/rc tags. used in html footer
 version = pg.__version__
 
-# The full version, including alpha/beta/rc tags.
-release = pg.__version__
-release = release.replace("_", "\\_")
+# The short X.Y.Z version.
+release = pg.__version__.split("+")[0]
 
+
+pg._g(f'pygimli version: {version}')
 
 ################################################################################
 # -- General SPHINX configuration
@@ -181,17 +182,15 @@ exclude_patterns = [
 # unit titles (such as .. function::).
 # add_module_names = True
 
-# If true, sectionauthor and moduleauthor directives will be shown in the
+# If true, section author and module author directives will be shown in the
 # output. They are ignored by default.
 # show_authors = False
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
 
-rst_epilog = """
-.. |version| replace:: pyGIMLi {versionnum}
-""".format(versionnum=version)
-
+rst_epilog = f"""
+.. |version| replace:: pyGIMLi {version}"""
 
 ################################################################################
 # -- MPL plot specific configuration
@@ -232,9 +231,9 @@ html_theme_options = {
     "secondary_sidebar_items": ["page-toc", "improve-this-page"],
     "footer_start": ["footer_start"],
     "footer_end": ["footer_end"],
-    "pygment_light_style": "friendly",
     "header_links_before_dropdown": 6,
-    "pygment_dark_style": "native",
+    "pygments_light_style": "friendly",
+    "pygments_dark_style": "native",
     "icon_links": [
         {
             "name": "GitHub",
@@ -247,7 +246,6 @@ html_theme_options = {
             "url": "https://pypi.org/project/pygimli",
             "icon": "fa-custom fa-pypi",
         },
-
     ]
 }
 
