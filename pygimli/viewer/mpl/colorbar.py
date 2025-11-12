@@ -1,8 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """Define special colorbar behavior."""
 import numpy as np
-from packaging import version
 
 import pygimli as pg
 from . import saveFigure, updateAxes
@@ -575,6 +573,7 @@ def addCoverageAlpha(patches, coverage, dropThreshold=0.4):
 #    else:
 #        print('taking the values directly')
     import matplotlib as mpl
+    from packaging import version
 
     if version.parse(mpl.__version__) >= version.parse("3.4"):
         patches.set_alpha(C)

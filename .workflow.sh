@@ -272,6 +272,40 @@ function build_whls(){
 }
 
 
+function install_WHL_E(){
+    opt=$1
+    GREEN
+    echo "*** install pygimli $opt from whl files (editable) ***"
+    NCOL
+
+    pushd $PROJECT_ROOT
+        # special case for windows .. pgcore install to ensuse mingw runtime libs are found
+        if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
+            # windows MSYS2
+            uv pip install $PROJECT_DIST/pgcore*.whl
+        fi
+        uv pip install -e ./gimli$opt
+
+    popd
+    testReport
+}
+
+
+function install_WHL(){
+    opt=$1
+    GREEN
+    echo "*** install pygimli $opt from whl files (non editable) ***"
+    NCOL
+    pushd $PROJECT_ROOT
+        uv pip uninstall pygimli pgcore
+        uv pip install --force-reinstall $PROJECT_DIST/pgcore*.whl
+        WHLFILE=$(ls $PROJECT_DIST/pygimli*.whl | head -n 1)
+        uv pip install "$WHLFILE$opt"
+    popd
+    testReport
+}
+
+
 function build_post(){
     GREEN
     echo "*** build_post (Testing build) ***"
@@ -294,16 +328,6 @@ function build_post(){
     fi
 
     pushd $PROJECT_ROOT
-        use_venv $VENV_BUILD
-
-        # special case for windows .. pgcore install to ensuse mingw runtime libs are found
-        if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
-            # windows MSYS2
-            uv pip install $BUILD_DIR/dist/pgcore*.whl
-        fi
-
-        testReport
-
         mkdir -p $PROJECT_DIST
 
         GREEN
@@ -311,6 +335,17 @@ function build_post(){
         NCOL
         cp $BUILD_DIR/dist/pgcore*.whl $PROJECT_DIST/
         cp $BUILD_DIR/dist/pygimli*.whl $PROJECT_DIST/
+
+        # test editable whl install
+        use_venv $VENV_BUILD
+        install_WHL_E [build]
+
+        # test whl install
+        use_venv $VENV_BUILD'_WHL'
+        install_WHL
+        deactivate
+        rm -rf $VENV_BUILD'_WHL'
+
     popd
 }
 
@@ -329,14 +364,7 @@ function test_pre(){
 
     pushd $PROJECT_ROOT
         new_venv $VENV_TEST
-        # not needed to install pgcore in editable after build for linux
-
-        # special case for windows .. pgcore install to ensuse mingw runtime libs are found
-        if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
-            # windows MSYS2
-            uv pip install $PROJECT_DIST/pgcore*.whl
-        fi
-        uv pip install -e $PROJECT_SRC/[test]
+        install_WHL_E [test]
     popd
 }
 
@@ -373,16 +401,10 @@ function doc_pre(){
 
     pushd $PROJECT_ROOT
         new_venv $VENV_DOC
-
-        # TODO find a way to install the whl file with optional deps
-        uv pip install $PROJECT_SRC/[doc]
-        uv pip uninstall pygimli ## remove rudimentary pygimli in doc venv
-        uv pip install --force-reinstall $PROJECT_DIST/pgcore*.whl
-        uv pip install $PROJECT_DIST/pygimli*.whl
-
-        testReport
+        install_WHL_E [doc]
     popd
 }
+
 
 function doc(){
     GREEN
@@ -408,7 +430,9 @@ function doc(){
             #touch CMakeCache.txt # to renew search for sphinx
             cmake $PROJECT_SRC
 
-            python -c 'import pygimli as pg; pg.version()'
+            # temporarily move pygimli to avoid import of installed version during doc build
+            mv pygimli _pygimli
+            testReport
 
             #make clean-gallery # should not be necessary
             if [ -x "$(command -v xvfb-run)" ]; then
@@ -419,9 +443,12 @@ function doc(){
                 echo "xvfb-run not available: building docs without it"
                 make doc
             fi
+            # move back pygimli
+            mv _pygimli pygimli
         popd
     popd
 }
+
 
 function doc_post(){
     GREEN

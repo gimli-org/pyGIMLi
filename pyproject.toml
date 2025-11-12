@@ -1,9 +1,9 @@
 [build-system]
-requires = ["setuptools", "versioneer[toml]"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
-version = {attr = "versioneer.get_version"}
+version = {attr = "pygimli._version.__version__"}
 
 [tool.setuptools.packages.find]
 #where = ["pygimli"]  # list of folders that contain the packages (["."] by default)
@@ -39,6 +39,7 @@ classifiers = [
 dependencies = [
     "numpy>=2.1.3",
     "setuptools>=75.8.2",
+    "scooby",
 ]
 
 [project.optional-dependencies]
@@ -46,10 +47,8 @@ build = [
     "pygccxml==2.5.0",
     "pyplusplus==1.8.5",
     "build",
-    "scooby",
     "twine",
     "wheel",
-    "versioneer",
     "auditwheel; sys_platform == 'linux'",
     "delvewheel; sys_platform == 'win32'",
     "delocate; sys_platform == 'darwin'",
