@@ -3,7 +3,7 @@ requires = ["setuptools", "versioneer[toml]"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
-version = {attr = "pygimli._version.__version__"}
+version = {attr = "versioneer.get_version"}
 
 [tool.setuptools.packages.find]
 #where = ["pygimli"]  # list of folders that contain the packages (["."] by default)
