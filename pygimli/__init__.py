@@ -289,3 +289,6 @@ def _plt():
         hold(True)
 
     return plt
+
+from . import _version
+__version__ = _version.get_versions()['version']
