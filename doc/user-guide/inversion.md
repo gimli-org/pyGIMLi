@@ -99,14 +99,14 @@ Beyond different inversion approaches there are so-called frameworks for typical
 inversion (mostly regularization) tasks.
 Examples that are already implemented in pyGIMLi are for example:
 
-- **Marquardt scheme** inversion of few independent parameters, e.g., fitting of spectra {cite}`Loewer2016`
-- **Soil-physical model reduction** incorporating soil-physical functions {cite}`Igel2016, Costabel2014`
+- **Marquardt scheme** inversion of few independent parameters, e.g., fitting of spectra {cite}`LoewerGueIgeKruMarWag2017GJI`
+- **Soil-physical model reduction** incorporating soil-physical functions {cite}`IgelStaGue2016SAGEEP, CostabelGue2014VZJ`
 - **Classical joint inversion** of two data sets for the same parameter like DC and EM {cite}`Guenther2013NSG`
-- **Block joint inversion** of several 1D data using common layers, e.g., MRS+VES {cite}`Guenther2012`
-- **Sequential (constrained) inversion** successive independent inversion of data sets, e.g., classic time-lapse inversion {cite}`Bechtold2012`
-- **Simultaneous constrained inversion** of data sets of data neighbored in space LCI, e.g., {cite}`Costabel2016`, time (full time-lapse) or frequency {cite}`Guenther2016`
-- **Structurally coupled cooperative inversion** of disparate data based on structural similarity (e.g., {cite}`Ronczka2017`
-- **Structure-based inversion** using layered 2D models {cite}`Attwa2014`
+- **Block joint inversion** of several 1D data using common layers, e.g., MRS+VES {cite}`GuentherMue2012HESS`
+- **Sequential (constrained) inversion** successive independent inversion of data sets, e.g., classic time-lapse inversion {cite}`BechtoldVanWei2012VZJ`
+- **Simultaneous constrained inversion** of data sets of data neighbored in space LCI, e.g., {cite}`CostabelGueDluMue2016GEO`, time (full time-lapse) or frequency {cite}`GuentherMar2016JAG`
+- **Structurally coupled cooperative inversion** of disparate data based on structural similarity (e.g., {cite}`RonczkaHelGueWisDah2017NSG`
+- **Structure-based inversion** using layered 2D models {cite}`AttwaAkcBasGue2014JAG`
 
 +++
 
@@ -160,6 +160,4 @@ Examples that are already implemented in pyGIMLi are for example:
 
 ### Resolution
 
-All matrices of the inversion formulation can be directly accessed from Python and thereby offer opportunities for uncertainty and resolution analysis as well as experimental design {cite}`Wagner2015`.
-
-The inversion class
+All matrices of the inversion formulation can be directly accessed from Python and thereby offer opportunities for uncertainty and resolution analysis as well as experimental design {cite}`WagnerGueSchMau2015`.

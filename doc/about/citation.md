@@ -4,9 +4,3 @@
 ```
 ```{rubric} Other studies and extended abstracts about pyGIMLi
 ```
-
-```{eval-rst}
-.. bibliography:: ./libgimli.bib
-    :style: alpha
-    :all:
-```
