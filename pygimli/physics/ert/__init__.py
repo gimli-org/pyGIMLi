@@ -1,20 +1,31 @@
 #!/usr/bin/env python
-"""Electrical Resistivity Tomography (ERT).
+"""Electrical Resistivity Tomography (ERT) including IP.
 
 Direct-Current (DC) Resistivity and Induced Polarisation (IP)
 
 This package contains tools, modelling operators, and managers for
 Electrical Resistivity Tomography (ERT) & Induced polarization (IP)
 
-Main entry functions or classes:
+Main entry classes:
 
-* simulate - synthetic (real or complex-valued) modelling
-* createData - generate data sets for synthetic modelling
-* ERTModelling - Modelling operator
-* ERTManager - data inversion and modelling for real resistivity
-* ERTIPManager - extension to IP (either frequency or time domain)
-* TimelapseERT - processing and inversion of timelapse ERT data
-* CrossholeERT - timelapse ERT in crosshole environments
+* `DataContainer(ERT)` - ERT/IP-specific data container
+* `ERTModelling` - Modelling operator
+* `ERTManager` - data inversion and modelling for real resistivity
+* `ERTIPManager` - extension to IP (either frequency or time domain)
+* `TimelapseERT` - processing and inversion of timelapse ERT data
+* `CrossholeERT` - timelapse ERT in crosshole environments
+
+and functions:
+
+* `simulate` - synthetic (real or complex-valued) modelling
+* `createData` - generate data sets for synthetic modelling
+* `load` - load/import data from file supporting various formats
+* `show/drawERTData` - show ERT data as pseudosection or crossplot
+* `generateDataPDF` - generate a PDF file showing all data fields
+* `createGeometricFactors` - geometric factors analytical/numerical
+* `estimateError` - estimate data errors
+* `reciprocalProcessing` - fit error model through reciprocals
+* `combineMultipleData` - homogenize data containers
 """
 
 import pygimli as pg
