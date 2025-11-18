@@ -6,109 +6,103 @@ kernelspec:
 
 # Modelling
 
-## Theory (Finite Element Analysis)
+As the Finite Element analysis (FEA) is the most commonly used numerical method used,
+this tutorial covers this method, referring the *M* (Modelling) in *pyGIMLi*.
 
-This tutorial covers the first steps into Finite Element computation
-referring the *M* (Modelling) in *pyGIMLi*.
+## Finite Elements for Poisson equation
 
-We will not dig into deep details about the theory of the Finite Elements Analysis (FEA) here,
-as this can be found in several books, e.g., {cite}`Zienkiewicz1977`.
+Details on the theory of the Finite Elements Analysis (FEA) can be found in several books,
+e.g., {cite}`Zienkiewicz1977`.
 Nevertheless, we provide a brief overview of the main concepts and ideas behind FEA to solve
 boundary value problems.
 
-Assuming Poisson's equation as the simplest partial differential equation (PDE)
-to be solved for the scalar field $ u(\mathbf{r}) $ within a modelling domain ${r}\in\Omega`$
-with a non-zero source $f$.
+Assume Poisson's equation as the simplest partial differential equation (PDE)
+to be solved for the scalar field $ u(\mathbf{r}) $ within a modelling domain ${r}\in\Omega$
+with a source $f$.
 
-$$
-- \Delta u = f \quad{\mathrm{in}}\quad~\Omega \\
-         u = g \quad{\mathrm{on}}\quad\partial\Omega\
-$$
+$$ - \nabla \cdot a \nabla u = f \quad{\mathrm{in}}~\Omega $$
 
-The Laplace operator $\Delta = \nabla\cdot\nabla$, i.e., the divergence
-of the gradient, is the sum of the second partial derivatives of the field
+<!-- $$\\ u =  \quad{\mathrm{on}}~\partial\Omega\ $$ -->
+
+The generalized Poisson operator $\Delta = \nabla\cdot\nabla$, i.e., the divergence of the flow
+(gradient times some conductivity), is a second-order partial derivative of the field
 $u(\mathbf{r})$ in Cartesian coordinates, i.e., in 1D $ \mathbf{r} = (x) $,
 in 2D $ {r} = (x, y) $, or in 3D space $ \mathbf{r} = (x, y, z) $.
-On the boundary $ \partial\Omega $ of the domain, we assume
-known values of $u=g$ as so-called Dirichlet boundary conditions.
+On the boundary $\partial\Omega$ of the domain, we assume known values of $u=u_B$ (Dirichlet
+boundary conditions) or gradients $\partial u/\partial n=g_B$.
 
 A common approach to solve this problem is the method of weighted residuals.
-An approximated solution $ u_h\approx u$ will only satisfy the PDE with a
-remainder $ R $ : $\Delta u_h + f = R $.
-If we choose some weighting functions $ w $,
-we can try to minimize the resulting residuum over our modelling domain as:
+An approximated solution $ u_h\approx u$ satisfies the PDE with a remainder $R=\Delta u_h + f$.
+We choose some weighting functions $w$ and minimize $R$ over our modelling domain:
 
-$$ \int_{\Omega} R w = 0\; $$
+$$ \int_{\Omega} w R = 0\; $$
 
-which leads to:
+which leads to
 
-$$ \int_{\Omega} - \Delta u_h w = \int_{\Omega} f w $$
+$$ \int_{\Omega} - w \nabla \cdot a \nabla u_h = \int_{\Omega} w f $$
 
 It is preferable to eliminate the second derivative in the Laplace operator,
-either due to integration by parts or by applying the product rule and
-Gauss's law. This leads to the so called weak formulation:
+either through to integration by parts or by applying the product rule and
+Gauss's law. This leads to the so-called weak formulation:
 
-$$  \int_{\Omega} \nabla \cdot u_h \nabla w - \int_{\partial \Omega}\mathbf{n} \cdot \nabla u_h w  = \int_{\Omega} f w $$
+$$  \int_{\Omega} a \nabla u_h \cdot \nabla w - \int_{\partial \Omega} a w \mathbf{n} \cdot \nabla u_h = \int_{\Omega} w f $$
 
-$$ \int_{\Omega} \nabla u_h \cdot \nabla w  = \int_{\Omega} f w + \int_{\partial \Omega}\frac{\partial u_h}{\partial\mathbf{n}} w\ $$
+$$ \int_{\Omega} a \nabla u_h \cdot \nabla w  = \int_{\Omega} w f + \int_{\partial \Omega} a w \frac{\partial u_h}{\partial\mathbf{n}} $$
 
-We choose an appropriate basis for an approximate solution $ u_h $
+We choose a function basis to approximate $u_h$:
 
-$$ u_h = \sum_i \mathrm{u}_i N_i\quad\text{with}\quad i = 0\ldots\mathcal{N} $$
+$$ u_h = \sum_i^\mathcal{N} \mathrm{u}_i N_i $$
 
-The latter fundamental FEA relation discretizes the continuous solution $ u_h $
-into a discrete values $ \mathrm{u} = \{\mathrm{u}_i\} $ for a number of
-$ i = 0\ldots\mathcal{N} $ degrees of freedom (dof), mostly connected to nodes (which we will assume here fore brevity), edges or faces of the mesh.
-The basis functions $ N_i $ can be understood as interpolation rules for
-the discrete solution spanned by adjacent nodes and will be chosen later.
+This fundamental relation discretizes the continuous solution $u_h$ by a vector of discrete coefficients
+$\mathrm{u} = \{\mathrm{u}_i\} $ for a number $\mathcal{N}$ degrees of freedom (dof).
+The basis functions $N_i$ can be understood as interpolation rules describing the solution on the whole domain, spanned by nodes, edges or faces in a mesh.
+Mostly, $N_i$ represent nodal basis functions (e.g. hat functions) so that the $\mathrm{u}_i$ correspond to the solution at nodes.
 
-Now we can set the unknown weighting functions to be the same as the basis
-functions $ w=N_j $ with $ j=0\ldots\mathcal{N} $ (Galerkin method)
+Now we can set the unknown weighting functions to be identical to the basis
+functions $w=N_j$ (Galerkin method) so that $ \forall j=0\ldots\mathcal{N} $ holds
 
-$$ \int_{\Omega} \sum_i \mathrm{u}_i \nabla N_i \cdot \nabla N_j = \int_{\Omega} f_j N_j + \int_{\partial \Omega} h N_j
-    \quad \text{with}\quad h  = \frac{\partial u}{\partial \mathbf{n}}
-$$
+$$ \int_{\Omega} a \sum_i \nabla N_i \cdot \nabla N_j \mathrm{u}_i =
+   \int_{\Omega} f_j N_j + \int_{\partial \Omega} g N_j
+   \quad \text{with}\quad g  = \frac{\partial u}{\partial \mathbf{n}} $$
 
-this can be rewritten with $h=0$ as:
+For $g=0$ (natural Neumann boundary conditions) this can be rewritten as
 
 $$ \mathrm{A} \mathrm{u} = \mathrm{b} $$
 
-with $\mathrm{A}$ known as 'Stiffness matrix'
+with $\mathrm{A}$ referred to as *Stiffness matrix*
 
 $$ \mathrm{A} = \{\mathrm{a}_{i,j}\} = \int_{\Omega}\nabla N_i \cdot \nabla N_j $$
 
-and the right hand $\mathrm{b}$ side known as 'load vector'
+and the right hand $\mathrm{b}$ side known as *load vector*
 
 $$ \mathrm{b} = \{\mathrm{b}_j\} = \int_{\Omega} f_j N_j $$
 
 The solution of this linear system of equations leads to the
 discrete solution $ \mathrm{u} = \{\mathrm{u}_i\} $ for all
-$ i=1\ldots\mathcal{N}$ dofs inside the modelling domain.
+$ i=1\ldots\mathcal{N}$ dofs spanning the modelling domain.
 
-The choice of the dofs is crucial. If we choose too few, the accuracy of the sought solution might be too small. If we choose too many, the dimension of the system matrix will become large, leading to higher memory consumption and calculation times.
+The choice of the dofs is crucial. If we choose too few, the accuracy of the sought solution might be pool. If we choose too many, the dimension of the system matrix will become large, leading to higher memory consumption and computation times.
 
 To define the nodes, we discretize our modelling domain into cells, or the
 eponymous elements. Cells are basic geometric shapes like triangles or
 hexahedrons and are constructed from the nodes and collected in a mesh.
-For more details, refer to the [Meshes](meshes.md) section of the user guide.
-In summary, the discrete solutions of the differential equation using FEA on
-a specific mesh are defined on the node positions of the mesh.
+For more details, refer to the [Meshes](meshes.md) section.
 
-To complete the solution for the small example, we still need to apply the boundary condition $u=g$ which is known as the Dirichlet condition. Setting
+To complete the solution for the small example, we still need to apply the boundary condition $u=u_B$ which is known as the Dirichlet condition. Setting
 explicit values for our solution is not covered by the general Galerkin weighted
 residuum method but we can solve it algebraically. We reduce the linear system
-of equations by the known solutions $g={g_k}$ for all $k$ nodes on
+of equations by the known solutions $u_B={u_k}$ for all $k$ nodes on
 the affected boundary elements:
 
-$$  \mathrm{A_D}\cdot\mathrm{u} = \mathrm{b_D} \\
-     \text{with } \mathrm{A_D} = \{\mathrm{a}_{i,j}\}\quad\forall i, j ~\notin~ k ~\text{and}~1~\text{for}~i,j \in k\\
-    \mathrm{b_D}  = \{\mathrm{b}_j\} - \mathrm{A}\cdot\mathrm{g}\quad\forall j \notin k~\text{and}~g_k~\text{for}~j \in k  $$
+$$ \mathrm{A_D}\cdot\mathrm{u} = \mathrm{b_D} \\
+     \text{with } \mathrm{A_D} = \{\mathrm{a}_{i,j}\}\quad\forall i, j ~\notin~ k ~\text{and}~1~\forall~i,j \in k\\
+    \mathrm{b_D}  = \{\mathrm{b}_j\} - \mathrm{A}\cdot\mathrm{g}\quad\forall j \notin k~\text{and}~u_k~\forall~j \in k  $$
 
-Now we have all parts together to assemble $\mathrm{A_D}$ and
-$\mathrm{b_D}$ and finally solve the given boundary value problem.
+Now we have all parts for assembling $\mathrm{A_D}$ and
+$\mathrm{b_D}$ and finally solve the given boundary value problem for the interior points.
 
 It is usually a good idea to test a numerical approach with known solutions.
-To keep things simple we create a modelling problem from the reverse direction.
+To keep things simple, we create a modelling problem from the reverse direction (method of manufactured solution).
 We choose a solution, calculate the right hand side function
 and select the domain geometry suitable for nice Dirichlet values.
 
@@ -122,6 +116,9 @@ and compare the resulting approximate solution $\mathrm{u}$
 with our known exact solution $u(x,y)$.
 
 ## Parameterizing a mesh with physical properties
+
+After importing the necessary modules
+
 ```{code-cell}
 :tags: [hide-cell]
 
@@ -134,23 +131,24 @@ from pygimli.viewer.mpl import drawStreams
 import pygimli.meshtools as mt
 ```
 
-We can parametrize a mesh that has been made with different physical properties depending on the region. For example, we have the following polygons created as PLC and created a mesh from this:
+we utilize the `meshtools` module to generate a mesh with different regions that can be attributed by physical properties.
 
-Create geometry definition for the modelling domain. worldMarker=True indicates the default boundary conditions for the ERT. Here we are also creating layers at `y=-10` and `y=-30`. This will make a world with 3 different markers for the 3 distinct layers.
+`createWorld` creates the definition for the modelling domain. `worldMarker=True` indicates the boundary conditions for the Earths surface and the subsurface. We assume layer boundaties at `y=-10` and `y=-30` so what we have a world with three different markers for the three layers.
 
 ```{code-cell}
 world = mt.createWorld(start=[-50, 0], end=[50, -50], layers=[-10, -30],worldMarker=True)
 ```
 
-Create some heterogeneous circular anomaly and assign the following markers:
+We create two circular anomalies and assign the markers 4 and 5:
 
 ```{code-cell}
 block_1 = mt.createCircle(pos=[-5, -3.], radius=[4, 1], marker=4,
-                        boundaryMarker=10, area=0.1)
+                          boundaryMarker=10, area=0.1)
 block_2  = mt.createCircle(pos=[10, -3.], radius=[4, 1], marker=5,
-                        boundaryMarker=10, area=0.1)
+                          boundaryMarker=10, area=0.1)
 ```
-Merge geometry definition into a Piecewise Linear Complex (PLC) and plot it using `pg.show`, you can pass markers=True to get a look at how your regions are numbered. Also, you can set `boundaryMarkers=True` to analyze the boundary markers which will be explained in the next section.
+
+The geometry definitions are merged into a Piecewise-Linear Complex (PLC) and plotted using `pg.show`, the keywords `markers=True` and `boundaryMarkers=True` show how the regions are numbered.
 
 ```{code-cell}
 geom = world + block_1 + block_2
@@ -170,7 +168,7 @@ number_of_cellmarkers = list(set(mesh.cellMarkers()))
 print(number_of_cellmarkers)
 ```
 
-Create a map to set resistivity values in the appropriate regions
+Create a map to set resistivity values for the five regions
  [[regionNumber, resistivity], [regionNumber, resistivity], [...]
 
 ```{code-cell}
@@ -198,7 +196,7 @@ We will now show the different options to set boundary conditions and get these 
 - Boundary marker ( >= 1 ) : no-flow boundaries
 :::
 
-As shown in [meshes section](meshes.md) of the user guide, pyGIMLi automatically assigns boundaries when using `mt.createWorld()`. However, you can assign BCs to different elements of your PLC or mesh.
+As shown in [meshes section](meshes.md), pyGIMLi automatically assigns boundaries when using `mt.createWorld()`. However, you can assign BCs to different elements of your PLC or mesh.
 
 There are different ways of specifying BCs. They can be maps from markers to values, explicit functions or implicit (lambda) functions. We use the example of the Poisson equation on the unit square and specify different boundary conditions on the four sides.
 
