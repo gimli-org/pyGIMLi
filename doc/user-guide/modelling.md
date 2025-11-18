@@ -115,7 +115,7 @@ We now can solve the Poison equation applying the FEA capabilities of pygimli
 and compare the resulting approximate solution $\mathrm{u}$
 with our known exact solution $u(x,y)$.
 
-## Parameterizing a mesh with physical properties
+## Boundary conditions (BC)
 
 After importing the necessary modules
 
@@ -131,78 +131,22 @@ from pygimli.viewer.mpl import drawStreams
 import pygimli.meshtools as mt
 ```
 
-we utilize the `meshtools` module to generate a mesh with different regions that can be attributed by physical properties.
-
-`createWorld` creates the definition for the modelling domain. `worldMarker=True` indicates the boundary conditions for the Earths surface and the subsurface. We assume layer boundaties at `y=-10` and `y=-30` so what we have a world with three different markers for the three layers.
+we create a grid to do some modelling on.
 
 ```{code-cell}
-world = mt.createWorld(start=[-50, 0], end=[50, -50], layers=[-10, -30],worldMarker=True)
+grid = pg.createGrid(x=np.linspace(-1.0, 1.0, 21),
+                     y=np.linspace(-1.0, 1.0, 21))
+grid.show(boundaryMarkers=True)
+print(grid)
 ```
 
-We create two circular anomalies and assign the markers 4 and 5:
-
-```{code-cell}
-block_1 = mt.createCircle(pos=[-5, -3.], radius=[4, 1], marker=4,
-                          boundaryMarker=10, area=0.1)
-block_2  = mt.createCircle(pos=[10, -3.], radius=[4, 1], marker=5,
-                          boundaryMarker=10, area=0.1)
-```
-
-The geometry definitions are merged into a Piecewise-Linear Complex (PLC) and plotted using `pg.show`, the keywords `markers=True` and `boundaryMarkers=True` show how the regions are numbered.
-
-```{code-cell}
-geom = world + block_1 + block_2
-ax, cb = pg.show(geom, markers=True, boundaryMarkers=False)
-```
-
-Create a mesh for the finite element modelling with appropriate mesh quality.
-
-```{code-cell}
-mesh = mt.createMesh(geom, quality=34)
-```
-
-You can also print the amount of markers that are in the mesh by using the following commands:
-
-```{code-cell}
-number_of_cellmarkers = list(set(mesh.cellMarkers()))
-print(number_of_cellmarkers)
-```
-
-Create a map to set resistivity values for the five regions
- [[regionNumber, resistivity], [regionNumber, resistivity], [...]
-
-```{code-cell}
-rhomap = [[1, 100.],
-          [2, 75.],
-          [3, 50.],
-          [4, 150.],
-          [5, 25]]
-```
-
-Here we assigned a different resistivity value to each part of the mesh using its cell markers and we can view the resistivity distribution with the following command:
-
-```{code-cell}
-ax, cb = pg.show(mesh, data=rhomap, label=pg.unit('res'), markers=True)
-```
-We will now show the different options to set boundary conditions and get these ready to then simulate and model the data.
-
-## Boundary conditions (BC)
-
-:::{admonition} Definition of Boundary Conditions
-:class: tip
-
-- Boundary marker (-1) : surface boundary conditions - `pg.core.MARKER_BOUND_HOMOGEN_NEUMANN`
-- Boundary marker (-2) : mixed-boundary conditions - `pg.core.MARKER_BOUND_MIXED`
-- Boundary marker ( >= 1 ) : no-flow boundaries
-:::
-
-As shown in [meshes section](meshes.md), pyGIMLi automatically assigns boundaries when using `mt.createWorld()`. However, you can assign BCs to different elements of your PLC or mesh.
+By default, all cells have the same marker, but the boundary markers are numbered from 1 to 4 for attributing .
 
 There are different ways of specifying BCs. They can be maps from markers to values, explicit functions or implicit (lambda) functions. We use the example of the Poisson equation on the unit square and specify different boundary conditions on the four sides.
 
-- The boundary 1 (left) and 2 (right) are directly mapped to the values 1 and 2.
-- On side 3 (top) a lambda function 3+x is used (p is the boundary position and p[0] its x coordinate).
-- On side 4 (bottom) a function uDirichlet is used that simply returns 4 in this example but can compute anything as a function of the individual boundaries b.
+- The boundaries 1 (left) and 2 (right) are directly mapped to the values 1 and 2.
+- On side 3 (top), a `lambda` function 3+x is used (`p` is the boundary position and `p[0]` its $x$ coordinate).
+- On side 4 (bottom), a function uDirichlet is used that simply returns 4 in this example but can compute anything as a function of the individual boundary `b`.
 
 ```{code-cell}
 def uDirichlet(boundary):
@@ -219,11 +163,9 @@ dirichletBC = {1: 1,                                           # left
 The boundary conditions are passed using the BC keyword dictionary `dirichletBC`.
 
 ```{code-cell}
-grid = pg.createGrid(x=np.linspace(-1.0, 1.0, 21),
-                     y=np.linspace(-1.0, 1.0, 21))
 u = solve(grid, f=1., bc={'Dirichlet': dirichletBC})
 
-# Note that showMesh returns the created figure ax and the created colorBar.
+# Note that showMesh returns the figure axes and the colorBar.
 ax, cbar = show(grid, data=u, label='Solution $u$')
 
 show(grid, ax=ax)
@@ -239,7 +181,8 @@ ax.set_xlim([-1.1, 1.1])  # some boundary for the text
 ax.set_ylim([-1.1, 1.1]);
 ```
 
-Alternatively we can define the gradients of the solution on the boundary, i.e., Neumann type BC. This is done with another dictionary {marker: value} and passed by the bc dictionary.
+Alternatively, we can define the gradients of the solution on the boundary, i.e., Neumann type BC.
+This is done through another dictionary `{marker: value}` passed along Dirichlet with the `bc` keyword.
 
 ```{code-cell}
 neumannBC = {1: -0.5,  # left
@@ -257,8 +200,7 @@ ax = show(grid, data=u, filled=True, orientation='vertical',
           label='Solution $u$',
           levels=np.linspace(min(u), max(u), 14), hold=True)[0]
 
-# Instead of the grid we now want to add streamlines to show the gradients of
-# the solution (i.e., the flow direction).
+# add streamlines to show the gradients of (i.e., the flow direction).
 drawStreams(ax, grid, u)
 ax.text(0.0, 1.01, '$u=1$',
         horizontalalignment='center')  # top -- 3
@@ -275,12 +217,34 @@ ax.set_xlim([-1.1, 1.1])
 ax.set_ylim([-1.1, 1.1]);
 ```
 
-Its also possible to force single nodes to fixed values too.
+Its also possible to force single nodes to fixed values.
 
 ```{code-cell}
-u = solve(grid, f=1., bc={'Node': [grid.findNearestNode([0.0, 0.0]), 1.0]})
-np.testing.assert_approx_equal(u[grid.findNearestNode([0.0, 0.0])], 1.0, significant=10)
+node0 = grid.findNearestNode([0.0, 0.0])
+u = solve(grid, f=1., bc={'Node': [node0, 1.0]})
+np.testing.assert_approx_equal(u[node0], 1.0, significant=10)
 
 ax, _ = pg.show(grid, u, logScale=False, label='Solution $u$',)
 _ = pg.show(grid, ax=ax)
 ```
+
+## Modelling in the halfspace
+
+In most cases, we want to model the subsurface below the Earth's surface.
+To this end, we use functions from the `pygimli.meshtools` module to create a
+PLC (e.g. including topography) and generate a mesh from it.
+There are so-called world boundaries that define the surface and bottom of the modelling domain with predefined values.
+
+```{code-cell}
+world = mt.createWorld(start=[-50, 0], end=[50, -30],
+                       layers=[-10, -30], worldMarker=True)
+_ = world.show(markers=True, boundaryMarkers=True)
+```
+
+:::{admonition} Definition of Boundary Conditions
+:class: tip
+
+- Boundary marker (-1) : surface boundary conditions - `pg.core.MARKER_BOUND_HOMOGEN_NEUMANN`
+- Boundary marker (-2) : mixed-boundary conditions - `pg.core.MARKER_BOUND_MIXED`
+- Boundary marker ( >= 1 ) : no-flow boundaries
+:::
