@@ -7,6 +7,7 @@ This package contains tools, modelling operators, and managers for
 Electrical Resistivity Tomography (ERT) & Induced polarization (IP)
 
 Main entry functions or classes:
+
 * simulate - synthetic (real or complex-valued) modelling
 * createData - generate data sets for synthetic modelling
 * ERTModelling - Modelling operator

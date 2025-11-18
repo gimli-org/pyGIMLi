@@ -156,7 +156,11 @@ Examples that are already implemented in pyGIMLi are for example:
 
 ### Data misfit
 
-### Cumulative sensitivity
+### Cumulative sensitivity (coverage)
+
+A necessary, but not sufficient condition for resolving an anomaly in the subsurface is that the data are sensitive to changes in the model parameters at the corresponding position. The overall sensitivity of the model can be obtained by summing up the absolute values of the sensitivity matrix (Jacobian) rows. In analogy to the total ray length in traveltime tomography it is also referred to as coverage.
+A high coverage does not guarantee high resolution, e.g., the same measurement can be done several times or very similar measurements are performed, so we need a certain degree of independence of the data to resolve model parameters.
+However, e.g., {cite}`Ronczka` showed that the coverage can be used as a rough estimate of resolution radius, which requires higher computational effort. Therefore, the coverage can be used for alpha-shading of the model, or for thresholding the well-resolved model parts.
 
 ### Resolution
 
