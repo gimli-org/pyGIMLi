@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2007-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2007-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -53,6 +53,7 @@
 #include <iterator>
 
 #ifdef USE_BOOST_BIND
+    // deprecated
     #include <boost/bind.hpp>
 #else
     #include <functional>
@@ -63,6 +64,10 @@ namespace GIMLI{
 template < class ValueType, class A > class __VectorExpr;
 
 IndexArray find(const BVector & v);
+
+DLLEXPORT IndexArray range(Index start, Index stop, Index step=1);
+DLLEXPORT IndexArray range(Index stop);
+
 
 #ifndef PYGIMLI_CAST
 inline void Dump(const void * mem, unsigned int n) {
@@ -336,7 +341,7 @@ public:
     }
     /*!
      * Return a new vector that based on indices's.
-     * Throws exception if indices's are out of bound
+     * Throws exception if indices's are out of bound.
      */
     inline Vector < ValueType > operator () (const SIndexArray & siArray) const {
         return get_(siArray);
@@ -365,6 +370,12 @@ public:
     /*! */
     Vector < ValueType > get_(const BVector & bv) const {
         return this->get_(GIMLI::find(bv));
+    }
+    Vector < ValueType > getVUI_(const IndexArray & iA) const {
+        return this->get_(iA);
+    }
+    Vector < ValueType > getVSI_(const IVector & iA) const {
+        return this->get_(iA);
     }
 
 #ifndef PYGIMLI_CAST
@@ -580,13 +591,15 @@ public:
 
     Vector < ValueType > getVal(Index start, SIndex end) const {
         Index e = (Index) end;
-        if (end == -1 || end > (SIndex)size_) e = size_;
+        if (end < 0){
+            e = max(start, size_ + end);
+        }
 
         Vector < ValueType > v(e-start);
 
-        if ((SIndex)start == end) return v;
+        if (start == e) return v;
 
-        if ((SIndex)start >= 0 && start < e){
+        if (start >= 0 && start < e){
             std::copy(& data_[start], & data_[e], &v[0]);
         } else {
             throwLengthError(WHERE_AM_I + " bounds out of range " +
@@ -708,8 +721,10 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
         if (newCapacity != capacity_) {
             ValueType * buffer = new ValueType[newCapacity];
 
-            std::memcpy(buffer, data_, sizeof(ValueType) * min(capacity_, newCapacity));
-            if (data_)  delete [] data_;
+            std::memcpy(buffer, data_,
+                        sizeof(ValueType) * min(capacity_, newCapacity));
+            // std::destroy_at(data_);
+            if (data_) delete [] data_;
             data_  = buffer;
             capacity_ = newCapacity;
             //std::copy(&tmp[0], &tmp[min(tmp.size(), n)], data_);
@@ -737,6 +752,9 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
         return *this;
     }
 
+    inline void assign(const Vector< ValueType > & v){
+        this->copy_(v);
+    }
     template < class ExprOP > inline void assign(const ExprOP & v){
         if (v.size()) {
             resize(v.size());
@@ -1660,6 +1678,11 @@ Vector< ValueType > increasingRange2(const ValueType & a,
     if (abs(a) < 1e-12){
         throwError("Can't create increasing range for start value of: " +
         str(a) );
+    }
+
+    if (a == last){
+        throwError("start and end need to be different: " +
+        str(a) + " "  + str(last));
     }
 
     if (sign(a) != sign(last)){

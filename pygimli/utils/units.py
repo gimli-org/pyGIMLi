@@ -9,13 +9,13 @@ from ..core.config import rc
 quants = {
     'rhoa': {
         'name': 'Apparent resistivity',
-        'unit': '$\Omega$m',
+        'unit': r'$\Omega$m',
         'ger': 'scheinbarer spez. elektr. Widerstand',
         'cMap': 'Spectral_r',
     },
     'res': {
         'name': 'Resistivity',
-        'unit': '$\Omega$m',
+        'unit': r'$\Omega$m',
         'ger': 'spez. elektr. Widerstand',
         'cMap': 'Spectral_r',
     },
@@ -43,6 +43,36 @@ quants = {
         'ger': 'neg. scheinbarer Phasenwinkel',
         'cMap': 'viridis',
     },
+    'u': {
+        'name': 'Voltage',
+        'unit': 'V',
+        'ger': 'Spannung',
+    },
+    'i': {
+        'name': 'Current',
+        'unit': 'A',
+        'ger': 'Stromstärke',
+    },
+    'err': {
+        'name': 'Error',
+        'unit': '-',
+        'ger': 'Fehler',
+    },
+    'e': {
+        'name': 'electric field',
+        'unit': 'V/m',
+        'ger': 'elektrisches Feld',
+    },
+    'b': {
+        'name': 'magnetic flux',
+        'unit': 'V/m²',
+        'ger': 'magnetische Flussdichte',
+    },
+    'h': {
+        'name': 'magnetic field',
+        'unit': 'A/m',
+        'ger': 'magnetische Feldstärke',
+    },
     'va': {
         'name': 'Apparent velocity',
         'unit': 'm/s',
@@ -52,11 +82,6 @@ quants = {
         'name': 'Velocity',
         'unit': 'm/s',
         'ger': 'Geschwindigkeit',
-    },
-    'as': {
-        'name': 'Apparent slowness',
-        'unit': 's/m',
-        'ger': 'Scheinlangsamkeit',
     },
     'slo': {
         'name': 'Slowness',
@@ -73,8 +98,9 @@ quants = {
 
 rc['quants'] = quants
 
+
 def quantity(name):
-    """ """
+    """Return quantity for given name."""
     quantity = None
 
     if name.lower() not in quants:
@@ -83,8 +109,9 @@ def quantity(name):
                 quantity = v
                 break
     else:
-        quantity = quants[name]
+        quantity = quants[name.lower()]
     return quantity
+
 
 def cmap(name):
     """Return default colormap for physical quantity name."""
@@ -109,10 +136,11 @@ def unit(name, unit='auto'):
     q = quantity(name)
 
     if unit == 'auto' and q is None:
-        ## fall back if the name is given instead of the abbreviation
-        print(quants)
-        pg.error('Please give abbreviation or full name '
-                 'for the quantity name: {0}'.format(name))
+        pass
+        # fall back if the name is given instead of the abbreviation
+        # print(quants)
+        # pg.error('Please give abbreviation or full name '
+        #          'for the quantity name: {0}'.format(name))
     else:
         if rc['lang'] == 'german' or rc['lang'] == 'de' or rc['lang'] == 'ger':
             name = q['ger']
@@ -125,8 +153,8 @@ def unit(name, unit='auto'):
     if unit is None:
         return '{0}'.format(name)
 
-    if rc['unitStyle'] == 1 or \
-        rc['lang'] == 'german' or rc['lang'] == 'de' or rc['lang'] == 'ger':
+    if rc['unitStyle'] == 1 or rc['lang'] == 'german' or \
+            rc['lang'] == 'de' or rc['lang'] == 'ger':
         return '{0} in {1}'.format(name, unit)
     elif rc['unitStyle'] == 2:
         return '{0} ({1})'.format(name, unit)

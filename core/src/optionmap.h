@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2009-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2009-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -148,47 +148,8 @@ public:
     void printHelp(const std::string & main);
 
     OptionBase * findOption(const char & key) const {
-//std::cout << "OptionBase * findOption(const char & key) const {" << std::endl;
+        log(Warning, "command line parsing from core is obsolete and will be replaced.");
         THROW_TO_IMPL
-        std::list < OptionBase * >::iterator it;
-
-        std::cout << std::equal_to< char >()(key, 'h') << std::endl;
-        std::cout << std::equal_to< char >()(key, 'd') << std::endl;
-
-        if (options_.size() > 0){
-            std::cout << "tn: " << (*options_.begin())->typname() << std::endl;
-            std::cout << std::mem_fun(&OptionBase::typname)(*options_.begin()) << std::endl;
-            std::cout << "key: " << (*options_.begin())->key() << std::endl;
-            std::cout << std::mem_fun(&OptionBase::key)(*options_.begin()) << std::endl;
-
-            std::cout << "cmp: " << std::equal_to< char >()(key,
-                                    std::mem_fun(&OptionBase::key)(*options_.begin()))
-                      << std::endl;
-
-            std::cout << "cmp: " << std::bind2nd(std::equal_to< char >(), key)('d') << std::endl;
-            std::cout << "cmp: " << std::bind2nd(std::equal_to< char >(), key)('h') << std::endl;
-
-            //** na schon fast, das geht leider noch nicht
-//             std::cout << "cmp: " << std::bind2nd< std::mem_fun(&OptionBase::key) >(
-//                     std::equal_to< char >(), key)(*options_.begin()) << std::endl;
-
-
-// std::mem_fun(&OptionBase::key)))(*options_.begin())
-//             << std::endl;
-
-        }
-//         it = std::find_if(options_.begin(), options_.end(),
-//                         std::equal_to< char >()(key,
-//                           std::mem_fun(&OptionBase::key)(*options_.begin())));
-//                             std::equal_to< char > (std::mem_fun(&Option::key), key));
-
-//std::cout << *it << std::endl;
-/*
-        if (it != options_.end()) {
-            return *it;
-        } else {
-            return NULL;
-        }*/
         return NULL;
     }
 

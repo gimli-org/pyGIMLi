@@ -1,0 +1,95 @@
+cff-version: 1.2.0
+title: >-
+  pyGIMLi: An open-source library for modelling and
+  inversion in geophysics
+message: >-
+  If you use this software, please cite it using the metadata from
+  'preferred-citation'.
+type: software
+authors:
+  - given-names: Carsten
+    family-names: Rücker
+    email: carsten@pygimli.org
+    orcid: 'https://orcid.org/0000-0002-8231-9861'
+  - given-names: Thomas
+    family-names: Günther
+    email: thomas@pygimli.org
+    orcid: 'https://orcid.org/0000-0001-5409-0273'
+  - given-names: Florian
+    family-names: Wagner
+    email: florian@pygimli.org
+    orcid: 'https://orcid.org/0000-0001-7407-9741'
+repository-code: 'https://github.com/gimli-org/gimli'
+url: 'https://www.pygimli.org'
+license: Apache-2.0
+
+preferred-citation:
+  type: article
+  journal: Computers and Geosciences
+  year: 2017
+  title: >-
+    pyGIMLi: An open-source library for modelling and
+    inversion in geophysics
+  authors:
+    - given-names: Carsten
+      family-names: Rücker
+      email: carsten@pygimli.org
+      orcid: 'https://orcid.org/0000-0002-8231-9861'
+    - given-names: Thomas
+      family-names: Günther
+      email: thomas@pygimli.org
+      orcid: 'https://orcid.org/0000-0001-5409-0273'
+    - given-names: Florian M.
+      family-names: Wagner
+      email: florian@pygimli.org
+      orcid: 'https://orcid.org/0000-0001-7407-9741'
+  abstract: >-
+    Many tasks in applied geosciences cannot be solved
+    by single measurements, but require the integration
+    of geophysical, geotechnical and hydrological
+    methods. Numerical simulation techniques are
+    essential both for planning and interpretation, as
+    well as for the process understanding of modern
+    geophysical methods. These trends encourage open,
+    simple, and modern software architectures aiming at
+    a uniform interface for interdisciplinary and
+    flexible modelling and inversion approaches. We
+    present pyGIMLi (Python Library for Inversion and
+    Modelling in Geophysics), an open-source framework
+    that provides tools for modelling and inversion of
+    various geophysical but also hydrological methods.
+    The modelling component supplies discretization
+    management and the numerical basis for
+    finite-element and finite-volume solvers in 1D, 2D
+    and 3D on arbitrarily structured meshes. The
+    generalized inversion framework solves the
+    minimization problem with a Gauss-Newton algorithm
+    for any physical forward operator and provides
+    opportunities for uncertainty and resolution
+    analyses. More general requirements, such as
+    flexible regularization strategies, time-lapse
+    processing and different sorts of coupling
+    individual methods are provided independently of
+    the actual methods used. The usage of pyGIMLi is
+    first demonstrated by solving the steady-state heat
+    equation, followed by a demonstration of more
+    complex capabilities for the combination of
+    different geophysical data sets. A fully coupled
+    hydrogeophysical inversion of electrical
+    resistivity tomography (ERT) data of a simulated
+    tracer experiment is presented that allows to
+    directly reconstruct the underlying hydraulic
+    conductivity distribution of the aquifer. Another
+    example demonstrates the improvement of jointly
+    inverting ERT and ultrasonic data with respect to
+    saturation by a new approach that incorporates
+    petrophysical relations in the inversion. Potential
+    applications of the presented framework are
+    manifold and include time-lapse, constrained,
+    joint, and coupled inversions of various
+    geophysical and hydrological data sets.
+  doi: 10.1016/j.cageo.2017.07.011 
+  volume: 109
+  start: 106
+  end: 123
+  license: CC-BY-4.0

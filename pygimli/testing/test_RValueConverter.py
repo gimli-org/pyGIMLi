@@ -111,7 +111,7 @@ class TestRVectorMethods(unittest.TestCase):
         self.assertEqual(a.size(), len(x))
         self.assertEqual(pg.sum(a), sum(x))
 
-        x = np.arange(10, dtype=np.long)
+        x = np.arange(10, dtype=int)
         a = pg.IVector(x)
         self.assertEqual(a.size(), len(x))
         self.assertEqual(pg.sum(a), sum(x))
@@ -136,12 +136,12 @@ class TestRVectorMethods(unittest.TestCase):
         self.assertEqual(a.size(), len(x))
         self.assertEqual(pg.sum(a), sum(x))
 
-        x = np.arange(10, dtype=np.int)
+        x = np.arange(10, dtype=int)
         a = pg.Vector(x)
         self.assertEqual(a.size(), len(x))
         self.assertEqual(pg.sum(a), sum(x))
 
-        x = np.arange(10, dtype=np.long)
+        x = np.arange(10, dtype=int)
         a = pg.Vector(x)
 
         self.assertEqual(a.size(), len(x))
@@ -222,7 +222,7 @@ class TestRVectorMethods(unittest.TestCase):
         v = pg.CVector(10, 1.1 + 1j*3)
         a = np.array(v)
         self.assertEqual(type(a), np.ndarray)
-        self.assertEqual(a.dtype, np.complex)
+        self.assertEqual(a.dtype, complex)
         self.assertEqual(len(a), 10)
         self.assertEqual(a[0], 1.1 + 1j*3)
 

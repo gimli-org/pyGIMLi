@@ -2,26 +2,33 @@
 # It is up to the user of this module to find a BLAS and link to it.
 
 if (UMFPACK_INCLUDES AND UMFPACK_LIBRARIES)
-  set(UMFPACK_FIND_QUIETLY TRUE)
-endif (UMFPACK_INCLUDES AND UMFPACK_LIBRARIES)
+    set(UMFPACK_FIND_QUIETLY TRUE)
+endif ()
 
 find_path(UMFPACK_INCLUDES
   NAMES
-  umfpack.h
+      umfpack.h
   HINTS 
-    ${EXTERNAL_DIR}/include $ENV{EXTERNAL_DIR}/include
+      ../../_build_env/include # for conda
+      ${EXTERNAL_DIR}/include 
+      $ENV{EXTERNAL_DIR}/include
   PATHS
-  $ENV{UMFPACKDIR}
-  ${INCLUDE_INSTALL_DIR}
+      ../../_build_env/include # for conda
+      $ENV{UMFPACKDIR}
+      ${INCLUDE_INSTALL_DIR}
   PATH_SUFFIXES
-  suitesparse
-  ufsparse
+      suitesparse
+      ufsparse
 )
+
+message(STATUS "UMFPACK_INCLUDES    : ${UMFPACK_INCLUDES}")
 
 find_library(UMFPACK_LIBRARIES umfpack 
     HINTS 
+        ../../_build_env/lib # for conda
         ${EXTERNAL_DIR}/lib
     PATHS 
+        ../../_build_env/lib # for conda
         ${EXTERNAL_DIR}
         $ENV{UMFPACKDIR} 
         ${LIB_INSTALL_DIR}
@@ -30,21 +37,29 @@ find_library(UMFPACK_LIBRARIES umfpack
         lib
 )
 
+message(STATUS "UMFPACK_LIBRARIES    : ${UMFPACK_LIBRARIES}")
+
 # if (NOT UMFPACK_LIBRARIES)
 #     if(EXISTS ${EXTERNAL_DIR}/lib/libumfpack.a)
 #         set(UMFPACK_LIBRARIES ${EXTERNAL_DIR}/lib/libumfpack.a)
 #     endif()
 # endif()
 
-if(UMFPACK_LIBRARIES)
+if(0 AND UMFPACK_LIBRARIES)
 
   if (NOT UMFPACK_LIBDIR)
-    get_filename_component(UMFPACK_LIBDIR ${UMFPACK_LIBRARIES} PATH)
+      get_filename_component(UMFPACK_LIBDIR ${UMFPACK_LIBRARIES} PATH)
   endif(NOT UMFPACK_LIBDIR)
 
-  find_library(COLAMD_LIBRARY colamd PATHS ${UMFPACK_LIBDIR} $ENV{UMFPACKDIR} ${LIB_INSTALL_DIR})
+  find_library(COLAMD_LIBRARY colamd 
+      PATHS 
+          ${UMFPACK_LIBDIR} 
+          $ENV{UMFPACKDIR} 
+          ${LIB_INSTALL_DIR}
+  )
+
   if (COLAMD_LIBRARY)
-    set(UMFPACK_LIBRARIES ${UMFPACK_LIBRARIES} ${COLAMD_LIBRARY})
+      set(UMFPACK_LIBRARIES ${UMFPACK_LIBRARIES} ${COLAMD_LIBRARY})
   endif (COLAMD_LIBRARY)
   
   find_library(AMD_LIBRARY amd PATHS ${UMFPACK_LIBDIR} $ENV{UMFPACKDIR} ${LIB_INSTALL_DIR})
@@ -58,7 +73,7 @@ if(UMFPACK_LIBRARIES)
   endif (SUITESPARSE_LIBRARY)
 
     message(STATUS "UMFPACK_LIBRARIES: ${UMFPACK_LIBRARIES}")
-endif(UMFPACK_LIBRARIES)
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(UMFPACK DEFAULT_MSG

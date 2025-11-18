@@ -1,17 +1,26 @@
-pygimli/_version.py export-subst
 # Set the default behavior, in case people don't have core.autocrlf set.
 * text=auto
 
 # Explicitly declare text files you want to always be normalized and converted
 # to native line endings on checkout.
-*.cpp text
-*.c text
-*.h text
-*.py text
-*.sh text
+# *.cpp text
+# *.c text
+# *.h text
+*.txt text 
+
+# keep shell scripts as Linux LE
+*.sh text eol=lf
+*.cpp text eol=lf
+*.c text eol=lf
+*.h text eol=lf
+
 
 # Declare files that will always have CRLF line endings on checkout.
-# *.sln text eol=crlf
+*.py text eol=crlf
+*.md text eol=crlf
+*.rst text eol=crlf
+*.bib text eol=crlf
+
 
 # Denote all files that are truly binary and should not be modified.
 *.png binary

@@ -12,59 +12,76 @@
 //typedef struct { long double x, y; } __float128;
 #endif
 
-//#define PYTES
+//#define PYTEST
 #ifdef PYTEST
 
  #include <iostream>
  #include <fstream>
- #include "stopwatch.h"
-// #include "vector.h"
-// #include "blockmatrix.h"
-// #include "vectortemplates.h"
+//  #include "stopwatch.h"
+//  #include "vector.h"
+
+#ifndef PYGIMLI_CAST
+    #include "pos.h"
+    #include "matrix.h"
+    #include "elementmatrix.h"
+#endif
 
 namespace GIMLI{
+    inline void tmp(){
+         std::cout << "tmp"<< std::endl;  
+    }
+    // class TMP {
+    //         public:
+    //         void a(){std::cout << "TMP"<< std::endl;}  
+    // };
 
-// 	template class Vector< double >;
+    // extern template class Vector< double >;
 //     template class VectorIterator< double >;
 //     template class Vector< Complex >;
 //     template class Vector< int >;
 //     template class BlockMatrix< double >;
 
-//     inline void ___instantiation___(){
-//         sizeof(::GIMLI::Index *);
-// 		sizeof(::GIMLI::Index &);
-// 		sizeof(::GIMLI::Index);
-// 		sizeof(::GIMLI::IndexArray *);
-// 		sizeof(::GIMLI::IndexArray &);
-// 		sizeof(::GIMLI::IndexArray);
-// 		sizeof(int *);
-//         sizeof(int &);
-//         sizeof(int);
-//         sizeof(long unsigned int *);
-//         sizeof(long unsigned int &);
-//         sizeof(long unsigned int);
-// 		sizeof(long long unsigned int *);
-//         sizeof(long long unsigned int &);
-//         sizeof(long long unsigned int);
-// 		sizeof(long long int *);
-//         sizeof(long long int &);
-//         sizeof(long long int);
-//         sizeof(double *);
-//         sizeof(double);
-//         sizeof(double &);
-//      }
+    inline void ___instantiation___(){
+        // sizeof(::GIMLI::Index *);
+		// sizeof(::GIMLI::Index &);
+		// sizeof(::GIMLI::Index);
+		// sizeof(::GIMLI::IndexArray *);
+		// sizeof(::GIMLI::IndexArray &);
+		// sizeof(::GIMLI::IndexArray);
+		// sizeof(int *);
+        // sizeof(int &);
+        // sizeof(int);
+        // sizeof(long unsigned int *);
+        // sizeof(long unsigned int &);
+        // sizeof(long unsigned int);
+		// sizeof(long long unsigned int *);
+        // sizeof(long long unsigned int &);
+        // sizeof(long long unsigned int);
+		// sizeof(long long int *);
+        // sizeof(long long int &);
+        // sizeof(long long int);
+        // sizeof(double *);
+        // sizeof(double);
+        // sizeof(bool);
+        // sizeof(double &);
+     }
 
 } // namespace GIMLI
 
-namespace pyplusplus{ namespace aliases{
-    //typedef std::complex< double >                  Complex;
-
+//     typedef std::complex< double >                  Complex;
 //     typedef GIMLI::Vector< double >                 RVector;
-//     typedef GIMLI::VectorIterator< double >              RVectorIter;
-//     typedef GIMLI::BlockMatrix< double >                 RBlockMatrix;
+//     // typedef GIMLI::Vector< bool >                 BVector;
+//     // typedef GIMLI::Vector< long >                 IVector;
+    
+//     typedef GIMLI::VectorIterator< double >          RVectorIter;// avoid doubs
+//     typedef GIMLI::VectorIterator< bool >            BVectorIter;// avoid doubs
+//     typedef GIMLI::VectorIterator< long >            IVectorIter;// avoid doubs
+    
+//     // typedef GIMLI::VectorIterator< Complex >              CVectorIter;
+//     // typedef GIMLI::BlockMatrix< double >                 RBlockMatrix;
 
-}
-} //pyplusplus::aliases
+//     }
+// } //pyplusplus::aliases
 
 #else // if not PYTEST
 
@@ -199,9 +216,16 @@ DEFINE_PY_VEC_UNARY_OPERATOR__(tan,   TAN)
 DEFINE_PY_VEC_UNARY_OPERATOR__(tanh,  TANH)
 #undef DEFINE_PY_VEC_UNARY_OPERATOR__
 
+    inline RVector mag(const CVector & a){return abs(a);}
+
+
+    //** maybe better to move these instantiation into libgimli, but why should the lib have unused template symbols??
+    // explicit instantiaion leads to duplicate symbols for architecture arm64 
+    // if the symbols allready exists, extern to mark them
+
 #define DEFINE_COMPARE_OPERATOR__(OP) \
-template BVector operator OP (const std::vector < GIMLI::SIndex > & vec, const GIMLI::SIndex & v); \
-template BVector operator OP (const std::vector < GIMLI::Index > & vec, const GIMLI::Index & v); \
+extern template BVector operator OP (const std::vector < GIMLI::SIndex > & vec, const GIMLI::SIndex & v); \
+extern template BVector operator OP (const std::vector < GIMLI::Index > & vec, const GIMLI::Index & v); \
 
 DEFINE_COMPARE_OPERATOR__(<)
 DEFINE_COMPARE_OPERATOR__(<=)
@@ -210,70 +234,62 @@ DEFINE_COMPARE_OPERATOR__(==)
 DEFINE_COMPARE_OPERATOR__(!=)
 DEFINE_COMPARE_OPERATOR__(>)
 
-    //** maybe better to move these instantiation into libgimli
+    extern template class Vector< bool >;
+    extern template class Vector< double >;
+    extern template class Vector< GIMLI::RVector3 >;
+    extern template class Vector< GIMLI::SIndex >;
+    extern template class Vector< GIMLI::Complex >;
 
-    template class Vector< bool >;
-    template class Vector< double >;
-    template class Vector< GIMLI::RVector3 >;
-    template class Vector< GIMLI::SIndex >;
-    template class Vector< GIMLI::Complex >;
+    extern template class VectorIterator< bool >;
+    extern template class VectorIterator< double >;
+    extern template class VectorIterator< GIMLI::RVector3 >;
+    extern template class VectorIterator< GIMLI::SIndex >;
+    extern template class VectorIterator< GIMLI::Index >;
+    extern template class VectorIterator< GIMLI::Complex >;
 
-    template class VectorIterator< bool >;
-    template class VectorIterator< double >;
-    template class VectorIterator< GIMLI::RVector3 >;
-    template class VectorIterator< GIMLI::SIndex >;
-    template class VectorIterator< GIMLI::Index >;
-    template class VectorIterator< GIMLI::Complex >;
+    extern template class Matrix< double >;
+    extern template class Matrix< std::complex< double > >;
+    extern template class Matrix3< double >;
 
-    template class Matrix< double >;
-    template class Matrix< std::complex< double > >;
-    template class Matrix3< double >;
+    extern template class BlockMatrix< double >;
+    extern template class Quaternion< double >;
 
-    template class BlockMatrix< double >;
-    template class Quaternion< double >;
+    extern template class PolynomialElement< double >;
+    extern template class PolynomialFunction< double >;
 
-    template class PolynomialElement< double >;
-    template class PolynomialFunction< double >;
+    extern template std::ostream & operator << (std::ostream & str, const PolynomialFunction < double > & p);
+    extern template PolynomialFunction < double > operator - (const PolynomialFunction < double > & f);
+    extern template PolynomialFunction < double > operator - (const PolynomialFunction < double > & f, const PolynomialFunction < double > & g);
+    extern template PolynomialFunction < double > operator + (const PolynomialFunction < double > & f, const PolynomialFunction < double > & g);
+    extern template PolynomialFunction < double > operator * (const PolynomialFunction < double > & f, const PolynomialFunction < double > & g);
+    extern template PolynomialFunction < double > operator * (const PolynomialFunction < double > & f, const double & val);
+    extern template PolynomialFunction < double > operator * (const double & val, const PolynomialFunction < double > & f);
+    extern template PolynomialFunction < double > operator + (const PolynomialFunction < double > & f, const double & val);
+    extern template PolynomialFunction < double > operator + (const double & val, const PolynomialFunction < double > & f);
 
-    template std::ostream & operator << (std::ostream & str, const PolynomialFunction < double > & p);
-    template PolynomialFunction < double > operator - (const PolynomialFunction < double > & f);
-    template PolynomialFunction < double > operator - (const PolynomialFunction < double > & f, const PolynomialFunction < double > & g);
-    template PolynomialFunction < double > operator + (const PolynomialFunction < double > & f, const PolynomialFunction < double > & g);
-    template PolynomialFunction < double > operator * (const PolynomialFunction < double > & f, const PolynomialFunction < double > & g);
-    template PolynomialFunction < double > operator * (const PolynomialFunction < double > & f, const double & val);
-    template PolynomialFunction < double > operator * (const double & val, const PolynomialFunction < double > & f);
-    template PolynomialFunction < double > operator + (const PolynomialFunction < double > & f, const double & val);
-    template PolynomialFunction < double > operator + (const double & val, const PolynomialFunction < double > & f);
-
-    template std::vector < PolynomialFunction < double > >
+    extern template std::vector < PolynomialFunction < double > >
         createPolynomialShapeFunctions(const Shape & ent, uint nCoeff, bool pascale, bool serendipity, const RVector &);
-    template std::vector < PolynomialFunction < double > >
+    extern template std::vector < PolynomialFunction < double > >
         createPolynomialShapeFunctions(const MeshEntity & ent, uint nCoeff, bool pascale, bool serendipity, const RVector &);
 
-    template double besselI0< double >(const double & x);
-    template double besselI1< double >(const double & x);
-    template double besselK0< double >(const double & x);
-    template double besselK1< double >(const double & x);
+    extern template double besselI0< double >(const double & x);
+    extern template double besselI1< double >(const double & x);
+    extern template double besselK0< double >(const double & x);
+    extern template double besselK1< double >(const double & x);
 
-    template class Trans< RVector >;
-    template class TransLinear< RVector >;
-    template class TransLin< RVector >;
-    template class TransPower< RVector >;
-    template class TransLog< RVector >;
-    template class TransLogLU< RVector >;
-    template class TransCotLU< RVector >;
-
-    template std::vector< Index > unique(const std::vector < Index > & a);
-    template std::vector< SIndex > unique(const std::vector < SIndex > & a);
-
-    template std::vector< Index > sort(const std::vector < Index > & a);
-    template std::vector< SIndex > sort(const std::vector < SIndex > & a);
+    extern template class Trans< RVector >;
+    extern template class TransLinear< RVector >;
+    extern template class TransLin< RVector >;
+    extern template class TransPower< RVector >;
+    extern template class TransLog< RVector >;
+    extern template class TransLogLU< RVector >;
+    extern template class TransCotLU< RVector >;
 
 #define DEFINE_XVECTOR_STUFF__(VEC) \
-template bool haveInfNaN(const VEC & v); \
-template BVector isInf(const VEC & vec); \
-template BVector isNaN(const VEC & vec); \
-template BVector isInfNaN(const VEC & vec); \
+extern template bool haveInfNaN(const VEC & v); \
+extern template BVector isInf(const VEC & vec); \
+extern template BVector isNaN(const VEC & vec); \
+extern template BVector isInfNaN(const VEC & vec); \
 
 DEFINE_XVECTOR_STUFF__(CVector)
 DEFINE_XVECTOR_STUFF__(BVector)
@@ -281,125 +297,124 @@ DEFINE_XVECTOR_STUFF__(IVector)
 DEFINE_XVECTOR_STUFF__(RVector) //RVector last since auto rhs conversion will fail else
 #undef DEFINE_XVECTOR_STUFF__
 
-    template RVector fliplr(const RVector & a);
-    template RVector round(const RVector & a, double tol);
-    template RVector increasingRange(const double & first, const double & last, Index n);
+    extern template RVector fliplr(const RVector & a);
+    extern template RVector round(const RVector & a, double tol);
+    extern template RVector increasingRange(const double & first, const double & last, Index n);
 
-    template Pos & Pos::transform(const Matrix < double > & mat);
+    extern template Pos & Pos::transform(const Matrix < double > & mat);
 
-    template class SparseMatrix< double >;
-    template class SparseMatrix< GIMLI::Complex >;
+    extern template class SparseMatrix< double >;
+    extern template class SparseMatrix< GIMLI::Complex >;
 
-    template RSparseMatrix operator + (const RSparseMatrix & A, const RSparseMatrix & B);
-    template RSparseMatrix operator - (const RSparseMatrix & A, const RSparseMatrix & B);
-    template RSparseMatrix operator * (const RSparseMatrix & A, const double & b);
-    template RSparseMatrix operator * (const double & b, const RSparseMatrix & A);
+    extern template RSparseMatrix operator + (const RSparseMatrix & A, const RSparseMatrix & B);
+    extern template RSparseMatrix operator - (const RSparseMatrix & A, const RSparseMatrix & B);
+    extern template RSparseMatrix operator * (const RSparseMatrix & A, const double & b);
+    extern template RSparseMatrix operator * (const double & b, const RSparseMatrix & A);
 
-    template CSparseMatrix operator + (const CSparseMatrix & A, const CSparseMatrix & B);
-    template CSparseMatrix operator - (const CSparseMatrix & A, const CSparseMatrix & B);
-    template CSparseMatrix operator * (const GIMLI::Complex & b, const CSparseMatrix & A);
-    template CSparseMatrix operator * (const CSparseMatrix & A, const GIMLI::Complex & b);
+    extern template CSparseMatrix operator + (const CSparseMatrix & A, const CSparseMatrix & B);
+    extern template CSparseMatrix operator - (const CSparseMatrix & A, const CSparseMatrix & B);
+    extern template CSparseMatrix operator * (const GIMLI::Complex & b, const CSparseMatrix & A);
+    extern template CSparseMatrix operator * (const CSparseMatrix & A, const GIMLI::Complex & b);
 
-    template class ElementMatrix< double >;
-    template std::ostream & operator << (std::ostream & str, const ElementMatrix< double > & p);
+    extern template class ElementMatrix< double >;
+    // extern template std::ostream & operator << (std::ostream & str,
+    //                                      const ElementMatrix< double > & p);
 
-    template RVector unique(const RVector & a);
-    // template IndexArray unique(const IndexArray & a);
-    template IVector unique(const IVector & a);
+    extern template std::vector< Index > unique(const std::vector < Index > & a);
+    extern template std::vector< SIndex > unique(const std::vector < SIndex > & a);
+    extern template RVector unique(const RVector & a);
+    // extern template IndexArray unique(const IndexArray & a);
+    extern template IVector unique(const IVector & a);
 
-    template RVector sort(const RVector & a);
-    // template IndexArray sort(const IndexArray & a);
-    template IVector sort(const IVector & a);
+    extern template RVector sort(const RVector & a);
+    // extern template IndexArray sort(const IndexArray & a);
+    extern template IVector sort(const IVector & a);
+    extern template std::vector< Index > sort(const std::vector < Index > & a);
+    extern template std::vector< SIndex > sort(const std::vector < SIndex > & a);
 
-    template RVector pow(const RVector & a, double power);
-    template RVector pow(const RVector & a, int power);
-    template RVector pow(const RVector & a, const RVector & power);
-    template RVector cat(const RVector & a, const RVector & b);
+    extern template RVector pow(const RVector & a, double power);
+    extern template RVector pow(const RVector & a, int power);
+    extern template RVector pow(const RVector & a, const RVector & power);
+    extern template RVector cat(const RVector & a, const RVector & b);
 
-    template RVector real(const CVector & a);
-    template RVector imag(const CVector & a);
-    template RVector angle(const CVector & a);
-    template RVector phase(const CVector & a);
-    template RVector abs(const CVector & a);
-    inline RVector mag(const CVector & a){return abs(a);}
-    template CVector conj(const CVector & a);
+    extern template RVector real(const CVector & a);
+    extern template RVector imag(const CVector & a);
+    extern template RVector angle(const CVector & a);
+    extern template RVector phase(const CVector & a);
+    extern template RVector abs(const CVector & a);
+    extern template CVector conj(const CVector & a);
 
-    template RMatrix real(const CMatrix & a);
-    template RMatrix imag(const CMatrix & a);
+    extern template RMatrix real(const CMatrix & a);
+    extern template RMatrix imag(const CMatrix & a);
 
-    template double det(const RMatrix & a);
-    template double det(const RMatrix3 & a);
+    extern template double det(const RMatrix & a);
+    extern template double det(const RMatrix3 & a);
 
-    template double min(const RVector & v);
-    template double max(const RVector & v);
+    extern template double min(const RVector & v);
+    extern template double max(const RVector & v);
 
-    template double rms(const RVector & a);
-    template double rms(const RVector & a, const RVector & b);
-    template double rrms(const RVector & a, const RVector & b);
+    extern template double rms(const RVector & a);
+    extern template double rms(const RVector & a, const RVector & b);
+    extern template double rrms(const RVector & a, const RVector & b);
 
-    template double norm(const RVector & a);
-    template double normlp(const RVector & a, int p);
-    template double norml1(const RVector & a);
-    template double norml2(const RVector & a);
-    template double normlInfinity(const RVector & a);
+    extern template double norm(const RVector & a);
+    extern template double normlp(const RVector & a, int p);
+    extern template double norml1(const RVector & a);
+    extern template double norml2(const RVector & a);
+    extern template double normlInfinity(const RVector & a);
 
-    template double norm(const CVector & a);
-    template double normlp(const CVector & a, int p);
-    template double norml1(const CVector & a);
-    template double norml2(const CVector & a);
-    template double normlInfinity(const CVector & a);
+    extern template double norm(const CVector & a);
+    extern template double normlp(const CVector & a, int p);
+    extern template double norml1(const CVector & a);
+    extern template double norml2(const CVector & a);
+    extern template double normlInfinity(const CVector & a);
 
-    template double euclideanNorm(const RVector & a);
-    template double stdDev(const RVector & v);
-    template double median(const RVector & a);
-    template double mean(const RVector & a);
-    template double arithmeticMean(const RVector & v);
-    template double geometricMean(const RVector & v);
-    template double harmonicMean(const RVector & a);
+    extern template double euclideanNorm(const RVector & a);
+    extern template double stdDev(const RVector & v);
+    extern template double median(const RVector & a);
+    extern template double mean(const RVector & a);
+    extern template double arithmeticMean(const RVector & v);
+    extern template double geometricMean(const RVector & v);
+    extern template double harmonicMean(const RVector & a);
 
-    template double dot(const RVector & v1, const RVector & v2);
+    extern template double dot(const RVector & v1, const RVector & v2);
 
-    template void rand(RVector & vec, double min = 0.0, double max = 1.0);
-    template void randn(RVector & vec);
+    extern template void rand(RVector & vec, double min = 0.0, double max = 1.0);
+    extern template void randn(RVector & vec);
 
-    template double degToRad(const double & deg);
-    template double radToDeg(const double & rad);
+    extern template double degToRad(const double & deg);
+    extern template double radToDeg(const double & rad);
 
-    template RVector3 degToRad(const RVector3 & deg);
-    template RVector3 radToDeg(const RVector3 & rad);
+    extern template RVector3 degToRad(const RVector3 & deg);
+    extern template RVector3 radToDeg(const RVector3 & rad);
 
-    template void sort(const RVector & a, RVector & b, IndexArray & idx);
-    template IndexArray sortIdx(const RVector & a);
+    extern template void sort(const RVector & a, RVector & b, IndexArray & idx);
+    extern template IndexArray sortIdx(const RVector & a);
 
-    template bool save(const RVector &v, const std::string & fname, IOFormat format = Ascii);
-    template bool load(RVector &v, const std::string & fname, IOFormat format = Ascii,
+    extern template bool save(const RVector &v, const std::string & fname, IOFormat format = Ascii);
+    extern template bool load(RVector &v, const std::string & fname, IOFormat format = Ascii,
                         bool verbose = true);
+    extern template bool load(RMatrix & A, const std::string & filename);
 
-  //  template bool save(const RMatrix & A, const std::string & filename, IOFormat format = Binary);
-    template bool load(RMatrix & A, const std::string & filename);
-
-    template bool loadMatrixSingleBin(RMatrix & A, const std::string & filename);
-    template bool loadMatrixVectorsBin(RMatrix & A, const std::string & filenameBody,
-                                        uint kCount = 1);
-
-    template bool saveMatrixCol(const RMatrix & A, const std::string & filename);
-    template bool saveMatrixCol(const RMatrix & A, const std::string & filename,
+    extern template bool saveMatrixCol(const RMatrix & A, const std::string & filename);
+    extern template bool saveMatrixCol(const RMatrix & A, const std::string & filename,
                                  const std::string & comments);
 
-    template bool loadMatrixCol(RMatrix & A, const std::string & filename);
-    template bool loadMatrixCol(RMatrix & A, const std::string & filename,
+    extern template bool loadMatrixCol(RMatrix & A, const std::string & filename);
+    extern template bool loadMatrixCol(RMatrix & A, const std::string & filename,
                                  std::vector < std::string > & comments);
 
-    template bool saveMatrixRow(const RMatrix & A, const std::string & filename);
-    template bool saveMatrixRow(const RMatrix & A, const std::string & filename,
+    extern template bool saveMatrixRow(const RMatrix & A, const std::string & filename);
+    extern template bool saveMatrixRow(const RMatrix & A, const std::string & filename,
                                  const std::string & comments);
 
-    template bool loadMatrixRow(RMatrix & A, const std::string & filename);
-    template bool loadMatrixRow(RMatrix & A, const std::string & filename,
+    extern template bool loadMatrixRow(RMatrix & A, const std::string & filename);
+    extern template bool loadMatrixRow(RMatrix & A, const std::string & filename,
                                 std::vector < std::string > & comments);
 
-    template std::set< Node * > commonNodes(const std::set < Boundary * > &);
-    template std::set< Node * > commonNodes(const std::set < Cell * > &);
+    extern template std::set< Node * > commonNodes(const std::set < Boundary * > &);
+    extern template std::set< Node * > commonNodes(const std::set < Cell * > &);
+
 
 //     inline void ___instantiation___(){
 //         sizeof(bool);
@@ -563,8 +578,7 @@ namespace pyplusplus{ namespace aliases{
     typedef std::vector< GIMLI::RVector3 >              stdVectorRVector3;
     typedef std::vector< GIMLI::R3Vector >              stdVectorR3Vector;
     typedef std::vector< GIMLI::RMatrix3 >              stdVectorMatrix3;
-    typedef std::vector< GIMLI::BlockMatrixEntry >   stdVectorBlockMatrixEntry;
-
+    
     typedef std::vector< GIMLI::PolynomialElement<double> > stdVectorPolynomialElementR;
     typedef std::vector< GIMLI::PolynomialFunction< double > > stdVectorPolynomialFunctionR;
 

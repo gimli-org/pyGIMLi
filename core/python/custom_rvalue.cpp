@@ -11,6 +11,7 @@
 
 #include <numpy/arrayobject.h>
 #include <numpy/arrayscalars.h>
+#include <numpy/npy_math.h>
 
 #include <Python.h>
 
@@ -20,13 +21,19 @@
 #include "matrix.h"
 
 // cp ../gimli/core/python/custom_rvalue.cpp core/python/generated/custom_rvalue.cpp && make pg
+static int __numpy_initialized = 0;
+
+// this fails for win since py39
+// const static int __numpy_initialized = initNumpy();
 
 int initNumpy(){
     // Needed or py* checks will segfault
-    import_array2("Cannot import numpy.core.multiarray c-api for rvalue converters.", 0);
+	if (__numpy_initialized == 0){
+        import_array2("Cannot import numpy.core.multiarray c-api for rvalue converters.", 0);
+        __numpy_initialized = 1;
+    }
     return 0;
 }
-const static int __numpy_initialized = initNumpy();
 
 namespace bp = boost::python;
 
@@ -45,6 +52,8 @@ std::ostream & operator << (std::ostream & os, const bp::object& o){
 namespace r_values_impl{
 
 template < class ValueType > void * checkConvertibleSequenz(PyObject * obj){
+    initNumpy();
+
     if (!obj){
         __DC("\t" << obj << "\t abborting .. !Object")
         return NULL;
@@ -150,6 +159,46 @@ template < class ValueType > void * checkConvertibleSequenz(PyObject * obj){
     __DC(obj << " fail")
     return NULL;
 }
+
+template < class ValueType > void * checkConvertibleNumpyScalar(PyObject * obj){
+    initNumpy();
+
+    // will be used for every convert of numpy scalars here e.g. for list conversion
+    if (!obj){
+        __DC("\t" << obj << "\t abort check .. !Object")
+        return NULL;
+    }
+    if (GIMLI::deepDebug() > 0){
+        __DC(obj << "(" << obj->ob_type->tp_name << ") -> " +
+            GIMLI::type(ValueType(0))) // FW: Caused problems during Mac build
+        __DC("\tType:" << Py_TYPE(obj))
+        __DC("\tArray:" << PyObject_TypeCheck(obj, &PyArray_Type))
+        __DC("\tPyGenericArrType_Type:" << PyObject_TypeCheck(obj, &PyGenericArrType_Type))
+        __DC("\tPyIntegerArrType_Type:" << PyObject_TypeCheck(obj, &PyIntegerArrType_Type))
+        __DC("\tPySignedIntegerArrType_Type:" << PyObject_TypeCheck(obj, &PySignedIntegerArrType_Type))
+        __DC("\tPyUnsignedIntegerArrType_Type:" << PyObject_TypeCheck(obj, &PyUnsignedIntegerArrType_Type))
+        __DC("\tPyIntArrType_Type:" << PyObject_TypeCheck(obj, &PyIntArrType_Type))
+        __DC("\tPyLongArrType_Type:" << PyObject_TypeCheck(obj, &PyLongArrType_Type))
+        __DC("\tPyUIntArrType_Type:" << PyObject_TypeCheck(obj, &PyUIntArrType_Type))
+        __DC("\tPyULongArrType_Type:" << PyObject_TypeCheck(obj, &PyULongArrType_Type))
+        __DC("\tPyFloatArrType_Type:" << PyObject_TypeCheck(obj, &PyFloatArrType_Type))
+        __DC("\tPyDoubleArrType_Type:" << PyObject_TypeCheck(obj, &PyDoubleArrType_Type))
+    }
+
+    if (PyObject_TypeCheck(obj, &PyGenericArrType_Type)){
+        if (typeid(ValueType) == typeid(GIMLI::Index)){
+            if (!PyObject_TypeCheck(obj, &PyIntegerArrType_Type)){
+                __DC("\t" << obj << "\t abort check .. Object cannot convert to GIMLI::Index")
+                return NULL;
+            }
+        }
+        __DC("\t" << obj << "\t ok.")
+        return obj;
+    }
+    __DC("\t" << obj << "\t abort: no numpy scalar.")
+    return NULL;
+}
+
 
 struct PyTuple2RVector3{
 
@@ -302,11 +351,17 @@ struct PySequence2CVector{
                 for (GIMLI::Index i = 0; i < vec->size(); i ++){
                     element = py_sequence[i];
 
+#ifndef NPY_2_0_API_VERSION
                     (*vec)[i] = GIMLI::Complex(
                             PyArrayScalar_VAL(element.ptr(), Complex128).real,
                             PyArrayScalar_VAL(element.ptr(), Complex128).imag);
-
-                    //                     (*vec)[i] = PyArrayScalar_VAL(element.ptr(),
+#else
+                    //see and fix me! https://numpy.org/devdocs/release/2.0.0-notes.html#complex-types-underlying-c-type-changes
+                    (*vec)[i] = GIMLI::Complex(
+                            npy_creal(PyArrayScalar_VAL(element.ptr(), Complex128)),
+                            npy_cimag(PyArrayScalar_VAL(element.ptr(), Complex128)));
+#endif
+//                     (*vec)[i] = PyArrayScalar_VAL(element.ptr(),
 //                     __DC(i << " a " << element);
 //                     __DC(i << " a "
 //                         << bp::extract< double >(element.attr('real')));
@@ -549,42 +604,6 @@ struct Numpy2RMatrix{
     }
 private:
 };
-
-template < class ValueType > void * checkConvertibleNumpyScalar(PyObject * obj){
-    // will be used for every convert of numpy scalars here e.g. for list conversion
-    if (!obj){
-        __DC("\t" << obj << "\t abort check .. !Object")
-        return NULL;
-    }
-    if (GIMLI::deepDebug() > 0){
-        __DC(obj << "(" << obj->ob_type->tp_name << ") -> " +
-            GIMLI::type(ValueType(0))) // FW: Caused problems during Mac build
-        __DC("\tType:" << Py_TYPE(obj))
-        __DC("\tArray:" << PyObject_TypeCheck(obj, &PyArray_Type))
-        __DC("\tPyGenericArrType_Type:" << PyObject_TypeCheck(obj, &PyGenericArrType_Type))
-        __DC("\tPyIntegerArrType_Type:" << PyObject_TypeCheck(obj, &PyIntegerArrType_Type))
-        __DC("\tPySignedIntegerArrType_Type:" << PyObject_TypeCheck(obj, &PySignedIntegerArrType_Type))
-        __DC("\tPyUnsignedIntegerArrType_Type:" << PyObject_TypeCheck(obj, &PyUnsignedIntegerArrType_Type))
-        __DC("\tPyIntArrType_Type:" << PyObject_TypeCheck(obj, &PyIntArrType_Type))
-        __DC("\tPyLongArrType_Type:" << PyObject_TypeCheck(obj, &PyLongArrType_Type))
-        __DC("\tPyUIntArrType_Type:" << PyObject_TypeCheck(obj, &PyUIntArrType_Type))
-        __DC("\tPyULongArrType_Type:" << PyObject_TypeCheck(obj, &PyULongArrType_Type))
-        __DC("\tPyFloatArrType_Type:" << PyObject_TypeCheck(obj, &PyFloatArrType_Type))
-        __DC("\tPyDoubleArrType_Type:" << PyObject_TypeCheck(obj, &PyDoubleArrType_Type))
-    }
-
-    if (PyObject_TypeCheck(obj, &PyGenericArrType_Type)){
-        if (typeid(ValueType) == typeid(GIMLI::Index)){
-            if (!PyObject_TypeCheck(obj, &PyIntegerArrType_Type)){
-                __DC("\t" << obj << "\t abort check .. Object cannot convert to GIMLI::Index")
-                return NULL;
-            }
-        }
-        return obj;
-    }
-    __DC("\t" << obj << "\t abort: no numpy scalar.")
-    return NULL;
-}
 
 template < class ValueType > void convertFromNumpyScalar(PyObject* obj,
                         bp::converter::rvalue_from_python_stage1_data * data){

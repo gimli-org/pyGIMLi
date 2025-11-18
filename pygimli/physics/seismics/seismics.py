@@ -237,12 +237,12 @@ def solvePressureWave(mesh, velocities, times, sourcePos, uSource, verbose=False
 
     theta = 0.51
     #theta = 1.
-    S1 = M + dt * dt * theta * theta * A
+    S1 = M + A * (dt * dt * theta * theta)
     S2 = M
 
     solver1 = pg.core.LinSolver(S1, verbose=False)
     solver2 = pg.core.LinSolver(S2, verbose=False)
-    swatch = pg.core.Stopwatch(True)
+    swatch = pg.Stopwatch(True)
 
 #    ut = pg.Vector(mesh.nodeCount(), .0)
 #    vt = pg.Vector(mesh.nodeCount(), .0)
@@ -260,7 +260,7 @@ def solvePressureWave(mesh, velocities, times, sourcePos, uSource, verbose=False
         # solve for u
         tic = time.time()
         # + * dt*dt * F
-        rhs = dt * M * v[n-1] + (M - dt*dt * theta * (1. - theta) * A) * u[n-1]
+        rhs = M * (dt * v[n-1]) + (M - A * (dt**2 * theta * (1. - theta))) * u[n-1]
         timeIter1[n - 1] = time.time() - tic
 
         tic = time.time()
@@ -270,7 +270,7 @@ def solvePressureWave(mesh, velocities, times, sourcePos, uSource, verbose=False
         # solve for v
         tic = time.time()
         rhs = M * v[n - 1] - dt * \
-            ((1. - theta) * A * u[n - 1] + theta * A * u[n])  # + dt * F
+            (A * ((1. - theta) * u[n - 1]) + A * (theta * u[n]))  # + dt * F
         timeIter3[n - 1] = time.time() - tic
 
         tic = time.time()

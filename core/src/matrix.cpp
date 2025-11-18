@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2007-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2007-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -17,11 +17,11 @@
  ******************************************************************************/
 
 #include "gimli.h"
-#include "vector.h"
+// #include "vector.h"
 #include "elementmatrix.h"
 
 #include "matrix.h"
-// #include "vector.h"
+#include "vector.h"
 #include "stopwatch.h"
 
 #if OPENBLAS_CBLAS_FOUND
@@ -204,7 +204,7 @@ void matTransMult(const RMatrix & A, const RMatrix & B, RMatrix & C, double a, d
     //** implement with openblas dgemm too and check performance
     // __MS("matTransMult: "<< A.rows() << " " << A.cols() << " : "
     //     << B.rows() << " " << B.cols() << " " << a << " " << b)
-    bool retTrans = false;
+    // bool retTrans = false;
 
     // A(k, m).T * B(k, n) = C(m, n)
 
@@ -225,7 +225,7 @@ void matTransMult(const RMatrix & A, const RMatrix & B, RMatrix & C, double a, d
                 // __MS("ret transmult")
                 return matTransMult(B, A, C, a, b);
 
-                retTrans = true;
+                //retTrans = true;
             } else {
                 //** resize target array
                 C.resize(m, n);
@@ -272,7 +272,8 @@ void matTransMult(const RMatrix & A, const RMatrix & B, RMatrix & C, double a, d
                 for (Index k = 0; k < A.rows(); k ++){
                     c += A[k][i] * B[k][j];
                 }
-                if (retTrans){
+                // if (retTrans){
+                if (0){
                     THROW_TO_IMPL
                     C[j][i] = a * c + C[j][i]*b;
                 } else {
@@ -288,6 +289,99 @@ void matTransMult(const RMatrix & A, const RMatrix & B, RMatrix & C, double a, d
     }
 }
 
+/*! Force to load single matrix binary file.
+    Format: see \ref save(const Matrix < ValueType > & A, const std::string & filename). */
+template < class ValueType >
+bool loadMatrixSingleBin_T(Matrix < ValueType > & A,
+                          const std::string & filename){
+
+    std::ifstream testFile(filename, std::ios::binary);
+    const auto begin = testFile.tellg();
+    testFile.seekg (0, std::ios::end);
+    const auto end = testFile.tellg();
+    SIndex fsize = (end-begin);
+    testFile.close();
+    FILE *file; file = fopen(filename.c_str(), "r+b");
+    if (!file) {
+        throwError(WHERE_AM_I + " " +
+                   filename + ": " + strerror(errno));
+    }
+
+    Index ret;
+    uint32 rows = 0;
+    ret = fread(&rows, sizeof(uint32), 1, file);
+    if (ret == 0) throwError("fail reading file " + filename);
+    uint32 cols = 0;
+    ret = fread(&cols, sizeof(uint32), 1, file);
+    if (ret == 0) throwError("fail reading file " + filename);
+
+    if ((SIndex)(rows*cols*sizeof(ValueType) + 2*sizeof(uint32)) != fsize){
+        __MS("rows: " << str(rows) << " cols: " <<  str(cols) << " fsize: " << str(fsize))
+        __MS(" filesize needed: " << str(rows*cols*sizeof(ValueType)+2*sizeof(uint32)))
+        fclose(file);
+        throwError(WHERE_AM_I + " " + filename + ": size invalid");
+    }
+
+    A.resize(rows, cols);
+    for (uint32 i = 0; i < rows; i ++){
+        for (uint32 j = 0; j < cols; j ++){
+            ret = fread((char*)&A[i][j], sizeof(ValueType), 1, file);
+            if (ret == 0) throwError("fail reading file " + filename);
+        }
+    }
+    fclose(file);
+    A.rowFlag().fill(1);
+    return true;
+}
+
+bool loadMatrixSingleBin(RMatrix & A, const std::string & filename){
+    return loadMatrixSingleBin_T(A, filename);
+}
+bool loadMatrixSingleBin(CMatrix & A, const std::string & filename){
+    return loadMatrixSingleBin_T(A, filename);
+}
+
+template < class ValueType >
+bool loadMatrixVectorsBin_T(Matrix < ValueType > & A,
+                            const std::string & filenameBody, uint kCount = 1){
+
+    A.clear();
+    Vector < ValueType > tmp;
+    std::string filename;
+
+    for (Index i = 0; i < kCount; i++){
+        Index count = 0;
+        while (1){ // load as long as posible
+            if (kCount > 1){
+                filename = filenameBody + "." + str(count) + "_" + str(i) + ".pot";
+            } else {
+                filename = filenameBody + "." + str(count) + ".pot";
+            }
+
+            if (!fileExist(filename)){
+                filename = filenameBody + "." + str(count);
+                if (!fileExist(filename)){
+                    if (count == 0) {
+	                    std::cerr << "Can't found: " << filename << std::endl;
+                    }
+                    break;
+                }
+            }
+            if (loadVec(tmp, filename, Binary )) A.push_back(tmp);
+            count ++;
+        } // while files exist
+    } // for each k count
+    return true;
+}
+
+bool loadMatrixVectorsBin(RMatrix & A,
+                           const std::string & filenameBody, uint kCount){
+    return loadMatrixVectorsBin_T(A, filenameBody, kCount);
+}
+bool loadMatrixVectorsBin(CMatrix & A,
+                           const std::string & filenameBody, uint kCount){
+    return loadMatrixVectorsBin_T(A, filenameBody, kCount);
+}
 
 
 } // namespace GIMLI{

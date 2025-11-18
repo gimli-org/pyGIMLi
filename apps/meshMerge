@@ -23,7 +23,7 @@ def main(argv):
     parser.add_argument("--debug", dest="debug", action="store_true",
                         help="debug mode")
     parser.add_argument('meshes', type=str, nargs='+',
-                        help='Files to be merge. If there are more then 2 files, '
+                        help='Files to be merge. If there are more than 2 files, '
                         ' e.g., called with wildcard (*.vtk), the file matches '
                         'the outFileName will be excluded.')
     parser.add_argument("-o", dest="outFileName", type=str,

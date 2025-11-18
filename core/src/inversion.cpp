@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *   Thomas Günther thomas@resistivity.net                                    *
  *                                                                            *
@@ -75,7 +75,7 @@ void RInversion::checkJacobian(bool force) {
     }
 
     Stopwatch swatch(true);
-    if (verbose_) std::cout << "calculating jacobian matrix (forced=" << force << ")...";
+    if (verbose_) std::cout << "Calculating Jacobian matrix (forced=" << force << ")...";
     forward_->createJacobian(model_);
     jacobiNeedRecalc_ = false;
     if (verbose_) std::cout << "... " << swatch.duration(true) << " s" << std::endl;
@@ -225,12 +225,12 @@ const RVector & RInversion::run(){ ALLOW_PYTHON_THREADS
         double phiD = getPhiD();
 
         if (stopAtChi1_ && (phiD < data_.size())) {
-            if (verbose_) std::cout << "Reached data fit criteria (chi^2 <= 1). Stop." << std::endl;
+            if (verbose_) std::cout << "Reached data fit criterion (chi^2 <= 1). Stop." << std::endl;
             break;
         }
         double phi = getPhi();
         if (phi / oldphi > (1.0 - dPhiAbortPercent_ / 100.0) && iter_ > 2) {
-            if (verbose_) std::cout << "Reached data fit criteria (delta phi < "
+            if (verbose_) std::cout << "Reached data fit criterion (delta phi < "
                                     << dPhiAbortPercent_ << "%). Stop." << std::endl;
             break;
         }
@@ -248,7 +248,6 @@ const RVector & RInversion::run(){ ALLOW_PYTHON_THREADS
 
 bool RInversion::oneStep() {
     iter_++;
-
     deltaModelIter_.resize(model_.size());
     deltaModelIter_ *= 0.0;
     deltaDataIter_ = (tD_->trans(data_) - tD_->trans(response_));
@@ -257,7 +256,7 @@ bool RInversion::oneStep() {
         if (verbose_) std::cout << "sum(abs(deltaDataIter_)) == Zero" << std::endl;
         return false;
     }
-//    Vec deltaModel0(model_.size());
+    //    Vec deltaModel0(model_.size());
     Vec modelNew(   model_.size());
     Vec responseNew( data_.size());
     Vec roughness(this->constraintsCount(), 0.0);
@@ -265,11 +264,11 @@ bool RInversion::oneStep() {
     this->checkJacobian((recalcJacobian_ && iter_ > 1) || jacobiNeedRecalc_);
 
     // if ((recalcJacobian_ && iter_ > 1) || jacobiNeedRecalc_ ) {
-    //     Stopwatch swatch(true);
-    //     if (verbose_) std::cout << "recalculating jacobian matrix ...";
-    //     forward_->createJacobian(model_);
-    //     if (verbose_) std::cout << swatch.duration(true) << " s" << std::endl;
-    // }
+        //     Stopwatch swatch(true);
+        //     if (verbose_) std::cout << "Recalculating Jacobian matrix ...";
+        //     forward_->createJacobian(model_);
+        //     if (verbose_) std::cout << swatch.duration(true) << " s" << std::endl;
+        // }
 
     if (!localRegularization_) {
         DOSAVE echoMinMax(model_, "model: ");
@@ -305,8 +304,8 @@ bool RInversion::oneStep() {
         DOSAVE save(tD_->deriv(response_), "responseTrans");
 
         if (verbose_) std::cout << "solve CGLSCDWWtrans with lambda = " << lambda_ << std::endl;
-
-        solveCGLSCDWWhtrans(*forward_->jacobian(), *forward_->constraints(),
+        try{
+            solveCGLSCDWWhtrans(*forward_->jacobian(), *forward_->constraints(),
                                 dataWeight_,
                                 deltaDataIter_,
                                 deltaModelIter_,
@@ -315,8 +314,22 @@ bool RInversion::oneStep() {
                                 tD_->deriv(response_),
                                 lambda_, roughness, maxCGLSIter_, CGLStol_,
                                 dosave_);
-    } // else no optimization
+        } catch(...){
+            // __MS("Debug halt! 1700")
+            // forward_->mesh()->save("S1700.bms");
+            // forward_->regionManager().mesh().save("R1700.bms");
 
+            // __MS("Debug halt! 17708")
+            // forward_->mesh()->save("S17708.bms");
+            // forward_->regionManager().mesh().save("R17708.bms");
+
+            // std::cout<<forward_->mesh()->boundary(2121).marker() << std::endl;
+            // std::cout<<forward_->mesh()->boundary(2122).marker() << std::endl;
+
+            // exit(1);
+            log(Error, "solveCGLSCDWWhtrans throws unknown exception.");
+        }
+    } // else no optimization
     //restrictMax(deltaModelIter_, 50.0); // only work for log trans
     DOSAVE echoMinMax(deltaModelIter_, "dm");
     modelNew = tM_->update(model_, deltaModelIter_);
@@ -376,7 +389,6 @@ bool RInversion::oneStep() {
         DOSAVE forward_->mesh()->exportVTK("fop-model" + str(iter_));
         DOSAVE forward_->mesh()->clearData();
     }
-
     return true;
 }
 

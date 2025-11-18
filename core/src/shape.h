@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -343,11 +343,7 @@ public:
     /*! Notify this shape that the inverse Jacobian matrix and the domain size are not longer valid and need recalculation. This method is called if a node has bee transformed. */
     void changed();
 
-    /*! Reverse node sequence order to enforce positive Jacobian determinant.
-     * Please use with care! Return True if the order has been changed.*/
-    virtual bool enforcePositiveDirection();
-
-    //     double jacobianDeterminant() const { return det(this->createJacobian()); }
+    double jacobianDeterminant() const { return det(this->createJacobian()); }
 
     inline void resizeNodeSize_(Index n) { this->nodeCount_ = n; }
 
@@ -390,7 +386,7 @@ public:
     virtual RVector3 norm() const;
 
 protected:
-//     virtual double jacobianDeterminant_() const { return 0.0; }
+    //virtual double jacobianDeterminant_() const { return 0.0; }
 };
 
 static const double EdgeCoordinates[2][3] = {

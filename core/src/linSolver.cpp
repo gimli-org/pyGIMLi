@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2007-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2007-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -32,20 +32,21 @@ CVector LinSolver::operator()(const CVector & rhs) {
 }
 
 LinSolver::LinSolver(bool verbose)
-    : verbose_(verbose){
+    : SolverWrapper(verbose){
+     
     init_();
     setSolverType(AUTOMATIC);
 }
 
 LinSolver::LinSolver(RSparseMatrix & S, bool verbose)
-    : verbose_(verbose) {
+    : SolverWrapper(verbose) {
     init_();
     setSolverType(AUTOMATIC);
     setMatrix(S);
 }
 
 LinSolver::LinSolver(RSparseMapMatrix & S, bool verbose)
-    : verbose_(verbose) {
+    : SolverWrapper(verbose) {
     init_();
     setSolverType(AUTOMATIC);
     cacheMatrix_ = new RSparseMatrix(S);
@@ -54,21 +55,21 @@ LinSolver::LinSolver(RSparseMapMatrix & S, bool verbose)
 }
 
 LinSolver::LinSolver(RSparseMatrix & S, SolverType solverType, bool verbose)
-    : verbose_(verbose) {
+    : SolverWrapper(verbose) {
     init_();
     setSolverType(solverType);
     setMatrix(S);
 }
 
 LinSolver::LinSolver(CSparseMatrix & S, bool verbose)
-    : verbose_(verbose) {
+    : SolverWrapper(verbose) {
     init_();
     setSolverType(AUTOMATIC);
     setMatrix(S);
 }
 
 LinSolver::LinSolver(CSparseMatrix & S, SolverType solverType, bool verbose)
-    : verbose_(verbose) {
+    : SolverWrapper(verbose) {
     init_();
     setSolverType(solverType);
     setMatrix(S);

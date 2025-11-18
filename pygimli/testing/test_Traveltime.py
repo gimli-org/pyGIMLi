@@ -14,8 +14,8 @@ class TestTT(unittest.TestCase):
         self.data.createSensor([0.0, 0.0])
         self.data.createSensor([1.0, 2.0])
         self.data.resize(1)
-        self.data.set("s", pg.Vector(1, 1.0))
-        self.data.set("g", pg.Vector(1, 2.0))
+        self.data.set("s", [1])
+        self.data.set("g", [2])
         self.data.registerSensorIndex("s")
         self.data.registerSensorIndex("g")
 
@@ -30,10 +30,12 @@ class TestTT(unittest.TestCase):
     def test_withoutSecNodes(self):
         fop = self.mgr.fop
         fop.setData(self.data)
-        fop.setMesh(self.mesh, ignoreRegionManager=True)
+        fop.setMesh(self.mesh, 
+                    ignoreRegionManager=True)
         t = fop.response(self.slo)
         np.testing.assert_allclose(t, 1 + np.sqrt(2))
 
+        pg.show(self.mesh)
         data = self.mgr.simulate(slowness=self.slo, scheme=self.data, 
                                  mesh=self.mesh, secNodes=0)
         np.testing.assert_allclose(data['t'], 1 + np.sqrt(2))
@@ -49,7 +51,7 @@ class TestTT(unittest.TestCase):
         np.testing.assert_allclose(t, np.sqrt(5)) # only works for odd secNodes
         
         data = self.mgr.simulate(slowness=self.slo, scheme=self.data, 
-                              mesh=self.mesh, secNodes=3)
+                                 mesh=self.mesh, secNodes=3)
         np.testing.assert_allclose(data['t'], np.sqrt(5)) # only works for odd secNodes
 
 

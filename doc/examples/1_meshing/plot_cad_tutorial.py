@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-# encoding: utf-8
 r"""
 CAD to mesh tutorial
 ====================
+
 In this example you will learn how to create a geometry in
 `FreeCAD <https://www.freecadweb.org/>`_ and then export and mesh it using
 `Gmsh <http://gmsh.info/>`_.
@@ -26,7 +26,7 @@ In this example you will learn how to create a geometry in
 # `website <https://www.freecadweb.org/downloads.php>`_ will give you the
 # most up to date version.
 #
-# This example is based on an ERT modeling and inversion experiment on a
+# This example is based on an ERT modelling and inversion experiment on a
 # small dike. However, this FreeCAD → Gmsh workflow can easily be
 # translated to other geophysical methods. The geometry and acquisition
 # design come from the IDEA League `master
@@ -37,11 +37,11 @@ In this example you will learn how to create a geometry in
 # FreeCAD: create the geometry
 # ----------------------------
 #
-# Two geometries have to be created. One for modeling and one for
-# inversion. When the same meshes are used for modeling and inversion,
-# the geometry of the sand channel is alreadyincluded in the structure
+# Two geometries have to be created. One for modelling and one for
+# inversion. When the same meshes are used for modelling and inversion,
+# the geometry of the sand channel is already included in the structure
 # of the mesh. Therefore, the mesh itself would act as prior information
-# to the inversion. The modeling geometry consists of three regions: the
+# to the inversion. The modelling geometry consists of three regions: the
 # outer region; the inner region (same as inversion region in this
 # example) and the sand channel. The inversion geometry consists of two
 # regions: the outer region and the inversion region.
@@ -98,7 +98,7 @@ In this example you will learn how to create a geometry in
 #
 #     FreeCAD important dialogs for making a correct compsolid.
 #
-# * It must be ``.brep``. This is the native format of the OpenCascade
+# It must be ``.brep``. This is the native format of the OpenCascade
 # CAD engine on which both FreeCAD and Gmsh run. ``.step`` (also
 # ``.stp``) is the standardized CAD exchange format, for some reason
 # this format does not export the shape as a compound solid. Gmsh can
@@ -127,7 +127,7 @@ In this example you will learn how to create a geometry in
 
 import numpy as np
 import pygimli as pg
-gmsh = pg.optImport("gmsh", "do this tutorial. Install by running: pip install gmsh")
+gmsh = pg.optImport("gmsh", "Install GMesh by running: pip install gmsh")
 
 # Download all nessesary files
 geom_filename = pg.getExampleFile("cad/dike_mod.brep")
@@ -170,6 +170,7 @@ if gmsh:
 # 4. The number of elements ect. can be found in the Tools → Statistics
 #    window.
 #
+#
 # Make sure to quickly write down the Gmsh volume tags of the outer
 # region, dike and channel and the surface tags of the free surface and
 # the underground boundary of the box. You will need this in the next
@@ -201,13 +202,13 @@ if gmsh:
     gmsh.model.occ.synchronize()
     # Set mesh sizes for the dike and outer region.
     # The order, in which mesh sizes are set, matters. Big -> Small
-    gmsh.model.mesh.setSize(            # Especially t16.py, also t2; 15; 18; 21
-        gmsh.model.getBoundary(         # get dimTags of boundary elements of
-            (3, tags["outer region"]),  # dimTag: (dim, tag)
-            recursive=True),            # recursive -> dimTags of points
+    gmsh.model.mesh.setSize(              # Especially t16.py, also t2; 15; 18; 21
+        gmsh.model.getBoundary(           # get dimTags of boundary elements of
+            [(3, tags["outer region"])],  # dimTag: (dim, tag)
+            recursive=True),              # recursive -> dimTags of points
         cl_outer)
     gmsh.model.mesh.setSize(
-        gmsh.model.getBoundary((3, tags["dike"]),recursive=True),
+        gmsh.model.getBoundary([(3, tags["dike"])],recursive=True),
         cl_dike)
 
 ###############################################################################
@@ -305,7 +306,7 @@ if gmsh:
 # The final mesh should look something like the figure below. Check
 # whether the Physical Groups are defined correctly using the
 # Visibility window as shown in the figure. Finally make the inversion
-# mesh in the same way as the modeling mesh. The differences being that
+# mesh in the same way as the modelling mesh. The differences being that
 # (a) there should be no sand channel in the geometry of the inversion
 # mesh. Meaning that there are also only 2 volumes: the outer region
 # and the dike, i.e. inversion region. And (b) that the mesh does not
@@ -318,7 +319,7 @@ if gmsh:
 # .. figure:: ../../_static/cad_tutorial/gmsh_fig.png
 #     :align: center
 #
-#     Gmsh visualizatin of the modeling mesh of the dike, with visibility dialog.
+#     Gmsh visualization of the modelling mesh of the dike, with visibility dialog.
 #
 # Additional very useful material
 # -------------------------------
@@ -332,3 +333,4 @@ if gmsh:
 #    (`replaces GeoData
 #    workbench <https://forum.freecadweb.org/viewtopic.php?f=8&t=37178&hilit=geodata#p316040>`_)
 #    allows for GPS, LiDAR and GIS data to be imported to FreeCAD
+#

@@ -17,11 +17,11 @@ import pygimli.meshtools as mt
 
 ###############################################################################
 # We start by generating a 2D mesh.
-plc = mt.createCircle([-1, -4], radius=1.5, area=0.1, segments=25)
+plc = mt.createCircle([-1, -4], radius=1.5, area=0.1, nSegments=25)
 circle = mt.createMesh(plc)
 for cell in circle.cells():
     cell.setMarker(cell.id())
-pg.show(circle, circle.cellMarkers(), label="Cell Markers")
+ax, cb = pg.show(circle, circle.cellMarkers(), label="Cell Markers")
 
 ###############################################################################
 # We now extrude this mesh to 3D given a *z* vector.

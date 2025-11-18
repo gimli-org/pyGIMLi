@@ -1,5 +1,4 @@
 ﻿#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Electromagnetics for Vertical Magnetic Dipole (VMD) functions and class."""
 
 from math import sqrt, pi
@@ -20,6 +19,7 @@ class VMDModelling(Block1DModelling):
 
     The VMD is at the origin ::math::`r_s = (0.0)` and ::math::`z_s=0`.
     """
+
     def __init__(self, **kwargs):
         """Initialize forward operator.
 
@@ -28,23 +28,24 @@ class VMDModelling(Block1DModelling):
 
         Parameters
         ----------
-
         **kwargs : dict()
             Forward to ModellingBase
         """
-        super(VMDModelling, self).__init__(**kwargs)
+        super().__init__(**kwargs)
+        self.nLayers = kwargs.pop("nLayers", 0)
 
     def createStartModel(self, rhoa):
         r"""Create suitable starting model.
 
-            Create suitable starting model based on median apparent resistivity
-            values and skin depth approximation.
+        Create suitable starting model based on median apparent
+        resistivity values and skin depth approximation.
         """
         if self.nLayers == 0:
             pg.critical("Model space is not been initialized.")
 
         skinDepth = np.sqrt(max(self.t) * pg.math.median(rhoa)) * 500
-        thk = np.arange(self.nLayers)/sum(np.arange(self.nLayers)) * skinDepth / 2.
+        thk = np.arange(self.nLayers) / sum(np.arange(self.nLayers)) * \
+            skinDepth / 2.
         startThicks = thk[1:]
 
         # layer thickness properties
@@ -52,7 +53,7 @@ class VMDModelling(Block1DModelling):
 
         # resistivity properties
         self.setRegionProperties(1, startModel=np.median(rhoa), trans='log')
-        return super(VMDModelling, self).regionManager().createStartModel()
+        return super().regionManager().createStartModel()
 
     def response_mt(self, par, i=0):
         """Compute response vector for a set of model parameter.
@@ -65,10 +66,12 @@ class VMDModelling(Block1DModelling):
         raise pg.critical("IMPLEMENTME")
 
     def response(self, par):
+        """Return model response."""
         return self.response_mt(par)
 
     def calcEPhiF(self, f, rho, d, rmin=1, nr=41, ze=0, zs=0, tm=1):
-        """Compute radial E field from vertical magnetic dipole (VMD) source.
+        """Compute radial E field from VMD source.
+
         Parameters
         ----------
         f : float
@@ -87,7 +90,6 @@ class VMDModelling(Block1DModelling):
             z coordinate of source in Meter
         zs    z-Koordinate des Senders in Meter
         """
-
         # filter coefficients
         q = 10**0.1
         rr = rmin * q**(np.array(nr) - 1)
@@ -126,7 +128,7 @@ class VMDModelling(Block1DModelling):
             if ze <= 0:
                 bt[i] = self.btp(k[i], f, rho, d, type=1)
             else:
-                raise Exception('NeedTests')
+                raise RuntimeError('NeedTests')
                 # not used (uncommented)
                 # aa[i], aap[i], bt[i] = downward(k[i], f, rho, d, ze)
 
@@ -135,7 +137,7 @@ class VMDModelling(Block1DModelling):
             e = np.exp(k * ze) * np.exp(k * zs)
             delta = e * (bt - k) / (bt + k)
         else:
-            raise Exception('NeedTests')
+            raise RuntimeError('NeedTests')
             e = np.exp(k * zs)
             delta = 2. * k**2. / (bt + k)*e
 
@@ -156,13 +158,13 @@ class VMDModelling(Block1DModelling):
                     del1 = del0 * k
                     aux3[n] = aux3[n] + del1 * fcJ1[mn-1]
                 else:
-                    raise Exception('NeedTests')
+                    raise RuntimeError('NeedTests')
                     del3 = del0 * aa(nu)
                     aux3[n] = aux3[n] + del3 * fcJ1[mn]
 
             if nr > 1:
                 aux3[n] = aux3[n] / rr[n]
-                raise Exception("more then one r .. check code here")
+                raise ValueError("more than one r .. check code here")
             else:
                 aux3[n] = aux3[n] / rr
 
@@ -170,7 +172,7 @@ class VMDModelling(Block1DModelling):
             # Air
             ePhi = ePhi - aux3
         else:
-            raise Exception("more then one r .. check code here")
+            raise ValueError("more than one r .. check code here")
             # Halfspace
             ePhi = aux3
 
@@ -179,7 +181,8 @@ class VMDModelling(Block1DModelling):
         return ePhi
 
     def btp(self, k, f, rho, d, type=1):
-        """Admittance of a layered halfspace
+        """Admittance of a layered halfspace.
+
         for TE (TYP=1) and TM (TYP=2) mode.
         k: wave number (1/m)
         f: frequency (1/s)
@@ -205,12 +208,11 @@ class VMDModelling(Block1DModelling):
 
 
 class VMDTimeDomainModelling(VMDModelling):
-    """
-    """
+    """Vertical magnetic dipole (VMD) modelling."""
+
     def __init__(self, times, txArea, rxArea=None, **kwargs):
-        """
-        """
-        super(VMDTimeDomainModelling, self).__init__(**kwargs)
+        """Set up class with necessary arguments."""
+        super().__init__(**kwargs)
 
         self.t = times
         self.txArea = txArea
@@ -241,8 +243,9 @@ class VMDTimeDomainModelling(VMDModelling):
         return self.startModel()
 
     def response_mt(self, par, i=0):
-        """
-            par = [thicknesses, res]
+        """Multi-threading result.
+
+        par = [thicknesses, res]
         """
         nLay = (len(par)-1)//2
         thk = par[0:nLay]
@@ -250,11 +253,14 @@ class VMDTimeDomainModelling(VMDModelling):
         return self.calcRhoa(thk, res)
 
     def response(self, par):
-        """par = [thicknesses(nLay), res(nlay + 1)]"""
+        """Return forward response.
+
+        par = [thicknesses(nLay), res(nlay + 1)]
+        """
         return self.response_mt(par, 0)
 
     def calcRhoa(self, thk, res):
-        """Compute apparent resistivity response"""
+        """Compute apparent resistivity response."""
         a = sqrt(self.txArea / pi)  # TX coil radius
 
         ePhiTD, tD = self.calcEphiT(tMin=min(self.t), tMax=max(self.t),
@@ -285,7 +291,7 @@ class VMDTimeDomainModelling(VMDModelling):
         nt = len(t)
         ncnt = nc + nt
 
-        fef = np.zeros((ncnt, nr), np.complex)
+        fef = np.zeros((ncnt, nr), complex)
         ePhi = np.zeros((nt, nr))
 
         omega = 10. ** (0.1 * (1 - (-nc + nc0 + np.arange(1, ncnt)))) / t[0]

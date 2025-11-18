@@ -1,43 +1,25 @@
 ﻿#!/usr/bin/env python
-# coding: utf-8
-"""Classes for modelling helicopter electromagnetics (HEM) using VMD solvers"""
-import numpy as np
-import pygimli as pg
+"""Modelling helicopter electromagnetics (HEM) using VMD solvers."""
 from math import sqrt, pi
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.cm import register_cmap
+import numpy as np
 
+import pygimli as pg
+from pygimli.physics.constants import Constants
+from pygimli.frameworks import Block1DModelling, MeshModelling
+from .tools import FDEMsystems
 
-def registerDAEROcmap():
-    """Standardized colormap from A-AERO projects (purple=0.3 to red=500)."""
-    CMY = np.array([
-        [127, 255, 31], [111, 255, 47], [95, 255, 63], [79, 255, 79],
-        [63, 255, 95], [47, 255, 111], [31, 255, 127], [16, 255, 159],
-        [0, 223, 159], [0, 191, 159], [0, 159, 207], [0, 127, 175],
-        [0, 95, 175], [0, 63, 175], [0, 47, 175], [0, 31, 191], [0, 0, 255],
-        [0, 0, 159], [15, 0, 127], [47, 0, 143], [79, 0, 143], [111, 0, 143],
-        [143, 0, 127], [159, 31, 63], [175, 47, 31], [207, 63, 0],
-        [223, 111, 0], [231, 135, 0], [239, 159, 0], [255, 191, 47],
-        [239, 199, 63], [223, 207, 79], [207, 239, 111]], dtype=float)
-    RGB = 1.0 - CMY/255
-    daero = LinearSegmentedColormap.from_list('D-AERO', RGB)
-    register_cmap(name='daero', cmap=daero)
-    return daero
-
-
-class HEMmodelling(pg.core.ModellingBase):
+class HEMmodelling(Block1DModelling):
     """HEM Airborne modelling class based on the BGR RESOLVE system."""
 
-    # Constants, should rather use pygiml/physics/constants
-    ep0 = 8.8542e-12
-    mu0 = 4e-7 * np.pi
+    ep0 = Constants.e0
+    mu0 = Constants.mu0
     c0 = sqrt(1. / ep0 / mu0)
-    fdefault = np.array([387.0, 1821.0, 8388.0, 41460.0, 133300.0], np.float)
-    rdefault = np.array([7.94, 7.93, 7.93, 7.91, 7.92], np.float)
+    fdefault = np.array([387.0, 1821.0, 8388.0, 41460.0, 133300.0], float)
+    rdefault = np.array([7.94, 7.93, 7.93, 7.91, 7.92], float)
     scaling = 1e6
 
     def __init__(self, nlay, height, f=None, r=None, **kwargs):
-        """Initialize class with geometry
+        """Initialize class with geometry.
 
         Parameters
         ----------
@@ -52,12 +34,15 @@ class HEMmodelling(pg.core.ModellingBase):
         scaling : float
             scaling factor or string (ppm=1e6, percent=1e2)
         """
-        # Attribute
         self.nlay = nlay
         self.height = height
+        syst = kwargs.pop('system', None)
+        if isinstance(syst, str):
+            f, r = FDEMsystems.getFrequenciesDistances(syst)
+
         self.f = np.asarray(f)
         if r is None:
-            raise Exception("Specify separation value or vector!")
+            raise ValueError("Specify separation value or vector!")
         if 'scaling' in kwargs:
             if kwargs['scaling'] == 'ppm':
                 self.scaling = 1e6
@@ -65,75 +50,74 @@ class HEMmodelling(pg.core.ModellingBase):
                 self.scaling = 1e2
             else:
                 self.scaling = kwargs['scaling']
+
         if self.f is None:
             self.f = self.fdefault
-        if isinstance(r, float) or isinstance(r, int):
-            self.r = np.ones_like(f, dtype=np.float) * r
+        if isinstance(r, (float, int)):
+            self.r = np.ones_like(f, dtype=float) * r
         else:
             if len(r) == len(self.f):
                 self.r = r
             else:
-                raise Exception('Length vector have to be matching!')
+                raise ValueError('Length vector have to be matching!')
         if self.r is None:
             self.r = self.rdefault
 
         self.wem = (2.0 * pi * self.f) ** 2 * self.ep0 * self.mu0
-        self.iwm = np.complex(0, 1) * 2.0 * pi * self.f * self.mu0
+        self.iwm = 1.0j * 2.0 * pi * self.f * self.mu0
         mesh = pg.meshtools.createMesh1DBlock(nlay)
-        pg.core.ModellingBase.__init__(self, mesh)
+        super().__init__()
+        self.setMesh(mesh)
 
-    def response(self, par):
+    def response(self, model):
         """Compute response vector by pasting in-phase and out-phase data."""
         ip, op = self.vmd_hem(self.height,
-                              np.asarray(par)[self.nlay-1:self.nlay*2-1],
-                              np.asarray(par)[:self.nlay-1])
-#        ip, op = self.vmd_hem(self.height,
-#                              np.asarray(par(self.nlay-1, self.nlay*2-1)),
-#                              np.asarray(par(0, self.nlay-1)))
+                              np.asarray(model[self.nlay-1:self.nlay*2-1]),
+                              np.asarray(model[:self.nlay-1]))
         return pg.cat(ip, op)
 
-    # Methoden
+    def response_mt(self, par, i=0):
+        """Multi-threaded forward response."""
+        return self.response(par)
+
     def calc_forward(self, x, h, rho, d, epr, mur, quasistatic=False):
         """Calculate forward response."""
-        field = np.zeros((self.f.size, x.size), np.complex)
+        field = np.zeros((self.f.size, x.size), complex)
         # Forward calculation for background model
         if d.size:
             for m in range(x.size):
-                field[:, m] = self.vmd_hem(np.array([h[m]], np.float),
+                field[:, m] = self.vmd_hem(np.array([h[m]], float),
                                            rho[:, m], d[:, m], epr[:, m],
                                            mur[:, m], quasistatic).T[:, 0]
-        # für jede Frequenz
         else:
             for n in range(self.f.size):
                 for m in range(x.size):
-                    field[n, m] = self.vmd_hem(np.array([h[n, m]], np.float),
-                                               np.array([rho[n, m]], np.float),
+                    field[n, m] = self.vmd_hem(np.array([h[n, m]], float),
+                                               np.array([rho[n, m]], float),
                                                d,
-                                               np.array([epr[n, m]], np.float),
-                                               np.array([mur[n, m]], np.float),
+                                               np.array([epr[n, m]], float),
+                                               np.array([mur[n, m]], float),
                                                quasistatic).T[n, 0]
         return field
 
     def downward(self, rho, d, z, epr, mur, lam):
         """Downward continuation of fields."""
-        # Anzahl der Schichten
         nl = rho.size
-        # arrays anlegen
-        alpha = np.zeros((nl, lam.shape[1], self.f.size), np.complex)
-        b = np.zeros((nl, lam.shape[1], self.f.size), np.complex)
-        aa = np.zeros((nl, lam.shape[1], self.f.size), np.complex)
-        aap = np.zeros((nl, lam.shape[1], self.f.size), np.complex)
+        alpha = np.zeros((nl, lam.shape[1], self.f.size), complex)
+        b = np.zeros((nl, lam.shape[1], self.f.size), complex)
+        aa = np.zeros((nl, lam.shape[1], self.f.size), complex)
+        aap = np.zeros((nl, lam.shape[1], self.f.size), complex)
         rho = rho[:, np.newaxis, np.newaxis] * np.ones(
-            (rho.size, lam.shape[1], self.f.size), np.float)
+            (rho.size, lam.shape[1], self.f.size), float)
         d = d[:, np.newaxis, np.newaxis] * np.ones(
-            (d.size, lam.shape[1], self.f.size), np.float)
+            (d.size, lam.shape[1], self.f.size), float)
         h = np.insert(np.cumsum(d[:, 0, 0]), 0, 0)
         epr = epr[:, np.newaxis, np.newaxis] * np.ones(
-            (epr.size, lam.shape[1], self.f.size), np.float)
+            (epr.size, lam.shape[1], self.f.size), float)
         mur = mur[:, np.newaxis, np.newaxis] * np.ones(
-            (mur.size, lam.shape[1], self.f.size), np.float)
+            (mur.size, lam.shape[1], self.f.size), float)
         lam = np.tile(lam, (nl, 1, 1))
-        # Ausbreitungskonstante
+        # progression constant
         alpha = np.sqrt(lam ** 2 - np.tile(self.wem, (nl, lam.shape[1], 1)) *
                         epr * mur + np.tile(self.iwm, (nl, lam.shape[1], 1)) *
                         mur / rho)
@@ -143,12 +127,12 @@ class HEMmodelling(pg.core.ModellingBase):
             ap = a.copy()
             return b1, a, ap
         elif nl > 1:  # multi-layer case
-            # tanh num instabil tanh(x)=(exp(x)-exp(-x))/(exp(x)+exp(-x))
+            # tanh num unstable tanh(x)=(exp(x)-exp(-x))/(exp(x)+exp(-x))
             ealphad = np.exp(-2.0 * alpha[0:-1, :, :] * d)
             talphad = (1.0 - ealphad) / (1.0 + ealphad)
             b[-1, :, :] = np.copy(alpha[-1, :, :])
-            # rekursive Berechnung der Admittanzen an der Oberkante der Schicht
-            # von unten nach oben, für nl-1 Schichten
+            # recursive admittance computation at upper layer boundary
+            # from bottom to top, for nl-1 layers
             for n in range(nl-2, -1, -1):
                 b[n, :, :] = alpha[n, :, :] * \
                     (b[n+1, :, :] + alpha[n, :, :] * talphad[n, :, :]) / \
@@ -165,14 +149,12 @@ class HEMmodelling(pg.core.ModellingBase):
                 aap[n, :, :] = (1.0 + alpha[n, :, :] * c[n, :, :]) / (
                     1.0 + alpha[n, :, :] * c[n+1, :, :]) * \
                     np.exp(-alpha[n, :, :] * d[n, :, :])
-            # Determin layer Index where z is
+            # Determine layer Index where z is
+            ind = nl - 1
             for n in range(0, nl-1):
                 if np.logical_and(z >= h[n], z < h[n+1]):
                     ind = n
-            try:
-                ind
-            except NameError:
-                ind = nl - 1
+
             if (ind + 1) < nl:
                 a = np.prod(aa[:ind, :, :], 0) * 0.5 * \
                     (1.0 + b[ind, :, :] / alpha[ind, :, :]) * \
@@ -207,26 +189,26 @@ class HEMmodelling(pg.core.ModellingBase):
         d : array
             thickness vector
         """
-        # Filterkoeffizienten
+        # filter coefficients
         if isinstance(epr, float):
-            epr = np.ones((len(rho),), np.float)*epr
+            epr = np.ones((len(rho),), float)*epr
         if isinstance(mur, float):
-            mur = np.ones((len(rho),), np.float)*mur
+            mur = np.ones((len(rho),), float)*mur
         fc0, nc, nc0 = hankelfc(3)
         fc1, nc, nc0 = hankelfc(4)
-        # arrays anlegen
+        # allocate arrays
         nf = len(self.f)
-        lam = np.zeros((1, nc, nf), np.float)
-        alpha0 = np.zeros((1, nc, nf), np.complex)
-        delta0 = np.zeros((1, nc, nf), np.complex)
-        delta1 = np.zeros((1, nc, nf), np.complex)
-        delta2 = np.zeros((1, nc, nf), np.complex)
-        delta3 = np.zeros((1, nc, nf), np.complex)
-        aux0 = np.zeros((1, nf), np.complex)
-        aux1 = np.zeros((1, nf), np.complex)
-        aux2 = np.zeros((1, nf), np.complex)
-        aux3 = np.zeros((1, nf), np.complex)
-        Z = np.zeros(nf, np.complex)
+        lam = np.zeros((1, nc, nf), float)
+        alpha0 = np.zeros((1, nc, nf), complex)
+        delta0 = np.zeros((1, nc, nf), complex)
+        delta1 = np.zeros((1, nc, nf), complex)
+        delta2 = np.zeros((1, nc, nf), complex)
+        delta3 = np.zeros((1, nc, nf), complex)
+        aux0 = np.zeros((1, nf), complex)
+        aux1 = np.zeros((1, nf), complex)
+        aux2 = np.zeros((1, nf), complex)
+        aux3 = np.zeros((1, nf), complex)
+        Z = np.zeros(nf, complex)
         # r0
         r0 = np.copy(self.r)
         # determine optimum r0 (shift nodes) for f > 1e4 and h > 100
@@ -234,56 +216,55 @@ class HEMmodelling(pg.core.ModellingBase):
             index = np.zeros(self.f.shape, np.bool)
         else:
             index = np.logical_and(self.f >= 1e4, h >= 100.0)
+
         if np.any(index):
             opt = np.floor(10.0 * np.log10(
                 self.r[index] * 2.0 * np.pi * self.f[index] / self.c0) + nc0)
             r0[index] = self.c0 / (2.0 * np.pi * self.f[index]) * 10.0 ** (
                 (opt + 0.5 - nc0) / 10.0)
-        # Bereitstellung der Wellenzahlen
-        n = np.arange(nc0 - nc, nc0, 1, np.float)
+        # Wave numbers
+        n = np.arange(nc0 - nc, nc0, 1, float)
         q = 0.1 * np.log(10)
         lam = np.reshape(np.exp(-n[np.newaxis, :, np.newaxis] * q) /
                          r0[np.newaxis, np.newaxis, :], (-1, nc, r0.size))
         # (1, 100, nfreq)
-        # Wellenzahl in Luft, quasistationäre Näherung
-        alpha0 = np.copy(lam) * np.complex(1, 0)  # (1, 100, nfreq)
-        # Wellenzahl in Luft, vollständige Lösung für f > 1e4
-        if quasistatic:
-            index = np.zeros(self.f.shape, np.bool)
-        else:
-            index = self.f >= 1e4
+        # wave number in air, quasistationary approximation
+        alpha0 = np.copy(lam) * complex(1, 0)  # (1, 100, nfreq)
+        # wave number in air, full solution for f > 1e4
+        index = np.zeros(self.f.shape, np.bool) if quasistatic \
+            else self.f >= 10000.0
         if np.any(index):
             alpha0[:, :, index] = np.sqrt(
                 lam[:, :, index]**2 - np.tile(self.wem[index], (1, nc, 1)) +
                 np.tile(self.iwm[index], (1, nc, 1)) / 1e9)  # (1, 100 , nfreq)
         # Admittanzen an der Oberfläche eines geschichteten Halbraums
-        b1, _, aap = self.downward(rho, d, 0.0, epr, mur, lam)
+        b1, _, _ = self.downward(rho, d, 0.0, epr, mur, lam)
         # Kernel functions
         e = np.exp(-2.0 * h * alpha0)  # (1, 100, nfreq)
         delta0 = (b1 - alpha0 * mur[0]) / (b1 + alpha0 * mur[0]) * e
         delta1 = (2 * mur[0]) / (b1 + alpha0 * mur[0]) * e  # (1, 100, nfreq)
         delta2 = 1 / h * e  # (1, 100, nfreq)
         delta3 = 1 / (2 * h) * e  # (1, 100, nfreq)
-        # Faltung
-        # quasistationäre Näherung
+        # convolution
+        # quasistationary approximation
         aux0 = np.sum(delta0 * lam ** 3 / alpha0 *
                       np.tile(fc0[::-1].T[:, :, np.newaxis],
-                              (1, 1, self.f.size)), 1, np.complex) / r0
-        # vollständige Lösung, partielle Integration
+                              (1, 1, self.f.size)), 1, complex) / r0
+        # full solution, partial integration
         if np.any(index):
             aux1 = np.sum(delta1 * lam ** 3 *
                           np.tile(fc0[::-1].T[:, :, np.newaxis],
-                                  (1, 1, self.f.size)), 1, np.complex) / r0
+                                  (1, 1, self.f.size)), 1, complex) / r0
             aux2 = np.sum(
                 delta2 * lam * np.tile(fc0[::-1].T[:, :, np.newaxis],
-                                       (1, 1, self.f.size)), 1, np.complex)/r0
+                                       (1, 1, self.f.size)), 1, complex)/r0
             aux3 = np.sum(delta3 * lam ** 2 *
                           np.tile(fc1[::-1].T[:, :, np.newaxis],
-                                  (1, 1, self.f.size)), 1, np.complex) / r0
-        # normiertes Sekundärfeld
-        # quasistationäre Näherung
+                                  (1, 1, self.f.size)), 1, complex) / r0
+        # normed secondary field
+        # quasistationary approximation
         Z = self.r ** 3 * aux0 * self.scaling
-        # vollständige Lösung
+        # full solution
         if np.any(index):
             Z[:, index] = (-self.r[index]**3 * aux1[:, index] +
                            self.r[index]**3 * aux2[:, index] -
@@ -292,37 +273,34 @@ class HEMmodelling(pg.core.ModellingBase):
 
     def vmd_total_Ef(self, h, z, rho, d, epr, mur, tm):
         """VMD E-phi field (not used actively)."""
-        # nur im HR
-        # Filterkoeffizienten
+        # only halfspace
+        # Filter coefficients
         fc1, nc, nc0 = hankelfc(4)
-        # arrays anlegen
-        lam = np.zeros((1, nc, self.f.size), np.float)
-        alpha0 = np.zeros((1, nc, self.f.size), np.complex)
-        delta = np.zeros((1, nc, self.f.size), np.complex)
-        aux = np.zeros((1, self.f.size), np.complex)
-        Ef = np.zeros(self.f.size, np.complex)
-        # r0
+        lam = np.zeros((1, nc, self.f.size), float)
+        alpha0 = np.zeros((1, nc, self.f.size), complex)
+        delta = np.zeros((1, nc, self.f.size), complex)
+        aux = np.zeros((1, self.f.size), complex)
+        Ef = np.zeros(self.f.size, complex)
         r0 = np.copy(self.r)
-        # Bereitstellung der Wellenzahlen
-        n = np.arange(nc0 - nc, nc0, 1, np.float)
+        # wave numbers
+        n = np.arange(nc0 - nc, nc0, 1, float)
         q = 0.1 * np.log(10)
         lam = np.reshape(np.exp(-n[np.newaxis, :, np.newaxis] * q) /
                          r0[np.newaxis, np.newaxis, :], (-1, nc, r0.size))
-        # Wellenzahl in Luft, vollständige Lösung
+        # wave numbers in air, full solution
         alpha0 = np.sqrt(lam ** 2 - np.tile(self.wem, (1, nc, 1)) +
                          np.tile(self.iwm, (1, nc, 1)) / 1e9)
-        # Admittanzen an der Oberfläche eines geschichteten Halbraums
+        # admittances on surface of layered halfspace
         b1, aa, _ = self.downward(rho, d, z, epr, mur, lam)
-        # Kernfunktionen
+        # Kernel functions
         e = np.exp(-h * alpha0)  # (1, 100, nfreq)
         delta = 2.0 / (alpha0 + b1) * e  # (1, 100, nfreq)
-        # Faltung
-        # vollständige Lösung
+        # convolution
+        # quasistationary approximation
         aux = np.sum(delta*lam**2*aa*np.tile(fc1[::-1].T[:, :, np.newaxis],
                                              (1, 1, self.f.size)), 1,
-                     np.complex) / r0  # (1, nfreq)
-        # absolute Feldwerte
-        # vollständige Lösung
+                     complex) / r0  # (1, nfreq)
+        # absolute fields, full solution
         Ef = -tm * self.iwm / (4.0 * np.pi) * aux
         return Ef
 
@@ -351,9 +329,9 @@ def hankelfc(order):
             -5.35535069e-5, 3.37899801e-5, -2.13200365e-5, 1.34520337e-5,
             -8.48765949e-6, 5.35535110e-6, -3.37899811e-6, 2.13200368e-6,
             -1.34520338e-6, 8.48765951e-7, -5.35535110e-7, 3.37899811e-7],
-            np.float)
-        nc = np.int(80)
-        nc0 = np.int(40)
+            float)
+        nc = 80
+        nc0 = 40
     elif order == 2:  # cos
         fc = np.array([
             1.63740363e-7, 1.83719709e-7, 2.06136904e-7, 2.31289411e-7,
@@ -397,9 +375,9 @@ def hankelfc(order):
             2.73337984e-5, -1.72464607e-5, 1.08817810e-5, -6.86593962e-6,
             4.33211503e-6, -2.73337979e-6, 1.72464606e-6, -1.08817810e-6,
             6.86593961e-7, -4.33211503e-7, 2.73337979e-7, -1.72464606e-7],
-            np.float)
-        nc = np.int(164)
-        nc0 = np.int(122)
+            float)
+        nc = 164
+        nc0 = 122
     elif order == 3:  # J0
         fc = np.array([
             2.89878288e-7, 3.64935144e-7, 4.59426126e-7, 5.78383226e-7,
@@ -427,9 +405,9 @@ def hankelfc(order):
             9.89181741e-6, -6.24131160e-6, 3.93800058e-6, -2.48471018e-6,
             1.56774609e-6, -9.89180896e-7, 6.24130948e-7, -3.93800005e-7,
             2.48471005e-7, -1.56774605e-7, 9.89180888e-8, -6.24130946e-8],
-            np.float)
-        nc = np.int(100)
-        nc0 = np.int(60)
+            float)
+        nc = 100
+        nc0 = 60
     elif order == 4:  # J1
         fc = np.array([
             1.84909557e-13, 2.85321327e-13, 4.64471808e-13, 7.16694771e-13,
@@ -457,9 +435,9 @@ def hankelfc(order):
             -8.64396364e-5, 5.45397224e-5, -3.44122382e-5, 2.17126544e-5,
             -1.36997587e-5, 8.64396338e-6, -5.45397218e-6, 3.44122380e-6,
             -2.17126543e-6, 1.36997587e-6, -8.64396337e-7, 5.45397218e-7],
-            np.float)
-        nc = np.int(100)
-        nc0 = np.int(60)
+            float)
+        nc = 100
+        nc0 = 60
     return (np.reshape(fc, (-1, 1)), nc, nc0)  # (100,) -> (100, 1)
 
 
@@ -475,9 +453,9 @@ class HEMRhoModelling(HEMmodelling):
         self.mymesh = pg.meshtools.createMesh1D(nlay)
         self.setMesh(self.mymesh)  # only for inversion
 
-    def response(self, res):
+    def response(self, model):
         """Forward response as combined in-phase and out-of-phase."""
-        ip, op = self.vmd_hem(self.height, rho=np.asarray(res), d=self.dvec)
+        ip, op = self.vmd_hem(self.height, rho=model, d=self.dvec)
         return pg.cat(ip, op)
 
 
@@ -492,20 +470,20 @@ class FDEMResSusModelling(HEMmodelling):
         self.setMesh(self.mymesh)  # only for inversion
         # pg.core.ModellingBase.__init__(self, self.mymesh)
 
-    def response(self, par):
+    def response(self, model):
         """Response vector as combined in-phase and out-phase data."""
-        thk = np.asarray(par[:self.nlay-1], dtype=np.float)
-        res = np.asarray(par[self.nlay-1:2*self.nlay-1], dtype=np.float)
-        mur = np.asarray(par[2*self.nlay-1:3*self.nlay-1], dtype=np.float) + 1
+        thk = np.asarray(model[:self.nlay-1], dtype=float)
+        res = np.asarray(model[self.nlay-1:2*self.nlay-1], dtype=float)
+        mur = np.asarray(model[2*self.nlay-1:3*self.nlay-1], dtype=float) + 1
         ip, op = self.vmd_hem(self.height, rho=res, d=thk, mur=mur)
         return pg.cat(ip, op)
 
 
 class HEMRhoSusModelling(HEMmodelling):
-    """Airborne EM (HEM) Forward modelling class for Occam inversion."""
+    """Airborne EM (HEM) smooth forward modelling including susceptibility."""
 
     def __init__(self, dvec, *args, **kwargs):
-        """ not yet working! """
+        """Initialize (not yet working)."""
         self.nlay = len(dvec) + 1
         self.dvec = np.asarray(dvec)
         self.zvec = np.hstack((0, np.cumsum(dvec)))
@@ -526,7 +504,7 @@ class FDEMLCIFOP(pg.core.ModellingBase):
 
     def __init__(self, data, nlay=2, verbose=False, f=None, r=None):
         """Parameters: FDEM data class and number of layers."""
-        super(FDEMLCIFOP, self).__init__(verbose)
+        super().__init__(verbose)
         self.nlay = nlay
         self.FOP = data.FOP(nlay)
         self.nx = len(data.x)
@@ -566,7 +544,7 @@ class FDEM2dFOP(pg.core.ModellingBase):
 
     def __init__(self, data, nlay=2, verbose=False):
         """Parameters: FDEM data class and number of layers."""
-        super(FDEM2dFOP, self).__init__(verbose)
+        super().__init__(verbose)
         self.nlay = nlay
         self.FOP = data.FOP(nlay)
         self.nx = len(data.x)
@@ -603,11 +581,27 @@ class FDEM2dFOP(pg.core.ModellingBase):
             self.FOP1d[i].createJacobian(modA[i])
 
 
+class FDEMSmoothModelling(MeshModelling):
+    """Occam-style (smooth) inversion."""
+
+    def __init__(self, thk, **kwargs):
+        super().__init__()
+        self.thk_ = thk
+        self.nlay_ = len(thk)+1
+        self.core = HEMmodelling(**kwargs, nLayers=self.nlay_)
+        self.mesh_ = pg.meshtools.createMesh1D(self.nlay_)
+        self.setMesh(self.mesh_)
+
+    def response(self, par):
+        """Model response (forward modelling)."""
+        return self.core.response(pg.cat(self.thk_, par))
+
+
 if __name__ == '__main__':
     numlay = 3
-    height = np.float(30.0)
-    resistivity = np.array([1000.0, 100.0, 1000.0], np.float)
-    thickness = np.array([22.0, 29.0], np.float)
-    f = HEMmodelling(numlay, height, r=10)  # frequency, separation)
-    IP, OP = f.vmd_hem(height, resistivity, thickness)
-    print(IP, OP)
+    elevation = 30.0
+    resistivity = np.array([1000.0, 100.0, 1000.0], float)
+    thickness = np.array([22.0, 29.0], float)
+    fop = HEMmodelling(numlay, elevation, r=10)  # frequency, separation)
+    IP, OP = fop.vmd_hem(elevation, resistivity, thickness)
+    pg.info(IP, OP)

@@ -54,28 +54,36 @@ find_path(SUITESPARSE_DIR SuiteSparse_demo.m
 	${EXTERNAL_DIR}/SuiteSparse
 	)
 
-# FIXME: Should we have separate FindXX modules for CAMD, COLAMD, and CCOLAMD?
-# FIXME: find_package(CAMD)
-# FIXME: find_package(COLAMD)
-# FIXME: find_package(CCOLAMD)
-
-# FIXME: It may be necessary to link to LAPACK and BLAS (or the vecLib
-# FIXME: framework on Darwin).
-
 
 # Check for header file
-find_path(CHOLMOD_INCLUDE_DIRS cholmod.h
-  HINTS 
-	${EXTERNAL_DIR}/include $ENV{EXTERNAL_DIR}/include
-	${SUITESPARSE_DIR}/CHOLMOD/include
-  PATH_SUFFIXES suitesparse ufsparse
-  DOC "Directory where the CHOLMOD header is located"
+find_path(CHOLMOD_INCLUDE_DIRS 
+    cholmod.h
+    HINTS 
+        ../../_build_env/include # for conda
+	      ${EXTERNAL_DIR}/include 
+        $ENV{EXTERNAL_DIR}/include
+	      ${SUITESPARSE_DIR}/CHOLMOD/include
+    PATH_SUFFIXES 
+        suitesparse 
+        ufsparse
+    DOC "Directory where the CHOLMOD header is located"
  )
 
 # Check for CHOLMOD library
-find_library(CHOLMOD_LIBRARY cholmod
-  HINTS ${EXTERNAL_DIR}/lib $ENV{EXTERNAL_DIR}/lib
-  DOC "The CHOLMOD library"
+find_library(CHOLMOD_LIBRARY
+    cholmod
+    HINTS 
+        ../../_build_env/lib # for conda
+        ${EXTERNAL_DIR}/lib
+        $ENV{EXTERNAL_DIR}/lib
+    DOC 
+        "The CHOLMOD library"
+)
+
+# Check for SUITESPARSECONFIG library
+find_library(SUITESPARSE_LIBRARY suitesparseconfig
+  HINTS ${EXTERNAL_DIR}/lib ${CCOLAMD_DIR}/lib $ENV{EXTERNAL_DIR}/lib $ENV{CCOLAMD_DIR}/lib
+  DOC "The SUITESPARSECONFIG library"
   )
 
 find_library(AMD_LIBRARY amd
@@ -101,81 +109,77 @@ find_library(CCOLAMD_LIBRARY ccolamd
   DOC "The CCOLAMD library"
   )
 
-# Check for SUITESPARSECONFIG library
-find_library(SUITESPARSE_LIBRARY suitesparseconfig
-  HINTS ${EXTERNAL_DIR}/lib ${CCOLAMD_DIR}/lib $ENV{EXTERNAL_DIR}/lib $ENV{CCOLAMD_DIR}/lib
-  DOC "The SUITESPARSECONFIG library"
-  )
 
 if (CHOLMOD_LIBRARY)
     set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARY})
 
-    # Collect libraries (order is important)
-    if (AMD_FOUND)
-        set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${AMD_LIBRARIES})
-    endif()
-    if (CAMD_LIBRARY)
-        set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${CAMD_LIBRARY})
-    endif()
-    if (AMD_LIBRARY)
-        set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${AMD_LIBRARY})
-    endif()
-    if (COLAMD_LIBRARY)	
-        set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${COLAMD_LIBRARY})
-    endif()
-    if (CCOLAMD_LIBRARY)
-        set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${CCOLAMD_LIBRARY})
-    endif()
-    if (SUITESPARSE_LIBRARY)
-        set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${SUITESPARSE_LIBRARY})
-    endif()
+    if (0)
+      #needed? 
+      # Collect libraries (order is important)
+      if (AMD_FOUND)
+          set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${AMD_LIBRARIES})
+      endif()
+      if (CAMD_LIBRARY)
+          set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${CAMD_LIBRARY})
+      endif()
+      if (AMD_LIBRARY)
+          set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${AMD_LIBRARY})
+      endif()
+      if (COLAMD_LIBRARY)	
+          set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${COLAMD_LIBRARY})
+      endif()
+      if (CCOLAMD_LIBRARY)
+          set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${CCOLAMD_LIBRARY})
+      endif()
+      if (SUITESPARSE_LIBRARY)
+          set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${SUITESPARSE_LIBRARY})
+      endif()
 
-    # Don't link against system-wide blas when making conda package
-    if (NOT ENV{CONDA_BUILD})
-        message(STATUS "adding LAPACK_LIBRARIES to CHOLMOD PATH: ${LAPACK_LIBRARIES}")
+      # Don't link against system-wide blas when making conda package
+      if (NOT ENV{CONDA_BUILD})
+          message(STATUS "adding LAPACK_LIBRARIES to CHOLMOD PATH: ${LAPACK_LIBRARIES}")
 
-        if (PARMETIS_FOUND)
-            set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${PARMETIS_LIBRARIES})
-        endif()
-        if (LAPACK_FOUND)
-            set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${LAPACK_LIBRARIES})
-        endif()
-        if (BLAS_FOUND)
-            set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${BLAS_LIBRARIES})
-        endif()
+          if (PARMETIS_FOUND)
+              set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${PARMETIS_LIBRARIES})
+          endif()
+          if (LAPACK_FOUND)
+              set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${LAPACK_LIBRARIES})
+          endif()
+          if (BLAS_FOUND)
+              set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${BLAS_LIBRARIES})
+          endif()
+      endif()
+
+      if (CONDA_BUILD)
+          find_library(GFORTRAN_LIBRARY gfortran
+              DOC "The gfortran library"
+          )
+
+          set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${GFORTRAN_LIBRARY})
+      else()
+
+          find_program(GFORTRAN_EXECUTABLE gfortran)
+          if (GFORTRAN_EXECUTABLE)
+              execute_process(COMMAND ${GFORTRAN_EXECUTABLE} -print-file-name=libgfortran.so
+                              OUTPUT_VARIABLE GFORTRAN_LIBRARY
+                              OUTPUT_STRIP_TRAILING_WHITESPACE)
+              if (EXISTS "${GFORTRAN_LIBRARY}")
+                  set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${GFORTRAN_LIBRARY})
+              endif()
+          endif(GFORTRAN_EXECUTABLE)
+      endif()
+
+      IF(WIN32)
+    
+      ELSE(WIN32)
+      # On unix system, debug and release have the same name
+          if (APPLE)
+          else(APPLE)
+              set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} rt)
+          endif(APPLE)
+      ENDIF(WIN32)
     endif()
-
-    if (CONDA_BUILD)
-        find_library(GFORTRAN_LIBRARY gfortran
-            DOC "The gfortran library"
-        )
-
-        set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${GFORTRAN_LIBRARY})
-    else()
-
-        find_program(GFORTRAN_EXECUTABLE gfortran)
-        if (GFORTRAN_EXECUTABLE)
-            execute_process(COMMAND ${GFORTRAN_EXECUTABLE} -print-file-name=libgfortran.so
-                            OUTPUT_VARIABLE GFORTRAN_LIBRARY
-                            OUTPUT_STRIP_TRAILING_WHITESPACE)
-            if (EXISTS "${GFORTRAN_LIBRARY}")
-                set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} ${GFORTRAN_LIBRARY})
-            endif()
-        endif(GFORTRAN_EXECUTABLE)
-    endif()
-
-    IF(WIN32)
-  
-    ELSE(WIN32)
-    # On unix system, debug and release have the same name
-        if (APPLE)
-        else(APPLE)
-            set(CHOLMOD_LIBRARIES ${CHOLMOD_LIBRARIES} rt)
-        endif(APPLE)
-    ENDIF(WIN32)
-
-
-endif (CHOLMOD_LIBRARY)
+endif ()
 
 # Standard package handling
 include(FindPackageHandleStandardArgs)
@@ -193,4 +197,4 @@ mark_as_advanced(
   AMD_LIBRARY
   COLAMD_LIBRARY
   CCOLAMD_LIBRARY
-  )
+)

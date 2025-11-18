@@ -1,25 +1,18 @@
 # -*- coding: utf-8 -*-
 """Model viewer functions."""
-
 import numpy as np
 
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-from matplotlib.collections import PatchCollection
-import matplotlib.colors as colors
-
 import pygimli as pg
+from pygimli.utils import rndig
 
 from .colorbar import setMappableData
-# from pygimli.viewer.mpl.modelview import cmapFromName
-from pygimli.utils import rndig
 from .utils import updateAxes as updateAxes_
 
 
 def drawModel1D(ax, thickness=None, values=None, model=None, depths=None,
                 plot='plot',
                 xlabel=r'Resistivity $(\Omega$m$)$', zlabel='Depth (m)',
-                z0=0,
+                z0=0, zmax=None,
                 **kwargs):
     """Draw 1d block model into axis ax.
 
@@ -100,7 +93,7 @@ def drawModel1D(ax, thickness=None, values=None, model=None, depths=None,
         px[2 * i + 1] = values[i]
 
         if i == nLayers - 1:
-            pz[2 * i + 1] = z1[i - 1] * 1.2
+            pz[2 * i + 1] = zmax or z1[i - 1] * 1.2
         else:
             pz[2 * i + 1] = z1[i]
             pz[2 * i + 2] = z1[i]
@@ -120,12 +113,14 @@ def drawModel1D(ax, thickness=None, values=None, model=None, depths=None,
     ax.set_ylabel(zlabel)
     ax.set_xlabel(xlabel)
     # assume positive depths pointing upward
-    ax.set_ylim(pz[-1], pz[0])
+    if plot in ['plot', 'semilogx']:
+        ax.set_ylim(pz[-1], pz[0])
+
     ax.grid(True)
 
 
-def draw1DColumn(ax, x, val, thk, width=30, ztopo=0, cmin=1, cmax=1000,
-                 cmap=None, name=None, textoffset=0.0):
+def draw1DColumn(ax, x, val, thk, width=30, ztopo=0, cMin=1, cMax=1000,
+                 cMap=None, name=None, textoffset=0.0, **kwargs):
     """Draw a 1D column (e.g., from a 1D inversion) on a given ax.
 
     Examples
@@ -140,7 +135,11 @@ def draw1DColumn(ax, x, val, thk, width=30, ztopo=0, cmin=1, cmax=1000,
     <matplotlib.collections.PatchCollection object at ...>
     >>> _ = ax.set_ylim(-np.sum(thk), 0)
     """
-    z = -np.hstack((0., np.cumsum(thk), np.sum(thk) * 1.5)) + ztopo
+    from matplotlib.patches import Rectangle
+    from matplotlib.collections import PatchCollection
+    from matplotlib.colors import LogNorm
+
+    z = -np.hstack([0., np.cumsum(thk), np.sum(thk) * 1.5]) + ztopo
     recs = []
     for i in range(len(val)):
         recs.append(Rectangle((x - width / 2., z[i]), width, z[i + 1] - z[i]))
@@ -149,17 +148,19 @@ def draw1DColumn(ax, x, val, thk, width=30, ztopo=0, cmin=1, cmax=1000,
     col = ax.add_collection(pp)
 
     pp.set_edgecolor(None)
-    pp.set_linewidths(0.0)
+    pp.set_linewidth(0.0)
 
-    if cmap is not None:
-        if isinstance(cmap, str):
-            pp.set_cmap(pg.viewer.mpl.cmapFromName(cmap))
+    if cMap is not None:
+        if isinstance(cMap, str):
+            pp.set_cmap(pg.viewer.mpl.cmapFromName(cMap))
         else:
-            pp.set_cmap(cmap)
+            pp.set_cmap(cMap)
 
-    pp.set_norm(colors.LogNorm(cmin, cmax))
+    if kwargs.pop("logScale", True):
+        pp.set_norm(LogNorm(cMin, cMax))
+
     pp.set_array(np.array(val))
-    pp.set_clim(cmin, cmax)
+    pp.set_clim(cMin, cMax)
     if name:
         ax.text(x+textoffset, ztopo, name, ha='center', va='bottom')
 
@@ -169,7 +170,8 @@ def draw1DColumn(ax, x, val, thk, width=30, ztopo=0, cmin=1, cmax=1000,
 
 def showmymatrix(mat, x, y, dx=2, dy=1, xlab=None, ylab=None, cbar=None):
     """What is this good for?."""
-    pg.error('who use this?')
+    pg.critical('who use this?')
+    plt = pg.plt
     plt.imshow(mat, interpolation='nearest')
     plt.xticks(np.arange(0, len(x), dx), ["%g" % rndig(xi, 2) for xi in x])
     plt.yticks(np.arange(0, len(y), dy), ["%g" % rndig(yi, 2) for yi in y])
@@ -177,15 +179,20 @@ def showmymatrix(mat, x, y, dx=2, dy=1, xlab=None, ylab=None, cbar=None):
 
     if xlab is not None:
         plt.xlabel(xlab)
+
     if ylab is not None:
         plt.ylabel(ylab)
+
     plt.axis('auto')
     if cbar is not None:
         plt.colorbar(orientation=cbar)
+
     return
+
 
 def draw1dmodelErr(x, xL, xU=None, thk=None, xcol='g', ycol='r', **kwargs):
     """TODO."""
+    pg.critical("in use?")
     if thk is None:
         nlay = (len(x) + 1) / 2
         thk = np.array(x)[:nlay - 1]
@@ -201,6 +208,7 @@ def draw1dmodelErr(x, xL, xU=None, thk=None, xcol='g', ycol='r', **kwargs):
     zm = np.hstack((np.cumsum(thk) - thk / 2, np.sum(thk) * 1.2))  # midpoint
     zc = np.cumsum(thk)  # cumulative
     draw1dmodel(x, thk, **kwargs)
+    plt = pg.plt
     plt.xlim(min(xL) * 0.95, max(xU) * 1.05)
     plt.ylim(zm[-1] * 1.1, 0.)
     plt.errorbar(
@@ -210,25 +218,9 @@ def draw1dmodelErr(x, xL, xU=None, thk=None, xcol='g', ycol='r', **kwargs):
                  yerr=np.vstack((thk - thkL, thkU - thk)), ecolor=ycol)
 
 
-def draw1dmodelLU(x, xL, xU, thk=None, **kwargs):
-    """Draw 1d model with lower and upper bounds."""
-    raise BaseException("IMPLEMENTME")
-    # draw1dmodel(x, thk, color='red', **kwargs)
-    # for i in range(len(x)):
-    #     x1 = np.array(x)
-    #     x1[i] = xL[i]
-    #     draw1dmodel(x1, thk, color='blue')
-    #     x1[i] = xU[i]
-    #     draw1dmodel(x1, thk, color='blue')
-    #
-    # li = draw1dmodel(x, thk, color='red', **kwargs)
-    # plt.xlim((min(xL) * 0.9, max(xU) * 1.1))
-    # return li
-
-
-def showStitchedModels(models, ax=None, x=None, cMin=None, cMax=None,
+def showStitchedModels(models, ax=None, x=None, cMin=None, cMax=None, thk=None,
                        logScale=True, title=None, zMin=0, zMax=0, zLog=False,
-                       cmap='jet', **kwargs):
+                       **kwargs):
     """Show several 1d block models as (stitched) section.
 
     Parameters
@@ -249,41 +241,54 @@ def showStitchedModels(models, ax=None, x=None, cMin=None, cMax=None,
         use logarithmic z (y axis) instead of linear
     topo : iterable
         vector of elevation for shifting
+    thk : iterable
+        vector of layer thicknesses for all models
     Returns
     -------
     ax : matplotlib axes [None - create new]
         axes object to plot in
     """
+    from matplotlib.patches import Rectangle
+    from matplotlib.collections import PatchCollection
+    from matplotlib.colors import LogNorm
+
     if x is None:
         x = np.arange(len(models))
 
-    topo = kwargs.pop('topo', x*0)
-    nlay = int(np.floor((len(models[0]) + 1) / 2.))
+    topo = kwargs.pop('topo', np.zeros_like(x))
 
     fig = None
     if ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = pg.plt.subplots()
 
-    dxmed2 = np.median(np.diff(x)) / 2.
-    vals = np.zeros((len(models), nlay))
+    dxmed2 = kwargs.pop("width", np.median(np.diff(x))) / 2.
     patches = []
     zMinLimit = 9e99
     zMaxLimit = 0
 
+    if thk is not None:
+        nlay = len(models[0])
+    else:
+        nlay = int(np.floor((len(models[0]) + 1) / 2.))
+
+    vals = np.zeros((len(models), nlay))
     for i, imod in enumerate(models):
-        if isinstance(imod, pg.Vector):
-            vals[i, :] = imod(nlay - 1, 2 * nlay - 1)
-            thk = np.asarray(imod(0, nlay - 1))
-        else:
-            vals[i, :] = imod[nlay - 1:2 * nlay - 1]
-            thk = imod[:nlay - 1]
+        if thk is not None:  # take only resistivity from model
+            vals[i, :] = imod
+            thki = thk
+        else:  # extract thickness from model vector
+            if isinstance(imod, pg.Vector):
+                vals[i, :] = imod[nlay - 1:2 * nlay - 1]
+                thki = np.asarray(imod[:nlay - 1])
+            else:
+                vals[i, :] = imod[nlay - 1:2 * nlay - 1]
+                thki = imod[:nlay - 1]
 
         if zMax > 0:
-            z = np.hstack((0., np.cumsum(thk)))
-            z = np.hstack((z, zMax))
+            z = np.hstack((0., np.cumsum(thki), zMax))
         else:
-            thk = np.hstack((thk, thk[-1]*3))
-            z = np.hstack((0., np.cumsum(thk)))
+            thki = np.hstack((thki, thki[-1]*3))
+            z = np.hstack((0., np.cumsum(thki)))
 
         z = topo[i] - z
         zMinLimit = min(zMinLimit, z[-1])
@@ -294,14 +299,19 @@ def showStitchedModels(models, ax=None, x=None, cMin=None, cMax=None,
                              dxmed2 * 2, z[j+1]-z[j])
             patches.append(rect)
 
-    p = PatchCollection(patches, cmap=cmap, linewidths=0)
-
+    p = PatchCollection(patches)  # , cmap=cmap, linewidths=0)
     if cMin is not None:
         p.set_clim(cMin, cMax)
 
-#    p.set_array( np.log10( vals.ravel() ) )
     setMappableData(p, vals.ravel(), logScale=logScale)
     ax.add_collection(p)
+
+    if logScale:
+        norm = LogNorm(cMin, cMax)
+        p.set_norm(norm)
+
+    if 'cMap' in kwargs:
+        p.set_cmap(kwargs['cMap'])
 
 #    ax.set_ylim((zMaxLimit, zMin))
     ax.set_ylim((zMinLimit, zMaxLimit))
@@ -321,161 +331,26 @@ def showStitchedModels(models, ax=None, x=None, cMin=None, cMax=None,
             xt = np.unique(np.clip(kwargs['cticks'], cMin, cMax))
             cb.set_ticks(xt)
             cb.set_ticklabels([str(xti) for xti in xt])
+        if 'label' in kwargs:
+            cb.set_label(kwargs['label'])
 
-    plt.draw()
+    pg.plt.draw()
     return ax  # maybe return cb as well?
-
-
-def showStitchedModels_Redundant(mods, ax=None,
-                                 cmin=None, cmax=None, **kwargs):
-    """Show several 1d block models as (stitched) section."""
-    x = kwargs.pop('x', np.arange(len(mods)))
-    topo = kwargs.pop('topo', x*0)
-
-    nlay = int(np.floor((len(mods[0]) - 1) / 2.)) + 1
-    if cmin is None or cmax is None:
-        cmin = 1e9
-        cmax = 1e-9
-        for model in mods:
-            res = np.asarray(model)[nlay - 1:nlay * 2 - 1]
-            cmin = min(cmin, min(res))
-            cmax = max(cmax, max(res))
-
-    if kwargs.pop('sameSize', True):  # all having the same width
-        dx = np.ones_like(x)*np.median(np.diff(x))
-    else:
-        dx = np.diff(x) * 1.05
-        dx = np.hstack((dx, dx[-1]))
-
-    x1 = x - dx / 2
-    if ax is None:
-        fig, ax = plt.subplots()
-    else:
-        ax = ax
-        fig = ax.figure
-
-#    ax.plot(x, x * 0., 'k.')
-    zm = kwargs.pop('zm', None)
-    maxz = 0.
-    if zm is not None:
-        maxz = zm
-    recs = []
-    RES = []
-    for i, mod in enumerate(mods):
-        mod1 = np.asarray(mod)
-        res = mod1[nlay - 1:]
-        RES.extend(res)
-
-        thk = mod1[:nlay - 1]
-        thk = np.hstack((thk, thk[-1]))
-        z = np.hstack((0., np.cumsum(thk)))
-        if zm is not None:
-            thk[-1] = zm - z[-2]
-            z[-1] = zm
-        else:
-            maxz = max(maxz, z[-1])
-
-        for j, _ in enumerate(thk):
-            recs.append(Rectangle((x1[i], topo[i]-z[j]), dx[i], -thk[j]))
-
-    pp = PatchCollection(recs, edgecolors=kwargs.pop('edgecolors', 'none'))
-    pp.set_edgecolor(kwargs.pop('edgecolors', 'none'))
-    pp.set_linewidths(0.0)
-    ax.add_collection(pp)
-    if 'cmap' in kwargs:
-        pp.set_cmap(kwargs['cmap'])
-
-    print(cmin, cmax)
-    norm = colors.LogNorm(cmin, cmax)
-    pp.set_norm(norm)
-    pp.set_array(np.array(RES))
-#    pp.set_clim(cmin, cmax)
-    ax.set_ylim((-maxz, max(topo)))
-    ax.set_xlim((x1[0], x1[-1] + dx[-1]))
-
-    cbar = None
-    if kwargs.pop('colorBar', True):
-        cbar = plt.colorbar(pp, ax=ax, norm=norm, orientation='horizontal',
-                            aspect=60)  # , ticks=[1, 3, 10, 30, 100, 300])
-        if 'ticks' in kwargs:
-            cbar.set_ticks(kwargs['ticks'])
-#        cbar.autoscale_None()
-    if ax is None:  # newly created fig+ax
-        return fig, ax
-    else:  # already given, better give back color bar
-        return cbar
-
-
-def showStitchedModelsOld(models, x=None, cmin=None, cmax=None,
-                          islog=True, title=None):
-    """Show several 1d block models as (stitched) section."""
-    if x is None:
-        x = np.arange(len(models))
-
-    nlay = int(np.floor((len(models[0]) - 1) / 2.)) + 1
-    if cmin is None or cmax is None:
-        cmin = 1e9
-        cmax = 1e-9
-        for model in models:
-            res = np.asarray(model)[nlay - 1:nlay * 2 - 1]
-            cmin = min(cmin, min(res))
-            cmax = max(cmax, max(res))
-
-        print("cmin=", cmin, " cmax=", cmax)
-
-    dx = np.diff(x)
-    dx = np.hstack((dx, dx[-1]))
-    x1 = x - dx / 2
-    ax = plt.gcf().add_subplot(111)
-    ax.cla()
-    mapsize = 64
-    # cmap = jetmap(mapsize)
-    plt.plot(x, np.zeros(len(x)), 'k.')
-    maxz = 0.
-    for mod in models:
-        mod1 = np.asarray(mod)
-        res = mod1[nlay - 1:]
-        if islog:
-            res = np.log(res)
-            cmi = np.log(cmin)
-            cma = np.log(cmax)
-        else:
-            cmi = cmin
-            cma = cmax
-
-        thk = mod1[:nlay - 1]
-        thk = np.hstack((thk, thk[-1]))
-        z = np.hstack((0., np.cumsum(thk)))
-        maxz = max(maxz, z[-1])
-        nres = (res - cmi) / (cma - cmi)
-        cind = np.around(nres * mapsize)
-        cind[cind >= mapsize] = mapsize - 1
-        cind[cind < 0] = 0
-        # for j in range(len(thk)):
-        #   fc = cmap[cind[j], :]
-        #   rect = Rectangle((x1[i], z[j]), dx[i], thk[j], fc=fc)
-        #   plt.gca().add_patch(rect)
-
-    ax.set_ylim((maxz, 0.))
-    ax.set_xlim((x1[0], x1[-1] + dx[-1]))
-    if title is not None:
-        plt.title(title)
-
-    plt.draw()
-    return
 
 
 def draw1dmodel(x, thk=None, xlab=None, zlab="z in m", islog=True, z0=0):
     """DEPRECATED."""
-    print("STYLE_WARNING!!!!!!! don't use this call. "
-          "Use show1dmodel or drawModel1D instead.")
+    pg.critical("STYLE_WARNING!!!!!!! don't use this call. "
+          "WHO use this anymore?? Use show1dmodel or drawModel1D instead.")
     show1dmodel(x, thk, xlab, zlab, islog, z0)
 
 
 def show1dmodel(x, thk=None, xlab=None, zlab="z in m", islog=True, z0=0,
                 **kwargs):
-    """Show 1d block model defined by value and thickness vectors."""
-    print("STYLE_WARNING!!!!!!! don't use this call. "
+    """Show 1d block model defined by value and thickness vectors.
+    """
+    pg.error("rename after naming convention, don't use plt")
+    pg.critical("STYLE_WARNING!!!!!!! don't use this call. "
           "WHO use this anymore??.")
 
     if xlab is None:
@@ -498,6 +373,7 @@ def show1dmodel(x, thk=None, xlab=None, zlab="z in m", islog=True, z0=0,
         if i < nl - 1:
             pz[2 * i + 2] = z[i + 1]
 
+    plt = pg.plt
     #    plt.cla()
     if islog:
         plt.semilogx(px, pz, **kwargs)
@@ -520,7 +396,11 @@ def showfdemsounding(freq, inphase, quadrat, response=None, npl=2):
     Show FDEM sounding as real(inphase) and imaginary (quadrature) fields
         normalized by the (purely real) free air solution.
     """
+    pg.error("rename after naming convention, don't use plt")
+    pg.critical("STYLE_WARNING!!!!!!! don't use this call. "
+          "WHO use this anymore??.")
     nf = len(freq)
+    plt = pg.plt
     fig = plt.figure(1)
     fig.clf()
     ax1 = fig.add_subplot(1, npl, npl - 1)

@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2007-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2007-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -91,6 +91,18 @@ void Vector< RVector3 >::clean(){
              data_[i] = RVector3();
          }
      }
+}
+
+IndexArray range(Index start, Index stop, Index step){
+    IndexArray ret(0);
+    for (Index i = start; i < stop; i += step){
+        ret.push_back(i);
+    }
+    return ret;
+}
+
+IndexArray range(Index stop){
+    return range(0, stop, 1);
 }
 
 } // namespace GIMLI{

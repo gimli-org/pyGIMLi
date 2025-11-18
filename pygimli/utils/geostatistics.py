@@ -90,7 +90,7 @@ def covarianceMatrix(mesh, nodes=False, **kwargs):
     return covarianceMatrixPos(pos, **kwargs)
 
 
-def generateGeostatisticalModel(mesh, **kwargs):
+def generateGeostatisticalModel(mesh, nodes=False, seed=None, **kwargs):
     """Generate geostatistical model (cell or node) for given mesh.
 
     Parameters
@@ -99,6 +99,9 @@ def generateGeostatisticalModel(mesh, **kwargs):
         Mesh
     nodes : bool [False]
         use node positions, otherwise (default) cell centers are used
+    seed : int, array_like[ints], SeedSequence, BitGenerator, Generator}, optional
+        A seed to initialize the BitGenerator. If None, then fresh, unpredictable 
+        entropy will be used. The `seed` variable is passed to :func:`numpy.random.default_rng`
     **kwargs
 
         I : float or list of floats
@@ -112,8 +115,9 @@ def generateGeostatisticalModel(mesh, **kwargs):
     -------
     res : np.array of size cellCount or nodeCount (nodes=True)
     """
-    return np.random.multivariate_normal(np.ones(mesh.cellCount()),
-                                         covarianceMatrix(mesh, **kwargs))
+    rng = np.random.default_rng(seed=seed)
+    return rng.multivariate_normal(np.ones(mesh.cellCount()),
+                                   covarianceMatrix(mesh, nodes=nodes, **kwargs))
 
 
 def computeInverseRootMatrix(CM, thrsh=0.001, verbose=False):

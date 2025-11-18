@@ -9,6 +9,7 @@ from .models import (
     modelColeColeRho,
     modelColeColeRhoDouble,
     modelColeColeSigma,
+    modelColeColeSigmaDouble,
     modelColeColeEpsilon,
     modelColeDavidson,
 

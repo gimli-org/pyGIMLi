@@ -4,14 +4,14 @@
 # write a correct test!
 import unittest
 
-from pygimli.viewer.mpl import underlayMap
+from pygimli.viewer.mpl.overlayimage import underlayMap
 #from pygimli.io import readGPX, readSimpleLatLon
 
 import matplotlib.pyplot as plt
 #import pyproj
 
 class TestOSMGetter(unittest.TestCase):
-    
+
     def test_OSM(self):
         #zone = 32
         #vendor = 'OSM'
@@ -55,6 +55,6 @@ class TestOSMGetter(unittest.TestCase):
         pass
 
 if __name__ == '__main__':
-    
+
     unittest.main()
-    
+

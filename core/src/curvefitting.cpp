@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2009-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2009-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *

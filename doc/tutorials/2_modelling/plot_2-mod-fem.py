@@ -3,7 +3,7 @@ Basics of Finite Element Analysis
 ---------------------------------
 
 This tutorial covers the first steps into Finite Element computation
-referring the *M* (Modeling) in *pyGIMLi*.
+referring the *M* (Modelling) in *pyGIMLi*.
 
 We will not dig into deep details about the theory of the Finite Elements Analysis (FEA)
 here, as this can be found in several books, e.g., :cite:`Zienkiewicz1977`.
@@ -14,7 +14,7 @@ So we start with some basics.
 
 Assuming Poisson's equation as a simple partial differential problem
 to be solved for the sought scalar field :math:`u(\mathbf{r})` within
-a modeling domain :math:`\mathbf{r}\in\Omega`
+a modelling domain :math:`\mathbf{r}\in\Omega`
 with a non zero right hand side function :math:`f`.
 
 .. math::
@@ -33,7 +33,7 @@ known values of :math:`u=g` as so called Dirichlet boundary conditions.
 A common approach to solve this problem is the method of weighted residuals.
 The base assumption states that an approximated solution :math:`u_h\approx u` will
 only satisfy the differential equation with a rest :math:`R`: :math:`\Delta u_h + f = R`. If we choose some weighting functions :math:`w`,
-we can try to minimize the resulting residuum over our modeling domain as:
+we can try to minimize the resulting residuum over our modelling domain as:
 
 .. math::
 
@@ -87,14 +87,14 @@ this can be rewritten with :math:`h=0` as:
 
 The solution of this linear system of equations leads to the
 discrete solution :math:`\mathrm{u} = \{\mathrm{u}_i\}` for all
-:math:`i=1\ldots\mathcal{N}` nodes inside the modeling domain.
+:math:`i=1\ldots\mathcal{N}` nodes inside the modelling domain.
 
 For the practical part, the choice of the nodes is crucial. If we choose too
 little, the accuracy of the sought solution might be too small. If we choose too
 many, the dimension of the system matrix will be too large, which leads to
 higher memory consumption and calculation times.
 
-To define the nodes, we discretize our modeling domain into cells, or the
+To define the nodes, we discretize our modelling domain into cells, or the
 eponymous elements. Cells are basic geometric shapes like triangles or
 hexahedrons and are constructed from the nodes and collected in a mesh. See the
 tutorials about the mesh basics (:ref:`tut:basics`). In summary, the discrete
@@ -123,7 +123,7 @@ Now we have all parts together to assemble :math:`\mathrm{A_D}` and
 :math:`\mathrm{b_D}` and finally solve the given boundary value problem.
 
 It is usually a good idea to test a numerical approach with known solutions.
-To keep things simple we create a modeling problem from the reverse direction.
+To keep things simple we create a modelling problem from the reverse direction.
 We choose a solution, calculate the right hand side function
 and select the domain geometry suitable for nice Dirichlet values.
 
@@ -143,7 +143,7 @@ import numpy as np
 import pygimli as pg
 
 ###############################################################################
-# We start to define the modeling domain and functions for the exact solution
+# We start to define the modelling domain and functions for the exact solution
 # and the values for the load vector.
 # The desired mesh of our domain will be a grid with equidistant spacing in
 # x and y directions.
@@ -186,7 +186,7 @@ u = pg.solver.linSolve(A, b)
 ###############################################################################
 # The resulting scalar field can displayed with the `pg.show` shortcut.
 #
-pg.show(domain, u, label='Approximated solution $\mathrm{u}$', nLevs=7)
+ax, cb = pg.show(domain, u, label='Approximated solution $u$', nLevs=7)
 
 ###############################################################################
 # For analyzing the accuracy for the approximation we apply the
@@ -229,16 +229,11 @@ ax.grid()
 a = [None]*domain.cellCount()
 for c in domain.cells():
     if c.center()[0] < np.pi:
-        a[c.id()] = pg.solver.anisotropyMatrix(lon=1.0, trans=10.0,
+        a[c.id()] = pg.solver.createAnisotropyMatrix(lon=1.0, trans=10.0,
                                                theta=-45/180 * np.pi)
     else:
-        a[c.id()] = pg.solver.anisotropyMatrix(lon=1.0, trans=10.0,
+        a[c.id()] = pg.solver.createAnisotropyMatrix(lon=1.0, trans=10.0,
                                                theta=45/180 * np.pi)
 
 u = pg.solve(domain, a=a, f=f, bc={'Dirichlet':{'*': 0}})
-pg.show(domain, u, label='Solution $\mathrm{u}$ for anisotrop material parameter $a$', nLevs=7)
-
-
-
-
-
+ax, cb = pg.show(domain, u, label='Solution $u$ for anisotropic $a$', nLevs=7)

@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the resistivity.net development team          *
+ *   Copyright (C) 2006-2024 by the resistivity.net development team          *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -299,7 +299,7 @@ MEMINFO
     std::sort(cells.begin(), cells.end(), lessCellMarker);
 
     double maxMemSize = max(0.0, getEnvironment("SENSMATMAXMEM", 0.0, verbose));
-    double maxSizeNeeded = mByte((double)nData * nModel * sizeof(double));
+    double maxSizeNeeded = MByte(nData * nModel * sizeof(double));
 
     if (maxMemSize > 0 && verbose){
         std::cout << "Size of S: " << maxSizeNeeded << " MB" << std::endl;
@@ -329,7 +329,7 @@ MEMINFO
             throwError(WHERE_AM_I + " sorry, size of single sensitivity-row exceeds memory limitations.");
         }
 
-        std::cout << "Size of S cluster: " << mByte((double)nData * modelCluster * sizeof(ValueType)) << " MB" << std::endl;
+        std::cout << "Size of S cluster: " << MByte(nData * modelCluster * sizeof(ValueType)) << " MB" << std::endl;
         std::cout << "Using model cluster " << nModel << " x " << modelCluster << std::endl;
 
         S.resize(nData, modelCluster);
@@ -386,10 +386,11 @@ MEMINFO
 
         S.clear();
     } else {
+
+        // __MS(nData << " "<< S.rows() << " "<<  nModel << " "<<  S.cols())
         if (S.rows() != nData || S.cols() != nModel) S.resize(nData, nModel);
         S *= ValueType(0);
 MEMINFO
-
         if (verbose){
             std::cout << "S(" << numberOfCPU() << "/" << nThreads; //**check!!!
             #if USE_BOOST_THREAD
@@ -401,10 +402,14 @@ MEMINFO
 //swatch.stop(verbose);
         }
         bool calc1 = getEnvironment("SENSMAT1", false, true);
-        distributeCalc(CreateSensitivityColMT< ValueType >(S, cells, data,
+        if (useOMP()){
+
+        } else {
+            distributeCalc(CreateSensitivityColMT< ValueType >(S, cells, data,
                                                            pots, currPatternIdx,
                                                            weights, k, calc1, verbose),
-                        cells.size(), nThreads, verbose);
+                            cells.size(), nThreads, verbose);
+        }
          if (verbose){
              swatch.stop(verbose);
          }

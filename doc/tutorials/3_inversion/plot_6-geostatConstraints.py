@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-# encoding: utf-8
 r"""
 Geostatistical regularization
------------------------------
+=============================
 
 In this example we illustrate the use of geostatistical constraints on
-irregular meshes as presented by :cite:`jordi2018geostatistical`, compared to
+irregular meshes as presented by :cite:`Jordi2018`, compared to
 classical smoothness operators of first or second kind.
 
 The elements of the covariance matrix :math:`\textbf{C}_{\text{M}}` are defined
@@ -22,20 +21,25 @@ It defines the correlation between model cells as a function of correlation
 lenghts (ranges) :math:`I_x`, :math:`I_y`, and :math:`I_z`. Of course, the
 orientation of the coordinate axes is arbitrary and can be chosen by rotation.
 Let us illustrate this by a simple mesh:
-"""
+"""  # noqa: D205, D400
 
 # %%
 # Computing covariance and constraint matrices
 # --------------------------------------------
 # We create a simple mesh using a box geometry
+import matplotlib.pyplot as plt
+from matplotlib.patches import CirclePolygon
+from matplotlib.collections import PatchCollection
+from matplotlib.colors import LogNorm
+import numpy as np
 import pygimli as pg
 import pygimli.meshtools as mt
+from pygimli.frameworks import PriorModelling
 
 # We create a rectangular domain and mesh it with small triangles
 rect = mt.createRectangle(start=[0, -10], end=[10, 0])
-mesh = mt.createMesh(rect, quality=34.5, area=0.1)
+mesh = mt.createMesh(rect, quality=34.3, area=0.2)
 
-# %%
 # We compute such a covariance matrix by calling
 CM = pg.utils.covarianceMatrix(mesh, I=5)  # I taken for both x and y
 # We search for the cell where the midpoint (5, -5) is located in
@@ -59,42 +63,53 @@ ax, cb = pg.show(mesh, CM[:, ind], cMap="magma_r")
 #     \textbf{C}_\text{M}^{-0.5} = \textbf{Q}\textbf{D}^{-0.5}\textbf{Q}^{T}
 #
 # In order to avoid a matrix inverse (square root), a special matrix is derived
-# that does the decomposition and stores the eigenvectors and eigenvalues values.
-# A multiplication is done by multiplying with Q and scaling with the diagonal D.
-# This matrix is implemented in the :mod:`pygimli.matrix` module
+# doing the decomposition and storing the eigenvectors and eigenvalues values.
+# A multiplication is done by multiplying with Q and scaling with the diagonal.
+# This matrix is implemented in the matrix module
 # by the class :py:mod:`pg.matrix.Cm05Matrix`
 
 Cm05 = pg.matrix.Cm05Matrix(CM)
 # %%
 # However, this matrix does not return a zero vector for a constant vector
 out = Cm05 * pg.Vector(mesh.cellCount(), 1.0)
-print(min(out), max(out))
+print("min/max value ", min(out), max(out))
 
 # %%
 # as desired for a roughness operator. Therefore, an additional matrix called
 # :py:mod:`pg.matrix.GeostatisticalConstraintsMatrix`
 # was implemented where this spur is corrected for.
 # It is, like the correlation matrix, created by a mesh, a list of correlation
-# lengths I, a dip angle# that distorts the x/y plane and a strike angle
+# lengths I, a dip angle that distorts the x/y plane and a strike angle
 # towards the third direction.
 #
 C = pg.matrix.GeostatisticConstraintsMatrix(mesh=mesh, I=5)
 
 # %%
-# In order to extract a certain column, we generate a vector with a single 1
+# In order to extract a column, we generate a vector with a single 1, multiply
 vec = pg.Vector(mesh.cellCount())
 vec[ind] = 1.0
-ax, cb = pg.show(mesh, pg.log10(pg.abs(C*vec)), cMin=-6, cMax=0, cMap="magma_r")
+cor = C * vec
+
+# %%
+# and plot it using a linear or logarithmic scale
+kwLin = dict(cMin=-1, cMax=1, cMap="bwr")  # noqa: N816
+ax, cb = pg.show(mesh, cor, **kwLin)
+kwLog = dict(cMin=1e-3, cMax=1, cMap="magma_r", logScale=True)  # noqa: N816
+ax, cb = pg.show(mesh, pg.abs(cor), **kwLog)
 
 # %%
 # The constraints have a rather small footprint compared to the correlation
-# (note the logarithmic scale) but still to the whole mesh unlike the classical
-# constraint matrices that only include relations to neighboring cells.
+# if one considers values below a certain threshold as insignificant.
 
 # %%
 # Such a matrix can also be defined for different ranges and dip angles, e.g.
-Cdip = pg.matrix.GeostatisticConstraintsMatrix(mesh=mesh, I=[10, 3], dip=-25)
-ax, cb = pg.show(mesh, pg.log10(pg.abs(Cdip*vec)), cMin=-6, cMax=0, cMap="magma_r")
+Cdip = pg.matrix.GeostatisticConstraintsMatrix(mesh=mesh, I=[9, 2], dip=-25)
+ax, cb = pg.show(mesh, Cdip * vec, **kwLin)
+ax, cb = pg.show(mesh, pg.abs(Cdip * vec), **kwLog)
+
+# %%
+# Even in the linear scale, but more in the log scale one can see the
+# regularization footprint in the shape of an ellipsis.
 
 # %%
 # In order to illustrate the role of the constraints, we use a very simple
@@ -107,38 +122,14 @@ ax, cb = pg.show(mesh, pg.log10(pg.abs(Cdip*vec)), cMin=-6, cMax=0, cMap="magma_
 # that projects the model vector to the forward response.
 # This matrix is also the Jacobian matrix for the inversion.
 
-class PriorFOP(pg.core.ModellingBase):
-    """Forward operator for grabbing values."""
-
-    def __init__(self, mesh, pos, verbose=False):
-        """Init with mesh and some positions that are converted into ids."""
-        super().__init__(self, verbose)
-        self.setMesh(mesh)
-        self.ind = [mesh.findCell(po).id() for po in pos]
-        self.J = pg.SparseMapMatrix()
-        self.J.resize(len(self.ind), mesh.cellCount())
-        for i, ii in enumerate(self.ind):
-            self.J.setVal(i, ii, 1.0)
-
-        self.setJacobian(self.J)
-
-    def response(self, model):
-        """Return values at the indexed cells."""
-        return model[self.ind]
-
-    def createJacobian(self, model):
-        """Do nothing (linear)."""
-        pass
-
-
 # %%
 # Inversion with geostatistical constraints
 # -----------------------------------------
 # We choose some positions and initialize the forward operator
 pos = [[2, -2], [8, -2], [5, -5], [2, -8], [8, -8]]
-fop = PriorFOP(mesh, pos)
+fop = PriorModelling(mesh, pos)
 # For plotting the results, we create a figure and define some plotting options
-fig, ax = pg.plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True)
+fig, ax = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True)
 kw = dict(
     colorBar=True,
     cMin=30,
@@ -146,46 +137,56 @@ kw = dict(
     orientation='vertical',
     cMap='Spectral_r',
     logScale=True)
+
 # We want to use a homogenenous starting model
-startModel = pg.Vector(mesh.cellCount(), 30)
-tLog = pg.core.TransLog()
-vals = [30, 50, 300, 100, 200]
-inv = pg.core.Inversion(vals, fop, tLog, tLog)
-inv.setRelativeError(0.05)  # 5 % error
-inv.setModel(startModel)
-inv.setLambda(200)
-# first we use the second order (curvature) constraint type
-fop.regionManager().setConstraintType(2)
-res = inv.run()
-print(('{:.1f} ' * 5).format(*fop(res)), inv.chi2())
-pg.show(mesh, res, ax=ax[0, 1], **kw)
-# Next, we use first-order constraints
-fop.regionManager().setConstraintType(1)
-res = inv.run()
-print(('{:.1f} ' * 5).format(*fop(res)), inv.chi2())
+vals = np.array([30, 50, 300, 100, 200])
+# We assume a 5% relative accuracy of the values
+relError = 0.05  # noqa: N816
+# set up data and model transformation log-scaled
+tLog = pg.trans.TransLog()  # noqa: N816
+inv = pg.Inversion(fop=fop)
+inv.transData = tLog
+inv.transModel = tLog
+inv.startModel = 30  # for all
+
+# Initially, we use the first-order constraints (default)
+# inv.setRegularization(cType=2)
+res = inv.run(vals, relativeError=relError, cType=1, lam=30)
+print(('Ctype=1: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
 pg.show(mesh, res, ax=ax[0, 0], **kw)
-# Now we set the geostatistic isotropic operator with 5m correlation length
-fop.setConstraints(C)
-inv.setModel(startModel)
-inv.setLambda(30)
-res = inv.run()
-print(('{:.1f} ' * 5).format(*fop(res)), inv.chi2())
-pg.show(mesh, res, ax=ax[1, 0], **kw)
 ax[0, 0].set_title("1st order")
+np.testing.assert_array_less(inv.chi2(), 1.2)
+
+# Next, we use the second order (curvature) constraint type
+res = inv.run(vals, relativeError=relError, cType=2, lam=25)
+print(('Ctype=2: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
+pg.show(mesh, res, ax=ax[0, 1], **kw)
 ax[0, 1].set_title("2nd order")
+np.testing.assert_array_less(inv.chi2(), 1.2)
+
+# Now we set the geostatistic isotropic operator with 5m correlation length
+res = inv.run(vals, relativeError=relError, lam=15, C=C)
+print(('Cg-5/5m: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
+pg.show(mesh, res, ax=ax[1, 0], **kw)
 ax[1, 0].set_title("I=5")
+np.testing.assert_array_less(inv.chi2(), 1.2)
+
 # and finally we use the dipping constraint matrix
-fop.setConstraints(Cdip)
-inv.setLambda(20)
-inv.setModel(startModel)
-res = inv.run()
-print(('{:.1f} ' * 5).format(*fop(res)), inv.chi2())
+res = inv.run(vals, relativeError=relError, lam=15, C=Cdip)
+print(('Cg-9/2m: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
 pg.show(mesh, res, ax=ax[1, 1], **kw)
-ax[1, 1].set_title("I=[10/3], dip=25")
+ax[1, 1].set_title("I=[9/2], dip=25")
+np.testing.assert_array_less(inv.chi2(), 1.2)
+
 # plot the position of the priors
+patches = [CirclePolygon(po, 0.2) for po in pos]
 for ai in ax.flat:
-    for po in pos:
-        ai.plot(*po, marker='o', markersize=10, color='k', fillstyle='none')
+    p = PatchCollection(patches, cmap=kw['cMap'])
+    p.set_facecolor(None)
+    p.set_array(np.array(vals))
+    p.set_norm(LogNorm(kw['cMin'], kw['cMax']))
+    ai.add_collection(p)
+
 # %%
 # Note that all four regularization operators fit the data equivalently but
 # the images (i.e. how the gaps between the data points are filled) are quite

@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2012-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2012-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -26,17 +26,18 @@
 #elif READPROC_FOUND || defined(HAVE_PROC_READPROC)
     #include <proc/readproc.h>
     #define USE_PROC_READPROC TRUE
+    #error readproc
 #else
     #define USE_PROC_READPROC 0
 #endif
 
-#if USE_BOOST_THREAD
-    #include <boost/thread.hpp>
-    /*! Lock proc reading to be thread safe */
-    static boost::mutex __readproc__mutex__;
+#include <mutex>
+static std::mutex __readproc__mutex__;
+
+#ifdef WIN32_LEAN_AND_MEAN
+    #include <windows.h>
 #else
-    #include <mutex>
-    static std::mutex __readproc__mutex__;
+    #include <unistd.h>
 #endif
 
 namespace GIMLI {
@@ -62,24 +63,21 @@ double MemWatch::current(){
 }
 
 double MemWatch::inUse() {
- #if USE_BOOST_THREAD
-        boost::mutex::scoped_lock lock(__readproc__mutex__);
- #else
-        std::unique_lock < std::mutex > lock(__readproc__mutex__);
+#if USE_BOOST_THREAD
+    boost::mutex::scoped_lock lock(__readproc__mutex__);
+#else
+    std::unique_lock < std::mutex > lock(__readproc__mutex__);
         //std::lock_guard< std::mutex > lock(__readproc__mutex__);
- #endif
+#endif
 
-
- #ifdef WIN32_LEAN_AND_MEAN
+#ifdef WIN32_LEAN_AND_MEAN
 
     PROCESS_MEMORY_COUNTERS pmc;
-
     if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))){
-        double ret = mByte(pmc.WorkingSetSize);
+        double ret = MByte(pmc.WorkingSetSize);
         return ret;
     } else { return 0; }
-
-#else
+#else // no WINDOWS
 
 #if USE_PROC_READPROC
     struct proc_t usage;
@@ -90,12 +88,14 @@ double MemWatch::inUse() {
 //      __MS("resident: " << usage.resident/1024)//         number of resident set (non-swapped) pages (4k)
 //      __MS("share: " << usage.share/1024)
 //      __MS("rss: " << usage.rss/1024)
-    double ret = mByte(usage.vsize);
+    double ret = MByte(usage.vsize);
     return ret;
-    #else // no windows and no libproc
+#else
+    // no windows and no libproc
+#endif
 
-    #endif // no libproc
-#endif // no windows
+
+#endif // no WINDOWS
     return 0;
 }
 
@@ -115,6 +115,19 @@ void MemWatch::info(const std::string & str){
         std::cout << "\t" << str << " Memory no info"  <<  std::endl;
     #endif
     }
+}
+
+long maxMem(){
+#if defined(WIN32_LEAN_AND_MEAN)
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    GlobalMemoryStatusEx(&status);
+    return status.ullTotalPhys;
+#else
+    long pages = sysconf(_SC_PHYS_PAGES);
+    long page_size = sysconf(_SC_PAGE_SIZE);
+    return pages * page_size;
+#endif
 }
 
 } // namespace GIMLI

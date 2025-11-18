@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2008-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2008-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -228,7 +228,7 @@ void Region::permuteParameterMarker(const IndexArray & p){
 //################ Start values
 void Region::setStartModel(const RVector & start){
     if (isBackground_){
-        log(Warning, "Region Nr:", marker_, " is background and should not get a starting model.");
+        // log(Warning, "Region Nr:", marker_, " is background and should not get a starting model.");
         return;
     }
     if (start.size() == parameterCount_){
@@ -262,7 +262,7 @@ void Region::fillStartModel(RVector & vec){
 //################ Model behaviour
 void Region::setModelControl(double val){
     if (isBackground_){
-        log(Warning, "Region Nr:", marker_, " is background and should not get a model control.");
+        // log(Warning, "Region Nr:", marker_, " is background and should not get a model control.");
         val = 1.0;
     }
 
@@ -274,7 +274,7 @@ void Region::setModelControl(double val){
 void Region::setModelControl(const RVector & mc){
     log(Error, "don't use it. modelControl is scalar");
     if (isBackground_){
-        log(Warning, "Region Nr:", marker_, " is background and should not get a model control.");
+        // log(Warning, "Region Nr:", marker_, " is background and should not get a model control.");
         return;
     }
     modelControl_ = 1.0;
@@ -303,6 +303,8 @@ Index Region::constraintCount() const {
 }
 
 void Region::fillConstraints(RSparseMapMatrix & C, Index startConstraintsID){
+    // __MS(isBackground_ << " " << isSingle_ << " " << constraintType_ <<  " " <<
+    //      startConstraintsID << " " << startParameter_)
     if (isBackground_ ) return;
 
     if (isSingle_ && constraintType_ == 0) return;
@@ -419,7 +421,7 @@ void Region::setConstraintWeights(double val){
 void Region::setConstraintWeights(const RVector & cw){
     //std::cout << "Region::setConstraintsWeight(const RVector & sw) " << sw.size() << " " <<  this->constraintCount() << std::endl;
     if (isBackground_){
-        log(Warning, "Region Nr:", marker_, " is background and should not get a constraints weight.");
+        // log(Warning, "Region Nr:", marker_, " is background and should not get a constraints weight.");
         return;
     }
     if (cw.size() == this->constraintCount()){
@@ -492,7 +494,8 @@ void Region::fillBoundarySize(RVector & vec, Index boundStart){
 void Region::setTransModel(Trans< RVector > & tM){
 
     if (isBackground_){
-        log(Warning, "Region Nr:", marker_, " is background and should not get a model transformiation."); return;
+        // log(Warning, "Region Nr:", marker_, " is background and should not get a model transformation.");
+        return;
     }
 
     if (tM_ && ownsTrans_) delete tM_;
@@ -503,7 +506,8 @@ void Region::setTransModel(Trans< RVector > & tM){
 
 void Region::setModelTransStr_(const std::string & val){
     if (isBackground_){
-        log(Warning, "Region Nr:", marker_, " is background and should not get a model transformation."); return;
+        // log(Warning, "Region Nr:", marker_, " is background and should not get a model transformation.");
+        return;
     }
     transString_ = val;
     delete tM_; tM_ = NULL;
@@ -609,6 +613,7 @@ void RegionManager::clear(){
     if (mesh_) { delete mesh_; mesh_ = NULL; }
 }
 
+
 void RegionManager::setMesh(const Mesh & mesh, bool holdRegionInfos){
 
     if (!holdRegionInfos){
@@ -629,7 +634,7 @@ void RegionManager::setMesh(const Mesh & mesh, bool holdRegionInfos){
     mesh_->createNeighborInfos();
     if (verbose_) {
         std::cout << swatch.duration(true) << " s " << std::endl;
-        std::cout << "analysing mesh ... ";
+        std::cout << "analyzing mesh ... ";
     }
 
     //** looking for and create regions
@@ -640,7 +645,7 @@ void RegionManager::setMesh(const Mesh & mesh, bool holdRegionInfos){
     bool singleOnly = false;
     if (regions.size() > 50){
         singleOnly = true;
-        log(Info,"More than 50 regions, so we assume single regions only.");
+        log(Info, "More than 50 regions, so we assume single regions only.");
     }
 
     std::map < int, std::vector< Cell * > > markerCellVectorMap;
@@ -664,7 +669,7 @@ void RegionManager::setMesh(const Mesh & mesh, bool holdRegionInfos){
     //** looking for and create region interfaces
 
     //** looking for and create inter-region interfaces
-    this->findInterRegionInterfaces_();
+    this->findInterRegionInterfaces();
 
     if (singleOnly){
         log(Info, "Applying *:* interregion constraints.");
@@ -703,6 +708,7 @@ Region * RegionManager::createRegion_(SIndex marker, const Mesh & mesh, SIndex c
     Region * region = NULL;
 
     if (regionMap_.count(marker) == 0){
+        // __MS(marker)
         region = new Region(marker, mesh, cellMarker, this);
         regionMap_.insert(std::make_pair(marker, region));
     } else {
@@ -759,11 +765,12 @@ void RegionManager::recountParaMarker_(){
     }
 }
 
-void RegionManager::findInterRegionInterfaces_(){
+void RegionManager::findInterRegionInterfaces(){
     // find all boundaries per inter region boundary
     // and store them < <left, right>, [ptr Boundary]>
 
     interRegionInterfaceMap_.clear();
+    interRegionConstraints_.clear();
 
     //** having fun with stl
     std::map< std::pair< SIndex, SIndex >, std::list < Boundary * > > ::iterator iRMapIter;
@@ -785,6 +792,7 @@ void RegionManager::findInterRegionInterfaces_(){
                         std::pair< SIndex, SIndex >,                       std::list < Boundary * > > (std::pair< SIndex, SIndex>(minMarker, maxMarker),
                                         std::list< Boundary* >()));
                 }
+
                 interRegionInterfaceMap_[std::pair< SIndex, SIndex > (minMarker, maxMarker)].push_back(&b);
             }
         }
@@ -912,11 +920,10 @@ Index RegionManager::interRegionConstraintsCount() const {
 void RegionManager::fillConstraints(RSparseMapMatrix & C){
     // __M
     Index nModel  = parameterCount();
-    // __MS(nModel)
+    //__MS(nModel)
     Index nConstr = constraintCount();
 
     this->_cWeights.resize(nConstr, 1.0);
-
     C.clear();
 
     //!** no regions: fill 0th-order constraints
@@ -942,21 +949,31 @@ void RegionManager::fillConstraints(RSparseMapMatrix & C){
         // __MS(cID)
     }
 
+    // __MS(interRegionConstraints_.size())
     if (interRegionConstraints_.size() > 0){
         if (verbose_) std::cout << "Creating inter region constraints." << std::endl;
-        Index i = 0;
+
+        // Index i = 0;
         for (auto & it : this->interRegionConstraints_){
 
             std::pair< SIndex, SIndex > ab = it.first;
+
             double cWeight = it.second;
-            if (verbose_) {
+
+            // if (verbose_) {
                 // std::cout << "\t" << i << ": "
                 //                     << ab.first << "< (" << cWeight << ") >"
                 //                     << ab.second << std::endl;
-                i ++;
-            }
+                // i ++;
+            // }
             Region * regA = regionMap_.find(ab.first)->second;
             Region * regB = regionMap_.find(ab.second)->second;
+
+            if (regA->isBackground() || regB->isBackground()){
+                // __MS(ab.first << " " << ab.second << " " << cWeight)
+                // log(Warning, "no inter region constraints for background regions.");
+                continue;
+            }
 
             double mcA = regA->modelControl();
             double mcB = regB->modelControl();

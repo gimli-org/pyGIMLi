@@ -35,17 +35,21 @@ from pygccxml import parser
 import logging
 
 from pygccxml import utils
+
+# patch for >gcc-14
+import patch_pygccxml
+
 logger = utils.loggers.cxx_parser
 #logger.setLevel(logging.DEBUG)
 
 from pygccxml import declarations
 from pygccxml.declarations import access_type_matcher_t
+
 from pyplusplus import code_creators, module_builder, messages, decl_wrappers
 from pyplusplus.module_builder import call_policies
 from pyplusplus.decl_wrappers.doc_extractor import doc_extractor_i
 
 import hashlib
-
 
 MAIN_NAMESPACE = 'GIMLI'
 
@@ -195,7 +199,7 @@ def generate(defined_symbols, extraIncludes):
     import platform
 
     defines = ['PYGIMLI_CAST', 'HAVE_BOOST_THREAD_HPP']
-    caster = 'gccxml'
+    caster = 'castxml'
     compiler_path = options.clang
 
     if platform.system() == 'Windows':
@@ -227,16 +231,13 @@ def generate(defined_symbols, extraIncludes):
             casterpath = settings.caster_path.replace('\\', '\\\\')
             casterpath = settings.caster_path.replace('/', '\\')
 
-            if 'gccxml' not in casterpath:
-                caster = 'castxml'
-
             if '.exe' not in casterpath:
                 casterpath += '\\' + caster + '.exe'
 
+            cflags = ''
         else:
             casterpath = settings.caster_path
-            if 'gccxml' not in casterpath:
-                caster = 'castxml'
+            cflags = '-std=c++11'
 
     except Exception as e:
         logger.info("caster_path=%s" % casterpath)
@@ -259,14 +260,13 @@ def generate(defined_symbols, extraIncludes):
                                         include_paths=settings.includesPaths,
                                         define_symbols=defines,
                                         ignore_gccxml_output=False,
-                                        cflags="",
+                                        cflags=cflags,
                                         compiler_path=compiler_path)
 
-    mb = module_builder.module_builder_t(
-                                [xml_cached_fc],
-                                indexing_suite_version=2,
-                                xml_generator_config=xml_generator_config
-                                )
+    mb = module_builder.module_builder_t([xml_cached_fc],
+                                         indexing_suite_version=2,
+                                         xml_generator_config=xml_generator_config
+                                        )
 
     logger.info("Reading of c++ sources done.")
 
@@ -373,7 +373,11 @@ def generate(defined_symbols, extraIncludes):
                 'getNonEmptyRow',
                 'getSubstrings',
                 'abs',
-                'type']
+                'type',
+                '::GIMLI::print',
+                'print',
+                'range',
+          ]
             )
 
     exclude(main_ns.free_operators,
@@ -392,9 +396,6 @@ def generate(defined_symbols, extraIncludes):
                   'distancePair_', 'IPCMessage', 'PythonGILSave',
                   'XAxis__', 'YAxis__', 'ZAxis__',
                 'Variable',
-                'BVectorIter',
-                'CVectorIter',
-                'RVectorIter',
                 'Electrode',
                 'ElectrodeShape',
                 'ElectrodeShapeDomain',
@@ -403,6 +404,12 @@ def generate(defined_symbols, extraIncludes):
                 'ElectrodeShapeNodesWithBypass',
                 'FunctionDD',
                 'H2SparseMapMatrix',
+                #'::GIMLI::VectorIterator<GIMLI::Pos>', # needed
+                #'::GIMLI::VectorIterator<bool>',
+                #'::GIMLI::VectorIterator<double>',
+                #'::GIMLI::VectorIterator<long>',
+                # ::GIMLI::VectorIterator<unsigned long>', needed
+                #'::GIMLI::VectorIterator<std::complex<double> >',
                   ]
             )
 
@@ -450,11 +457,10 @@ def generate(defined_symbols, extraIncludes):
         #   'std::set<Boundary*', # we need them
           'Variable',
           'Variable<GIMLI::XAxis__',
-          'BVectorIter',
-          'CVectorIter',
-          'IVectorIter',
-          'RVectorIter',
           'FunctionDD',
+          '::GIMLI::print',
+          'print',
+          'range',
           ]
 
     for c in main_ns.free_functions():
@@ -466,64 +472,67 @@ def generate(defined_symbols, extraIncludes):
                 except BaseException as _:
                     logger.debug("Fail to exclude: " + str(c))
 
-    for c in main_ns.classes():
-        for e in ex:
-            if c.decl_string.find(e) > -1:
-                try:
-                    c.exclude()
-                    logger.debug("Exclude: " + c.name)
-                except BaseException as _:
-                    logger.debug("Fail to exclude: " + c.name)
+    try:
+        for c in main_ns.classes():
+            for e in ex:
+                if c.decl_string.find(e) > -1:
+                    try:
+                        c.exclude()
+                        logger.debug("Exclude: " + c.name)
+                    except BaseException as _:
+                        logger.debug("Fail to exclude: " + c.name)
 
-        try:
-            for mem in c.variables():
-                print(mem)
-                try:
-                    pass
-                    #mem.exclude()
-                    # logger.info("Exclude: " + str(mem))
-                except BaseException as _:
-                    logger.debug("Fail to exclude: " + str(mem))
-        except BaseException as _:
-            # print(c, "has no member functions")
-            pass
+            try:
+                for mem in c.variables():
+                    print(mem)
+                    try:
+                        pass
+                        #mem.exclude()
+                        # logger.info("Exclude: " + str(mem))
+                    except BaseException as _:
+                        logger.debug("Fail to exclude: " + str(mem))
+            except BaseException as _:
+                # print(c, "has no member functions")
+                pass
 
-        try:
-            for mem in c.constructors():
-                for e in ex:
-                    if mem.decl_string.find(e) > -1:
-                        try:
-                            mem.exclude()
-                            # logger.info("Exclude: " + str(mem))
-                        except BaseException as _:
-                            logger.debug("Fail to exclude: " + str(mem))
+            try:
+                for mem in c.constructors():
+                    for e in ex:
+                        if mem.decl_string.find(e) > -1:
+                            try:
+                                mem.exclude()
+                                # logger.info("Exclude: " + str(mem))
+                            except BaseException as _:
+                                logger.debug("Fail to exclude: " + str(mem))
 
-            for mem in c.member_functions():
-                for e in ex:
-                    if mem.decl_string.find(e) > -1:
-                        try:
-                            mem.exclude()
-                            # logger.info("Exclude: " + str(mem))
-                        except BaseException as _:
-                            logger.debug("Fail to exclude: " + str(mem))
+                for mem in c.member_functions():
+                    for e in ex:
+                        if mem.decl_string.find(e) > -1:
+                            try:
+                                mem.exclude()
+                                # logger.info("Exclude: " + str(mem))
+                            except BaseException as _:
+                                logger.debug("Fail to exclude: " + str(mem))
 
 
 
-        except BaseException as _:
-            # print(c, "has no member functions")
-            pass
+            except BaseException as _:
+                # print(c, "has no member functions")
+                pass
 
-        # print('#'*100)
-        # print(c, c.name)
-        if c.name.startswith('Vector<unsigned long>'):
-            # print('         ', c.name)
-            for mem in c.constructors():
-                # print("mem", mem, mem.decl_string)
-                if mem.decl_string.find('( ::GIMLI::Index )') > -1:
-                    logger.debug("Exclude: " + str(mem))
-                    mem.exclude()
+            # print('#'*100)
+            # print(c, c.name)
+            if c.name.startswith('Vector<unsigned long>'):
+                # print('         ', c.name)
+                for mem in c.constructors():
+                    # print("mem", mem, mem.decl_string)
+                    if mem.decl_string.find('( ::GIMLI::Index )') > -1:
+                        logger.debug("Exclude: " + str(mem))
+                        mem.exclude()
 
-                # print("mem", mem)
+                    # print("mem", mem)
+    except:
+        pass
 
     try:
         mb.calldefs(access_type_matcher_t('protected')).exclude()
@@ -623,7 +632,7 @@ def generate(defined_symbols, extraIncludes):
                 # mem_fun.call_policies = \
                 #   call_policies.return_value_policy(call_policies.copy_non_const_reference)
 
-    logger.info("Create api documentation from Doxgen comments.")
+    logger.info("Create API documentation from Doxygen comments.")
     # Now it is the time to give a name to our module
     from doxygen import doxygen_doc_extractor
     extractor = doxygen_doc_extractor()
@@ -647,6 +656,8 @@ def generate(defined_symbols, extraIncludes):
     additional_files = [
         os.path.join(
             os.path.abspath(os.path.dirname(__file__)), 'custom_rvalue.cpp'),
+        os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), 'explicit_instances.cpp'),
         os.path.join(
             os.path.abspath(os.path.dirname(__file__)), 'generators.h'),
         os.path.join(

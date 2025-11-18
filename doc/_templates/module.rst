@@ -55,9 +55,8 @@ Functions
 
 {% for function in functions %}
 
-{{ function | underline(".") }}
-
 .. autofunction:: {{ function }}
+
 
 .. include:: {{fullname}}.{{function}}.examples
     :end-line: 3
@@ -81,7 +80,6 @@ Classes
 -------
 
 {% for class in classes %}
-.. rubric:: {{ class }}
 .. autoclass:: {{ class }}
   :members:
   :undoc-members:

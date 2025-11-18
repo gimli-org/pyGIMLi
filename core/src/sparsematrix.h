@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -369,6 +369,15 @@ public:
 
     inline ValueType & val(const iterator & I) { return (*I).second;  }
 
+    inline Vector< ValueType > values() const {
+        Vector< ValueType > ret(C_.size());
+        Index i = 0;
+        for (const_iterator it = this->begin(); it != this->end(); it ++, i ++){
+            ret[i] = val(it);
+        }
+        return ret;
+    }
+
     inline ValueType getVal(IndexType i, IndexType j) { return (*this)[i][j]; }
 
     inline void setVal(IndexType i, IndexType j, const ValueType & val) {
@@ -724,7 +733,7 @@ public:
         colPtr_ = std::vector < int >(colPtr.size());
         rowIdx_ = std::vector < int >(rowIdx.size());
         for (Index i = 0; i < colPtr_.size(); i ++ ) colPtr_[i] = colPtr[i];
-        for (Index i = 0; i < colPtr_.size(); i ++ ) rowIdx_[i] = rowIdx[i];
+        for (Index i = 0; i < rowIdx_.size(); i ++ ) rowIdx_[i] = rowIdx[i];
         vals_   = vals;
         stype_  = stype;
         valid_  = true;

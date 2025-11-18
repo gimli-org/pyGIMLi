@@ -1,103 +1,116 @@
-{%- set title = "Home" %} {%- extends "layout.html" %} {% block body %}
-        <div class="card text-white bg-light">
-          <div class="card-body">
-            <h3>pyGIMLi is an open-source multi-method library for modelling and inversion in
-              geophysics.</h3>
-            <a class="btn btn-primary btn-large" href="about.html">
-              Learn more
-            </a>
-            <!-- <a class="btn btn-success btn-large" href="http://try.pygimli.org">
-          <i class="far fa-play-circle"></i> Try it now!
-        </a> -->
-          </div>
-        </div>
-        <h1>Showcase
-        <small><font color="gray">
-          pyGIMLi-based research papers
-        </font></small>
-        </h1>
-        <div id="paper-carousel" class="carousel slide" data-ride="carousel">
-          <div class="carousel-inner">
-            <!-- Carousel items -->
-            {%- for paper in showcase %}
-            {%- if loop.index == 1 %}
-            <div class="carousel-item active">
-            {%- else %}
-            <div class="carousel-item">
-              {%- endif %}
-                <div class="card-block">
-                  <div class="row">
-                    <div class="col-8">
-                      <a href="{{ paper['link'] }}" target="_blank">
-                      <img src="_static/usecases/{{ paper['img'] }}" align="center" width="100%">
-                      </a>
-                        <a class="carousel-control-prev" href="#paper-carousel" role="button" data-slide="prev">
-                          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                          <span class="sr-only">Previous</span>
-                        </a>
-                        <a class="carousel-control-next" href="#paper-carousel" role="button" data-slide="next">
-                          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                          <span class="sr-only">Next</span>
-                        </a>
-                    </div>
-                    <div class="col-4">
-                      <div class="h-25 d-inline-block">
-                      <br>
-                      <h3>{{ paper["title"] }}</h3>
-                      <p>{{ paper["subtitle"] }}</p>
-                      </div>
-                      <div class="h-75 d-inline-block">
-                      <br>
-                      <a href="{{ paper['link'] }}" target="_blank">
-                      <button class="btn btn-outline-success">Go to {{ paper["subtitle"].split(',')[0] }}</button>
-                      </a>
-                      <br>
-                      <br>
-                      <a href="{{ pathto('publist') }}")
-                      <button class="btn btn-outline-secondary btn-sm">Complete list of pyGIMLi-based publications</button>
-                      </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-            </div>
-            {%- endfor %}
-            <!-- Carousel nav -->
-          </div>
-          <script>
-            ! function($) {
-              $(function() {
-                // carousel demo
-                $('#paper-carousel').carousel({
-                  interval: 4500 // 4.5 sec
-                })
-              })
-            }(window.jQuery)
-          </script>
-        </div>
+{%- extends "layout.html" %}
+{%- set title = "Home" %}
 
-        <h1>Get pyGIMLi.
-        <small><font color="gray">
-          Available for different platforms.
-          <i class="fab fa-windows"></i>
-          <i class="fab fa-linux"></i>
-          <i class="fab fa-apple"></i>
-        </font></small>
-        </h1>
-        pyGIMLi has been successfully compiled on Windows, various Linux distributions and Mac OS X. See the <a href="installation.html">installation section</a> for more details on how to install or build pyGIMLi.
-        <h1>Get started.
-        <small><font color="gray">
-          Check out the tutorials.
-        </font></small>
-        </h1>
-        To get started, have a look at the
-        <a href="{{pathto("_tutorials_auto/index")}}">pyGIMLi tutorials</a>. Applications and user stories can be found in the
-        <a href="{{pathto("_examples_auto/index")}}">Example section</a>. 
-        <h1>Get involved.
-        <small><font color="gray">
-          We want your help.
-        </font></small></h1>
-        You found a bug or desperately miss a certain functionality? Fill out a
-        <a href="https://github.com/gimli-org/gimli/issues">bug report or a feature
-        request</a>. If you have used pyGIMLi for an interesting application, consider
-        <a href="mailto:mail@pygimli.org">sending us</a> your example. Please <a href="https://www.pygimli.org/citation.html">cite the pyGIMLi paper</a> or derived ones when using it for scientific purposes. {% endblock %}
+{% block body %}
+
+<h1 class="display-5">
+  pyGIMLi is an open-source library for multi-method modelling and inversion in geophysics.
+</h1>
+<a class="btn btn-primary btn-lg mt-2" href="about.html">
+  Learn more
+</a>
+
+<h1 class="mt-5">Showcase
+  <small class="text-muted">
+    pyGIMLi-based research papers
+  </small>
+</h1>
+<div id="paper-carousel" class="carousel slide" data-ride="carousel">
+  <div class="carousel-inner">
+    <!-- Carousel items -->
+    {%- for paper in showcase %}
+    <div class="carousel-item">
+      <div class="card-block">
+        <div class="row">
+          <div class="col-md-8">
+            <a href="{{ paper['link'] }}" target="_blank">
+              <img src="_static/usecases/{{ paper['img'] }}" align="center" width="100%">
+            </a>
+            <button class="carousel-control-prev" type="button" data-bs-target="#paper-carousel" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#paper-carousel" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          </div>
+          <div class="col-md-4 align-center">
+
+            <div class="d-flex align-items-start flex-column bd-highlight mb-3" style="height: 80%;">
+              <div class="mb-auto p-2 bd-highlight">
+                <h4 class="mt-0">{{ paper["title"] }}</h4>
+                <p class="fs-6 text-muted">{{ paper["subtitle"] }}</p>
+              </div>
+              <div class="p-2 bd-highlight">
+                <a href="{{ paper['link'] }}" target="_blank">
+                  <button class="btn btn-outline-success mb-2 btn-sm">Go to {{ paper["subtitle"].split(',')[0]
+                    }}</button>
+                </a>
+                <a href="{{ pathto('publist') }}">
+                  <button class="btn btn-outline-secondary btn-sm">More pyGIMLi-based publications</button>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {%- endfor %}
+    <!-- Carousel nav -->
+  </div>
+  <script>
+    ! function ($) {
+      $(function () {
+        // carousel demo
+        const items = document.querySelectorAll('#paper-carousel .carousel-item');
+        const randomItemNumber = Math.floor(Math.random() * items.length); //random number in range of items
+        items[randomItemNumber].classList.add('active');
+        $('#paper-carousel').carousel({
+          interval: 4500, // 4.5 sec
+          ride: "carousel"
+        })
+      })
+    }(window.jQuery)
+  </script>
+</div>
+
+<h1 class="mt-5">Get pyGIMLi.
+  <small class="text-muted">
+    Available for different platforms.
+    <i class="fab fa-windows"></i>
+    <i class="fab fa-linux"></i>
+    <i class="fab fa-apple"></i>
+  </small>
+</h1>
+pyGIMLi works on Windows, various Linux distributions and Mac OS. See the <a
+  href="installation.html">installation section</a> for more details on how to install the binaries or build pyGIMLi from the source code.
+<h1 class="mt-5">Get started.
+  <small class="text-muted">
+    Check out the tutorials.
+  </small>
+
+</h1>
+To get started, have a look at the
+<a href="{{pathto("_tutorials_auto/index")}}">pyGIMLi tutorials</a>. Applications and user stories can be found in
+the
+<a href="{{pathto("_examples_auto/index")}}">Example section</a>.
+
+<h1 class="mt-5">Get involved.
+  <small class="text-muted">
+    We want your help.
+  </small>
+</h1>
+You found a bug or desperately miss a certain functionality? Fill out a
+<a href="https://github.com/gimli-org/gimli/issues">bug report or a feature
+  request</a>. If you have used pyGIMLi for an interesting application, consider
+<a href="mailto:mail@pygimli.org">sending us</a> your example. Please <a
+  href="https://www.pygimli.org/citation.html">cite the pyGIMLi paper</a> or derived ones when using it for scientific
+purposes.
+<div class="mb-2"></div>
+{% endblock body %}
+
+{# Secondary sidebar #}
+{% block docs_toc %}
+<div class="bd-sidebar-secondary bd-toc">{% include "sidebar.html" %}</div>
+{% endblock docs_toc %}

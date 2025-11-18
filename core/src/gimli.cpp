@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -39,6 +39,7 @@
     std::mutex __GIMLILogWriteMutex__;
 #endif
 
+#include <omp.h>
 
 namespace GIMLI{
 
@@ -47,12 +48,69 @@ static bool __GIMLI_DEBUG__ = false;
 static int __GIMLI_DEEP_DEBUG__ = 0;
 
 Index __setTC__(){
-    long tc = numberOfCPU();
-    if (tc == -1) return 1;
-    return (Index)(tc);
+    // to close to number of cpu can bring significent shedular overhead
+    int omp = getEnvironment("OMP_NUM_THREADS", -1, false);
+    if (omp == -1){
+        omp_set_num_threads(min(8, numberOfCPU()-2));
+    }
+
+    int tc = getEnvironment("OPENBLAS_NUM_THREADS", -1, false);
+
+    if (tc == -1){
+        int tc = getEnvironment("GIMLI_NUM_THREADS", -1, false);
+
+    }
+
+// __MS(tc)
+    tc = Index(min(8, numberOfCPU()-2));
+// __MS(Index(tc))
+    setThreadCount(Index(tc));
+    return Index(tc);
 }
 
 static Index __GIMLI_THREADCOUNT__ = __setTC__();
+
+void setThreadCount(Index nThreads){
+
+    nThreads = max(1, nThreads);
+    log(Debug, "Set amount of threads to " + str(nThreads));
+    //log(Debug, "omp_get_max_threads: " + str(omp_get_max_threads()));
+    //omp_set_num_threads
+#if OPENBLAS_CBLAS_FOUND
+    openblas_set_num_threads(nThreads);
+    //omp_set_num_threads
+#else
+    log(Debug, "can't set openblas thread count. ");
+#endif
+
+    __GIMLI_THREADCOUNT__ = nThreads;
+    // __MS(__GIMLI_THREADCOUNT__)
+}
+
+Index threadCount(){
+    return __GIMLI_THREADCOUNT__;
+}
+
+
+bool __setOMP__(){
+
+    int tc = getEnvironment("PG_USE_OMP", -1, false);
+    if (tc == -1) {
+        // default is false
+        tc = false;
+    }
+    setUseOMP(tc);
+    return (bool)tc;
+}
+
+static bool __GIMLI_USE_OMP__ = __setOMP__();
+
+void setUseOMP(bool o){
+    __GIMLI_USE_OMP__ = o;
+}
+bool useOMP(){
+    return __GIMLI_USE_OMP__;
+}
 
 // //** end forward declaration
 // // static here gives every .cpp its own static bool
@@ -72,25 +130,6 @@ bool debug(){ return __GIMLI_DEBUG__;}
 
 void setDeepDebug(int level){__GIMLI_DEEP_DEBUG__ = level;}
 int deepDebug(){ return __GIMLI_DEEP_DEBUG__; }
-
-void setThreadCount(Index nThreads){
-    log(Debug, "Set amount of threads to " + str(nThreads));
-    //log(Debug, "omp_get_max_threads: " + str(omp_get_max_threads()));
-    //omp_set_num_threads
-#if OPENBLAS_CBLAS_FOUND
-    openblas_set_num_threads(nThreads);
-    //omp_set_num_threads
-#else
-    log(Debug, "can't set openblas thread count. ");
-#endif
-
-    __GIMLI_THREADCOUNT__ = nThreads;
-}
-
-Index threadCount(){
-    return __GIMLI_THREADCOUNT__;
-}
-
 
 void PythonGILSave::save() {
     if (!saved_) {
@@ -250,12 +289,19 @@ std::vector < std::string > split(const std::string & str, char delimiter){
     return subStrings;
 }
 
+std::string replace(const std::string & str, const std::string & from,
+                    const std::string & to){
+    std::string ret(str);
+    if (ret.find(from) != std::string::npos){
+        ret.replace(ret.find(from), from.length(), to);
+    }
+    return ret;
+}
 std::string replace(const std::string & str, char from, char to){
     std::string ret(str);
     std::replace(ret.begin(), ret.end(), from, to);
     return ret;
 }
-
 std::string lower(const std::string & str){
     std::string lo(str);
     std::transform(lo.begin(), lo.end(), lo.begin(), tolower);

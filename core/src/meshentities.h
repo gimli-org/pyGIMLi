@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -42,6 +42,10 @@ DLLEXPORT Boundary * findBoundary(const Node & n1, const Node & n2);
 DLLEXPORT Boundary * findBoundary(const Node & n1, const Node & n2, const Node & n3);
 
 DLLEXPORT Boundary * findBoundary(const std::vector < Node * > & n);
+
+/*! Find all boundaries that have these nodes in common. */
+DLLEXPORT std::set < Boundary * >  
+findBoundaries(const std::vector < Node * > & n);
 
 /*! */
 DLLEXPORT Boundary * findCommonBoundary(const Cell & c1, const Cell & c2);
@@ -202,7 +206,7 @@ public:
     /*! Geometry has been changed. Deletes cache.*/
     void changed();
 
-void addSecondaryNode(Node * n);
+    void addSecondaryNode(Node * n);
 
     void delSecondaryNode(Node * n);
 
@@ -213,11 +217,19 @@ void addSecondaryNode(Node * n);
 
     Index allNodeCount() const;
 
+    /*! Reverse node sequence order to enforce positive Jacobian determinant.
+     * Please use with care! Return True if the order has been changed.*/
+    virtual bool enforcePositiveDirection();
+
 protected:
     void fillShape_();
 
     virtual void registerNodes_();
     virtual void deRegisterNodes_();
+
+    virtual void registerSecNode_(Node *n);
+    virtual void deRegisterSecNode_(Node *n);
+    
 
     Shape * shape_;
 
@@ -311,6 +323,9 @@ public:
 protected:
     virtual void registerNodes_();
     virtual void deRegisterNodes_();
+    virtual void registerSecNode_(Node *n);
+    virtual void deRegisterSecNode_(Node *n);
+    
     std::vector < Cell * > neighborCells_;
     double attribute_;
 
@@ -375,9 +390,11 @@ public:
 
 
 protected:
-    void registerNodes_();
-
-    void deRegisterNodes_();
+    virtual void registerNodes_();
+    virtual void deRegisterNodes_();
+    virtual void registerSecNode_(Node *n);
+    virtual void deRegisterSecNode_(Node *n);
+    
 
     Cell *leftCell_;
     Cell *rightCell_;
@@ -598,8 +615,9 @@ public:
     void insertNode(Node * node, double tol=TOLERANCE);
 
     /*! Insert nodes for a subpolygon.
-    All nodes regarding the parent mesh and need to be inside the face.*/
-    void addSubface(const std::vector < Node * > & nodes);
+    All nodes regarding the parent mesh and need to be inside the face.
+    If marked as hole the boundary does not become part if nodes boundary set.*/
+    void addSubface(const std::vector < Node * > & nodes, bool isHole=false);
 
     Index subfaceCount() const {return this->subfaces_.size();}
 
@@ -1184,6 +1202,10 @@ public:
 
 protected:
 };
+
+DLLEXPORT std::ostream & operator << (std::ostream & str, const std::set < GIMLI::MeshEntity * > & ents);
+
+DLLEXPORT std::ostream & operator << (std::ostream & str, const std::set < GIMLI::Boundary * > & bounds);
 
 } // namespace GIMLI
 

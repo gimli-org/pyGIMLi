@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -136,16 +136,6 @@ Node & Shape::node(Index i) const {
         std::cerr << WHERE_AM_I << " requested shape node: " << i << " does not exist." << std::endl;
     }
     return *((*nodeVector_)[i]);
-}
-
-bool Shape::enforcePositiveDirection(){
-    __MS("inuse?")
-    // if (createJacobian().det() < 0){
-    //     std::reverse(nodeVector_.begin(), nodeVector_.end());
-    //     this->changed();
-    //     return true;
-    // }
-    return false;
 }
 
 RVector3 Shape::center() const {
@@ -452,7 +442,7 @@ bool Shape::touch(const RVector3 & pos, double tol, bool verbose) const {
 
         for (Index i = 0; i < nodeCount(); i ++){
             Line segment(node(i).pos(), node((i+1)%nodeCount()).pos());
-            // __MS(segment)
+            // __MS(segment << " " << pos)
 
             if (segment.intersectRay(pos, rayDir, iP)){
                 // __MS(iP << " vs.  " << pos << " d:" << iP.dist(pos)
@@ -523,8 +513,7 @@ RVector3 EdgeShape::rst(Index i) const{
 }
 
 bool EdgeShape::touch(const RVector3 & pos, double tol, bool verbose) const{
-    THROW_TO_IMPL
-    return false;
+    return Line(node(0).pos(), node(1).pos()).touch(pos, tol);
 }
 
 bool EdgeShape::intersectRay(const RVector3 & start, const RVector3 & dir,

@@ -10,7 +10,12 @@ _generated/
 # sidebar gallery is created on the fly
 doc/_templates/gallery.html
 doc/_static/usecases/original/
+*sg_execution_times.rst
 *.ipynb
+*.ipynb_checkpoints*
+
+doc/user-guide/*_files
+doc/user-guide/*.html
 
 # Customizations
 *.log
@@ -30,11 +35,18 @@ command.history
 *.xyz
 *.dat
 *.ves
+constraint.matrix
+chi.txt
+*.data
+*.poly
 
 # Gmsh
 *.geo.*
 *.geo
 *.msh
+
+# Mac
+*.DS_Store*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -43,6 +55,7 @@ __pycache__/
 
 # C extensions
 *.so
+*.dylib
 
 # Distribution / packaging
 .Python
@@ -94,12 +107,10 @@ gimli.code-workspace
 pygimli/core/*.dll
 .vscode/settings.json
 
-pygimli/testing/synth.ves
 .vscode/launch.json
 python/git.exe.stackdump
 pygimli/core/libgimli.dll.back
 pygimli/core/_pygimli_.pyd.back
 pygimli/core/_pygimli_.so.dSYM/
-pygimli/core/libgimli.dylib
-doc/examples/dc_and_ip/synth.ves
 pygimli/VERSION
+synth.ves

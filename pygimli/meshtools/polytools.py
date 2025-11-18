@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """Tools to create or manage PLC.
 
 Please note there is currently no collision or intersection check at all.
@@ -20,6 +20,7 @@ import math
 import os
 from os import system
 
+import functools
 import numpy as np
 import pygimli as pg
 
@@ -69,7 +70,7 @@ def setPolyRegionMarker(poly, marker=1, area=0.0, markerPosition=None,
         Marks the geometry as a hole and will be cut in any merge mesh.
 
     Keyword Arguments
-    ----------------
+    -----------------
     **kwargs
         Additional kwargs
     """
@@ -125,6 +126,14 @@ def createRectangle(start=None, end=None, pos=None, size=None, **kwargs):
             Marker for the resulting boundary edges
         leftDirection : bool [True]
             TODO Rotational direction
+        pnts: [[x, y],]
+            Return squared rectangle of origin-aligned boundingbox for pnts.
+        minBB: False
+            Return squared rectangle of non-origin-aligned minimum bounding box
+            for pnts.
+        minBBOffset: [1.0, 1.0]
+            Offset for minimal boundingbox in x and y direction in relative
+            extent .. whatever that means for non-aligned boxes.
 
     Returns
     -------
@@ -140,9 +149,107 @@ def createRectangle(start=None, end=None, pos=None, size=None, **kwargs):
     ...                      marker=1, area=0.1, markerPosition=[0, -2])
     >>> r2 = mt.createRectangle(start=[0.5, -0.5], end=[2, -2],
     ...                      marker=2, area=1.1)
-    >>> _ = pg.show(mt.mergePLC([r1, r2]))
-    >>> pg.wait()
+    >>> pnts3 = [[-0.5, 0], [0, 0.2], [-0.2, 0.5], [-0.3, 0.25]]
+    >>> r3 = mt.createRectangle(pnts=pnts3, marker=3, area=0.2)
+    >>> pnts4 = [[1.5, 0], [2.0, 0.2], [1.8, 0.5], [1.7, 0.25]]
+    >>> r4 = mt.createRectangle(pnts=pnts4, marker=4, minBB=True)
+    >>> pnts5 = [[-0.5, -1], [0, -0.8], [-0.2, -0.5], [-0.3, -0.75]]
+    >>> r5 = mt.createRectangle(pnts=pnts5, marker=5,
+    ...                         minBB=True, minBBOffset=[1.2, 1.2])
+    >>> ax, _ = pg.show(mt.mergePLC([r1, r2, r3, r4, r5]))
+    >>> pg.viewer.mpl.drawSensors(ax, pnts3)
+    >>> pg.viewer.mpl.drawSensors(ax, pnts4)
+    >>> pg.viewer.mpl.drawSensors(ax, pnts5)
     """
+    pnts = kwargs.pop('pnts', None)
+    if pnts is not None:
+        if len(pnts) == 1:
+            return createRectangle(pos=pnts[0], size=[1, 1], **kwargs)
+        if len(pnts) == 2:
+            return createRectangle(start=pnts[0], end=pnts[1], **kwargs)
+
+        minBB = kwargs.pop('minBB', False)
+        minBBBoundary = kwargs.pop('minBBOffset', [1.0, 1.0])
+
+        if not minBB:
+            xMin = min(pg.x(pnts))
+            xMax = max(pg.x(pnts))
+            yMin = min(pg.y(pnts))
+            yMax = max(pg.y(pnts))
+
+            bb = np.asarray([[xMin, yMin], [xMax, yMax]])
+
+            bbScale = (bb[1]-bb[0])*(minBBBoundary-np.asarray([1.0, 1.0]))
+            return createRectangle(start=bb[0]-bbScale, end=bb[1]+bbScale,
+                                   **kwargs)
+        else:
+            # create convex hull
+            m = pg.meshtools.createMesh(pnts)
+            if m.boundaryCount() == 0:
+                # probably linear pnts so no convex hull
+                for i in range(m.nodeCount()-1):
+                    m.createBoundary([i, i+1])
+
+                    bs = pg.meshtools.createLine(pnts[0], pnts[-1])
+            else:
+                bs = m.createSubMesh(m.boundaries([b.id()
+                                     for b in m.boundaries() if b.outside()]))
+
+            def getBB(m, off, rot):
+                # Rotate hull and find bb
+                m2 = pg.Mesh(m)
+                m2.translate(-off)
+                m2.transform(rot)
+                m2.translate(off)
+
+                # Increase bb if zero width or lenght
+                bb = m2.bb()
+                if (bb[1]-bb[0])[0] < 1e-12:
+                    bb[1][0] += 0.5
+                    bb[0][0] -= 0.5
+                if (bb[1]-bb[0])[1] < 1e-12:
+                    bb[1][1] += 0.5
+                    bb[0][1] -= 0.5
+
+                return bb
+
+            off = 0
+            minSize = [9e99, None, None, None]
+
+            for b in bs.boundaries():
+                # normalize to origin
+                off = b.node(0).pos()
+                # rotation to origin x axis
+                rot = pg.core.getRotation((b.node(1).pos()-off), [1, 0])
+
+                # get bounding box for normalized mesh
+                bb = getBB(bs, off, rot)
+
+                # compare size off bb and collect minimum size
+                s = (bb[1]-bb[0]).abs()
+                if s < minSize[0]:
+                    minSize[0] = s
+                    minSize[1] = bb
+                    minSize[2] = b.node(1).pos()
+                    minSize[3] = off
+
+            # Rotate bb back and create rectangle
+            bb = minSize[1]
+            off = minSize[3]
+
+            bbScale = (bb[1]-bb[0])*(minBBBoundary-np.asarray([1.0, 1.0]))
+            r = createRectangle(start=bb[0]-bbScale, end=bb[1]+bbScale,
+                                **kwargs)
+
+            rot = pg.core.getRotation([1, 0], minSize[2]-off)
+            r.translate(-off)
+            r.transform(rot)
+            r.translate(off)
+
+            # pg.show(r)
+            # pg.wait()
+            return r
+
     if start is None:
         start = [-0.5, 0.5]
     if end is None:
@@ -174,6 +281,9 @@ def createRectangle(start=None, end=None, pos=None, size=None, **kwargs):
 
     _polyCreateDefaultEdges(poly, **kwargs)
 
+    sPos = poly.bb()[0]
+    ePos = poly.bb()[1]
+
     kwargs['markerPosition'] = kwargs.pop('markerPosition',
                                           sPos + (ePos - sPos) * 0.2)
 
@@ -186,10 +296,12 @@ def createWorld(start, end, marker=1, area=0., layers=None, worldMarker=True,
                 **kwargs):
     """Create simple rectangular 2D or 3D world.
 
-    Create simple rectangular [hexagonal] world with appropriate boundary conditions.
-    Surface boundary is set do pg.core.MARKER_BOUND_HOMOGEN_NEUMANN, i.e, -1
-    and inner subsurface is set to pg.core.MARKER_BOUND_MIXED, i.e., -2 or
-    Numbered: 1, 2, 3, 4, 5, 6 for left, right, bottom, top, front and back, if worldMarker is set to false and no layers are given. With layers, its numbered in ascending order.
+    Create simple rectangular [hexagonal] world with appropriate boundary
+    conditions. Surface boundary is set  pg.core.MARKER_BOUND_HOMOGEN_NEUMANN,
+    and inner subsurface is set to pg.core.MARKER_BOUND_MIXED, i.e., -2 OR
+    Numbered: 1, 2, 3, 4, 5, 6 for left, right, bottom, top, front and back,
+    if worldMarker is set to false and no layers are given. With layers, it is
+    numbered in ascending order.
 
     TODO
     ----
@@ -209,7 +321,9 @@ def createWorld(start, end, marker=1, area=0., layers=None, worldMarker=True,
     layers: [float] [None]
         List of depth coordinates for some layers.
     worldMarker: bool [True]
-        Specify kind of preset boundary marker [-1, -2] or ascending order [1, 2, 3, 4 ..]
+        Specify boundary markers:
+        True: [-1, -2] for [surface, subsurface] boundaries
+        False: ascending order [1, 2, 3, 4 ..]
 
     Other Parameters
     ----------------
@@ -237,9 +351,8 @@ def createWorld(start, end, marker=1, area=0., layers=None, worldMarker=True,
             pg.critical("3D with layers is not yet implemented.")
 
         world = createCube(size=pg.Pos(end)-pg.Pos(start),
-                           pos=(pg.Pos(end)-pg.Pos(start))/2.0,
-                           **kwargs)
-
+                           pos=(pg.Pos(end)+pg.Pos(start))/2.0,
+                           area=area, marker=marker, **kwargs)
 
         for i, b in enumerate(world.boundaries()):
             if worldMarker is True:
@@ -275,9 +388,9 @@ def createWorld(start, end, marker=1, area=0., layers=None, worldMarker=True,
     if isinstance(area, float) or isinstance(area, int):
         area = np.ones(len(z)-1) * float(area)
 
-    if len(area) < len(z) -1:
+    if len(area) < len(z) - 1:
         pg.warn('Missing {} area value, padding with zeros'.format(
-            (len(z) -1) - len(area)))
+            (len(z) - 1) - len(area)))
         _area = np.zeros(len(z)-1)
         _area[0:len(area)] = area
         area = _area
@@ -314,7 +427,6 @@ def createWorld(start, end, marker=1, area=0., layers=None, worldMarker=True,
                 b.setMarker(3)
             elif b.norm() == [0, 1]:
                 b.setMarker(4)
-            
 
     if layers is not None:
         for i in range(len(layers)):
@@ -371,6 +483,7 @@ def createCircle(pos=None, radius=1, nSegments=12, start=0, end=2.*math.pi,
     --------
     >>>  # no need to import matplotlib. pygimli's show does
     >>> import math
+    >>> import pygimli as pg
     >>> from pygimli.viewer.mpl import drawMesh
     >>> import pygimli.meshtools as mt
     >>> c0 = mt.createCircle(pos=(-5.0, 0.0), radius=2, nSegments=6)
@@ -383,7 +496,7 @@ def createCircle(pos=None, radius=1, nSegments=12, start=0, end=2.*math.pi,
     >>> drawMesh(ax, plc, fillRegion=False)
     >>> pg.wait()
     """
-    pg.renameKwarg('segments', 'nSegments', kwargs, '1.2') # 20210312
+    pg.renameKwarg('segments', 'nSegments', kwargs, '1.2')  # 20210312
     nSegments = kwargs.pop('nSegments', nSegments)
 
     # TODO refactor with polyCreatePolygon
@@ -467,7 +580,7 @@ def createLine(start, end, nSegments=1, **kwargs):
     >>> ax, _ = pg.show([w, l1, l2,], ax=ax, fillRegion=False)
     >>> pg.wait()
     """
-    pg.renameKwarg('segments', 'nSegments', kwargs, '1.2') # 20210312
+    pg.renameKwarg('segments', 'nSegments', kwargs, '1.2')  # 20210312
     nSegments = kwargs.pop('nSegments', nSegments)
 
     # TODO refactor with polyCreatePolygon
@@ -508,8 +621,9 @@ def createPolygon(verts, isClosed=False, addNodes=0, interpolate='linear',
     isClosed : bool [True]
         Add closing edge between last and first node.
 
-    addNodes : int [1]
-        Number of additional nodes to be added equidistant between sensors.
+    addNodes : int [1], iterable
+        Constant or (for each) Number of additional nodes to be added,
+        equidistant between sensors.
 
     interpolate : str ['linear']
         Interpolation rule for addNodes. 'linear' or 'spline'. TODO 'harmfit'
@@ -554,18 +668,27 @@ def createPolygon(verts, isClosed=False, addNodes=0, interpolate='linear',
     """
     poly = pg.Mesh(dim=2, isGeometry=True)
 
-    if addNodes > 0:
+    if hasattr(addNodes, '__iter__') or addNodes > 0:
         if isClosed:
             verts = np.array(verts)
             verts = np.vstack([verts, verts[0]])
 
         tV = pg.utils.cumDist(verts)
+
+        if isinstance(addNodes, int) and addNodes > 0:
+            addNodes = np.full(len(tV)-1, addNodes)
+
+        if len(addNodes) != len(tV)-1:
+            print(addNodes)
+            pg.error('Amount of addNodes does not match needed length:',
+                     len(tV)-1)
+
         tI = []
 
         for i, t in enumerate(tV[0:len(tV)-1]):
             tI.append(t)
-            for j in range(addNodes):
-                dt = (tV[i+1]-tV[i]) / (addNodes+1)
+            for j in range(addNodes[i]):
+                dt = (tV[i+1]-tV[i]) / (addNodes[i]+1)
                 tI.append(tV[i] + dt*(j+1))
 
         if not isClosed:
@@ -597,31 +720,54 @@ def createPolygon(verts, isClosed=False, addNodes=0, interpolate='linear',
     return poly
 
 
+def merge(*args, **kwargs):
+    """Little syntactic sugar to merge.
+
+    All args are forwarded to mergeMeshes if isGeometry is not set.
+    Otherwise it considers the mesh as PLC to merge.
+
+    Args
+    ----
+    List of meshes or comma separated list of meshes that will be forwarded to
+    mergeMeshes or meshPLC.
+    """
+    if len(args) == 1 and isinstance(args[0], list):
+        return merge(*args[0], **kwargs)
+
+    for arg in args:
+        if hasattr(arg, 'isGeometry'):
+            if arg.isGeometry():
+                return mergePLC([*args], **kwargs)
+
+    return pg.meshtools.mergeMeshes([*args], **kwargs)
+
+
 def mergePLC(plcs, tol=1e-3):
     """Merge multiply polygons.
 
     Merge multiply polygons into a single polygon.
     Common nodes and common edges will be checked and removed.
-    When a node touches an edge, the edge will be splited.
+    When a node touches an edge, the edge will be split.
 
-    3D only OOC with polytools
+    3D only OOC with polytools.
 
-    TODO:
-        * Crossing or Node/Edge intersections will NOT be
-        recognized yet.
-        * Edge on Node touch
+    TODO
+    ----
+    * Crossing or Node/Edge intersections will NOT be recognized yet.
+    * Edge on Node touch
+
 
     Parameters
     ----------
-    plcs: [:gimliapi:`GIMLI::Mesh`]
+    plcs: [:gimliapi:`GIMLI::Mesh`,]
         List of PLC that want to be merged into one new PLC
 
-    tol : double
+    tol: double
         Tolerance to check for duplicated nodes. [1e-3]
 
     Returns
     -------
-    plc : :gimliapi:`GIMLI::Mesh`
+    plc: :gimliapi:`GIMLI::Mesh`
         The resulting polygon is a :gimliapi:`GIMLI::Mesh`.
 
     Examples
@@ -645,28 +791,28 @@ def mergePLC(plcs, tol=1e-3):
     if plcs[0].dim() == 3:
         return mergePLC3D(plcs, tol)
 
-        tmp = pg.optImport('tempfile')
-        names = []
-        for p in plcs:
-            _, namePLC = tmp.mkstemp(suffix='.poly')
-            pg.meshtools.exportPLC(p, namePLC)
-            names.append(namePLC)
+        # tmp = pg.optImport('tempfile')
+        # names = []
+        # for p in plcs:
+        #     _, namePLC = tmp.mkstemp(suffix='.poly')
+        #     pg.meshtools.exportPLC(p, namePLC)
+        #     names.append(namePLC)
 
-        for n in names[1:]:
-            syscal = 'polyMerge {0} {1} {0}'.format(names[0], n)
-            pg.debug(syscal)
-            os.system(syscal)
+        # for n in names[1:]:
+        #     syscal = 'polyMerge {0} {1} {0}'.format(names[0], n)
+        #     pg.debug(syscal)
+        #     os.system(syscal)
 
-        plc = readPLC(names[0])
+        # plc = readPLC(names[0])
 
-        for n in names:
-            try:
-                pg.debug('Remove:', n)
-                os.remove(n)
-            except:
-                print("can't remove:", n)
+        # for n in names:
+        #     try:
+        #         pg.debug('Remove:', n)
+        #         os.remove(n)
+        #     except Exception:
+        #         print("can't remove:", n)
 
-        return plc
+        # return plc
 
     # handle 2D geometries
     plc = pg.Mesh(dim=2, isGeometry=True)
@@ -696,17 +842,13 @@ def mergePLC(plcs, tol=1e-3):
 
 
 def mergePLC3D(plcs, tol=1e-3):
-    """Merge a list of 3D PLC into one
+    """Merge a list of 3D PLC into one.
 
     Experimental replacement for polyMerge. Don't expect too much.
 
     Works if:
         * all plcs are free and does not have any contact to each other
-        * contact of two facets if the second facet is completely within the first facet
-    
-    TODO:
-        * everything else
-
+        * contact of two facets if the second is completely within the first
     """
     if len(plcs) < 2:
         pg.critical("Give at least 2 PLCs.")
@@ -737,22 +879,22 @@ def createParaDomain2D(*args, **kwargs):
     return createParaMeshPLC(*args, **kwargs)
 
 
-def createParaMeshPLC(sensors, paraDX=1, paraDepth=0, paraBoundary=2,
+def createParaMeshPLC(sensors, paraDX=1, paraDepth=-1, paraBoundary=2,
                       paraMaxCellSize=0.0, boundary=-1, boundaryMaxCellSize=0,
                       balanceDepth=True,
                       isClosed=False, addNodes=1, **kwargs):
-    """Create a PLC mesh for an inversion parameter mesh.
+    """Create a geometry (PLC) for an inversion parameter mesh.
 
-    Create a PLC mesh for an inversion parameter mesh with for a given list of
+    Create an inversion mesh geometry (PLC) for a given list of
     sensor positions. Sensor positions are assumed to be on the surface and
-    must be sorted and unique.
+    must be unique and sorted along x coordinate.
 
     You can create a parameter mesh without sensors if you just set [xMin,
     xMax] as sensors.
 
     The PLC is a :gimliapi:`GIMLI::Mesh` and contain nodes, edges and two
     region markers, one for the parameters domain (marker=2) and a larger
-    boundary around the outside (marker=1)
+    boundary around the outside (marker=1).
 
     TODO:
         * additional topographic points
@@ -770,9 +912,9 @@ def createParaMeshPLC(sensors, paraDX=1, paraDepth=0, paraBoundary=2,
         e.g., 0.5 means 1 additional node between two neighboring sensors
         e.g., 0.33 means 2 additional equidistant nodes between two sensors
 
-    paraDepth : float, optional
-        Maximum depth for parametric domain, 0 (default) means 0.4 * maximum
-        sensor range.
+    paraDepth : float[-1], optional
+        Maximum depth in m for parametric domain.
+        Automatic (<=0) results in 0.4 * maximum sensor span range in m
 
     balanceDepth: bool [True]
         Equal depth for the parametric domain.
@@ -781,10 +923,10 @@ def createParaMeshPLC(sensors, paraDX=1, paraDepth=0, paraBoundary=2,
         Margin for parameter domain in absolute sensor distances. 2 (default).
 
     paraMaxCellSize: double, optional
-        Maximum size for parametric size in m*m
+        Maximum cell size for parametric region in m²
 
     boundaryMaxCellSize: double, optional
-        Maximum cells size in the boundary region in m*m
+        Maximum cells size in the boundary region in m²
 
     boundary : float, optional
         Boundary width to be appended for domain prolongation in absolute
@@ -798,6 +940,10 @@ def createParaMeshPLC(sensors, paraDX=1, paraDepth=0, paraBoundary=2,
     addNodes : int [1]
         Number of additional nodes to be added equidistant between sensors.
 
+    trapRatio : float [0]
+        Form a trapezoidal shape instead of a rectangle.
+        The value is a ratio of the total length to put inside at depth.
+
     Returns
     -------
     poly: :gimliapi:`GIMLI::Mesh`
@@ -807,10 +953,10 @@ def createParaMeshPLC(sensors, paraDX=1, paraDepth=0, paraBoundary=2,
     --------
     >>> # no need to import matplotlib, pygimli show does.
     >>> import pygimli as pg
-    >>> import pygimli.meshtools as plc
+    >>> import pygimli.meshtools as mt
     >>> # Create the simplest paramesh PLC with a para box of 10 m without
     >>> # sensors
-    >>> p = plc.createParaMeshPLC([0,10])
+    >>> p = mt.createParaMeshPLC([0,10])
     >>> # you can add subsurface sensors now with
     >>> for z in range(1,4):
     ...     n = p.createNode((5,-z), -99)
@@ -856,19 +1002,25 @@ def createParaMeshPLC(sensors, paraDX=1, paraDepth=0, paraBoundary=2,
 
     paraBound = eSpacing * paraBoundary
 
-    if paraDepth == 0:
+    if paraDepth <= 0.0:
         paraDepth = 0.4 * (xMax - xMin)
 
     poly = pg.Mesh(dim=2, isGeometry=True)
     # define para domain without surface
     n1 = poly.createNode([xMin - paraBound, sensors[0][iz]])
+    xStart = xMin - paraBound
+    xEnd = xMax + paraBound
+    trapRatio = np.minimum(kwargs.pop("trapRatio", 0), 0.45)
+    dxTrap = (xEnd - xStart) * trapRatio
+
     if balanceDepth:
-        bD = min(sensors[0][iz] - paraDepth, sensors[0][iz] - paraDepth)
-        n2 = poly.createNode([xMin - paraBound, bD])
-        n3 = poly.createNode([xMax + paraBound, bD])
+        bD = min(sensors[0][iz] - paraDepth, sensors[-1][iz] - paraDepth)
+        n2 = poly.createNode([xStart + dxTrap, bD])
+        n3 = poly.createNode([xEnd - dxTrap, bD])
     else:
-        n2 = poly.createNode([xMin - paraBound, sensors[0][iz] - paraDepth])
-        n3 = poly.createNode([xMax + paraBound, sensors[-1][iz] - paraDepth])
+        n2 = poly.createNode([xStart + dxTrap, sensors[0][iz] - paraDepth])
+        n3 = poly.createNode([xEnd - dxTrap, sensors[-1][iz] - paraDepth])
+
     n4 = poly.createNode([xMax + paraBound, sensors[-1][iz]])
 
     if boundary < 0:
@@ -882,7 +1034,7 @@ def createParaMeshPLC(sensors, paraDX=1, paraDepth=0, paraBoundary=2,
         n14 = poly.createNode(n4.pos() + [bound, 0.])
         n13 = poly.createNode(n14.pos() - [0., bound + paraDepth])
 
-        poly.createEdge(n1,  n11, pg.core.MARKER_BOUND_HOMOGEN_NEUMANN)
+        poly.createEdge(n1, n11, pg.core.MARKER_BOUND_HOMOGEN_NEUMANN)
         poly.createEdge(n11, n12, pg.core.MARKER_BOUND_MIXED)
         poly.createEdge(n12, n13, pg.core.MARKER_BOUND_MIXED)
         poly.createEdge(n13, n14, pg.core.MARKER_BOUND_MIXED)
@@ -904,30 +1056,48 @@ def createParaMeshPLC(sensors, paraDX=1, paraDepth=0, paraBoundary=2,
         for i, e in enumerate(sensors):
             if iz == 2:
                 e.rotateX(-math.pi / 2)
-            if paraDX >= 0.5:
+
+            # nSurface.append(poly.createNode(e, pg.core.MARKER_NODE_SENSOR))
+            if addNodes > 1:
+                nSurface.append(poly.createNode(e, pg.core.MARKER_NODE_SENSOR))
+                if i < len(sensors) - 1:
+                    e1 = sensors[i + 1]
+                    if iz == 2:
+                        e1.rotateX(-math.pi / 2)
+
+                    for j in range(addNodes):
+                        nSurface.append(poly.createNode(
+                            e + (e1 - e) * (j+1)/(addNodes+1)))
+            elif paraDX >= 0.5:
                 nSurface.append(poly.createNode(e, pg.core.MARKER_NODE_SENSOR))
                 if i < len(sensors) - 1:
                     e1 = sensors[i + 1]
                     if iz == 2:
                         e1.rotateX(-math.pi / 2)
                     nSurface.append(poly.createNode((e + e1) * 0.5))
-                # print("Surface add ", e, el, nSurface[-2].pos(),
-                #        nSurface[-1].pos())
+
             elif paraDX < 0.5:
                 if i > 0:
                     e1 = sensors[i - 1]
                     if iz == 2:
                         e1.rotateX(-math.pi / 2)
+
                     nSurface.append(poly.createNode(e - (e - e1) * paraDX))
+
                 nSurface.append(poly.createNode(e, pg.core.MARKER_NODE_SENSOR))
                 if i < len(sensors) - 1:
                     e1 = sensors[i + 1]
                     if iz == 2:
                         e1.rotateX(-math.pi / 2)
+
                     nSurface.append(poly.createNode(e + (e1 - e) * paraDX))
-                # print("Surface add ", nSurface[-3].pos(), nSurface[-2].pos(),
-                #        nSurface[-1].pos())
+
     nSurface.append(n4)
+
+    ### remove duplicates
+    nSurface = [ni for i, ni in enumerate(nSurface) if ni not in nSurface[:i]]
+    ### sort again .. just in case
+    nSurface.sort(key=lambda n: n.pos()[0])
 
     for i in range(len(nSurface) - 1, 0, -1):
         poly.createEdge(nSurface[i], nSurface[i - 1],
@@ -936,26 +1106,315 @@ def createParaMeshPLC(sensors, paraDX=1, paraDepth=0, paraBoundary=2,
     return poly
 
 
-def readPLC(filename, comment='#'):
-    r"""Read in a piece-wise linear complex object, i.e. pyGIMLi geometry, from .poly file. The latter could be created with `mt.exportPLC`.
+def createParaMeshSurface(sensors, paraBoundary=None, boundary=-1,
+                          surfaceMeshQuality=30, surfaceMeshArea=0,
+                          addTopo=None):
+    r"""Create surface mesh for an 3D inversion parameter mesh.
+
+        Topographic information (non-zero z-coodinate) can be from sensors
+        together with addTopo, or in addTopo alone if provided.
+        Outside boundary corners are set to median of all topography.
+
+    Args
+    ----
+    sensors: DataContainer with sensorPositions()
+        Sensor positions.
+
+    paraBoundary: [float, float] [1.1, 1.1]
+        Margin for parameter domain in relative extend.
+
+    boundary: [float, float] [10., 10.]
+        Boundary width to be appended for domain prolongation in relative
+        para domain size.
+
+    surfaceMeshQuality: float [30]
+        Quality of the surface mesh.
+
+    surfaceMeshArea: float [0]
+        Max cell Size for parametric domain.
+
+    addTopo: [[x,y,z],]
+        Number of additional nodes for topography.
+
+    Returns
+    -------
+    surface: :gimliapi:`GIMLI::Mesh`
+        3D Surface mesh
+
+    Examples
+    --------
+    >>> # no need to import matplotlib, pygimli show does.
+    >>> import numpy as np
+    >>> import pygimli as pg
+    >>> import pygimli.meshtools as mt
+    >>> # very simple design: 10 sensors on 1D profile in 3D topography
+    >>> x = np.linspace(-10, 10, 10)
+    >>> topo = [[15, -15, 10], [-15, 15, -10]]
+    >>> surface = mt.createParaMeshSurface(np.asarray([x, x, x*0]).T,
+    ...                                    paraBoundary=[1.2, 1.2],
+    ...                                    boundary=[2, 2],
+    ...                                    surfaceMeshQuality=30,
+    ...                                    addTopo=topo)
+    >>> _ = pg.show(surface, showMesh=True, color='white')
+    """
+    if hasattr(sensors, 'sensors'):
+        sensors = sensors.sensors()
+
+    sensors = np.asarray(sensors)
+
+    if paraBoundary is None:
+        paraBoundary = [1.1, 1.1]
+    elif isinstance(paraBoundary, (int, float)):
+        paraBoundary = [paraBoundary, paraBoundary]
+
+    if boundary is None:
+        boundary = [10.0, 10.0]
+
+    # find maximum extent
+    boundaryRect = pg.meshtools.createRectangle(pnts=sensors[:, 0:2],
+                                                minBB=False,
+                                                minBBOffset=boundary)
+    for i in range(4):
+        boundaryRect.boundary(i).setMarker(i+1)
+        boundaryRect.node(i).setMarker((i % 4 + 1) * 10)
+
+    # collect all pnts with topography
+    if addTopo is not None:
+        if min(sensors[:, 2]) != max(sensors[:, 2]) and sensors[0][2] != 0.0:
+            pnts = np.vstack((sensors, addTopo))
+        else:
+            pnts = np.asarray(addTopo)
+    else:
+        pnts = np.array(sensors)
+
+    # add maximal extent corners to median topo
+    boundaryRect.translate([0, 0, np.median(pnts[:, 2])])
+    pnts = np.vstack((boundaryRect.positions(), pnts))
+
+    # create mesh for topo interpolation
+    pntsSurface = pg.meshtools.createMesh(pnts[:, 0:2])
+
+    # find parameter extent
+    paraRect = pg.meshtools.createRectangle(pnts=sensors[:, 0:2],
+                                            minBB=True,
+                                            minBBOffset=paraBoundary,
+                                            area=surfaceMeshArea,
+                                            )
+    for i in range(4):
+        paraRect.boundary(i).setMarker(i + 5)
+        paraRect.node(i).setMarker((i % 4 + 5) * 10)
+
+    # create surface mesh of sensors and with maximal and parameter extent
+    if boundary == 0:
+        surfacePLC = paraRect + sensors[:, 0:2]
+    else:
+        surfacePLC = boundaryRect + paraRect + sensors[:, 0:2]
+
+    surface = pg.meshtools.createMesh(surfacePLC, quality=surfaceMeshQuality)
+
+    # interpolate topography to surface
+    # ax, _ = pg.show(pntsSurface)
+    # p_ = np.asarray(list(zip(pg.x(surface.positions()),
+    #                          pg.y(surface.positions()))))
+    # ax.scatter(*p_.T)
+    sZ = pg.interpolate(pntsSurface, pnts[:, 2], surface.positions())
+    for n in surface.nodes():
+        n.translate(0, 0, sZ[n.id()])
+
+    # create 3D surfacemesh
+    s = pg.meshtools.createSurface(
+        surface, boundaryMarker=pg.core.MARKER_BOUND_HOMOGEN_NEUMANN)
+
+    return s
+    # pg.show(surface, showMesh=True)
+
+
+def createParaMeshPLC3D(sensors, paraDX=0, paraDepth=-1, paraBoundary=None,
+                        paraMaxCellSize=0.0, boundary=None,
+                        boundaryMaxCellSize=0,
+                        surfaceMeshQuality=30, surfaceMeshArea=0,
+                        addTopo=None, isClosed=False, **kwargs):
+    r"""Create a geometry (PLC) for an 3D inversion parameter mesh.
+
+    Todo
+    ----
+        * 3D without TOPO
+        * better paraBoundary scale for with and height
+
+    Args
+    ----
+    sensors: Sensor list or pg.DataContainer with .sensors()
+        Sensor positions.
+
+    paraDX : float [1]
+        Absolute distance for node refinement (0=none).
+        Refinement node will be placed below the surface.
+
+    paraDepth : float[-1], optional
+        Maximum depth in m for parametric domain.
+        Automatic (<=0) results in 0.4 * maximum sensor span range in m.
+        Depth is set to median sensors depth + paraDepth.
+
+    paraBoundary: [float, float] | float [1.1, 1.1]
+        Margin for parameter domain in relative extend.
+
+    paraMaxCellSize: double, optional
+        Maximum cell size for parametric region in m³
+
+    boundaryMaxCellSize: double, optional
+        Maximum cells size in the boundary region in m³
+
+    boundary: [float, float] | float [10., 10.]
+        Boundary width to be appended for domain prolongation in relative
+        para domain size.
+
+    surfaceMeshQuality: float [30]
+        Quality of the surface mesh.
+
+    surfaceMeshArea: float [0]
+        Max boundary size for surface area in parametric region.
+
+    addTopo: [[x,y,z],]
+        Number of additional nodes for topography.
+
+    Returns
+    -------
+    poly: :gimliapi:`GIMLI::Mesh`
+        Piecewise linear complex (PLC) containing nodes and edges
+    """
+    if hasattr(sensors, 'sensors'):
+        sensors = sensors.sensors()
+
+    sensors = np.asarray(sensors)
+
+    if boundary is None:
+        boundary = [10.0, 10.0]
+    elif isinstance(boundary, (float, int)):
+        boundary = [boundary, boundary]
+
+    surface = pg.meshtools.createParaMeshSurface(
+        sensors, paraBoundary=paraBoundary, boundary=boundary,
+        surfaceMeshQuality=surfaceMeshQuality,
+        surfaceMeshArea=surfaceMeshArea,
+        addTopo=addTopo)
+
+    # find depth and paradepth
+    xSpan = (max(sensors[:, 0]) - min(sensors[:, 0]))
+    ySpan = (max(sensors[:, 1]) - min(sensors[:, 1]))
+
+    if paraDepth == -1:
+        paraDepth = (0.4*(max(xSpan, ySpan)))
+
+    paraDepth = np.median(sensors[:, 2]) - paraDepth
+    depth = paraDepth - max(boundary[0]*xSpan, boundary[1]*ySpan)/2
+
+    def sortP(p):
+        base = pg.core.Line(p[0], p[1]).at(-1e7)
+
+        def cmp_(p1, p2):
+            if p1.distSquared(base) < p2.distSquared(base):
+                return -1
+            else:
+                return 1
+
+        p.sort(key=functools.cmp_to_key(cmp_))
+
+    bounds = [surface]
+    # close outer surfaces
+    bttm = []
+    for i in range(4):
+
+        p = [n.pos() for n in surface.nodes() if n.marker() == i+1]
+        p.append(surface.nodes(
+            surface.nodeMarkers() == (i % 4 + 1) * 10)[0].pos())
+        p.append(surface.nodes(
+            surface.nodeMarkers() == ((i + 1) % 4 + 1) * 10)[0].pos())
+        sortP(p)
+
+        p0 = pg.Pos(p[-1])
+        p0[2] = depth
+        p.append(p0)
+
+        p1 = pg.Pos(p[0])
+        p1[2] = depth
+        p.append(p1)
+
+        m = pg.meshtools.createPolygon(p, isClosed=True)
+        f = pg.meshtools.createFacet(m, boundaryMarker=-2)
+
+        bounds.append(f)
+        bttm.append(p0)
+        bttm.append(p1)
+
+    m = pg.meshtools.createRectangle(pnts=bttm, minBB=True)
+    m.translate([0, 0, depth])
+    bttmA = pg.meshtools.createFacet(m, boundaryMarker=-2)
+    bounds.append(bttmA)
+
+    # close para surfaces
+    bttm = []
+    for i in range(4):
+        p = [n.pos() for n in surface.nodes() if n.marker() == i+5]
+        p.append(surface.nodes(
+            surface.nodeMarkers() == (i % 4 + 5) * 10)[0].pos())
+        p.append(surface.nodes(
+            surface.nodeMarkers() == ((i + 1) % 4 + 5) * 10)[0].pos())
+        sortP(p)
+
+        p0 = pg.Pos(p[-1])
+        p0[2] = paraDepth
+        p.append(p0)
+
+        p1 = pg.Pos(p[0])
+        p1[2] = paraDepth
+        p.append(p1)
+
+        m = pg.meshtools.createPolygon(p[::-1], isClosed=True)
+        f = pg.meshtools.createFacet(m, boundaryMarker=1)
+
+        bounds.append(f)
+        bttm.append(p0)
+        bttm.append(p1)
+
+    m = pg.meshtools.createRectangle(pnts=bttm, minBB=True)
+    m.translate([0, 0, paraDepth])
+    bttmP = pg.meshtools.createFacet(m, boundaryMarker=1)
+    bounds.append(bttmP)
+
+    pdPLC = pg.meshtools.mergePLC(bounds)
+
+    if paraDX > 0:
+        for s in sensors:
+            pdPLC.createNode(s - [0.0, 0.0, paraDX])
+
+    pdPLC.addRegionMarker(pg.center(bttmA.positions()) + [0.0, 0.0, 0.1],
+                          marker=1, area=boundaryMaxCellSize)
+    pdPLC.addRegionMarker(pg.center(bttmP.positions()) + [0.0, 0.0, 0.1],
+                          marker=2, area=paraMaxCellSize)
+
+    return pdPLC
+
+
+def readPLC(filename:str, comment:str='#'):
+    r"""Read in a piece-wise linear complex object (PLC) from .poly file.
 
     Read 2D :term:`Triangle` or 3D :term:`Tetgen` PLC files.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     filename: string
-        Filename *.poly
+        Filename `*.poly`
 
-    comment: string ('#')
+    comment: string
         String containing all characters that define a comment line.
         Identified lines will be ignored during import.
 
     Returns
     -------
-    poly :
+    poly:
         :gimliapi:`GIMLI::Mesh`
 
-    See also
+    See Also
     --------
     exportPLC
     """
@@ -1114,11 +1573,11 @@ def readPLC(filename, comment='#'):
 
 
 def exportPLC(poly, fname, **kwargs):
-    r"""General writer to save a piece-wise linear complex (PLC), i.e. a pyGIMLi geometry, as a poly file.
+    r"""Export a piece-wise linear complex (PLC) to a .poly file (2D or 3D).
 
-    Choose from poly.dimension() and forward appropriate to
-    :gimliapi:`GIMLI::Mesh::exportAsTetgenPolyFile`
-    and :py:mod:`pygimli.meshtools.writeTrianglePoly`
+    Chooses from poly.dimension() and forwards accordingly to
+    `poly.exportAsTetgenPolyFile`
+    or :py:mod:`pygimli.meshtools.writeTrianglePoly`
 
     Parameters
     ----------
@@ -1141,8 +1600,8 @@ def exportPLC(poly, fname, **kwargs):
     >>> world3d = pg.createGrid([0, 1], [0, 1], [-1, 0])
     >>> pg.meshtools.exportPLC(world3d, fname)
     >>> os.remove(fname)
-    
-    See also
+
+    See Also
     --------
     readPLC
     """
@@ -1207,15 +1666,17 @@ def exportTrianglePoly(poly, fname, float_format='.15e'):
 
 
 def writeTrianglePoly(*args, **kwargs):
-    """ Backward compatibility.
+    """Backward compatibility.
+
     Please use :py:mod:`pygimli.meshtools.exportTrianglePoly`.
     """
     return exportTrianglePoly(*args, **kwargs)
 
 
 def exportTetgenPoly(poly, filename, float_format='.12e', **kwargs):
-    r"""
-    Writes a given piecewise linear complex (mesh/poly) into a Ascii file in
+    r"""Export PLC as tetgen poly file.
+
+    Write given piecewise linear complex (mesh/poly) into Ascii file in
     :term:`Tetgen` .poly format.
 
     Parameters
@@ -1308,14 +1769,14 @@ def exportTetgenPoly(poly, filename, float_format='.12e', **kwargs):
                                                  sep, npolys, nHoles)
         # inner loop over polygons
         # <# of corners> <corner 1> <corner 2> ... <corner #>
-        for l in range(1):
+        for k in range(1):
             poly_str = '{:d}'.format(bound.nodeCount())
             poly_str += sep + sep.join(['{:d}'.format(n) for n in bound.ids()])
             polytxt += '{0}{1}'.format(poly_str, linesep)
 
         # loop over subfaces
-        for l in range(nSubs):
-            sub = bound.subface(l)
+        for k in range(nSubs):
+            sub = bound.subface(k)
             poly_str = '{:d}'.format(len(sub))
             poly_str += sep + sep.join(['{:d}'.format(n.id()) for n in sub])
             polytxt += '{0}{1}'.format(poly_str, linesep)
@@ -1329,8 +1790,8 @@ def exportTetgenPoly(poly, filename, float_format='.12e', **kwargs):
         # because this is for 2D holes in facets only
 
         # loop over secondaryNodes add them as single points
-        for l in range(len(bound.secondaryNodes())):
-            ind = bound.secondaryNodes()[l].id()
+        for k in range(len(bound.secondaryNodes())):
+            ind = bound.secondaryNodes()[k].id()
             poly_str = '{:d}'.format(2)
             poly_str += sep + '{0:d} {0:d}'.format(ind)
             polytxt += '{0}{1}'.format(poly_str, linesep)
@@ -1379,13 +1840,12 @@ def exportTetgenPoly(poly, filename, float_format='.12e', **kwargs):
     with open(filename, 'w') as out:
         out.write(polytxt)
 
+
 def syscallTetgen(filename, quality=1.2, area=0, preserveBoundary=False,
                   verbose=False, tetgen='tetgen'):
-    """Create a mesh with :term:`Tetgen` from file.
+    """Create a mesh from a PLC by system-calling :term:`Tetgen`.
 
     Create a :term:`Tetgen` :cite:`Si2004` mesh from a PLC.
-
-    Forwards to system call tetgen, which must be known to your system.
 
     Parameters
     ----------
@@ -1437,6 +1897,7 @@ def syscallTetgen(filename, quality=1.2, area=0, preserveBoundary=False,
 
     if verbose:
         print(syscal)
+
     pg.debug(syscal)
 
     system(syscal)
@@ -1469,17 +1930,27 @@ def polyCreateWorld(filename, x=None, depth=None, y=None, marker=0,
                     maxCellSize=0, verbose=True):
     """Create the PLC of a default world.
 
-    Create the PLC of a default world.
+    Out-of-core wrapper for dcfemlib::polytools::polyCreateWorld
 
-    Out of core wrapper for dcfemlib::polytools::polyCreateWorld
-
-    # TODO needs to be converted to the Python-only tools.
+    Todo
+    * needs to be converted to the Python-only tools.
 
     Parameters
     ----------
-
-    Returns
-    -------
+    filename : str
+        file name
+    x : float
+        x dimension
+    y : float
+        y dimension
+    depth : float
+        z dimension
+    marker : int
+        region marker
+    maxCellSize : float
+        maximum cell size
+    verbose : bool
+        be verbose
     """
     if depth is None:
         print("Please specify worlds depth.")
@@ -1512,13 +1983,63 @@ def polyCreateWorld(filename, x=None, depth=None, y=None, marker=0,
     os.system(syscal)
 
 
-def createFacet(mesh, boundaryMarker=None, verbose=True):
-    """Create a coplanar PLC of a 2d mesh or poly
+def createSurface(mesh, boundaryMarker=None, verbose=True):
+    """Convert a 2D mesh into a 3D surface mesh.
 
-    TODO:
+    Parameters
+    ----------
+    mesh: :gimliapi:`GIMLI::Mesh`
+        The 2D input mesh.
+    boundaryMarker: int[0]
+        Boundary marker for the resulting faces.
+        If None the cell markers of the mesh are taken.
+
+    Returns
+    -------
+    :gimliapi:`GIMLI::Mesh`
+        The 3D surface mesh.
+    """
+    if mesh.dimension() != 2:
+        pg.error("Need two dimensional mesh")
+    if mesh.cellCount() == 0:
+        pg.error("Need a two dimensional mesh with cells")
+
+    # think to use this
+    # s = surface.createHull()
+
+    surface = pg.Mesh(dim=3, isGeometry=True)
+
+    [surface.createNode(n.pos(), n.marker()).id() for n in mesh.nodes()]
+
+    for c in mesh.cells():
+        surface.createBoundary(c.ids(), marker=c.marker())
+
+    if boundaryMarker is not None:
+        surface.setBoundaryMarkers(np.full(surface.boundaryCount(),
+                                           boundaryMarker))
+
+    return surface
+
+
+def createFacet(mesh, boundaryMarker=None):
+    """Create coplanar PLC from a 2d mesh or PLC.
+
+    Parameters
+    ----------
+    mesh : pg.Mesh
+        2D mesh or PLC to be converted to a 3D facet
+    boundaryMarker : int
+        boundary marker for the facet, otherwise taken from 2d region markers
+
+    Returns
+    -------
+    plc : pyGIMLi mesh
+        plc of the created facet
+
+    Todo
+    ----
     * mesh with cell into plc with boundaries
     * poly account for inner edges
-
     """
     if mesh.dimension() != 2:
         pg.error("need two dimensional mesh or poly")
@@ -1543,12 +2064,12 @@ def createFacet(mesh, boundaryMarker=None, verbose=True):
     return poly
 
 
-def createCube(size=[1.0, 1.0, 1.0], pos=None, 
-               start=None, end=None,
+def createCube(size=None, pos=None, start=None, end=None,
                rot=None, boundaryMarker=0, **kwargs):
     """Create cube PLC as geometrie definition.
 
-    Create cube PLC as geometrie definition. You can either give size and center position or start and end position.
+    Create cube PLC as geometrie definition.
+    You can either give size and center position or start and end position.
 
     Parameters
     ----------
@@ -1586,11 +2107,13 @@ def createCube(size=[1.0, 1.0, 1.0], pos=None,
     -------
     poly : :gimliapi:`GIMLI::Mesh`
         The resulting polygon is a :gimliapi:`GIMLI::Mesh`.
-
     """
+    if size is None:
+        size = [1.0, 1.0, 1.0]
+
     if start is not None and end is not None:
-        size = end-start
-        pos = start + size/2
+        size = pg.Pos(end) - pg.Pos(start)
+        pos = pg.Pos(start) + pg.Pos(size)/2
 
     poly = pg.Mesh(3, isGeometry=True)
 
@@ -1627,8 +2150,200 @@ def createCube(size=[1.0, 1.0, 1.0], pos=None,
     return poly
 
 
+def createSphere(size=None, pos=None, nSegments=20, nRings=10,
+                 rot=None, boundaryMarker=0, var='uvsphere',
+                 triFaces=True, **kwargs):
+    """Create sphere PLC as geometrie definition.
+
+    Create sphere PLC as geometrie definition.
+    You can either give size and center position.
+
+    Arguments
+    ---------
+    size: [x, y, z]
+        x, y, and z-size of the cube. Default = [1.0, 1.0, 1.0] in m
+    pos: [x, y, z]
+        The center position, default is at the origin.
+    nSegments: int[0]
+        Discrete number of segments along the horizontal axis
+    nRings: int[0]
+        Discrete number of segments along the vertical axis
+    rot: pg.Pos [None]
+        Rotate on the center.
+    boundaryMarker: int[0]
+        Boundary marker for the resulting faces.
+    var: str='uvsphere'
+        Variance of sphere: 'uvsphere', 'qsphere' or 'icosphere'.
+    triFaces: bool [True]
+        Output triangular faces instead of quadrilateral faces. Only for qsphere
+        at the moment.
+
+    Keyword Args
+    ------------
+    ** kwargs:
+        * Marker related arguments:
+            See :py:mod:`pygimli.meshtools.polytools.setPolyRegionMarker`
+        * refine: int [3]
+            Number of refinements to create a smoother sphere.
+            Default `refine=3` for variance='qsphere' and `refine=2`
+            for 'icosphere'
+
+    Returns
+    -------
+    poly : :gimliapi:`GIMLI::Mesh`
+        The resulting polygon is a :gimliapi:`GIMLI::Mesh`.
+
+    Examples
+    --------
+    >>> import pygimli as pg
+    >>> import pygimli.meshtools as mt
+    >>> sphere = mt.createSphere()
+    >>> print(sphere)
+    Mesh: Nodes: 182 Cells: 0 Boundaries: 360
+    >>> sphere = mt.createSphere()
+    >>> print(sphere.bb())
+    [RVector3: (-0.5, -0.5, -0.5), RVector3: (0.5, 0.5, 0.5)]
+    >>> uvs = mt.createSphere([6, 5, 2], nSegments=25, nRings=15)
+    >>> pg.show(uvs, showMesh=True, markers=True) # doctest: +ELLIPSIS
+    (<pyvista...
+    >>> uv = pg.meshtools.createSphere(var='uvsphere', pos=[3,0,0])
+    >>> qs4 = pg.meshtools.createSphere(var='qsphere', pos=[2,0,0],
+    ...                                 refine=3, triFaces=False)
+    >>> qs3 = pg.meshtools.createSphere(var='qsphere', pos=[1,0,0],
+    ...                                 refine=3, triFaces=True)
+    >>> ico = pg.meshtools.createSphere(var='icosphere', pos=[0,0,0],
+    ...                                 refine=2)
+    >>> pg.show([uv, qs4, qs3, ico], showMesh=True,
+    ...         markers=True) # doctest: +ELLIPSIS
+    (<pyvista...
+    """
+    if size is None:
+        size = [1.0, 1.0, 1.0]
+
+    poly = pg.Mesh(3, isGeometry=True)
+
+    if var == 'uvsphere':
+        if nSegments < 3:
+            nSegments = 3
+
+        for i in range(nRings+1):
+            theta = np.pi * (i / nRings)
+            for j in range(nSegments):
+                phi = 2 * np.pi * (j / (nSegments))
+                x = 0.5 * np.sin(theta) * np.cos(phi)
+                y = 0.5 * np.sin(theta) * np.sin(phi)
+                z = 0.5 * np.cos(theta)
+                poly.createNode(x, y, z)
+                if i == 0 or i == nRings:
+                    break
+
+        num = len(poly.nodes())
+
+        for f in range(nSegments-1):
+            poly.createBoundary(poly.nodes([0, 1+f, 2+f]),
+                                marker=boundaryMarker)
+            poly.createBoundary(poly.nodes([num-1, num-2-f, num-3-f]),
+                                marker=boundaryMarker)
+
+        poly.createBoundary(poly.nodes([0, 1, nSegments]),
+                            marker=boundaryMarker)
+        poly.createBoundary(poly.nodes([num-1, num-2, num-1-nSegments]),
+                            marker=boundaryMarker)
+
+        for b in range(nRings-2):
+            b_l = b*nSegments
+            for f in range(1, nSegments):
+                poly.createBoundary(poly.nodes([f+b_l,
+                                                f+b_l+nSegments,
+                                                f+b_l+nSegments+1]),
+                                    marker=boundaryMarker)
+                poly.createBoundary(poly.nodes([num-1-f-b_l,
+                                                num-1-f-b_l-nSegments,
+                                                num-2-f-b_l-nSegments]),
+                                    marker=boundaryMarker)
+
+            poly.createBoundary(poly.nodes([b_l+nSegments,
+                                            b_l+nSegments*2,
+                                            b_l+nSegments+1]),
+                                marker=boundaryMarker)
+            poly.createBoundary(poly.nodes([num-1-b_l-nSegments,
+                                            num-1-b_l-nSegments*2,
+                                            num-2-b_l-nSegments]),
+                                marker=boundaryMarker)
+    elif var == 'qsphere':
+        ## trivial version of quad sphere
+        poly = createCube()
+        refine = kwargs.pop('refine', 3)
+        for r in range(refine):
+            poly = poly.createH2()
+            for n in poly.nodes():
+                r = pg.Line([0.0, 0.0, 0.0], n.pos())
+                # normalizing with project on the unit sphere
+                n.setPos(r.at(0.5/n.pos().abs()))
+                ### alternatively could be smooth with neighbors, and
+                ### post normalize the end result, TODO test and compare
+
+        if triFaces is True:
+            poly = pg.meshtools.refineQuad2Tri(poly)
+
+    elif var == 'icosphere':
+        ## trivial version of quad sphere
+
+        poly = pg.Mesh(3, isGeometry=True)
+        # Create an icosahedron (20 faces, 12 vertices)
+        phi = (1 + math.sqrt(5)) / 2  # golden ratio
+
+        # Vertices of a unit icosahedron centered at origin
+        verts = [
+            [-1,  phi, 0], [ 1,  phi, 0], [-1, -phi, 0], [ 1, -phi, 0],
+            [0, -1,  phi], [0,  1,  phi], [0, -1, -phi], [0,  1, -phi],
+            [ phi, 0, -1], [ phi, 0,  1], [-phi, 0, -1], [-phi, 0,  1],]
+
+        # Normalize to radius 0.5
+        verts = np.array(verts)
+        verts = 0.5 * verts / np.linalg.norm(verts[0])
+
+        nodes = [poly.createNode(*v) for v in verts]
+
+        # Faces of the icosahedron (each as 3 indices into verts)
+        faces = [
+            [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
+            [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
+            [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
+            [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1],]
+
+        for f in faces:
+            poly.createBoundary([nodes[i].id() for i in f],
+                                marker=boundaryMarker)
+
+        refine = kwargs.pop('refine', 2)
+        for r in range(refine):
+            poly = poly.createH2()
+            for n in poly.nodes():
+                r = pg.Line([0.0, 0.0, 0.0], n.pos())
+                # normalizing with project on the unit sphere
+                n.setPos(r.at(0.5/n.pos().abs()))
+                # alternative could be smooth with neighbors, and
+                # post normalize with the end result, test and compare
+    else:
+        pg.critical("Unknown sphere variance: ", var)
+
+
+    poly.scale(size)
+
+    if rot is not None:
+        poly.rotate(rot)
+
+    if pos is not None:
+        poly.translate(pos)
+
+    setPolyRegionMarker(poly, **kwargs)
+
+    return poly
+
+
 def extrude(p2, z=-1.0, boundaryMarker=0, **kwargs):
-    """Create 3D body by extruding a closed 2D poly into z direction
+    """Create 3D body by extruding a closed 2D poly into z direction.
 
     Parameters
     ----------
@@ -1712,7 +2427,6 @@ def createCylinder(radius=1, height=1, nSegments=8,
     -------
     poly : :gimliapi:`GIMLI::Mesh`
         The resulting polygon is a :gimliapi:`GIMLI::Mesh`.
-
     """
     circ = createCircle(radius=radius, nSegments=nSegments)
     poly = extrude(circ, z=height, boundaryMarker=boundaryMarker, **kwargs)
@@ -1748,7 +2462,6 @@ def boundaryPlaneIntersectionLines(boundaries, plane):
             lines.append(list(zip([ps[0].x(), ps[1].x()],
                                   [ps[0].z(), ps[1].z()])))
     return lines
-
 
 
 if __name__ == "__main__":

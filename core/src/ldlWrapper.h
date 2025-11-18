@@ -38,11 +38,14 @@ public:
 
     int factorise();
     
-    virtual int solve( const RVector & rhs, RVector & solution );
+    virtual void setMatrix(RSparseMatrix & S);
+
+    virtual void solve(const RVector & rhs, RVector & solution);
     
 protected:
   
     int initialize_(RSparseMatrix & S);
+    void free_();
 
     int * colPtr_;
     int * rowIdx_;

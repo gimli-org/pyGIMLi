@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the resistivity.net development team          *
+ *   Copyright (C) 2006-2024 by the resistivity.net development team          *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -177,7 +177,7 @@ void dcfemDomainAssembleStiffnessMatrix(SparseMatrix < ValueType > & S, const Me
     }
     ValueType rho = 0.0;
     Stopwatch swatch(true);
-    unsigned long sCount = 0;
+    //unsigned long sCount = 0;
 
     for (uint i = 0; i < mesh.cellCount(); i++){
         rho = atts[mesh.cell(i).id()];
@@ -190,15 +190,13 @@ void dcfemDomainAssembleStiffnessMatrix(SparseMatrix < ValueType > & S, const Me
 
                 Stopwatch s(true);
                 Se.u2(mesh.cell(i));
-                sCount += s.cycleCounter().toc();
-
+                //sCount += s.cycleCounter().toc();
                 Se *= k * k;
                 Se += Stmp.ux2uy2uz2(mesh.cell(i));
-
             } else {
                 Se.ux2uy2uz2(mesh.cell(i));
             }
-            S.add(Se, 1./rho);
+	S.add(Se, 1./rho);
 //             Se *= 1.0 / rho;
 //             S += Se;
         } else {
@@ -558,6 +556,7 @@ void DCMultiElectrodeModelling::init_(){
     JIsRMatrix_          = true;
     JIsCMatrix_          = false;
 
+    solver_              = nullptr;
     buildCompleteElectrodeModel_    = false;
     dipoleCurrentPattern_           = false;
 
@@ -565,11 +564,10 @@ void DCMultiElectrodeModelling::init_(){
 
     byPassFile_ = "bypass.map";
 
-
     Index nThreads = getEnvironment("BERTTHREADS", 0, verbose_);
     nThreads = getEnvironment("BERT_NUM_THREADS", 0, verbose_);
     if (nThreads > 0) setThreadCount(nThreads);
-
+    //log(Info, "DCMultiElectrodeModelling init with thread count:", nThreads);
 }
 
 void DCMultiElectrodeModelling::setComplex(bool c) {
@@ -1421,7 +1419,7 @@ void DCMultiElectrodeModelling::createJacobian_(const CVector & model,
                          matrixClusterIds, this->nThreads_, this->verbose_);
 
     if (model.size() == J->cols()){
-        __MS("check")
+        // __MS("check")
         CVector m2(model*model);
         //CVector m2(model*conj(model));
         if (model.size() == J->cols()){
@@ -1674,14 +1672,12 @@ void DCMultiElectrodeModelling::calculate(const std::vector < ElectrodeShape * >
     if (!subSolutions_) {
         subpotOwner_ = true;
         if (complex_){
-            subSolutions_ = new CMatrix(0);
+            subSolutions_ = new CMatrix(0, 0);
         } else {
-            subSolutions_ = new RMatrix(0);
+            subSolutions_ = new RMatrix(0, 0);
         }
     }
-
     uint nCurrentPattern = eA.size();
-
     subSolutions_->resize(nCurrentPattern * kValues_.size(),
                           mesh_->nodeCount());
 
@@ -1698,21 +1694,6 @@ void DCMultiElectrodeModelling::calculate(const std::vector < ElectrodeShape * >
     // create or find primary potentials
     preCalculate(eA, eB);
 
-#ifdef HAVE_LIBBOOST_THREAD
-    uint kIdx = 0;
-    while (kIdx < kValues_.size()){
-        boost::thread_group threads;
-        for (uint thread = 0; thread < nThreads_; thread ++){
-            if (kIdx <  kValues_.size()){
-                threads.create_thread(CalculateMT(this,
-                                                  eA, eB,
-                                                  kIdx, *subSolutions_));
-                kIdx ++;
-            }
-        }
-        threads.join_all();
-    }
-#else
     for (Index kIdx = 0; kIdx < kValues_.size(); kIdx ++){
         //if (verbose_ && kValues_.size() > 1) std::cout << "\r" << kIdx + 1 << "/" << kValues_.size();
 
@@ -1722,7 +1703,7 @@ void DCMultiElectrodeModelling::calculate(const std::vector < ElectrodeShape * >
             calculateK(eA, eB, dynamic_cast< RMatrix & > (*subSolutions_), kIdx);
         }
     }
-#endif
+
     for (Index kIdx = 0; kIdx < kValues_.size(); kIdx ++){
         for (Index i = 0; i < nCurrentPattern; i ++) {
             if (kIdx == 0) {
@@ -1800,7 +1781,7 @@ void DCMultiElectrodeModelling::calculateK_(const std::vector < ElectrodeShape *
 // MEMINFO
 
 //** START  assemble matrix
-    if (verbose_) std::cout << "Assembling system matrix ... " ;
+    if (debug) std::cout << "Assembling system matrix ... " ;
     dcfemDomainAssembleStiffnessMatrix(S_, *mesh_, k);
     dcfemBoundaryAssembleStiffnessMatrix(S_, *mesh_, sourceCenterPos_, k);
 
@@ -1826,7 +1807,7 @@ void DCMultiElectrodeModelling::calculateK_(const std::vector < ElectrodeShape *
 //             //** FIXME this fails with passive bodies
             elecs.push_back(electrodeRef_);
         }
-        if (verbose_) std::cout << "Assembling complete electrode model ... " << std::endl;
+        if (debug) std::cout << "Assembling complete electrode model ... " << std::endl;
 
         for (Index i = 0; i < passiveCEM_.size(); i ++) elecs.push_back(passiveCEM_[i]);
 
@@ -1857,13 +1838,17 @@ void DCMultiElectrodeModelling::calculateK_(const std::vector < ElectrodeShape *
     //** END assemble matrix
 
     //** START solving
-
-    LinSolver solver(verbose_);
-    //solver.setSolverType(LDL);
-    //    std::cout << "solver: " << solver.solverName() << std::endl;
-
-    solver.setMatrix(S_, 1);
-    if (verbose_) std::cout << "Factorizing (" << solver.solverName() << ") system matrix ... ";
+    SolverWrapper * solver;
+    bool solverNeedsDelete = false;
+    if (solver_ != nullptr){
+        solver = solver_;
+        solver->setMatrix(S_);
+    } else {
+        solver = new LinSolver(debug);
+        solverNeedsDelete = true;
+        dynamic_cast< LinSolver * >(solver)->setMatrix(S_, 1);
+        if (debug) std::cout << "Factorize (" << solver->name() << ") matrix ... " << swatch.duration() << std::endl;
+    }
 
 // MEMINFO
 
@@ -1879,20 +1864,25 @@ void DCMultiElectrodeModelling::calculateK_(const std::vector < ElectrodeShape *
         if (eB[i]) eB[i]->assembleRHS(rTmp, -1.0, oldMatSize);
         Vector < ValueType >rhs(rTmp);
 
-        solver.solve(rhs, sol);
+        solver->solve(rhs, sol);
 
-//         if (i==4){
-//             S_.save("S-gimli.matrix");
-//             rhs.save("rhs.vec");
-//             save(sol, "sol.vec");
-            // __MS(eA[i])
-            // __MS(eB[i])
-            // mesh_->addData("sol" + str((kIdx) * nCurrentPattern + i), sol);
-            // mesh_->addData("rhs", rhs);
-            // mesh_->addData("soll", log(abs(sol)));
-            // mesh_->exportVTK("sol");
-            // exit(0);
-//         }
+        /*if (i==4){
+            __MS(*mesh_)
+            __MS(min(rhs) << " " << max(rhs))
+    	    __MS(min(sol) << " " << max(sol))
+
+	    S_.save("S-gimlii_2.matrix");
+             rhs.save("rhs_2.vec");
+             save(sol, "sol_2.vec");
+            __MS(eA[i])
+             __MS(eB[i])
+             mesh_->addData("sol" + str((kIdx) * nCurrentPattern + i), sol);
+             mesh_->addData("rhs", rhs);
+             mesh_->addData("soll", log(abs(sol)));
+             mesh_->exportVTK("sol_2");
+             exit(0);
+         }
+	 */
 //         mesh_->addData("sol" + str((kIdx) * nCurrentPattern + i), sol);
 //         S_.save("S-gimli.matrix");
 //         rhs.save("rhs.vec");
@@ -1907,7 +1897,7 @@ void DCMultiElectrodeModelling::calculateK_(const std::vector < ElectrodeShape *
 //                 S_.save("S.matrix");
 //                 save(rhs[i], "rhs.vec");
 //                 save(sol, "sol.vec");
-            std::cout   << " Ooops: Warning!!!! Solver: " << solver.solverName()
+            std::cout   << " Ooops: Warning!!!! Solver: " << solver->name()
                             << " fails with rms(A *x -b)/rms(b) > tol: "
                             << norml2(S_ * sol - rhs)<< std::endl;
 
@@ -1932,6 +1922,9 @@ void DCMultiElectrodeModelling::calculateK_(const std::vector < ElectrodeShape *
 // MEMINFO
     // we dont need reserve the memory
     S_.clean();
+    if (solverNeedsDelete == true){
+        delete solver;
+    }
 }
 
 
@@ -2108,6 +2101,7 @@ void DCSRMultiElectrodeModelling::checkPrimpotentials_(const std::vector < Elect
                     // PLS CHECK some redundancy here see DCMultiElectrodeModelling::calculateKAnalyt
                     if (eA[i]) (*primPot_)[potID]  = exactDCSolution(*mesh_, eA[i], k, surfaceZ_, setSingValue_);
                     if (eB[i]) (*primPot_)[potID] -= exactDCSolution(*mesh_, eB[i], k, surfaceZ_, setSingValue_);
+                    //print("\r", k , "/", kValues_.size(), "/", nCurrentPattern);
 
                 } else {
                     if (initVerbose){
@@ -2158,6 +2152,7 @@ void DCSRMultiElectrodeModelling::preCalculate(const std::vector < ElectrodeShap
 void DCSRMultiElectrodeModelling::calculateK(const std::vector < ElectrodeShape * > & eA,
                                              const std::vector < ElectrodeShape * > & eB,
                                              RMatrix & solutionK, int kIdx) {
+    bool debug = false;
     if (complex_){
         THROW_TO_IMPL
     }
@@ -2201,9 +2196,19 @@ void DCSRMultiElectrodeModelling::calculateK(const std::vector < ElectrodeShape 
     //mesh_->setCellAttributes(tmpRho);
 
 // MEMINFO
-    LinSolver solver(false);
-    solver.setMatrix(S_, 1);
-    if (verbose_) std::cout << "Factorize (" << solver.solverName() << ") matrix ... " << swatch.duration() << std::endl;
+    SolverWrapper *solver;
+    bool solverNeedsDelete = false;
+
+    if (solver_ != nullptr){
+        solver = solver_;
+        solver->setMatrix(S_);
+    } else {
+        solver = new LinSolver(debug);
+        solverNeedsDelete = true;
+        dynamic_cast< LinSolver * >(solver)->setMatrix(S_, 1);
+        if (debug) std::cout << "Factorize (" << solver->name() << ") matrix ... " << swatch.duration() << std::endl;
+    }
+
 
 // MEMINFO
 
@@ -2277,12 +2282,17 @@ void DCSRMultiElectrodeModelling::calculateK(const std::vector < ElectrodeShape 
             rhs[calibrationSourceIdx_[j]] = 0.0;
         }
         solutionK[i + (kIdx * nCurrentPattern)] *= 0.0;
-        solver.solve(rhs, solutionK[i + (kIdx * nCurrentPattern)]);
+        solver->solve(rhs, solutionK[i + (kIdx * nCurrentPattern)]);
 
         solutionK[i + (kIdx * nCurrentPattern)] += prim;
 
         if (singleVerbose) singleVerbose = false;
     }
+
+    if (solverNeedsDelete == true){
+        delete solver;
+    }
+
 }
 
 } // namespace GIMLI{

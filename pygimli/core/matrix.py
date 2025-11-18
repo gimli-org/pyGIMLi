@@ -7,13 +7,14 @@ import numpy as np
 from .core import pgcore
 
 from .core import (CMatrix, CSparseMapMatrix, CSparseMatrix,
-               RSparseMapMatrix, RSparseMatrix, ElementMatrix,
-               IVector, MatrixBase, R3Vector, RVector)
+                   RSparseMapMatrix, RSparseMatrix, ElementMatrix,
+                   IVector, MatrixBase, R3Vector, RVector)
 
-from .logger import critical, warn
+from .logger import critical, warn, info
 
-# make core matrices (now in pgcore, later pg.core) available here for brevity
-## Usefull Aliases
+
+# make pygimli core (pgcore) matrices available here for clarity
+# useful aliases
 IdentityMatrix = pgcore.IdentityMatrix
 
 Matrix = pgcore.RMatrix
@@ -21,7 +22,7 @@ SparseMatrix = pgcore.RSparseMatrix
 SparseMapMatrix = pgcore.RSparseMapMatrix
 BlockMatrix = pgcore.RBlockMatrix
 
-## General Monkeypatch core classes
+# General Monkeypatch core classes
 __Matrices = [pgcore.MatrixBase,
               pgcore.RSparseMatrix,
               pgcore.RSparseMapMatrix,
@@ -34,13 +35,19 @@ for m in __Matrices:
     m.ndim = 2
     m.__len__ = lambda self: self.rows()
     m.shape = property(lambda self: (self.rows(), self.cols()))
+    ## To allow for ignoring np.*.__mul__ in case A has the __rmul__ function
+    ## see test TestMatrixMethods.testSparseMatrixBasics, TestRVectorMethods.testUFunc
+    m.__array_ufunc__ = None
+    m.__rmul__ = lambda self: critical('not yet implemented')
 
-pgcore.RMatrix.dtype = np.float
-pgcore.CMatrix.dtype = np.complex
-pgcore.RSparseMapMatrix.dtype = np.float
-pgcore.CSparseMapMatrix.dtype = np.complex
-pgcore.RSparseMatrix.dtype = np.float
-pgcore.CSparseMatrix.dtype = np.complex
+
+pgcore.RMatrix.dtype = float
+pgcore.CMatrix.dtype = complex
+pgcore.RSparseMapMatrix.dtype = float
+pgcore.CSparseMapMatrix.dtype = complex
+pgcore.RSparseMatrix.dtype = float
+pgcore.CSparseMatrix.dtype = complex
+
 
 def __RMatrix_str(self):
     s = "RMatrix: " + str(self.rows()) + " x " + str(self.cols())
@@ -48,7 +55,7 @@ def __RMatrix_str(self):
     if self.rows() < 6:
         s += '\n'
         for v in range(self.rows()):
-            s += self[v].__str__(True) + '\n'
+            s += self[v].__str__() + '\n'
     return s
 
 
@@ -58,8 +65,9 @@ def __CMatrix_str(self):
     if self.rows() < 6:
         s += '\n'
         for v in range(self.rows()):
-            s += self[v].__str__(True) + '\n'
+            s += self[v].__str__() + '\n'
     return s
+
 
 def __ElementMatrix_str(self):
     """Show entries of an ElementMatrix."""
@@ -70,9 +78,6 @@ def __ElementMatrix_str(self):
     maxRowID = int(np.log10(max(self.rowIDs())))+2
 
     s = '\n ' + ' ' * maxRowID
-    # print(self.mat())
-    # print(self.colIDs())
-    # print(self.rowIDs())
     for i in range(self.mat().cols()):
         s += str(self.colIDs()[i]).rjust(9)
     s += '\n'
@@ -86,13 +91,44 @@ def __ElementMatrix_str(self):
         s += '\n'
     return s
 
-pgcore.RMatrix.__repr__ =__RMatrix_str
-pgcore.CMatrix.__repr__ =__CMatrix_str
-pgcore.ElementMatrix.__repr__ =__ElementMatrix_str
+
+pgcore.RMatrix.__repr__ = __RMatrix_str
+pgcore.CMatrix.__repr__ = __CMatrix_str
+pgcore.ElementMatrix.__repr__ = __ElementMatrix_str
 
 
-## Special Monkeypatch core classes
+def __RSparseMapMatrix_str(self):
+    s = "SparseMapMatrix: " + str(self.rows()) + " x " + str(self.cols())
+    if self.rows() * self.cols() > 0:
+        pc = int(self.nVals()/self.cols()/self.rows()*1000) / 10
+        s += " (nnz=" + str(self.nVals()) + " / " + str(pc)+ "%)"
+
+    return s
+
+
+pgcore.RSparseMapMatrix.__repr__ = __RSparseMapMatrix_str
+
+def __RSparseMatrix_str(self):
+    s = "SparseMatrix: " + str(self.rows()) + " x " + str(self.cols())
+    if self.rows() * self.cols() > 0:
+        pc = int(self.nVals()/self.cols()/self.rows()*1000) / 10
+        s += " (nnz=" + str(self.nVals()) + " / " + str(pc)+ "%)"
+
+    return s
+
+
+pgcore.RSparseMatrix.__repr__ = __RSparseMatrix_str
+
+
+def __RVector_format(self, f):
+    print(f)
+    return str(self)
+
+pgcore.RVector.__format__ = __RVector_format
+
+# Special Monkeypatch core classes
 __BlockMatrix_addMatrix__ = pgcore.RBlockMatrix.addMatrix
+
 
 def __BlockMatrix_addMatrix_happy_GC__(self, M, row=None, col=None,
                                        scale=1.0, transpose=False):
@@ -140,7 +176,7 @@ def __BlockMatrix_addMatrix_happy_GC__(self, M, row=None, col=None,
                 M = SparseMapMatrix(j, i, v)
             else:
                 critical("don't know yet how to add transpose matrix of type",
-                        type(M))
+                         type(M))
 
     if not hasattr(self, '__mats__'):
         self.__mats__ = []
@@ -153,14 +189,16 @@ def __BlockMatrix_addMatrix_happy_GC__(self, M, row=None, col=None,
 
     return matrixID
 
+
 def __BlockMatrix_str__(self):
     string = ("pg.matrix.BlockMatrix of size %d x %d consisting of %d "
-               "submatrices.")
+              "submatrices.")
     return string % (self.rows(), self.cols(), len(self.entries()))
+
 
 pgcore.RBlockMatrix.addMatrix = __BlockMatrix_addMatrix_happy_GC__
 pgcore.RBlockMatrix.add = __BlockMatrix_addMatrix_happy_GC__
-pgcore.RBlockMatrix.__repr__ =__BlockMatrix_str__
+pgcore.RBlockMatrix.__repr__ = __BlockMatrix_str__
 pgcore.RBlockMatrix.ndim = 2
 # pgcore.CBlockMatrix.addMatrix = __BlockMatrix_addMatrix_happy_GC__
 # pgcore.CBlockMatrix.add = __BlockMatrix_addMatrix_happy_GC__
@@ -174,7 +212,6 @@ def __SparseMatrixEqual__(self, T):
             self.rows(), self.cols(), T.rows(), T.cols()))
         return False
 
-
     rowsA, colsA, valsA = sparseMatrix2Array(self, indices=True)
     rowsB, colsB, valsB = sparseMatrix2Array(T, indices=True)
 
@@ -186,12 +223,14 @@ def __SparseMatrixEqual__(self, T):
     # print('rows:', np.linalg.norm(np.array(rowsA)-np.array(rowsB)))
     # print('cols:', np.linalg.norm(np.array(colsA)-np.array(colsB)))
 
-    # print(np.linalg.norm(valsA-valsB), np.mean(abs(valsA)), np.mean(abs(valsB)))
+    # print(np.linalg.norm(valsA-valsB), np.mean(abs(valsA)),
+    #     np.mean(abs(valsB)))
     # print(np.linalg.norm(valsA-valsB)/np.mean(abs(valsA)))
 
     return rowsA == rowsB and \
-           colsA == colsB and \
-               np.linalg.norm(valsA-valsB)/np.mean(abs(valsA)) < 1e-14
+        colsA == colsB and \
+        np.linalg.norm(valsA-valsB)/np.mean(abs(valsA)) < 1e-14
+
 
 pgcore.RSparseMatrix.__eq__ = __SparseMatrixEqual__
 pgcore.RSparseMapMatrix.__eq__ = __SparseMatrixEqual__
@@ -200,350 +239,428 @@ pgcore.RSparseMapMatrix.__eq__ = __SparseMatrixEqual__
 def __SparseMatrixCopy__(self):
     """Create a copy."""
     return pgcore.RSparseMatrix(self)
+
+
 pgcore.RSparseMatrix.copy = __SparseMatrixCopy__
+
 
 def __SparseMapMatrixCopy__(self):
     """Create a copy."""
     return pgcore.RSparseMapMatrix(self)
+
+
 pgcore.RSparseMapMatrix.copy = __SparseMapMatrixCopy__
 
 
-class MultMatrix(pgcore.MatrixBase):
-    """Base Matrix class for all matrix types holding a matrix."""
-    def __init__(self, A, verbose=False):
-        self._A = A
-        self.ndim = self._A.ndim
-        super(MultMatrix, self).__init__(verbose)
-
-    @property
-    def A(self):
-        return self._A
-
-    @A.setter
-    def A(self, A):
-        self._A = A
-
-    def rows(self):
-        """Return number of rows (using underlying matrix)."""
-        return self.A.rows()  # this should be _A
-
-    def cols(self):
-        """Return number of columns (using underlying matrix)."""
-        return self.A.cols()  # this should be _A
-
-    def save(self, filename):
-        """So it can be used in inversion with dosave flag"""
-        pass
-
-
-class MultLeftMatrix(MultMatrix):
-    """Matrix consisting of actual RMatrix and lef-side vector."""
-
-    def __init__(self, A, left, verbose=False):
-        """Constructor saving matrix and vector."""
-        if A.rows() != len(left):
-            raise Exception("Matrix columns do not fit vector length!")
-        super(MultLeftMatrix, self).__init__(A, verbose)
+# class MultMatrix(pgcore.MatrixBase):
+#     """Base Matrix class for all matrix types holding a matrix."""
 
-        self._l = left
+#     def __init__(self, A, verbose=False):
+#         self._A = A
+#         self.ndim = self._A.ndim
+#         super(MultMatrix, self).__init__(verbose)
 
-    @property
-    def l(self):  # better use left and right instead (pylint E743)?
-        return self._l
+#     @property
+#     def A(self):
+#         return self._A
 
-    @l.setter
-    def r(self, l):
-        self._l = l
+#     @A.setter
+#     def A(self, A):
+#         self._A = A
 
-    def mult(self, x):
-        """Multiplication from right-hand-side (dot product A*x)."""
-        return self.A.mult(x) * self.l
+#     def rows(self):
+#         """Return number of rows (using underlying matrix)."""
+#         return self.A.rows()  # this should be _A
 
-    def transMult(self, x):
-        """Multiplication from right-hand-side (dot product A.T * x)"""
-        return self.A.transMult(x * self.l)
+#     def cols(self):
+#         """Return number of columns (using underlying matrix)."""
+#         return self.A.cols()  # this should be _A
 
-LMultRMatrix = MultLeftMatrix  # alias for backward compatibility
+#     def save(self, filename):
+#         """So it can be used in inversion with dosave flag"""
+#         pass
 
 
-class MultRightMatrix(MultMatrix):
-    """Some Matrix, multiplied with a right hand side vector r."""
+# class MultLeftMatrix(MultMatrix):
+#     """Matrix consisting of actual RMatrix and lef-side vector."""
 
-    def __init__(self, A, r=None, verbose=False):
-        super(MultRightMatrix, self).__init__(A, verbose)
+#     def __init__(self, A, left, verbose=False):
+#         """Constructor saving matrix and vector."""
+#         if A.rows() != len(left):
+#             raise Exception("Matrix columns do not fit vector length!")
+#         super(MultLeftMatrix, self).__init__(A, verbose)
 
-        if r is None:
-            self._r = pgcore.RVector(self.cols(), 1.0)
-        else:
-            self._r = r
+#         self._l = left
 
-    @property
-    def r(self):
-        return self._r
+#     @property
+#     def l(self):  # better use left and right instead (pylint E743)?
+#         return self._l
 
-    @r.setter
-    def r(self, r):
-        self._r = r
+#     @l.setter
+#     def r(self, l):
+#         self._l = l
 
-    def mult(self, x):
-        """Return M*x = A*(r*x)"""
-        if hasattr(x, '__len__') and hasattr(self.r, '__len__'):
-            if len(x) != len(self.r):
-                # assuming A was complex
-                # warn('need to double x')
-                # print('mult:', self.A.rows(), " x " , self.A.cols(),
-                #        'x:', len(x), 'r:', len(self.r))
-                # print(self.perm)
-                return self.A.mult(x[self.perm] * self.r)
-                # return self.A.mult(pgcore.cat(x, x) * self.r)
-        return self.A.mult(x * self.r)
-
-    def transMult(self, x):
-        """Return M.T*x=(A.T*x)*r"""
-        # print('transmult', self.A.rows(), " x " , self.A.cols(), x, self.r, )
-        return self.A.transMult(x) * self.r
+#     def mult(self, x):
+#         """Multiplication from right-hand-side (dot product A*x)."""
+#         return self.A.mult(x) * self.l
 
-RMultRMatrix = MultRightMatrix  # alias for backward compatibility
+#     def transMult(self, x):
+#         """Multiplication from right-hand-side (dot product A.T * x)"""
+#         return self.A.transMult(x * self.l)
 
 
-class MultLeftRightMatrix(MultMatrix):
-    """Matrix consisting of actual RMatrix and left-hand-side vector."""
+# LMultRMatrix = MultLeftMatrix  # alias for backward compatibility
 
-    def __init__(self, A, left, right, verbose=False):
-        """Constructor saving matrix and vector."""
-        if A.cols() != len(right):
-            raise Exception("Matrix columns do not fit right vector length!")
-        if A.rows() != len(left):
-            raise Exception("Matrix rows do not fit left vector length!")
 
-        super(MultLeftRightMatrix, self).__init__(A, verbose)
-        self._r = right
-        self._l = left
+# class MultRightMatrix(MultMatrix):
+#     """Some Matrix, multiplied with a right hand side vector r."""
 
-    @property
-    def l(self):
-        return self._l
+#     def __init__(self, A, r=None, verbose=False):
+#         super(MultRightMatrix, self).__init__(A, verbose)
 
-    @l.setter
-    def l(self, l):
-        self._l = l
+#         if r is None:
+#             self._r = pgcore.RVector(self.cols(), 1.0)
+#         else:
+#             self._r = r
 
-    @property
-    def r(self):
-        return self._r
+#     @property
+#     def r(self):
+#         return self._r
 
-    @r.setter
-    def r(self, r):
-        self._r = r
+#     @r.setter
+#     def r(self, r):
+#         self._r = r
 
-    def mult(self, x):
-        """Multiplication from right-hand-side (dot product A*x)."""
-        return self.A.mult(x * self._r) * self._l
+#     def mult(self, x):
+#         """Return M*x = A*(r*x)"""
+#         if hasattr(x, '__len__') and hasattr(self.r, '__len__'):
+#             if len(x) != len(self.r):
+#                 # assuming A was complex
+#                 # warn('need to double x')
+#                 # print('mult:', self.A.rows(), " x " , self.A.cols(),
+#                 #        'x:', len(x), 'r:', len(self.r))
+#                 # print(self.perm)
+#                 return self.A.mult(x[self.perm] * self.r)
+#                 # return self.A.mult(pgcore.cat(x, x) * self.r)
+#         return self.A.mult(x * self.r)
 
-    def transMult(self, x):
-        """Multiplication from right-hand-side (dot product A.T*x)."""
-        return self.A.transMult(x * self._l) * self._r
+#     def transMult(self, x):
+#         """Return M.T*x=(A.T*x)*r"""
+#         # print('transmult', self.A.rows(), " x " , self.A.cols(), x, self.r, )
+#         return self.A.transMult(x) * self.r
 
-LRMultRMatrix = MultLeftRightMatrix  # alias for backward compatibility
 
+# RMultRMatrix = MultRightMatrix  # alias for backward compatibility
 
-class Add2Matrix(pgcore.MatrixBase):
-    """Matrix by adding two matrices."""
 
-    def __init__(self, A, B):
-        super().__init__()
-        self.A = A
-        self.B = B
-        assert A.rows() == B.rows()
-        assert A.cols() == B.cols()
+# class MultLeftRightMatrix(MultMatrix):
+#     """Matrix consisting of actual RMatrix and left-hand-side vector."""
 
-    def mult(self, x):
-        """Return M*x = A*(r*x)"""
-        return self.A.mult(x) + self.B.mult(x)
+#     def __init__(self, A, left, right, verbose=False):
+#         """Constructor saving matrix and vector."""
+#         if A.cols() != len(right):
+#             raise Exception("Matrix columns do not fit right vector length!")
+#         if A.rows() != len(left):
+#             raise Exception("Matrix rows do not fit left vector length!")
 
-    def transMult(self, x):
-        """Return M.T*x=(A.T*x)*r"""
-        return self.A.transMult(x) + self.B.transMult(x)
+#         super(MultLeftRightMatrix, self).__init__(A, verbose)
+#         self._r = right
+#         self._l = left
 
-    def cols(self):
-        """Number of columns."""
-        return self.A.cols()
+#     @property
+#     def l(self):
+#         return self._l
 
-    def rows(self):
-        """Number of rows."""
-        return self.A.rows()
+#     @l.setter
+#     def l(self, l):
+#         self._l = l
 
+#     @property
+#     def r(self):
+#         return self._r
 
-class Mult2Matrix(pgcore.MatrixBase):
-    """Matrix by multiplying two matrices.
-        M*x = A * (B*x)
-        M.T*x = (A*x) * B
-    """
+#     @r.setter
+#     def r(self, r):
+#         self._r = r
 
-    def __init__(self, A, B):
-        super().__init__()
-        self.A = A
-        self.B = B
-        assert A.cols() == B.rows()
+#     def mult(self, x):
+#         """Multiplication from right-hand-side (dot product A*x)."""
+#         return self.A.mult(x * self._r) * self._l
 
-    def mult(self, x):
-        """Return M*x = A*(B*x)"""
-        return self.A.mult(self.B.mult(x))
+#     def transMult(self, x):
+#         """Multiplication from right-hand-side (dot product A.T*x)."""
+#         return self.A.transMult(x * self._l) * self._r
 
-    def transMult(self, x):
-        """Return M.T*x=(A.T*x)*B"""
-        return self.B.transMult(self.A.transMult(x))
 
-    def cols(self):
-        """Number of columns."""
-        return self.B.cols()
+# LRMultRMatrix = MultLeftRightMatrix  # alias for backward compatibility
 
-    def rows(self):
-        """Number of rows."""
-        return self.A.rows()
 
+# class Add2Matrix(pgcore.MatrixBase):
+#     """Matrix by adding two matrices."""
 
-class DiagonalMatrix(pgcore.MatrixBase):
-    """Square matrix with a vector on the main diagonal."""
+#     def __init__(self, A, B):
+#         super().__init__()
+#         self.A = A
+#         self.B = B
+#         assert A.rows() == B.rows()
+#         assert A.cols() == B.cols()
 
-    def __init__(self, d):
-        super().__init__()
-        self.d = d
+#     def mult(self, x):
+#         """Return M*x = A*(r*x)"""
+#         return self.A.mult(x) + self.B.mult(x)
 
-    def mult(self, x):
-        """Return M*x = d*x (element-wise)"""
-        return x * self.d
-
-    def transMult(self, x):
-        """Return M.T*x = M*x"""
-        return x * self.d
-
-    def cols(self):
-        """Number of columns (length of diagonal)."""
-        return len(self.d)
-
-    def rows(self):
-        """Number of rows (length of diagonal)."""
-        return len(self.d)
-
-
-class Cm05Matrix(pgcore.MatrixBase):
-    """Matrix implicitly representing the inverse square-root."""
-
-    def __init__(self, A, verbose=False):
-        """Constructor saving matrix and vector.
-
-        Parameters
-        ----------
-        A : ndarray
-            numpy type (full) matrix
-        """
-        from scipy.linalg import eigh  # , get_blas_funcs
-
-        if A.shape[0] != A.shape[1]:  # rows/cols for pgcore matrix
-            raise Exception("Matrix must by square (and symmetric)!")
-
-        self.size = A.shape[0]
-        t = time.time()
-        self.ew, self.EV = eigh(A)
-        self.mul = np.sqrt(1./self.ew)
-        if verbose:
-            pgcore.info('(C) Time for eigenvalue decomposition:{:.1f}s'.format(
-                time.time() - t))
-
-        self.A = A
-        super().__init__(verbose)  # only in Python 3
-
-    def rows(self):
-        """Return number of rows (using underlying matrix)."""
-        return self.size
-
-    def cols(self):
-        """Return number of columns (using underlying matrix)."""
-        return self.size
-
-    def mult(self, x):
-        """Multiplication from right-hand side (dot product)."""
-        part1 = (np.dot(np.transpose(x), self.EV).T*self.mul).reshape(-1, 1)
-        return self.EV.dot(part1).reshape(-1,)
-#        return self.EV.dot((x.T.dot(self.EV)*self.mul).T)
-
-    def transMult(self, x):
-        """Multiplication from right-hand side (dot product)."""
-        return self.mult(x)  # matrix is symmetric by definition
-
-
-class NDMatrix(BlockMatrix):
-    """Diagonal block (block-Jacobi) matrix derived from pg.matrix.BlockMatrix.
-
-    (to be moved to a better place at a later stage)
-    """
-
-    def __init__(self, num, nrows, ncols):
-        super(NDMatrix, self).__init__()  # call inherited init function
-        self.Ji = []  # list of individual block matrices
-        for i in range(num):
-            self.Ji.append(pgcore.Matrix())
-            self.Ji[-1].resize(nrows, ncols)
-            n = self.addMatrix(self.Ji[-1])
-            self.addMatrixEntry(n, nrows * i, ncols * i)
-
-        self.recalcMatrixSize()
-        print(self.rows(), self.cols())
-
-
-class GeostatisticConstraintsMatrix(pgcore.MatrixBase):
-    """Geostatistic constraints matrix
-
-    Uses geostatistical operators described by Jordi et al. (2018),
-    however corrects for the remaining non-smooth (damping) part by
-    correcting for the spur of the inverse root matrix.
-
-    Jordi, C., Doetsch, J., Günther, T., Schmelzbach, C. & Robertsson, J.O.A.
-    (2018): Geostatistical regularisation operators for geophysical inverse
-    problems on irregular meshes. Geoph. J. Int. 213, 1374-1386,
-    doi:10.1093/gji/ggy055.
-    """
-    def __init__(self, CM=None, mesh=None, **kwargs):
-        """Initialize by computing the covariance matrix & its inverse root.
-
-        Parameters
-        ----------
-        CM : pg.Matrix or pg.SparseMapMatrix
-            covariance matrix, if not given, use mesh and I
-        mesh : pg.Mesh
-            mesh of which the cell midpoints are used for covariance
-        I : float | iterable of floats
-            axis correlation length (isotropic) or lengths (anisotropic)
-        dip : float [0]
-            angle of main axis corresponding to I[0] (2D) or I[0]&I[1] (3D)
-        strike : float [0]
-            angle of main axis corresponding to I[0] versus I[1] (3D)
-        withRef : bool [False]
-            neglect spur (reference model effect) that is otherwise corrected
-        """
-        from pygimli.utils.geostatistics import covarianceMatrix
-
-        super().__init__()
-        if isinstance(CM, pgcore.Mesh):
-            CM = covarianceMatrix(CM, **kwargs)
-        if CM is None:
-            CM = covarianceMatrix(mesh, **kwargs)
-
-        self.nModel = CM.shape[0]
-        self.CM05 = Cm05Matrix(CM)
-        self.spur = self.CM05 * pgcore.RVector(self.nModel, 1.0)
-        if kwargs.pop('withRef', False):
-            self.spur *= 0.0
-
-    def mult(self, x):
-        return self.CM05.mult(x) - self.spur * x
-
-    def transMult(self, x):
-        return self.CM05.transMult(x) - self.spur * x
-
-    def cols(self):
-        return self.nModel
-
-    def rows(self):
-        return self.nModel
+#     def transMult(self, x):
+#         """Return M.T*x=(A.T*x)*r"""
+#         return self.A.transMult(x) + self.B.transMult(x)
+
+#     def cols(self):
+#         """Number of columns."""
+#         return self.A.cols()
+
+#     def rows(self):
+#         """Number of rows."""
+#         return self.A.rows()
+
+
+# class Mult2Matrix(pgcore.MatrixBase):
+#     """Matrix by multiplying two matrices.
+#         M*x = A * (B*x)
+#         M.T*x = (A*x) * B
+#     """
+
+#     def __init__(self, A, B):
+#         super().__init__()
+#         self.A = A
+#         self.B = B
+#         assert A.cols() == B.rows()
+
+#     def mult(self, x):
+#         """Return M*x = A*(B*x)"""
+#         return self.A.mult(self.B.mult(x))
+
+#     def transMult(self, x):
+#         """Return M.T*x=(A.T*x)*B"""
+#         return self.B.transMult(self.A.transMult(x))
+
+#     def cols(self):
+#         """Number of columns."""
+#         return self.B.cols()
+
+#     def rows(self):
+#         """Number of rows."""
+#         return self.A.rows()
+
+
+# class DiagonalMatrix(pgcore.MatrixBase):
+#     """Square matrix with a vector on the main diagonal."""
+
+#     def __init__(self, d):
+#         super().__init__()
+#         self.d = d
+
+#     def mult(self, x):
+#         """Return M*x = d*x (element-wise)"""
+#         return x * self.d
+
+#     def transMult(self, x):
+#         """Return M.T*x = M*x"""
+#         return x * self.d
+
+#     def cols(self):
+#         """Number of columns (length of diagonal)."""
+#         return len(self.d)
+
+#     def rows(self):
+#         """Number of rows (length of diagonal)."""
+#         return len(self.d)
+
+# @pg.cache
+# def createCm05(A):
+#     """Globally cached helper function to create Cm05Matrix."""
+#     return pg.matrix.Cm05Matrix(A, verbose=True)
+
+# class Cm05Matrix(pgcore.MatrixBase):
+#     """Matrix implicitly representing the inverse square-root."""
+
+#     def __init__(self, A, verbose=False):
+#         """Constructor saving matrix and vector.
+
+#         Parameters
+#         ----------
+#         A : ndarray
+#             numpy type (full) matrix
+#         """
+#         super().__init__(verbose)  # only in Python 3
+#         self._mul = None
+
+#         if isinstance(A, str):
+#             self.load(A)
+#         else:
+#             from scipy.linalg import eigh  # , get_blas_funcs
+
+#             if A.shape[0] != A.shape[1]:  # rows/cols for pgcore matrix
+#                 raise Exception("Matrix must by square (and symmetric)!")
+
+#             if verbose:
+#                 t = time.perf_counter()
+#             self.ew, self.EV = eigh(A)
+
+#             if verbose:
+#                 info('(C) Time for eigenvalue decomposition: {:.1f}s'.format(
+#                     time.perf_counter()-t))
+
+#             #self.A = A
+
+#     @property
+#     def mul(self):
+#         if self._mul is None:
+#             self._mul = np.sqrt(1./self.ew)
+#         return self._mul
+
+#     def save(self, fileName):
+#         """Save the content of this matrix. Used for caching until pickling is possible for this class"""
+#         np.save(fileName, dict(ew=self.ew, EV=self.EV), allow_pickle=True)
+
+#     def load(self, fileName):
+#         """Load the content of this matrix. Used for caching until pickling is possible for this class"""
+#         d = np.load(fileName + '.npy', allow_pickle=True).tolist()
+#         self.ew = d['ew']
+#         self.EV = d['EV']
+
+#     def rows(self):
+#         """Return number of rows (using underlying matrix)."""
+#         return len(self.ew)
+
+#     def cols(self):
+#         """Return number of columns (using underlying matrix)."""
+#         return self.row()
+
+#     def mult(self, x):
+#         """Multiplication from right-hand side (dot product)."""
+#         part1 = (np.dot(np.transpose(x), self.EV).T*self.mul).reshape(-1, 1)
+#         return self.EV.dot(part1).reshape(-1,)
+# #        return self.EV.dot((x.T.dot(self.EV)*self.mul).T)
+
+#     def transMult(self, x):
+#         """Multiplication from right-hand side (dot product)."""
+#         return self.mult(x)  # matrix is symmetric by definition
+
+
+# class NDMatrix(BlockMatrix):
+#     """Diagonal block (block-Jacobi) matrix derived from pg.matrix.BlockMatrix.
+
+#     (to be moved to a better place at a later stage)
+#     """
+
+#     def __init__(self, num, nrows, ncols):
+#         super(NDMatrix, self).__init__()  # call inherited init function
+#         self.Ji = []  # list of individual block matrices
+#         for i in range(num):
+#             self.Ji.append(pgcore.Matrix())
+#             self.Ji[-1].resize(nrows, ncols)
+#             n = self.addMatrix(self.Ji[-1])
+#             self.addMatrixEntry(n, nrows * i, ncols * i)
+
+#         self.recalcMatrixSize()
+
+
+# class GeostatisticConstraintsMatrix(pgcore.MatrixBase):
+#     """Geostatistic constraints matrix
+
+#     Uses geostatistical operators described by Jordi et al. (2018),
+#     however corrects for the remaining non-smooth (damping) part by
+#     correcting for the spur of the inverse root matrix.
+
+#     Jordi, C., Doetsch, J., Günther, T., Schmelzbach, C. & Robertsson, J.O.A.
+#     (2018): Geostatistical regularisation operators for geophysical inverse
+#     problems on irregular meshes. Geoph. J. Int. 213, 1374-1386,
+#     doi:10.1093/gji/ggy055.
+#     """
+
+#     def __init__(self, CM=None, mesh=None, **kwargs):
+#         """Initialize by computing the covariance matrix & its inverse root.
+
+#         Parameters
+#         ----------
+#         CM : pg.Matrix or pg.SparseMapMatrix
+#             covariance matrix, if not given, use mesh and I
+#         mesh : pg.Mesh
+#             mesh of which the cell midpoints are used for covariance
+#         I : float | iterable of floats
+#             axis correlation length (isotropic) or lengths (anisotropic)
+#         dip : float [0]
+#             angle of main axis corresponding to I[0] (2D) or I[0]&I[1] (3D)
+#         strike : float [0]
+#             angle of main axis corresponding to I[0] versus I[1] (3D)
+#         withRef : bool [False]
+#             neglect spur (reference model effect) that is otherwise corrected
+#         """
+#         super().__init__(kwargs.pop('verbose', False))
+#         self.withRef = kwargs.pop('withRef', False)
+#         self._spur = None
+
+#         if isinstance(CM, str):
+#             self.load(CM)
+#         else:
+#             from pygimli.utils.geostatistics import covarianceMatrix
+
+#             if isinstance(CM, pgcore.Mesh):
+#                 CM = covarianceMatrix(CM, **kwargs)
+
+#             if CM is None and mesh is not None:
+#                 CM = covarianceMatrix(mesh, **kwargs)
+#             else:
+#                 pg.critical('Give either CM or mesh')
+
+#             self.Cm05 = createCm05(CM)
+
+#     @property
+#     def spur(self):
+#         if self._spur is None:
+#             if self.withRef is True:
+#                 self._spur = np.zeros(self.rows())
+#             else:
+#                 self._spur = self.Cm05 * pgcore.RVector(self.rows(), 1.0)
+#         return self._spur
+
+#     @property
+#     def nModel(self):
+#         try:
+#             return self.Cm05.size()
+#         except Exception as e:
+#             return 0
+
+#     def save(self, fileName):
+#         """Save the content of this matrix. Used for caching until pickling is possible for this class
+#         """
+#         self.Cm05.save(fileName + '-Cm05')
+#         np.save(fileName, dict(verbose=self.verbose(),
+#                                withRef=self.withRef,
+#                                Cm05=fileName +'-Cm05'),
+#                         allow_pickle=True)
+
+
+#     def load(self, fileName):
+#         """Load the content of this matrix. Used for caching until pickling is possible for this class
+#         """
+#         d = np.load(fileName + '.npy', allow_pickle=True).tolist()
+#         self.setVerbose(d['verbose'], )
+#         self.withRef = d['withRef']
+#         self.Cm05 = Cm05Matrix(d['Cm05'])
+
+
+#     def mult(self, x):
+#         return self.Cm05.mult(x) - self.spur * x
+
+#     def transMult(self, x):
+#         return self.Cm05.transMult(x) - self.spur * x
+
+#     def cols(self):
+#         return self.nModel
+
+#     def rows(self):
+#         return self.nModel
+
+#     def clear(self):
+#         self.Cm05 = None
+#         self._spur = None

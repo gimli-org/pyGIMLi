@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -258,7 +258,8 @@ public:
     /*! Return true if token data exist and at least one value is != 0.0.
      Return false if the data contains ONLY zero values. */
     inline bool haveData(const std::string & token) const {
-        if (exists(token)) return !zero(dataMap_.find(token)->second);
+        if (exists(token) && dataMap_.find(token)->second.size() > 0) 
+            return !zero(dataMap_.find(token)->second);
         return false;
     }
 

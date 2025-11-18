@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -74,19 +74,27 @@ namespace GIMLI{
 
 
 LDLWrapper::LDLWrapper(RSparseMatrix & S, bool verbose)
-    : SolverWrapper(S, verbose) {
+    : SolverWrapper(verbose) {
     name_ = "LDL";
     preordering_ = true;
+    setMatrix(S);
+}
+
+LDLWrapper::LDLWrapper(CSparseMatrix & S, bool verbose)
+    : SolverWrapper(verbose) {
+    THROW_TO_IMPL
+}
+
+void LDLWrapper::setMatrix(RSparseMatrix & S){
     initialize_(S);
     factorise();
 }
 
-LDLWrapper::LDLWrapper(CSparseMatrix & S, bool verbose)
-    : SolverWrapper(S, verbose) {
-    THROW_TO_IMPL
+LDLWrapper::~LDLWrapper(){
+    free_();
 }
 
-LDLWrapper::~LDLWrapper(){
+void LDLWrapper::free_(){
 #ifdef HAVE_LIBLDL
   delete [] Li_;
   delete [] Lp_;
@@ -101,8 +109,9 @@ LDLWrapper::~LDLWrapper(){
 #endif //HAVE_LIBLDL
   std::cerr << WHERE_AM_I << " LDL not installed" << std::endl;
 }
-
 int LDLWrapper::initialize_(RSparseMatrix & S){
+    dim_ = S.size();
+    nVals_ = S.nVals();
 
 #ifdef HAVE_LIBLDL
     colPtr_ = reinterpret_cast< int * >(S.colPtr());
@@ -179,7 +188,7 @@ int LDLWrapper::factorise(){
   return 0;
 }
 
-int LDLWrapper::solve(const RVector & rhs, RVector & solution){
+void LDLWrapper::solve(const RVector & rhs, RVector & solution){
 #ifdef HAVE_LIBLDL
   if (solution.size() != dim_) solution.resize(dim_);
 
@@ -203,10 +212,10 @@ int LDLWrapper::solve(const RVector & rhs, RVector & solution){
     std::cerr << WHERE_AM_I << " rhs is not defined" << std::endl;
   }
 
-  return 1;
+  //#return 1;
 #endif //HAVE_LIBLDL
   std::cerr << WHERE_AM_I << " Warning! LDL not installed" << std::endl;
-  return 0;
+  // return 0;
 }
 
 } //namespace GIMLI

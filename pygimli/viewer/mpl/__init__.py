@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Matplotlib drawing functions used by `pygimli.viewer`."""
+"""Drawing functions using Matplotlib."""
 
-import pygimli as pg
-import matplotlib
 
 # are the following suitable for a drawing package?
 from .utils import (hold,
                     wait,
+                    noShow,
                     updateFig,
                     updateAxes,
                     renameDepthTicks,
@@ -19,7 +18,9 @@ from .utils import (hold,
                     setOutputStyle,
                     setPlotStuff,
                     plotLines,
-                    twin, createTwinX, createTwinY)
+                    twin, createTwinX, createTwinY,
+                    isInteractive,
+                    registerShowPendingFigsAtExit)
 
 from .boreholes import BoreHole, BoreHoles, create_legend
 
@@ -32,7 +33,6 @@ from .colorbar import (createColorBar,
                        findAndMaskBestClim,
                        setCbarLevels,
                        setMappableData)
-
 from .meshview import (CellBrowser,
                        createMeshPatches,
                        createTriangles,
@@ -49,12 +49,13 @@ from .meshview import (CellBrowser,
                        drawStreamLines,
                        drawStreams)
 
-from .overlayimage import (cacheFileName,
-                           deg2MapTile,
-                           getMapTile,
-                           mapTile2deg,
-                           underlayMap,
-                           underlayBKGMap)
+# do not default import
+# from .overlayimage import (cacheFileName,
+#                            deg2MapTile,
+#                            getMapTile,
+#                            mapTile2deg,
+#                            underlayMap,
+#                            underlayBKGMap)
 
 from .matrixview import (drawBlockMatrix, drawSparseMatrix)
 
@@ -78,12 +79,12 @@ from .dataview import (drawSensorAsMarker,  # dups to meshview??
 
 # which of these do we actually need?
 from .modelview import (drawModel1D,
-                        showmymatrix,  # needed ?
+                        #showmymatrix,  # needed ?
                         draw1DColumn, # needed or redundant ?
                         draw1dmodel,   # needed or redundant ?
                         show1dmodel,  # needed or redundant ?
-                        draw1dmodelErr,  # needed or redundant ?
-                        draw1dmodelLU,  # needed or redundant ?
+                        #draw1dmodelErr,  # needed or redundant ?
+                        #draw1dmodelLU,  # needed or redundant ?
                         showStitchedModels,
                         showfdemsounding)
 
@@ -100,20 +101,6 @@ __all__ = [
     "setOutputStyle", "setPlotStuff", "createAnimation", "saveAnimation",
     "drawParameterConstraints", "drawPLC", "drawSelectedMeshBoundaries",
     "drawSelectedMeshBoundariesShadow", "drawSensors", "drawStreamLines",
-    "drawStreams", "insertUnitAtNextLastTick", "plotLines", "cacheFileName",
-    "deg2MapTile", "getMapTile", "mapTile2deg", "underlayMap", "updateAxes"
-]
+    "drawStreams", "insertUnitAtNextLastTick", "plotLines", "updateAxes"]
+# "cacheFileName", "deg2MapTile", "getMapTile", "mapTile2deg", "underlayMap"]
 
-# plt.subplots() resets locale setting to system default .. this went
-# horrible wrong for german 'decimal_point': ','
-# https://github.com/matplotlib/matplotlib/issues/6706
-# Qt5Agg resets it after importing figure;
-# TkAgg resets it after importing pyplot.
-# until its fixed we should maybe silently initialize the qt5agg backend and
-# refix the locale afterwards. If someone have a plan to do.
-#checkAndFixLocaleDecimal_point(verbose=True)
-
-
-# Set global hold if mpl inline backend is used (as in Jupyter Notebooks)
-if 'inline' in matplotlib.get_backend():
-    hold(1)

@@ -223,7 +223,9 @@ public:
                                                 (::floor(v1_->size() / 2.0) +
                                                     (v1_->size() / 2.0 - ::floor(v1_->size() / 2.0))));
         CPPUNIT_ASSERT(GIMLI::sum(v - v) == 0.0);
-        CPPUNIT_ASSERT(GIMLI::sum(v(0, -1) - v(0, v.size())) == 0.0);
+
+
+        CPPUNIT_ASSERT(GIMLI::sum(v(0, -1) - v(0, v.size()-1)) == 0.0);
         CPPUNIT_ASSERT(min(v) == 1.0);
         CPPUNIT_ASSERT(max(v) == v1_->size());
         RVector vs(10);

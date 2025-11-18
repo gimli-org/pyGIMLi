@@ -2,28 +2,30 @@
 # coding: utf-8
 """
 Crosshole traveltime tomography
--------------------------------
+===============================
 
 Seismic and ground penetrating radar (GPR) methods are frequently applied to
 image the shallow subsurface. While novel developments focus on inverting the
 full waveform, ray-based approximations are still widely used in practice and
-offer a computationally efficient alternative. Here we demonstrate the modelling
-of traveltimes and their inversion for the underlying slowness distribution for
-a crosshole scenario.
+offer a computationally efficient alternative.
+Here, we demonstrate the modelling of traveltimes and their inversion for the
+underlying slowness distribution for a crosshole scenario.
 
 We start by importing the necessary packages.
 """
-# sphinx_gallery_thumbnail_number = 3
+# sphinx_gallery_thumbnail_number = 4
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 import pygimli as pg
 import pygimli.meshtools as mt
-from pygimli.physics.traveltime import TravelTimeManager, createCrossholeData
+import pygimli.physics.traveltime as tt
 
 pg.utils.units.quants['vel']['cMap'] = 'inferno_r'
-################################################################################
+###############################################################################
+# Geometry setup
+# --------------
 # Next, we build the crosshole acquisition geometry with two shallow boreholes.
 
 # Acquisition parameters
@@ -54,14 +56,16 @@ for sen in sensors:
 
 mesh_fwd = mt.createMesh(geom, quality=34, area=0.25)
 model = np.array([2000., 2300, 1700])[mesh_fwd.cellMarkers()]
-pg.show(mesh_fwd, model,
-        label=pg.unit('vel'), cMap=pg.cmap('vel'), nLevs=3, logScale=False)
+ax, cb = pg.show(mesh_fwd, model, logScale=False,
+                 label=pg.unit('vel'), cMap=pg.cmap('vel'), nLevs=3)
 
 ###############################################################################
+# Synthetic data generation
+# -------------------------
 # Next, we create an empty DataContainer and fill it with sensor positions and
 # all possible shot-receiver pairs for the two-borehole scenario.
 
-scheme = createCrossholeData(sensors) 
+scheme = tt.createCrossholeData(sensors)
 
 ###############################################################################
 # The forward simulation is performed with a few lines of code. We initialize
@@ -73,11 +77,15 @@ scheme = createCrossholeData(sensors)
 # paper by `Giroux & Larouche (2013)
 # <https://doi.org/10.1016/j.cageo.2012.12.005>`_ to learn more about it.
 
-tt = TravelTimeManager()
+mgr = tt.TravelTimeManager()
 data = tt.simulate(mesh=mesh_fwd, scheme=scheme, slowness=1./model,
                    secNodes=4, noiseLevel=0.001, noiseAbs=1e-5, seed=1337)
 
+ax, cb = tt.showVA(data, usePos=False)
+
 ###############################################################################
+# Inversion
+# ---------
 # Now we create a structured grid as inversion mesh
 refinement = 0.25
 x = np.arange(0, bh_spacing + refinement, sensor_spacing * refinement)
@@ -87,16 +95,11 @@ mesh = pg.meshtools.createGrid(x, y)
 ax, _ = pg.show(mesh, hold=True)
 ax.plot(sensors[:, 0], sensors[:, 1], "ro")
 
+invmodel = mgr.invert(data, mesh=mesh, secNodes=3, lam=1000, zWeight=1.0,
+                      useGradient=False, verbose=True)
+print("chi^2 = {:.2f}".format(mgr.inv.chi2()))  # Look at the data fit
+
 ###############################################################################
-# Note. Setting setRecalcJacobian(False) to simulate linear inversion here.
-tt.inv.inv.setRecalcJacobian(True)
-
-invmodel = tt.invert(data, mesh=mesh, secNodes=3, lam=1000, zWeight=1.0,
-                     useGradient=False, verbose=True)
-print("chi^2 = %.2f" % tt.inv.chi2())  # Look at the data fit
-# np.testing.assert_approx_equal(tt.inv.chi2(), 0.999038, significant=5)
-
-################################################################################
 # Finally, we visualize the true model and the inversion result next to each
 # other.
 
@@ -104,26 +107,28 @@ fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 7), sharex=True, sharey=True)
 ax1.set_title("True model")
 ax2.set_title("Inversion result")
 
-pg.show(mesh_fwd, model, ax=ax1, showMesh=True,
-        label=pg.unit('vel'), cMap=pg.cmap('vel'), nLevs=3)
+ax, cb = pg.show(mesh_fwd, model, ax=ax1, showMesh=True,
+                 label=pg.unit('vel'), cMap=pg.cmap('vel'), nLevs=3)
 
 for ax in (ax1, ax2):
     ax.plot(sensors[:, 0], sensors[:, 1], "wo")
 
-tt.showResult(ax=ax2, logScale=False, nLevs=3)
-tt.drawRayPaths(ax=ax2, color="0.8", alpha=0.3)
+mgr.showResult(ax=ax2, logScale=False, nLevs=3)
+mgr.drawRayPaths(ax=ax2, color="0.8", alpha=0.3)
 fig.tight_layout()
 
-################################################################################
+###############################################################################
+# Coverage and ray paths
+# ----------------------
 # Note how the rays are attracted by the high velocity anomaly while
-# circumventing the low velocity region. This is also reflected in the coverage,
-# which can be visualized as follows:
+# circumventing the low-velocity region.
+# This is also reflected in the coverage, which can be visualized as follows:
 
 fig, ax = plt.subplots()
-tt.showCoverage(ax=ax, cMap="Greens")
-tt.drawRayPaths(ax=ax, color="k", alpha=0.3)
-ax.plot(sensors[:, 0], sensors[:, 1], "ko")
+mgr.showCoverage(ax=ax, cMap="Greens")
+mgr.drawRayPaths(ax=ax, color="k", alpha=0.3)
+p = ax.plot(sensors[:, 0], sensors[:, 1], "ko")
 
-################################################################################
-# White regions indicate the model null space, i.e. cells that are not traversed
-# by any ray.
+###############################################################################
+# White regions indicate the model null space, i.e. cells that are not
+# traversed by any ray.

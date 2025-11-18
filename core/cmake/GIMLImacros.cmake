@@ -1,6 +1,33 @@
 ################################################################################
 # Macro definitions used by GIMLI's cmake build
 ################################################################################
+function(cprint)
+    list(GET ARGV 0 Color)
+    list(REMOVE_AT ARGV 0)
+    execute_process(COMMAND 
+    cmake -E cmake_echo_color --${Color} ${ARGV})
+
+
+#   if(MessageType STREQUAL FATAL_ERROR OR MessageType STREQUAL SEND_ERROR)
+#     list(REMOVE_AT ARGV 0)
+#     _message(${MessageType} "${BoldRed}${ARGV}${ColourReset}")
+#   elseif(MessageType STREQUAL WARNING)
+#     list(REMOVE_AT ARGV 0)
+#     _message(${MessageType} "${BoldYellow}${ARGV}${ColourReset}")
+#   elseif(MessageType STREQUAL AUTHOR_WARNING)
+#     list(REMOVE_AT ARGV 0)
+#     _message(${MessageType} "${BoldCyan}${ARGV}${ColourReset}")
+#   elseif(MessageType STREQUAL STATUS)
+#     list(REMOVE_AT ARGV 0)
+#     _message(${MessageType} "${ARGV}")
+#     _message(STATUS "${ARGV}")
+#     #_message(${MessageType} "${Green}${ARGV}${ColourReset}")
+#   else()
+#     _message("${ARGV}")
+#   endif()
+endfunction()
+
+
 macro(add_python_module PYTHON_MODULE_NAME SOURCE_DIR EXTRA_LIBS OUTDIR)
 
     set(PYTHON_TARGET_NAME "_${PYTHON_MODULE_NAME}_")
@@ -13,81 +40,93 @@ macro(add_python_module PYTHON_MODULE_NAME SOURCE_DIR EXTRA_LIBS OUTDIR)
 
     include_directories(BEFORE ${SOURCE_DIR})
     include_directories(${Python_INCLUDE_DIRS})
+    include_directories(${Boost_INCLUDE_DIR})
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
     include_directories(${CMAKE_CURRENT_BINARY_DIR}/generated/)
-
+    
     add_definitions(-DPYGIMLI)
     add_definitions(-DBOOST_PYTHON_NO_PY_SIGNATURES)
-	add_definitions(-DBOOST_PYTHON_USE_GCC_SYMBOL_VISIBILITY)
-
+    add_definitions(-DBOOST_PYTHON_USE_GCC_SYMBOL_VISIBILITY)
+    
     add_library(${PYTHON_TARGET_NAME} MODULE ${${PYTHON_MODULE_NAME}_SOURCE_FILES})
-
-    target_link_libraries(${PYTHON_TARGET_NAME} ${EXTRA_LIBS})
-    target_link_libraries(${PYTHON_TARGET_NAME} ${Python_LIBRARIES})
-    target_link_libraries(${PYTHON_TARGET_NAME} ${Boost_PYTHON_LIBRARY})
-
     set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES PREFIX "")
+        
+    #TODO check!! (python3-config --extension-suffix)
 
-    if (WIN32)
+    if (APPLE)
+        # set(GIMLI_LIBRARY "${CMAKE_BINARY_DIR}/${LIBRARY_INSTALL_DIR}/libgimli.dylib")
+        target_link_libraries(${PYTHON_TARGET_NAME} "-bundle -undefined dynamic_lookup")
+    elseif (WIN32)
+        # set(GIMLI_LIBRARY "${CMAKE_BINARY_DIR}/bin/libgimli.dll")
         set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES SUFFIX ".pyd")
+    else()
+        # set(GIMLI_LIBRARY "${CMAKE_BINARY_DIR}/${LIBRARY_INSTALL_DIR}/libgimli.so")
+    endif()
+    
+    # target_link_libraries(${PYTHON_TARGET_NAME} ${GIMLI_LIBRARY}) 
+    # target_link_libraries(${PYTHON_TARGET_NAME} $<TARGET_FILE:gimli>) 
+    target_link_libraries(${PYTHON_TARGET_NAME} gimli) 
+    target_link_libraries(${PYTHON_TARGET_NAME} ${Boost_PYTHON_LIBRARY})
+    #target_link_libraries(${PYTHON_TARGET_NAME} ${Python_LIBRARIES})
+
+    if (Python_Development.Module_FOUND)
+        #target_link_libraries(${PYTHON_TARGET_NAME} PRIVATE Python::Module)
+        target_link_libraries(${PYTHON_TARGET_NAME} Python::Module)
+    else()
+        target_link_libraries(${PYTHON_TARGET_NAME} ${Python_LIBRARIES})
     endif()
 
-    #if (NOT APPLE AND BERT_INSTALL_WITH_RPATH)
-    #    set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
-    #        INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${BERT_LIB_INSTALL_DIR}"
-    #    )
-    #endif()
 
-#     if (OUTDIR)
-        set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
-                            LIBRARY_OUTPUT_DIRECTORY_DEBUG ${OUTDIR})
-        set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
-                            LIBRARY_OUTPUT_DIRECTORY_RELEASE ${OUTDIR})
-        set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
-                            LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL ${OUTDIR})
-        set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
-                            LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO ${OUTDIR})
-#     endif(OUTDIR)
-
-    if (CMAKE_COMPILER_IS_GNUCXX)
-        set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES COMPILE_FLAGS "-fvisibility=hidden -Wno-unused-value")
+    set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
+                        LIBRARY_OUTPUT_DIRECTORY_DEBUG ${OUTDIR})
+    set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
+                        LIBRARY_OUTPUT_DIRECTORY_RELEASE ${OUTDIR})
+    set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
+                        LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL ${OUTDIR})
+    set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
+                        LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO ${OUTDIR})
+    
+    if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_CLANGXX)
+	    set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
+                            COMPILE_FLAGS "-fvisibility=hidden -Wno-unused-value -Wno-infinite-recursion"
+                                )
+        
         if (WIN32 AND ADDRESSMODEL EQUAL "64")
-            set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES DEFINE_SYMBOL "MS_WIN64")
+            set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES 
+                                DEFINE_SYMBOL "MS_WIN64")
         endif()
     endif()
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        #     using regular Clang or AppleClang
-        set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES COMPILE_FLAGS "-fvisibility=hidden -Wno-unused-value")
-    endif()
-
+    
+    
     #--copy pattern files to build folder--
-    set(PYTHON_IN_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
-    set(PYTHON_OUT_PATH "${CMAKE_BINARY_DIR}/package")
+    ## needed?
+    # set(PYTHON_IN_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+    # set(PYTHON_OUT_PATH "${CMAKE_BINARY_DIR}/package")
 
-    file(GLOB_RECURSE PYTHON_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-                    "${PYTHON_MODULE_NAME}/*.py"
-                    "${PYTHON_MODULE_NAME}/*.png"
-                    "${PYTHON_MODULE_NAME}/*.xrc"
-                    "${PYTHON_MODULE_NAME}/*.fbp")
+    # file(GLOB_RECURSE PYTHON_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+    #                 "${PYTHON_MODULE_NAME}/*.py"
+    #                 "${PYTHON_MODULE_NAME}/*.png"
+    #                 "${PYTHON_MODULE_NAME}/*.xrc"
+    #                 "${PYTHON_MODULE_NAME}/*.fbp")
 
-    add_custom_target(copy_python ALL)
+    
 
-    foreach(file ${PYTHON_FILES})
+    # foreach(file ${PYTHON_FILES})
 
-        #message ("${PYTHON_IN_PATH}/${file} ${PYTHON_OUT_PATH}/${file}")
-        add_custom_command(
-            COMMAND
-                cmake -E copy_if_different
-                ${PYTHON_IN_PATH}/${file}
-                ${PYTHON_OUT_PATH}/${file}
-            DEPENDS "${PYTHON_IN_PATH}/${file}"
-            TARGET
-                copy_python
-            VERBATIM
-            COMMENT
-                "Updating python file: ${file}"
-        )
-    endforeach(file)
+    #     #message ("${PYTHON_IN_PATH}/${file} ${PYTHON_OUT_PATH}/${file}")
+    #     add_custom_command(
+    #         COMMAND
+    #             cmake -E copy_if_different
+    #             ${PYTHON_IN_PATH}/${file}
+    #             ${PYTHON_OUT_PATH}/${file}
+    #         DEPENDS "${PYTHON_IN_PATH}/${file}"
+    #         TARGET
+    #             copy_python
+    #         VERBATIM
+    #         COMMENT
+    #             "Updating python file: ${file}"
+    #     )
+    # endforeach(file)
 
 
 #----install-----------------------
@@ -139,10 +178,11 @@ function(find_python_module module)
         set( ${module}_FOUND ${${module}_FOUND} CACHE INTERNAL ${module}_FOUND)
         set( ${module}_LOC ${_${module}_location} CACHE INTERNAL ${module}_LOC)
     endif()
-
 endfunction(find_python_module)
 
+
 macro(findBuildTools)
+    message(STATUS "checking for some build tools ...")
     #unzip try cmake -E tar
     #find_package(Tar REQUIRED)  ${CMAKE_COMMAND} -E tar "cfvz"
     find_program(PATCH_TOOL NAMES patch  REQUIRED)
@@ -150,6 +190,7 @@ macro(findBuildTools)
     find_package(Wget REQUIRED)
     find_package(Git REQUIRED)
 endmacro(findBuildTools)
+
 
 macro(find_or_build_package package get_package)
 
@@ -168,16 +209,46 @@ macro(find_or_build_package package get_package)
     find_or_build_package_check(${package} ${get_package} ${upper_package}_FOUND ${foceLocal})
 endmacro()
 
-macro(find_or_build_package_check package get_package checkVar forceLocal)
+macro(build_package package get_package)
+    findBuildTools()
 
+    message(STATUS "building ${package} from foreign sources into ${THIRDPARTY_DIR}" )
+
+    file(MAKE_DIRECTORY ${THIRDPARTY_DIR})
+
+    if (J)
+        set(ENV{PARALLEL_BUILD} ${J})
+    endif()
+
+    if (NOT get_package)
+        set(get_package ${lower_package})
+    endif()
+
+    execute_process(
+        COMMAND
+            bash ${PROJECT_SOURCE_DIR}/core/scripts/buildThirdParty.sh ${get_package}
+        WORKING_DIRECTORY
+            ${THIRDPARTY_DIR}
+    )
+endmacro()
+
+macro(find_or_build_package_check 
+        package 
+        get_package 
+        checkVar 
+        forceLocal
+        )
+
+    message(STATUS "** Find or build ${package} at: ${checkVar} force: ${forceLocal}")
     find_package(${package})
+    message(STATUS "Found: ${${package}_FOUND}")
 
     string(TOUPPER ${package} upper_package)
     string(TOLOWER ${package} lower_package)
 
     set (FORCE_LOCAL_REBUILD 0)
 
-    message(STATUS "${package} is local ${forceLocal}")
+    message(STATUS "Local build ${package} forced: ${forceLocal}")
 
     if ($ENV{CLEAN})
         if(${forceLocal} OR ${package}_LOCAL)
@@ -189,34 +260,16 @@ macro(find_or_build_package_check package get_package checkVar forceLocal)
 
     if (NOT ${checkVar} OR ${FORCE_LOCAL_REBUILD})
 
-        findBuildTools()
+        build_package(${package} ${get_package})
 
-        message(STATUS "${package} NOT found .. building version from foreign sources into ${THIRDPARTY_DIR}" )
-
-        file(MAKE_DIRECTORY ${THIRDPARTY_DIR})
-
-        if (J)
-            set(ENV{PARALLEL_BUILD} ${J})
-        endif()
-
-        if (NOT get_package)
-            set(get_package ${lower_package})
-        endif()
-
-        execute_process(
-            COMMAND
-				bash ${PROJECT_SOURCE_DIR}/core/scripts/buildThirdParty.sh ${get_package}
-            WORKING_DIRECTORY
-				${THIRDPARTY_DIR}
-        )
-
+        message(STATUS "checking again for ${package} ...")
 		find_package(${package})
+        message(STATUS "Found: ${${package}_FOUND}")
 
         set(${package}_LOCAL 1 CACHE INTERNAL "this package was build local")
     else()
-        message(STATUS "${package} found" )
+        message(STATUS "** Find or build ${package} done.")
     endif()
-
 endmacro()
 
 

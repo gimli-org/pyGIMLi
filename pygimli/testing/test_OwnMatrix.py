@@ -8,7 +8,7 @@ import pygimli as pg
 
 from pygimli.core.matrix import RVector, MatrixBase
 
-class Matrix(pg.matrix.MatrixBase):
+class Matrix(pg.core.MatrixBase):
 
     def __init__(self):
         pg.MatrixBase.__init__(self)

@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -15,7 +15,6 @@
  *   limitations under the License.                                           *
  *                                                                            *
  ******************************************************************************/
-
 #ifndef _GIMLI_GIMLI__H
 #define _GIMLI_GIMLI__H
 
@@ -119,12 +118,72 @@ typedef int64_t int64;
 	#endif
 #endif
 
-#ifdef _WIN64__
-    #define __FILENAME__ std::max<const char*>(__FILE__,\
-        std::max(strrchr(__FILE__, '\\')+1, strrchr(__FILE__, '/')+1))
-#else
-    #define __FILENAME__ __FILE__
+
+/*!Replace from with to inside str and return the result*/
+DLLEXPORT  std::string replace(const std::string & str,
+                               const std::string & from,
+                               const std::string & to);
+
+#ifndef SRC_DIR
+    #define SRC_DIR "./"
 #endif
+
+#ifdef _WIN64__
+    /// testme and refactor with below # 1.3.1
+    #define __FILENAME__ GIMLI::replace(__FILE__, SRC_DIR, ".")
+    // #define __FILENAME__ std::max<const char*>(__FILE__,\
+    //     std::max(strrchr(__FILE__, '\\')+1, strrchr(__FILE__, '/')+1))
+#else
+    #define __FILENAME__ GIMLI::replace(__FILE__, SRC_DIR, ".")
+#endif
+
+
+#ifndef PYGIMLI_CAST // castxml complains on older gcc/clang
+inline std::string str(){ return "";}
+#endif
+//! General template for conversion to string, should supersede all sprintf etc.
+template< typename T > inline std::string str(const T & v){
+    std::ostringstream os;
+    os << v;
+    return os.str();
+}
+enum LogType {Verbose, Info, Warning, Error, Debug, Critical};
+DLLEXPORT void log(LogType type, const std::string & msg);
+
+template<typename Value, typename... Values>
+std::string str(Value v, Values... vs){
+    std::ostringstream os;
+    using expander = int[];
+    os << v; // first
+    (void) expander{ 0, (os << " " << vs, void(), 0)... };
+    return os.str();
+}
+
+template<typename... Values>
+void log(LogType type, Values... vs){
+    return log(type, str(vs...));
+}
+
+// simple python like std out
+inline void print() {
+    std::cout << std::endl;
+}
+
+template<class Head>
+void print(std::ostream& s, Head&& head) {
+    s << std::forward<Head>(head) << std::endl;
+}
+
+template<class Head, class... Tail>
+void print(std::ostream& s, Head&& head, Tail&&... tail) {
+    s << std::forward<Head>(head) << " ";
+    print(s, std::forward<Tail>(tail)...);
+}
+
+template<class... Args>
+void print(Args&&... args) {
+    print(std::cout, std::forward<Args>(args)...);
+}
 
 #define WHERE GIMLI::str(__FILENAME__) + ":" + GIMLI::str(__LINE__) + "\t"
 #define WHERE_AM_I WHERE + "\t" + GIMLI::str(__ASSERT_FUNCTION) + " "
@@ -132,6 +191,8 @@ typedef int64_t int64;
 
 #define __M std::cout << "*** " << WHERE << std::endl;
 #define __MS(str) std::cout << "*** " <<str << " " << WHERE << std::endl;
+// temporary
+#define __MSP(...) GIMLI::print("+++", WHERE, "\n", __VA_ARGS__, "\n---");
 #define __D if (debug()) std::cout << "Debug: " << WHERE << std::endl;
 #define __DS(str) if (debug()) std::cout << "Debug: " << str << " " << WHERE << std::endl;
 
@@ -243,6 +304,7 @@ class RegionManager;
 class Shape;
 class Stopwatch;
 class Pos;
+class SolverWrapper;
 
 typedef Pos RVector3;
 typedef std::complex < double > Complex;
@@ -277,6 +339,7 @@ typedef Matrix3< double > RMatrix3;
 typedef Matrix < Complex > CMatrix;
 typedef BlockMatrix < double > RBlockMatrix;
 
+
 //#typedef Vector< unsigned char > BVector;
 
 // typedef std::vector < RVector > RMatrix;
@@ -307,6 +370,9 @@ Default is number of CPU. */
 DLLEXPORT void setThreadCount(Index nThreads);
 DLLEXPORT Index threadCount();
 
+DLLEXPORT void setUseOMP(bool o);
+DLLEXPORT bool useOMP();
+
 /*! For some debug purposes only */
 DLLEXPORT void showSizes();
 
@@ -334,31 +400,6 @@ private:
     #endif
 #else
 //     #include <Python.h>
-#endif
-
-inline std::string str(){ return "";}
-//! General template for conversion to string, should supersede all sprintf etc.
-template< typename T > inline std::string str(const T & v){
-    std::ostringstream os;
-    os << v;
-    return os.str();
-}
-enum LogType {Verbose, Info, Warning, Error, Debug, Critical};
-DLLEXPORT void log(LogType type, const std::string & msg);
-
-#ifndef PYGIMLI_CAST // castxml complains on older gcc/clang
-template<typename Value, typename... Values>
-std::string str(Value v, Values... vs){
-    std::ostringstream os;
-    using expander = int[];
-    os << v; // first
-    (void) expander{ 0, (os << " " << vs, void(), 0)... };
-    return os.str();
-}
-template<typename... Values>
-void log(LogType type, Values... vs){
-    return log(type, str(vs...));
-}
 #endif
 
 DLLEXPORT std::string versionStr();

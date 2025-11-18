@@ -61,6 +61,26 @@ class TestInterpolate(unittest.TestCase):
         np.testing.assert_allclose(pg.interpolate(grid, pg.x(grid.positions()), x, x*0, x*0), x)
         np.testing.assert_allclose(pg.interpolate(grid, pg.x(grid.positions()), x=x, y=x*0, z=x*0), x)
 
+        pnts = [[0.  ,0. ],
+                [0.1 ,0. ],
+                [0.2 ,0. ],
+                [0.3 ,0. ],
+                [0.4 ,0. ],
+                [0.5 ,0. ],
+                [0.6 ,0. ],
+                [0.7 ,0. ],
+                [0.8 ,0. ],
+                [0.9 ,0. ],
+                [1.  ,0. ]]
+        np.testing.assert_allclose(pg.interpolate(grid, pg.x(grid.positions()), pnts), x)
+        np.testing.assert_allclose(pg.interpolate(grid, pg.x(grid.positions()), np.array(pnts)), x)
+        
+        pnts = np.linspace((min(x), 0.0), (max(x), 0.0), len(x))
+        np.testing.assert_allclose(pg.interpolate(grid, pg.x(grid.positions()), pnts), x)
+
+        pnts = np.linspace((min(x), 0.0, 0.0), (max(x), 0.0, 0.0), len(x))
+        np.testing.assert_allclose(pg.interpolate(grid, pg.x(grid.positions()), pnts), x)
+
 
 if __name__ == '__main__':
     #pg.setDebug(1)

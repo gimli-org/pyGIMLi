@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the resistivity.net development team          *
+ *   Copyright (C) 2006-2024 by the resistivity.net development team          *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -262,6 +262,9 @@ public:
     /*! Return true if singular value estimation is switched on.*/
     bool isSetSingValue() const { return setSingValue_;}
 
+    /*! Set a custom solver if you don't want the default Choldmod or UMFPACK. */
+    void setSolver(SolverWrapper *solver){ solver_ = solver; }
+    
 private:
     void init_();
 
@@ -334,6 +337,8 @@ protected:
     RVector vContactImpedance_;
 
     DataMap * primDataMap_;
+
+    SolverWrapper *solver_;
 };
 
 class DLLEXPORT DCSRMultiElectrodeModelling : public DCMultiElectrodeModelling {

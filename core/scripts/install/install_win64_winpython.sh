@@ -6,10 +6,8 @@ else
     PYTHON_MAJOR_REQ=$1
 fi
 
-WINPYTHON_DOWNLOAD=winPython_3.6/3.6.1.0/WinPython-64bit-3.6.1.0
-WINPYTHON_VERSION=python-3.6.1.amd64
-#WINPYTHON_DOWNLOAD=winPython_3.4/3.4.4.1/WinPython-64bit-3.4.4.1Qt5
-#WINPYTHON_VERSION=python-3.4.4.amd64
+WINPYTHON_DOWNLOAD=https://docs.anaconda.com/anaconda/install/windows/
+WINPYTHON_VERSION=anaconda
 
 searchPython(){
     FindRunDone=$1
@@ -28,7 +26,7 @@ searchPython(){
     else
         if [ -z "$FindRunDone" ]; then
             echo "---------------------------------------------------------------------------------------------------"
-            echo "Please install http://sourceforge.net/projects/winpython/files/$WINPYTHON_DOWNLOAD'.exe'/download"
+            echo "Please install latest version from $WINPYTHON_DOWNLOAD"
             echo "We try to find it if you already have but forget to set a proper path" 
             echo "---------------------------------------------------------------------------------------------------"
             echo "No suiteable python version found .. trying to find one .......... find /C -name $WINPYTHON_VERSION"
@@ -49,11 +47,10 @@ searchPython(){
         else
   
             echo "-----------------------------------------------------------------------------------"
-            echo "No suiteable python version found .. you need to install winpython"
-            echo "http://sourceforge.net/projects/winpython/files/$WINPYTHON_DOWNLOAD'.exe'/download"
-            echo "Please install winpython"
+            echo "No suiteable python version found .. you need to install latest anaconda for windows"
+            echo "$WINPYTHON_DOWNLOAD"
             echo "You can the simple rerun this script and find you Python installation temporarily, "
-            echo "or set your PATH variable to your winpython installation directory."
+            echo "or set your PATH variable to your anaconda installation directory."
         fi
     fi
 }
@@ -76,4 +73,4 @@ patchPython(){
 }
 
 searchPython
-patchPython
+#patchPython

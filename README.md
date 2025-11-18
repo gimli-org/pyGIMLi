@@ -6,21 +6,22 @@ Readme for Github repository only. (Gets selected before *.rst file)
   <img src="https://www.pygimli.org/_images/pg_logo.png" width="50%">
 </a>
 
-[![Build Status](http://jenkins.pygimli.org/job/pyGIMLi_dev/badge/icon?style=flat-square)](http://jenkins.pygimli.org/job/pyGIMLi_dev/)
-[![license](https://img.shields.io/github/license/gimli-org/gimli.svg?style=flat-square)](https://pygimli.org/license.html)
+[![pyGIMLi CI](https://github.com/gimli-org/gimli/actions/workflows/main.yml/badge.svg)](https://github.com/gimli-org/gimli/actions/workflows/main.yml)
+[![Anaconda-Server Badge](https://anaconda.org/gimli/pygimli/badges/license.svg)](https://pygimli.org/license.html)
 [![release](https://img.shields.io/github/release/gimli-org/gimli.svg?style=flat-square)](https://github.com/gimli-org/gimli/releases/latest)
 [![Github commits (since latest release)](https://img.shields.io/github/commits-since/gimli-org/gimli/latest.svg?style=flat-square)](https://github.com/gimli-org/gimli/tree/dev)
-[![Slack](https://img.shields.io/badge/Slack-pGIMLi-yellow.svg?logo=slack&style=flat-square)](https://swung.slack.com/archives/C01US4T522X)
+[![Slack](https://img.shields.io/badge/pyGIMLi%20chat%20-%20mattermost?style=flat&logo=mattermost&label=mattermost&link=https%3A%2F%2Fmattermost.softwareunderground.org%2Fswung%2Fchannels%2Fpygimli
+)](https://mattermost.softwareunderground.org/swung/channels/pygimli)
 
-[pyGIMLi](www.pygimli.org) is an open-source library for modelling and inversion and in geophysics. The object-oriented library provides management for structured and unstructured meshes in 2D and 3D, finite-element and finite-volume solvers, various geophysical forward operators, as well as Gauss-Newton based frameworks for constrained, joint and fully-coupled inversions with flexible regularization.
+[pyGIMLi](https://www.pygimli.org) is an open-source library for modelling and inversion and in geophysics. The object-oriented library provides management for structured and unstructured meshes in 2D and 3D, finite-element and finite-volume solvers, various geophysical forward operators, as well as Gauss-Newton based frameworks for constrained, joint and fully-coupled inversions with flexible regularization.
 
 What is pyGIMLi suited for?
 
--   analyze, visualize and invert geophysical data in a reproducible manner
--   forward modelling of (geo)physical problems on complex 2D and 3D geometries
--   inversion with flexible controls on a-priori information and regularization
--   combination of different methods in constrained, joint and fully-coupled inversions
--   teaching applied geophysics (e.g. in combination with [Jupyter notebooks])
+- analyze, visualize and invert geophysical data in a reproducible manner
+- forward modelling of (geo)physical problems on complex 2D and 3D geometries
+- inversion with flexible controls on a-priori information and regularization
+- combination of different methods in constrained, joint and fully-coupled inversions
+- teaching applied geophysics (e.g. in combination with [Jupyter notebooks])
 
 What is pyGIMLi **NOT** suited for?
 
@@ -30,7 +31,6 @@ What is pyGIMLi **NOT** suited for?
 
 ##### Installation
 
-[![Anaconda-Server Badge](https://anaconda.org/gimli/pygimli/badges/installer/conda.svg)](https://conda.anaconda.org/gimli)
 [![Anaconda-Server Badge](https://anaconda.org/gimli/pygimli/badges/platforms.svg)](https://anaconda.org/gimli/pygimli)
 [![Anaconda-Server Badge](https://anaconda.org/gimli/pygimli/badges/downloads.svg)](https://anaconda.org/gimli/pygimli)
 [![Anaconda-Server Badge](https://anaconda.org/gimli/pygimli/badges/version.svg)](https://anaconda.org/gimli/pygimli)
@@ -40,12 +40,16 @@ On all platforms, we recommend to install pyGIMLi via the conda package manager
 contained in the Anaconda distribution. For details on how to install Anaconda,
 we refer to: https://docs.anaconda.com/anaconda/install/
 
-To avoid conflicts with other packages, we recommend to install pygimli in a
+Note that Anaconda comes with many (great) packages, many of which you likely
+will not use. If you want to save space, you can install the [light-weight
+version Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/).
+
+To avoid conflicts with other packages, we recommend to install pyGIMLi in a
 separate environment. Here we call this environment pg, but you can give it any
 name. Note that this environment has to be created only once.
 
 ``` bash
-conda create -n pg -c gimli -c conda-forge pygimli=1.2.1
+conda create -n pg -c gimli -c conda-forge "pygimli>=1.5.0"
 ```
 
 If you are using Windows or Mac, a new environment named “pg” should be visible in the Anaconda Navigator. If you want to use pygimli from the command line, you have to activate the environment. You can put this line in your ~/.bashrc file so that it is activated automatically if you open a terminal.

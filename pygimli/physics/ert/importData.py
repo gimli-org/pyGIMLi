@@ -1,6 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Import routines several ERT file formats."""
 import re
+from pathlib import Path
 import numpy as np
 import pygimli as pg
 
@@ -18,13 +18,17 @@ def load(fileName, verbose=False, **kwargs):
     Parameters
     ----------
     fileName: str
+        file name
+    verbose : bool
+        print some stuff or not
+    ensureKRhoa : bool
+        make sure data container has geometric factors and apparent resistivity
 
     Returns
     -------
     data: pg.DataContainer
 
     """
-
     data = pg.load(fileName)
     if isinstance(data, pg.DataContainerERT):
         return data
@@ -33,7 +37,7 @@ def load(fileName, verbose=False, **kwargs):
         pg.info("could not read unified data format for ERT ... try res2dinv")
         data = importRes2dInv(fileName)
         return data
-    except:
+    except Exception:
         pg.info("could not read res2dinv ... try Ascii columns")
 
     try:
@@ -47,15 +51,24 @@ def load(fileName, verbose=False, **kwargs):
         pg.info("Try to import using pybert .. if available")
 
     pb = pg.optImport('pybert')
-    data = pb.loadData(fileName)
+    data = pb.importData(fileName)
+
+    if kwargs.pop('ensureKRhoa', False):
+        if not data.haveData('k'):
+            data.createGeometricFactors()
+        if data.haveData('r'):
+            data['rhoa'] = data['r'] * data['k']
+        elif data.haveData('u') and data.haveData('i'):
+            data['rhoa'] = data['u'] / data['i'] * data['k']
 
     if isinstance(data, pg.DataContainerERT):
         return data
 
     pg.critical("Can't import ERT data file.", fileName)
 
+
 def importRes2dInv(filename, verbose=False, return_header=False):
-    """Read res2dinv format
+    """Read res2dinv format file.
 
     Parameters
     ----------
@@ -90,7 +103,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
         return s.split('\r\n')[0]
     # def getNonEmptyRow(...)
 
-    with open(filename, 'r') as fi:
+    with Path(filename).open('r') as fi:
         content = fi.readlines()
 
     it = iter(content)
@@ -123,24 +136,38 @@ def importRes2dInv(filename, verbose=False, return_header=False):
             header['ipDT'] = np.array(ipline[2:-2], dtype=float)
             header['ipGateT'] = np.cumsum(np.hstack((header['ipDelay'],
                                                      header['ipDT'])))
-
     data = pg.DataContainerERT()
     data.resize(nData)
 
     if typ == 9 or typ == 10:
-        raise Exception("Don't know how to read:" + str(typ))
+        raise NotImplementedError("Don't know how to read:" + str(typ))
 
-    if typ == 11 or typ == 12 or typ == 13:  # mixed array
-
+    row = getNonEmptyRow(it, comment=';')
+    if typ in [11, 12, 13]:  # mixed array
         res = pg.Vector(nData, 0.0)
         ip = pg.Vector(nData, 0.0)
+        err = pg.Vector(nData, 0.0)
+        iperr = pg.Vector(nData, 0.0)
         specIP = []
 
-        for i in range(nData):
-            vals = getNonEmptyRow(it, comment=';').replace(',', ' ').split()
+        hasErr = False
+        if row.startswith("Error"):
+            hasErr = True
+            row = getNonEmptyRow(it, comment=';')
+            if row.startswith("Type"):
+                row = getNonEmptyRow(it, comment=';')
 
+            header['ipErrType'] = int(row)
+            row = getNonEmptyRow(it, comment=';')
+
+        for i in range(nData):
+            if i > 0:
+                row = getNonEmptyRow(it, comment=';')
+
+            vals = row.replace(',', ' ').split()
+            nEls = int(float(vals[0]))
             # row starts with 4
-            if int(vals[0]) == 4:
+            if nEls == 4:
                 eaID = data.createSensor(pg.Pos(float(vals[1]),
                                                 float(vals[2])))
                 ebID = data.createSensor(pg.Pos(float(vals[3]),
@@ -149,7 +176,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                                                 float(vals[6])))
                 enID = data.createSensor(pg.Pos(float(vals[7]),
                                                 float(vals[8])))
-            elif int(vals[0]) == 3:
+            elif nEls == 3:
                 eaID = data.createSensor(pg.Pos(float(vals[1]),
                                                 float(vals[2])))
                 ebID = -1
@@ -157,7 +184,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                                                 float(vals[4])))
                 enID = data.createSensor(pg.Pos(float(vals[5]),
                                                 float(vals[6])))
-            elif int(vals[0]) == 2:
+            elif nEls == 2:
                 eaID = data.createSensor(pg.Pos(float(vals[1]),
                                                 float(vals[2])))
                 ebID = -1
@@ -165,14 +192,21 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                                                 float(vals[4])))
                 enID = -1
             else:
-                raise Exception('dont know how to handle row', vals[0])
-            res[i] = float(vals[int(vals[0])*2+1])
+                raise ValueError('dont know how to handle first entry', vals[0])
+
+            res[i] = float(vals[nEls*2+1])
             if hasIP:
-                # ip[i] = float(vals[int(vals[0])*2+2])
-                ipCol = int(vals[0])*2+2
+                # ip[i] = float(vals[nEls*2+2])
+                ipCol = nEls*2+2
                 ip[i] = float(vals[ipCol])
                 if 'ipNumGates' in header:
                     specIP.append(vals[ipCol:])
+            if hasErr:
+                ipCol = nEls*2+3
+                err[i] = float(vals[ipCol])
+                if hasIP:
+                    ipErrCol = nEls*2+4
+                    iperr[i] = float(vals[ipErrCol])
 
             data.createFourPointData(i, eaID, ebID, emID, enID)
 
@@ -190,109 +224,109 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                 for i in range(header['ipNumGates']):
                     data.set('ip'+str(i+1), A[:, i])
 
-        data.sortSensorsX()
-        data.sortSensorsIndex()
-        if return_header:
-            return data, header
+        if hasErr:
+            data["err"] = err
+            if hasIP:
+                data["iperr"] = iperr
+
+    else:  # not type 11-13
+        # amount of values per column per typ
+        nntyp = [0, 3, 3, 4, 3, 3, 4, 4, 3, 0, 0, 8, 10]
+        nn = nntyp[typ] + hasIP  # number of columns
+
+        dataBody = np.zeros((nn, nData))
+        for i in range(nData):
+            vals = getNonEmptyRow(it, comment=';').replace(',', ' ').split()
+            dataBody[:, i] = np.array(vals, dtype=float)
+
+        XX = dataBody[0]
+        EL = dataBody[1]
+        SP = pg.Vector(nData, 1.0)
+
+        if nn - hasIP == 4:
+            SP = dataBody[2]
+
+        AA = None
+        BB = None
+        NN = None
+        MM = None
+
+        if typ == 1:  # Wenner
+            AA = XX - xLoc * EL * 1.5
+            MM = AA + EL
+            NN = MM + EL
+            BB = NN + EL
+        elif typ == 2:  # Pole-Pole
+            AA = XX - xLoc * EL * 0.5
+            MM = AA + EL
+        elif typ == 3:  # Dipole-Dipole
+            AA = XX - xLoc * EL * (SP / 2. + 1.)
+            BB = AA + EL
+            MM = BB + SP * EL
+            NN = MM + EL
+        elif typ == 3:  # Dipole-Dipole
+            AA = XX - xLoc * EL * (SP / 2. + 1.)
+            BB = AA + EL
+            MM = BB + SP * EL
+            NN = MM + EL
+        elif typ == 4:  # WENNER-BETA
+            AA = XX - xLoc * EL * 1.5
+            BB = AA + EL
+            MM = BB + EL
+            NN = MM + EL
+        elif typ == 5:  # WENNER-GAMMA
+            AA = XX - xLoc * EL * 1.5
+            MM = AA + EL
+            BB = MM + EL
+            NN = BB + EL
+        elif typ == 6:  # POLE-DIPOLE
+            AA = XX - xLoc * SP * EL - (SP - 1.) * (SP < 0.) * EL
+            MM = AA + SP * EL
+            NN = MM + np.sign(SP) * EL
+        elif typ == 7:  # SCHLUMBERGER
+            AA = XX - xLoc * EL * (SP + 0.5)
+            MM = AA + SP * EL
+            NN = MM + EL
+            BB = NN + SP * EL
         else:
-            return data
+            raise NotImplementedError('Datatype ' + str(typ) + ' not yet supported')
 
-    # amount of values per collumn per typ
-    nntyp = [0, 3, 3, 4, 3, 3, 4, 4, 3, 0, 0, 8, 10]
+        for i in range(len(AA)):
+            eaID = data.createSensor(pg.Pos(AA[i], 0.0)) if AA is not None else -1
 
-    nn = nntyp[typ] + hasIP
+            ebID = data.createSensor(pg.Pos(BB[i], 0.0)) if BB is not None else -1
 
-    # dataBody = pg.Matrix(nn, nData)
-    dataBody = np.zeros((nn, nData))
+            emID = data.createSensor(pg.Pos(MM[i], 0.0)) if MM is not None else -1
 
-    for i in range(nData):
-        vals = getNonEmptyRow(it, comment=';').replace(',', ' ').split()
-        dataBody[:, i] = np.array(vals, dtype=float)
-#        for j in range(nn):
-#            dataBody[j][i] = float(vals[j])
+            enID = data.createSensor(pg.Pos(NN[i], 0.0)) if NN is not None else -1
 
-    XX = dataBody[0]
-    EL = dataBody[1]
-    SP = pg.Vector(nData, 1.0)
+            data.createFourPointData(i, eaID, ebID, emID, enID)
 
-    if nn - hasIP == 4:
-        SP = dataBody[2]
+        data.set('rhoa', dataBody[nn - hasIP - 1])
+        if hasIP:
+            data.set('ip', dataBody[nn - 1])
 
-    AA = None
-    BB = None
-    NN = None
-    MM = None
+    try:
+        row = getNonEmptyRow(it, comment=';')
+        if row.lower().startswith('topography'):
+            row = getNonEmptyRow(it, comment=';')
 
-    if typ == 1:  # Wenner
-        AA = XX - xLoc * EL * 1.5
-        MM = AA + EL
-        NN = MM + EL
-        BB = NN + EL
-    elif typ == 2:  # Pole-Pole
-        AA = XX - xLoc * EL * 0.5
-        MM = AA + EL
-    elif typ == 3:  # Dipole-Dipole
-        AA = XX - xLoc * EL * (SP / 2. + 1.)
-        BB = AA + EL
-        MM = BB + SP * EL
-        NN = MM + EL
-        pass
-    elif typ == 3:  # Dipole-Dipole
-        AA = XX - xLoc * EL * (SP / 2. + 1.)
-        BB = AA + EL
-        MM = BB + SP * EL
-        NN = MM + EL
-    elif typ == 4:  # WENNER-BETA
-        AA = XX - xLoc * EL * 1.5
-        BB = AA + EL
-        MM = BB + EL
-        NN = MM + EL
-    elif typ == 5:  # WENNER-GAMMA
-        AA = XX - xLoc * EL * 1.5
-        MM = AA + EL
-        BB = MM + EL
-        NN = BB + EL
-    elif typ == 6:  # POLE-DIPOLE
-        AA = XX - xLoc * SP * EL - (SP - 1.) * (SP < 0.) * EL
-        MM = AA + SP * EL
-        NN = MM + pg.sign(SP) * EL
-    elif typ == 7:  # SCHLUMBERGER
-        AA = XX - xLoc * EL * (SP + 0.5)
-        MM = AA + SP * EL
-        NN = MM + EL
-        BB = NN + SP * EL
-    else:
-        raise Exception('Datatype ' + str(typ) + ' not yet suppoted')
+        istopo = int(row)
+        if istopo:
+            header["foundTopo"] = 1
+            ntopo = int(getNonEmptyRow(it, comment=';'))
+            ap = data.additionalPoints()
+            for _ in range(ntopo):
+                strs = getNonEmptyRow(it, comment=';').replace(',', ' ').split()
+                ap.push_back(pg.Pos([float(s) for s in strs]))
 
-    for i in range(len(AA)):
+            data.setAdditionalPoints(ap)
 
-        if AA is not None:
-            eaID = data.createSensor(pg.Pos(AA[i], 0.0))
-        else:
-            eaID = -1
-
-        if BB is not None:
-            ebID = data.createSensor(pg.Pos(BB[i], 0.0))
-        else:
-            ebID = -1
-
-        if MM is not None:
-            emID = data.createSensor(pg.Pos(MM[i], 0.0))
-        else:
-            emID = -1
-
-        if NN is not None:
-            enID = data.createSensor(pg.Pos(NN[i], 0.0))
-        else:
-            enID = -1
-
-        data.createFourPointData(i, eaID, ebID, emID, enID)
-
-    data.set('rhoa', dataBody[nn - hasIP - 1])
-    if hasIP:
-        data.set('ip', dataBody[nn - 1])
+    except StopIteration:
+        header["foundTopo"] = 0
 
     data.sortSensorsX()
+    data.sortSensorsIndex()
     if return_header:
         return data, header
     else:
@@ -301,26 +335,67 @@ def importRes2dInv(filename, verbose=False, return_header=False):
 
 
 def importAsciiColumns(filename, verbose=False, return_header=False):
-    """Import any ERT data file organized in columns with column header
+    """Import any ERT data file organized in columns with column header.
 
     Input can be:
         * Terrameter LS or SAS Ascii Export format, e.g.
-    Time MeasID DPID Channel A(x) A(y) A(z) B(x) B(y) B(z) M(x) M(y) M(z) \
-    N(x) N(y) N(z) F(x) F(y) F(z) Note I(mA) Uout(V) U(V)        SP(V) R(O) \
+    Time MeasID DPID Channel A(x) A(y) A(z) B(x) B(y) B(z) M(x) M(y) M(z)
+    N(x) N(y) N(z) F(x) F(y) F(z) Note I(mA) Uout(V) U(V)        SP(V) R(O)
     Var(%)         Rhoa Cycles Pint Pext(V) T(°C) Lat Long
-    2016-09-14 07:01:56 73 7 1 8 1 1 20 1 1 12 1 1 \
-    16 1 1 14 1 2.076  99.8757 107.892 0.0920761 0 0.921907 \
+    2016-09-14 07:01:56 73 7 1 8 1 1 20 1 1 12 1 1
+    16 1 1 14 1 2.076  99.8757 107.892 0.0920761 0 0.921907
     0.196302 23.17 1 12.1679 12.425 42.1962 0 0
         * Resecs Output format
 
     """
     data = pg.DataContainerERT()
     header = {}
-    with open(filename, 'r', encoding='iso-8859-15') as fi:
+    with Path(filename).open('r', encoding='iso-8859-15') as fi:
         content = fi.readlines()
+        if content[0].startswith('Injection'):  # Resecs lead-in
+            for n in range(20):
+                if len(content[n]) < 2:
+                    break
+
+            content = content[n+1:]
+
+        if content[0].startswith('Filename'):  # ABEM lead-in
+            for n, line in enumerate(content):
+                if line.find("MeasID") >= 0:
+                    break
+
+            for i in range(n):
+                sp = content[i].split(":")
+                if len(sp) > 1:
+                    tok = sp[0].lstrip("\t").lstrip("- ")
+                    header[tok] = sp[1].rstrip("\n").rstrip("\r")
+
+            for last in range(n+1, len(content)):
+                if content[last].find("---") == 0:
+                    last -= 1
+                    break
+            # for last in range(len(content)-1, -1, -1):
+            #     if content[last].find("---") == 0:
+            #         last -= 1
+            #         while len(content[last]) < 3:
+            #             last -= 1
+
+            #         last += 1
+            #         break
+
+            if last <= 1:
+                last = len(content)
+
+            content = content[n:last]
+
+        for i, line in enumerate(content):
+            if "/" in line:
+                content[i] = line.replace(' / non conventional', '')
+
         d = readAsDictionary(content, sep='\t')
         if len(d) < 2:
             d = readAsDictionary(content)
+
         nData = len(next(iter(d.values())))
         data.resize(nData)
         if 'Spa.1' in d:  # Syscal Pro
@@ -342,7 +417,7 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
         else:
             pg.debug("no electrode positions found!")
             pg.debug("Keys are:", d.keys())
-            raise Exception("No electrode positions found!")
+            raise RuntimeError("No electrode positions found!")
         for i in range(nData):
             if abmn[0]+'(z)' in d:
                 eID = [data.createSensor([d[se+'(x)'][i], d[se+'(y)'][i],
@@ -370,9 +445,10 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
         # data.save('tmp.shm', 'a b m n')
         tokenmap = {'I(mA)': 'i', 'I': 'i', 'In': 'i', 'Vp': 'u',
                     'VoltageV': 'u', 'U': 'u', 'U(V)': 'u', 'UV': 'u',
-                    'R(Ohm)': 'r',  'RO': 'r', 'R(O)': 'r', 'Res': 'r',
+                    'Voltage(V)': 'u',
+                    'R(Ohm)': 'r', 'RO': 'r', 'R(O)': 'r', 'Res': 'r',
                     'Rho': 'rhoa', 'AppROhmm': 'rhoa', 'Rho-a(Ohm-m)': 'rhoa',
-                    'Rho-a(Om)': 'rhoa',
+                    'Rho-a(Om)': 'rhoa', 'App.R(Ohmm)': 'rhoa',
                     'Var(%)': 'err', 'D': 'err', 'Dev.': 'err', 'Dev': 'err',
                     'M': 'ma', 'P': 'ip', 'IP sum window': 'ip',
                     'Time': 't'}
@@ -383,7 +459,7 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
         abmn = ['a', 'b', 'm', 'n']
         if 'Cycles' in d:
             d['stacks'] = d['Cycles']
-        for key in d.keys():
+        for key in d:
             vals = np.asarray(d[key])
             if key.startswith('IP sum window'):  # there is a trailing number
                 key = 'IP sum window'  # apparently not working
@@ -399,7 +475,7 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
                     if not re.search('([x-z])', key) and key not in abmn:
                         data.set(key.replace(' ', '_'), d[key])
 
-        r = data('u') / data('i')
+        r = data['u'] / data['i']
         if hasattr(d, 'R(0)'):
             if np.linalg.norm(r-d['R(O)']) < 1e4:  # no idea what's that for
                 data.set('r', r)
@@ -445,7 +521,7 @@ def readAsDictionary(content, token=None, sep=None):  # obsolote due to numpy?
         header = content[0].splitlines()[0].split(sep)
         token = []
 
-        for i, tok in enumerate(header):
+        for tok in header:
             tok = tok.lstrip()
             token.append(tok)
 
@@ -460,10 +536,13 @@ def readAsDictionary(content, token=None, sep=None):  # obsolote due to numpy?
                 data[token[j]] = [None] * (len(content)-1)
             try:
                 data[token[j]][i] = float(v)
-            except:
+            except Exception:
                 if len(v) == 1 and v[0] == '-':
                     v = 0.0
                 data[token[j]][i] = v
 
     return data
 
+
+if __name__ == "__main__":
+    pass

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# import matplotlib.pyplot as plt
 import numpy as np
 # from numpy import ma
 
@@ -51,7 +50,7 @@ def createData(elecs, schemeName='none', **kwargs):
     >>>
     >>> for i, schemeName in enumerate(schemes):
     ...     s = ert.createData(elecs=41, schemeName=schemeName)
-    ...     k = ert.geometricFactors(s)
+    ...     k = ert.createGeometricFactors(s)
     ...     _ = ert.show(s, vals=k, ax=ax.flat[i], label='k - ' + schemeName)
     >>>
     >>> plt.show()
@@ -84,7 +83,7 @@ def createData(elecs, schemeName='none', **kwargs):
                              electrodeSpacing=kwargs.pop('spacing', 1),
                              **kwargs)
     elif hasattr(elecs, '__iter__'):
-        if isinstance(elecs[0], float) or isinstance(elecs[0], int):
+        if isinstance(elecs[0], (float, int)):
             data = scheme.create(nElectrodes=len(elecs), **kwargs)
             data.setSensors(elecs)
         else:
@@ -93,6 +92,7 @@ def createData(elecs, schemeName='none', **kwargs):
         print(elecs)
         pg.critical("Can't interpret elecs")
 
+    data['k'] = ert.createGeometricFactors(data)
     return data
 
 
@@ -114,7 +114,7 @@ def createDataVES(ab2, mn2):
 
     data = pg.DataContainerERT()
 
-    if type(mn2) is float or type(mn2) is int:
+    if isinstance(mn2, (float, int)):
         mn2 = [mn2]
 
     count = 0
@@ -151,10 +151,10 @@ class Pseudotype:
 
 
 class DataSchemeManager(object):
-    """ """
+    """Data scheme manager."""
     def __init__(self):
-        """ """
-        self.schemes_ = dict()
+        """Initialize all the data schemes."""
+        self.schemes_ = {}
         self.addScheme(DataSchemeBase())
         self.addScheme(DataSchemeWennerAlpha())
         self.addScheme(DataSchemeWennerBeta())
@@ -165,13 +165,13 @@ class DataSchemeManager(object):
         self.addScheme(DataSchemeHalfWenner())
         self.addScheme(DataSchemeMultipleGradient())
 
-        self.addScheme(DataSchemeBase(type=Pseudotype.A_M, name='A_M'))
-        self.addScheme(DataSchemeBase(type=Pseudotype.AB_MN, name='AB_MN'))
-        self.addScheme(DataSchemeBase(type=Pseudotype.AB_M, name='AB_M'))
-        self.addScheme(DataSchemeBase(type=Pseudotype.AB_N, name='AB_N'))
+        self.addScheme(DataSchemeBase(typ=Pseudotype.A_M, name='A_M'))
+        self.addScheme(DataSchemeBase(typ=Pseudotype.AB_MN, name='AB_MN'))
+        self.addScheme(DataSchemeBase(typ=Pseudotype.AB_M, name='AB_M'))
+        self.addScheme(DataSchemeBase(typ=Pseudotype.AB_N, name='AB_N'))
 
     def addScheme(self, scheme):
-        """ """
+        """A a scheme from given name."""
         self.schemes_[scheme.name] = scheme
 
     def scheme(self, name):
@@ -193,17 +193,17 @@ class DataSchemeManager(object):
         scheme : DataScheme
 
         """
-        if type(name) == int:
+        if isinstance(name, int):
             s = self.schemeFromTyp(name)
             if s:
                 return s
 
-        elif type(name) == str:  # or type(name) == unicode: (always in Py3)
+        elif isinstance(name, str):  # or type(name) == unicode: (always in Py3)
             s = self.schemeFromPrefix(name)
             if s:
                 return s
 
-            if name in self.schemes_.keys():
+            if name in self.schemes_:
                 return self.schemes_[name]
 
             print('Unknown scheme name:', name)
@@ -225,15 +225,14 @@ class DataSchemeManager(object):
                 return s
         return None
 
-    def schemeFromTyp(self, type):
+    def schemeFromTyp(self, typ):
         for s in list(self.schemes_.values()):
-            if s.type == type:
+            if s.type == typ:
                 return s
         return None
 
     def schemes(self):
-        '''
-        '''
+        '''.'''
         return list(self.schemes_.keys())
 
 
@@ -247,10 +246,10 @@ class DataSchemeBase(object):
         electrode.
 
     """
-    def __init__(self, type=Pseudotype.unknown, name="unknown", prefix='uk'):
+    def __init__(self, typ=Pseudotype.unknown, name="unknown", prefix='uk'):
         self.name = name
         self.prefix = prefix
-        self.type = type
+        self.type = typ
         self.data_ = None
         self.inverse_ = False
         self.addInverse_ = False
@@ -265,9 +264,9 @@ class DataSchemeBase(object):
 
     def create(self, nElectrodes=24, electrodeSpacing=1, sensorList=None,
                **kwargs):
-        """
-        """
+        """."""
         self.createElectrodes(nElectrodes, electrodeSpacing, sensorList)
+        self.setMaxSeparation(kwargs.pop("maxSeparation", 999))
         self.createData(**kwargs)
 
         if self.addInverse_:
@@ -308,9 +307,7 @@ class DataSchemeBase(object):
         self.inverse_ = inverse
 
     def addInverse(self, addInverse=False):
-        """
-            Add inverse value to create a full dataset.
-        """
+        """Add inverse value to create a full dataset."""
         self.addInverse_ = addInverse
 
     def setMaxSeparation(self, maxSep):
@@ -721,27 +718,14 @@ if __name__ == '__main__':
     schemes = ['wa', 'wb', 'pp', 'pd', 'dd', 'slm', 'gr', 'hw']
     fig, ax = pg.plt.subplots(3, 3)
     kw = dict(cMin=10, cMax=1000, logScale=True, colorBar=False, cMap="viridis")
-    for i, schemeName in enumerate(schemes):
-        shm = ert.createData(elecs=41, schemeName=schemeName)
-        print(schemeName, shm)
-        k = ert.geometricFactor(shm)
-        mg = DataSchemeManager()
-        longname = mg.scheme(schemeName).name
-        ert.show(shm, vals=np.abs(k), ax=ax.flat[i], colorBar=1, logScale=0,
-                label='k ' + longname + ')-' + schemeName)
+    for it, scheme in enumerate(schemes):
+        shm = ert.createData(elecs=41, schemeName=scheme)
+        print(scheme, shm)
+        k = ert.createGeometricFactors(shm)
+        mgr = DataSchemeManager()
+        longname = mgr.scheme(scheme).name
+        ert.show(shm, vals=np.abs(k), ax=ax.flat[it], colorBar=1, logScale=0,
+                label='k ' + longname + ')-' + scheme)
 
     createColorBarOnly(**kw, ax=ax.flat[-1], aspect=0.1)
     pg.plt.show()
-# %%
-# import matplotlib.pyplot as plt
-# from pygimli.physics import ert
-
-# schemes = ['wa', 'wb', 'pp', 'pd', 'dd', 'slm', 'hw', 'gr']
-# fig, ax = plt.subplots(3,3)
-
-# for i, schemeName in enumerate(schemes):
-#     s = ert.createData(elecs=41, schemeName=schemeName)
-#     k = ert.geometricFactors(s)
-#     ert.show(s, vals=k, ax=ax.flat[i], label='k - ' + schemeName)
-
-# plt.show()

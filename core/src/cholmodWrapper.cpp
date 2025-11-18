@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2005-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2005-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -45,17 +45,43 @@ namespace GIMLI{
 
 CHOLMODWrapper::CHOLMODWrapper(RSparseMatrix & S, bool verbose, int stype,
                                bool forceUmfpack)
-    : SolverWrapper(S, verbose), forceUmfpack_(forceUmfpack){
-    init_(S, stype);
+    : SolverWrapper(verbose), stype_(stype), forceUmfpack_(forceUmfpack){
+    
+    Numeric_ = nullptr;
+    NumericD_= nullptr;
+    c_ = NULL;
+    A_ = NULL;
+    L_ = NULL;
+    AxV_ = NULL;
+    AzV_ = NULL;
+    Ap_ = NULL;
+    Ai_ = NULL;
+    ApR_ = NULL;
+    AiR_ = NULL;
+    setMatrix(S);
 }
-
 CHOLMODWrapper::CHOLMODWrapper(CSparseMatrix & S, bool verbose, int stype,
                                bool forceUmfpack)
-    : SolverWrapper(S, verbose), forceUmfpack_(forceUmfpack){
-    init_(S, stype);
+    : SolverWrapper(verbose), stype_(stype), forceUmfpack_(forceUmfpack){
+    Numeric_ = nullptr;
+    NumericD_= nullptr;
+    c_ = NULL;
+    A_ = NULL;
+    L_ = NULL;
+    AxV_ = NULL;
+    AzV_ = NULL;
+    Ap_ = NULL;
+    Ai_ = NULL;
+    ApR_ = NULL;
+    AiR_ = NULL;
+    setMatrix(S);
 }
 
 CHOLMODWrapper::~CHOLMODWrapper(){
+    this->free();
+}
+
+void CHOLMODWrapper::free(){
 #if USE_CHOLMOD
     if (L_) cholmod_free_factor((cholmod_factor**)(&L_), (cholmod_common*)c_);
 //     ** We did not allocate the matrix so we dont need to free it
@@ -64,25 +90,47 @@ CHOLMODWrapper::~CHOLMODWrapper(){
     cholmod_finish((cholmod_common*)c_);
 
     if (A_) delete (cholmod_sparse*)A_;
+    A_ = nullptr;
     if (c_) delete (cholmod_common*)c_;
+    c_ = nullptr;
 
 #if USE_UMFPACK
     if (Numeric_) umfpack_zi_free_numeric (&Numeric_);
+    Numeric_ = nullptr;
     if (NumericD_) umfpack_di_free_numeric (&NumericD_);
+    NumericD_ = nullptr;
 #endif
+    // try allways
     if (AxV_) delete AxV_;
+    AxV_ = nullptr;
     if (AzV_) delete AzV_;
+    AzV_ = nullptr;
 
     if (ApR_) delete [] ApR_;
+    ApR_ = nullptr;
+
     if (AiR_) delete [] AiR_;
+    AiR_ = nullptr;
 
 #else
     std::cerr << WHERE_AM_I << " cholmod not installed" << std::endl;
 #endif
 }
 
+void CHOLMODWrapper::setMatrix(RSparseMatrix & S){
+    this->free();
+    init_(S, stype_);
+}
+void CHOLMODWrapper::setMatrix(CSparseMatrix & S){
+    this->free();
+    init_(S, stype_);
+}
+
 template < class ValueType >
 void CHOLMODWrapper::init_(SparseMatrix < ValueType > & S, int stype){
+
+    dim_ = S.size();
+    nVals_ = S.nVals();
 
     useUmfpack_ = false;
     Numeric_ = 0;
@@ -141,6 +189,7 @@ int CHOLMODWrapper::initializeMatrix_(CSparseMatrix & S){
 
         if (useUmfpack_){
 #if USE_UMFPACK
+// __MS("new C")
             Ap_ = (int*)S.colPtr();
             Ai_ = (int*)S.rowIdx();
             AxV_ = new RVector(real(S.vecVals()));
@@ -202,10 +251,13 @@ int CHOLMODWrapper::initializeMatrix_(RSparseMatrix & S){
                 }
             }
         }
-        if (forceUmfpack_) useUmfpack_ = true;
+        
+        if (forceUmfpack_ || getEnvironment("BERTUSEUMFPACK", 0) == 1) useUmfpack_ = true;
 
         if (useUmfpack_){
 #if USE_UMFPACK
+
+            log(Info, "Using umfpack.");
             int * ApT = (int*)S.colPtr();
             int * AiT = (int*)S.rowIdx();
             double * AxT = &S.vecVals()[0];
@@ -216,7 +268,7 @@ int CHOLMODWrapper::initializeMatrix_(RSparseMatrix & S){
 
             ApR_ = new int[S.vecColPtr().size()];
             AiR_ = new int[S.vecRowIdx().size()];
-            double *Ax_ =  new double[S.vecVals().size()];
+            double *Ax_ =  new double[S.vecVals().size()]; // delete me!!
             //our crs format need to be transposed first
 
             int *P=0, *Q=0;
@@ -228,9 +280,14 @@ int CHOLMODWrapper::initializeMatrix_(RSparseMatrix & S){
 
             // if (verbose_) std::cout << "Using umfpack .. " << std::endl;
             // beware transposed matrix here
+            Stopwatch sw;
+            // __MS(sw.duration(true))
             (void) umfpack_di_symbolic(S.nCols(), S.nRows(), ApR_, AiR_, Ax_, &Symbolic, null, null) ;
+            // __MS(sw.duration(true)) // test maybe just 1% ??
             (void) umfpack_di_numeric(ApR_, AiR_, Ax_, Symbolic, &NumericD_, null, null) ;
-            umfpack_di_free_symbolic (&Symbolic);
+            // __MS(sw.duration(true))
+            umfpack_di_free_symbolic(&Symbolic);
+            // __MS(sw.duration(true))
             name_ = "Umfpack";
 
             return 1;
@@ -320,7 +377,7 @@ int CHOLMODWrapper::factorise_(){
 }
 
 template < class ValueType >
-    int CHOLMODWrapper::solveCHOL_(const Vector < ValueType > & rhs,
+    void CHOLMODWrapper::solveCHOL_(const Vector < ValueType > & rhs,
                                    Vector < ValueType > & solution){
     ASSERT_VEC_SIZE(rhs, this->dim_)
     ASSERT_VEC_SIZE(solution, this->dim_)
@@ -358,15 +415,13 @@ template < class ValueType >
         cholmod_free_dense(&x, (cholmod_common*)c_);
         cholmod_free_dense(&r, (cholmod_common*)c_);
         cholmod_free_dense(&b, (cholmod_common*)c_);
-    return 1;
 #else
     std::cerr << WHERE_AM_I << " cholmod not installed" << std::endl;
 #endif
     }
-    return 0;
 }
 
-int CHOLMODWrapper::solve(const RVector & rhs, RVector & solution){
+void CHOLMODWrapper::solve(const RVector & rhs, RVector & solution){
     ASSERT_VEC_SIZE(rhs, this->dim_)
     ASSERT_VEC_SIZE(solution, this->dim_)
     if (!dummy_){
@@ -396,17 +451,14 @@ int CHOLMODWrapper::solve(const RVector & rhs, RVector & solution){
 // umfpack_di_free_numeric (&Numeric) ;
 //
 
-
-            return 1;
 #endif
         } else {
             return solveCHOL_(rhs, solution);
         }
     }
-    return 0;
 }
 
-int CHOLMODWrapper::solve(const CVector & rhs, CVector & solution){
+void CHOLMODWrapper::solve(const CVector & rhs, CVector & solution){
     ASSERT_VEC_SIZE(rhs, this->dim_)
     ASSERT_VEC_SIZE(solution, this->dim_)
     if (!dummy_){
@@ -432,13 +484,11 @@ int CHOLMODWrapper::solve(const CVector & rhs, CVector & solution){
             // set booth to NULL or they will be wrongly deleted ..
 
             solution = toComplex(xx, xz);
-            return 1;
 #endif
         } else {
             return solveCHOL_(rhs, solution);
         }
     }
-    return 0;
 }
 
 

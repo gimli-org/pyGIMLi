@@ -1,75 +1,115 @@
-# CODING=Utf-8
+#!/usr/bin/env python
 """Plotting utilities used throughout the viewer.mpl package."""
-
+import sys
 import os
-import atexit
-
+import time
 import numpy as np
-
-# TODO expensive import costs 75% of total time
-# see: python -X importtime -c 'import pygimli'
-# import matplotlib.animation as animation
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 
 import pygimli as pg
 from pygimli.utils import prettyFloat
 
-holdAxes__ = 0
+__holdAxes__ = True
+__lastBackend__ = None
 
 
-def updateFig(fig, force=False, sleep=.0001):
+def updateFig(fig, force=True, sleep=.001):
     """For internal use."""
-    if not holdAxes__:
+    if not globals()['__holdAxes__']:
         try:
             fig.canvas.draw_idle()
             if force:
                 fig.canvas.flush_events()
-                #fig.canvas.draw()
-                #pg.plt.show(block=False)
-                pg.plt.pause(sleep)
-                #time.sleep(sleep)
+                time.sleep(sleep)
         except BaseException as e:
             print(fig, e)
             pg.warn("Exception raised", e)
 
 
-def updateAxes(ax, force=False):
+def updateAxes(ax, force=True):
     """For internal use."""
     updateFig(ax.figure, force=force)
 
 
-def hold(val=1):
-    """TODO WRITEME."""
-    globals()[holdAxes__] = val
-
-
-def waitOnExit():
-    backend = matplotlib.get_backend()
-    if not 'inline' in backend:
-        if 'Qt' in backend or 'Wx' in backend:
-
-            if len(plt.get_fignums()) > 0:
-                pg.info('Showing pending widgets on exit. '
-                        'Close all figures or Ctrl-C to quit the programm')
-                pg.wait()
-
-# this can't be changed after import
-if pg.rc['waitOnExit'] is True:
-    atexit.register(waitOnExit)
+def hold(val=True):
+    """Set axis plotting state to hold (not done yet)."""
+    globals()['__holdAxes__'] = val
 
 
 def wait(**kwargs):
-    """TODO WRITEME."""
+    """Show figure and wait until it is closed or key is pressed."""
     # plt.pause seems to be broken in mpl:2.1
     # ax.canvas.draw_onIdle()
-    updateAxes(plt.gca())
+    import matplotlib.pyplot as plt
+
+    #if len(plt.get_fignums()) > 0:
+    #for f in plt.get_fignums():
+    #    updateFig(f)
+    updateFig(plt.gca())
     kp = kwargs.pop('untilKeyPressed', False)
-    if kp == True:
+    if kp:
         plt.waitforbuttonpress(**kwargs)
     else:
         plt.show(**kwargs)
+
+
+def noShow(on=True):
+    """Toggle quiet mode to avoid popping figures.
+
+    Arguments
+    ---------
+    on: bool[True]
+        Set Matplotlib backend to 'agg' and restore old backend if set to False.
+    """
+    import matplotlib
+    if on is True:
+        globals()[__lastBackend__] = matplotlib.get_backend()
+        matplotlib.use('agg')
+    else:
+        if globals()[__lastBackend__] is not None:
+            matplotlib.use(globals()[__lastBackend__])
+
+
+__registeredShowPendingFigsAtExit__ = False
+
+def registerShowPendingFigsAtExit():
+    """Register closing function to show all figures.
+
+    If called, register a closing function that will ensure all pending MPL
+    figures are shown. It is only set on demand by pg.show() since we only
+    need it if matplotlib is used.
+    """
+    global __registeredShowPendingFigsAtExit__
+    if not __registeredShowPendingFigsAtExit__:
+        import atexit
+
+        #pg._y('register wait on exit')
+        ## first  call one empty show to initial QtManager before register
+        # onExit to avoid RuntimeError: wrapped C/C++ object MainWindow been deleted
+        if 'matplotlib.pyplot' in sys.modules:
+            import matplotlib.pyplot as plt
+            #pg._g('empty show')
+            plt.show()
+
+        @atexit.register
+        def waitOnExit():
+            """Call on script end to ensure to open all remaining mpl figures."""
+            #pg._g('waitonexit')
+            # only call it if mpl has been used
+            if 'matplotlib.pyplot' in sys.modules:
+                import matplotlib.pyplot as plt
+
+                backend = sys.modules['matplotlib.pyplot'].get_backend()
+                #backend = plt.get_backend()
+                #print('backend', backend)
+
+                if 'inline' not in backend:
+                    if 'qt' in backend or 'Qt' in backend or 'Wx' in backend or 'Tk' in backend or 'GTK' in backend:
+                        if len(plt.get_fignums()) > 0:
+                            pg.info(f'Showing pending widgets ({backend}) on exit. '
+                                        'Close all figures or Ctrl-C to quit the programm')
+                            pg.wait()
+
+    __registeredShowPendingFigsAtExit__ = True
 
 
 def saveFigure(fig, filename, pdfTrim=False):
@@ -108,18 +148,27 @@ def insertUnitAtNextLastTick(ax, unit, xlabel=True, position=-2):
         ax.set_yticklabels(labels)
 
 
-def adjustWorldAxes(ax):
+def adjustWorldAxes(ax, useDepth:bool=True, xl:str='$x$ in m', yl:str=None):
     """Set some common default properties for an axe."""
-    ax.set_ylabel('Depth (m)')
-    ax.set_xlabel('$x$ (m)')
+    if yl is None:
+        if useDepth is True:
+            ax.set_ylabel('Depth in m')
+            renameDepthTicks(ax)
+        else:
+            ax.set_ylabel('$y$ in m')
+    else:
+        ax.set_ylabel(yl)
 
-    renameDepthTicks(ax)
-    plt.tight_layout()
+    ax.set_xlabel(xl)
+
+    ax.figure.tight_layout()
     updateAxes(ax)
 
 
 def renameDepthTicks(ax):
-    """Switch signs of depth ticks to be positive"""
+    """Switch signs of depth ticks to be positive."""
+    from matplotlib import ticker
+
     @ticker.FuncFormatter
     def major_formatter(x, pos):
         return prettyFloat(-x) % x
@@ -131,10 +180,7 @@ def renameDepthTicks(ax):
 def setOutputStyle(dim='w', paperMargin=5, xScale=1.0, yScale=1.0, fontsize=9,
                    scale=1, usetex=True):
     """Set preferred output style."""
-    if dim == 'w':
-        dim = 0
-    else:
-        dim = 1
+    dim = 0 if dim == 'w' else 1
 
     a4 = [21.0, 29.7]
 
@@ -182,7 +228,8 @@ def setOutputStyle(dim='w', paperMargin=5, xScale=1.0, yScale=1.0, fontsize=9,
         'lines.markersize': 6 * scale,
         'lines.linewidth': 0.6 * scale
     }
-    plt.rcParams.update(params)
+    import matplotlib
+    matplotlib.rcParams.update(params)
 
 
 def setPlotStuff(fontsize=7, dpi=None):
@@ -225,8 +272,9 @@ def createAnimation(fig, animate, nFrames, dpi, out):
 
     Until I know a better place.
     """
-    anim = animation.FuncAnimation(fig, animate, frames=nFrames,
-                                   interval=0.001, repeat=False)
+    from matplotlib.animation import FuncAnimation
+    anim = FuncAnimation(fig, animate, frames=nFrames,
+                         interval=0.001, repeat=False)
     anim.save(out + ".mp4", writer=None, fps=20, dpi=dpi, codec=None,
               bitrate=24 * 1024, extra_args=None, metadata=None,
               extra_anim=None, savefig_kwargs=None)
@@ -244,9 +292,11 @@ def saveAnimation(mesh, data, out, vData=None, plc=None, label='', cMin=None,
 
     Until I know a better place.
     """
+    import matplotlib.pyplot as plt
+
     dpi = 92
     scale = 1
-    fig = plt.figure(facecolor='white',
+    fig = pg.plt.figure(facecolor='white',
                      figsize=(scale * 800 / dpi, scale * 490 / dpi), dpi=dpi)
     ax = fig.add_subplot(1, 1, 1)
 
@@ -266,7 +316,7 @@ def saveAnimation(mesh, data, out, vData=None, plc=None, label='', cMin=None,
 
         if vData is not None:
             ax.clear()
-            pg.viewer.mpl.holdAxes_ = 1
+            pg.hold(True)
             pg.viewer.mpl.drawModel(ax, mesh, data=data[i], cMin=cMin,
                                    cMax=cMax, cMap=cmap, logScale=logScale)
             pg.viewer.mpl.drawStreams(ax, mesh, vData[i], **kwargs)
@@ -304,17 +354,17 @@ def twin(ax):
 
 
 def createTwinX(ax):
-    """Utility function to create (or return existing) twin x axes for ax."""
+    """Create (or return existing) twin x axes for ax."""
     return _createTwin(ax, 'twinx')
 
 
 def createTwinY(ax):
-    """Utility function to create (or return existing) twin x axes for ax."""
+    """Create (or return existing) twin x axes for ax."""
     return _createTwin(ax, 'twiny')
 
 
 def _createTwin(ax, funct):
-    """Utility function to create (or return existing) twin x axes for ax."""
+    """Create (or return existing) twin x axes for ax."""
     tax = None
     for other_ax in ax.figure.axes:
         if other_ax is ax:
@@ -326,3 +376,12 @@ def _createTwin(ax, funct):
         tax = getattr(ax, funct)()
 
     return tax
+
+def isInteractive():
+    """Return False if a non-interactive backend is used.
+
+    e.g. for Jupyter Notebooks and sphinx builds.
+    """
+    backend = pg.plt.get_backend().lower()
+    inlineBackend = "inline" in backend or backend == "agg"
+    return not inlineBackend

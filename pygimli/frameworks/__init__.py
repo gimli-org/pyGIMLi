@@ -1,14 +1,17 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Unified and method independent inversion frameworks."""
 
 
 from .modelling import (Modelling, Block1DModelling, MeshModelling,
-                        JointModelling,
+                        JointModelling, PriorModelling, LinearModelling,
                         PetroModelling, LCModelling, ParameterModelling)
 
 from .inversion import (Inversion, MarquardtInversion,
                         Block1DInversion,
                         LCInversion)
+
+from .lsqrinversion import LSQRInversion  # circular import, why?
 
 from .methodManager import (fit, MethodManager, MethodManager1d,
                             ParameterInversionManager,
@@ -16,11 +19,11 @@ from .methodManager import (fit, MethodManager, MethodManager1d,
                             PetroInversionManager,
                             JointPetroInversionManager)
 
-# will be removed very soon
-# from .methodManager import (MethodManager0,
-#                             MeshMethodManager0)
+from .timelapse import MultiFrameModelling
 
-# from .resolution import computeR
+from .linesearch import lineSearch
+
+from .resolution import resolutionMatrix
 
 from .harmfit import HarmFunctor, harmfit, harmfitNative
 

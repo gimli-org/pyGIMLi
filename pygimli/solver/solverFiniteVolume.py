@@ -4,8 +4,7 @@
 
 import numpy as np
 import pygimli as pg
-from pygimli.viewer import show
-from pygimli.meshtools import createMesh
+
 from pygimli.solver import identity  # , parseArgToArray, parseArgToBoundaries
 
 
@@ -389,8 +388,6 @@ def diffusionConvectionKernel(mesh, a=None, b=0.0,
 
     rhsBoundaryScales = np.zeros(dof)
 
-#    swatch = pg.core.Stopwatch(True)
-
     # we need this to fast identify uBoundary and value by boundary
     uBoundaryID = []
     uBoundaryVals = [None] * mesh.boundaryCount()
@@ -580,7 +577,7 @@ def solveFiniteVolume(mesh, a=1.0, b=0.0, f=0.0, fn=0.0, vel=None, u0=0.0,
     """
     verbose = kwargs.pop('verbose', False)
     # The Workspace is to hold temporary data or preserve matrix rebuild
-    # swatch = pg.core.Stopwatch(True)
+    # swatch = pg.Stopwatch(True)
     sparse = True
 
     workspace = pg.solver.WorkSpace()
@@ -1024,7 +1021,7 @@ def _test_ConvectionAdvection():
             b7 = b
     b7.setMarker(7)
 
-    swatch = pg.core.Stopwatch(True)
+    swatch = pg.Stopwatch(True)
     # velBoundary = [[1, [0.0, 0.0]],
     #                [2, [0.0, 0.0]],
     #                [3, [1.0, 0.0]],

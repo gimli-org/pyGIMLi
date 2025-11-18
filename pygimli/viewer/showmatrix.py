@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """Generic matrix visualization tools."""
 
-import matplotlib as mpl
+# import matplotlib as mpl
 import numpy as np
 
 import pygimli as pg
 
-from .mpl import createColorBar, updateColorBar
+from .mpl import createColorBar  # , updateColorBar
 from .mpl.matrixview import drawBlockMatrix, drawSparseMatrix
+from .mpl.colorbar import cmapFromName
 
 
 def showMatrix(mat, ax=None, **kwargs):
@@ -27,14 +28,15 @@ def showMatrix(mat, ax=None, **kwargs):
     -------
         mpl.axes, Colorbar
     """
+    cBar = None
     if ax is None:
-        print(ax)
         ax = pg.show()[0]
 
     try:
         from scipy.sparse import spmatrix
 
         if isinstance(mat, spmatrix):
+            kwargs.setdefault('markersize', 1)
             gci = drawSparseMatrix(ax, mat, **kwargs)
             return ax, None
     except ImportError:
@@ -42,13 +44,12 @@ def showMatrix(mat, ax=None, **kwargs):
 
     if isinstance(mat, (pg.core.RSparseMapMatrix, pg.core.RSparseMatrix)):
         gci = drawSparseMatrix(ax, mat, **kwargs)
-        cBar = None
     elif isinstance(mat, pg.matrix.BlockMatrix):
         gci, cBar = drawBlockMatrix(ax, mat, **kwargs)
 
         if cBar is None:
             uniqueIDs = pg.unique([e.matrixID for e in mat.entries()])
-            cMap = pg.plt.cm.get_cmap("Set3", len(uniqueIDs))
+            cMap = cmapFromName("Set3", ncols=len(uniqueIDs))
             sm = pg.plt.cm.ScalarMappable(cmap=cMap)
 
             cBar = createColorBar(sm, ax=ax, label="Matrix ID",
@@ -61,7 +62,22 @@ def showMatrix(mat, ax=None, **kwargs):
                 label = "{:d}".format(ID)
                 labels.append(label)
             cBar.set_ticklabels(labels)
-
+    elif isinstance(mat, pg.matrix.Matrix):
+        from pygimli.utils import gmat2numpy
+        gci = ax.matshow(gmat2numpy(mat))
+        cBar = ax.figure.colorbar(gci)
+    elif isinstance(mat, pg.matrix.RealNumpyMatrix):
+        gci = ax.matshow(mat.M)
+        cBar = ax.figure.colorbar(gci)
+    elif isinstance(mat, (pg.matrix.IdentityMatrix,
+                          pg.matrix.DiagonalMatrix)):
+        x = [0, mat.cols()]
+        ax.plot(x, x)
+        ax.set_ylim(x[::-1])
     else:
-        pg.error("Matrix type not supported yet.")
+        nC = mat.cols()
+        nR = mat.rows()
+        ax.fill([0, nC, nC, 0, 0], [0, 0, nR, nR, 0], hatch='/')
+        ax.set_ylim(nR, 0)
+
     return ax, cBar

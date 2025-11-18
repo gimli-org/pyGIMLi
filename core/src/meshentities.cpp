@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -18,10 +18,10 @@
 
 #include "meshentities.h"
 
-#include "node.h"
-#include "shape.h"
 #include "line.h"
 #include "mesh.h"
+#include "node.h"
+#include "shape.h"
 
 #include <map>
 #include <algorithm>
@@ -34,7 +34,7 @@ Boundary * findBoundary_(const std::set < Boundary *> & common){
     } else {
         if (common.size() > 1){
             std::cerr << WHERE_AM_I << " pls. check, this should not happen. "
-                    " There is more then one boundary defined." <<
+                    " There is more than one boundary defined." <<
                     common.size() << std::endl;
             std::for_each(common.begin(), common.end(), cerrPtrObject());
         }
@@ -73,14 +73,17 @@ Boundary * findBoundary(const std::vector < Node * > & n) {
     else if (n.size() == 3) return findBoundary(*n[0], *n[1], *n[2]);
     else if (n.size() == 4) return findBoundary(*n[0], *n[1], *n[2], *n[3]);
 
+    return findBoundary_(findBoundaries(n));
+}
+
+std::set < Boundary * > findBoundaries(const std::vector < Node * > & n){
     std::vector < std::set< Boundary * > > bs(n.size());
 
     for (uint i = 0; i < n.size(); i ++) bs[i] = n[i]->boundSet();
 
     std::set < Boundary * > common;
     intersectionSet(common, bs);
-
-    return findBoundary_(common);
+    return common;
 }
 
 Boundary * findCommonBoundary(const Cell & c1, const Cell & c2){
@@ -109,7 +112,7 @@ Cell * findCommonCell(const std::vector < Node * > & n, bool warn) {
             if (warn){
                 for (uint i = 0; i < n.size(); i ++) std::cout << n[i]->id()<< " " ;
                 std::cout <<std::endl;
-                std::cerr << WHERE_AM_I << " pls. check, this should not happen. there is more then one cell defined for the given nodes." <<
+                std::cerr << WHERE_AM_I << " pls. check, this should not happen. there is more than one cell defined for the given nodes." <<
                 common.size() << std::endl;
             }
             return *common.begin();
@@ -202,6 +205,7 @@ MeshEntity::MeshEntity()
 }
 
 MeshEntity::~MeshEntity(){
+    for (auto *n: secondaryNodes_) this->deRegisterSecNode_(n);
 }
 
 RVector3 MeshEntity::center() const {
@@ -243,11 +247,19 @@ void MeshEntity::setNodes(const std::vector < Node * > & nodes){
     }
 }
 
+void MeshEntity::registerSecNode_(Node *n){
+}
+void MeshEntity::deRegisterSecNode_(Node *n){
+
+}
+
 void MeshEntity::addSecondaryNode(Node * n) {
     secondaryNodes_.push_back(n);
+    registerSecNode_(n);
 }
 
 void MeshEntity::delSecondaryNode(Node * n) {
+    deRegisterSecNode_(n);
     secondaryNodes_.erase(std::remove(secondaryNodes_.begin(),
                                       secondaryNodes_.end(), n),
                           secondaryNodes_.end());
@@ -364,6 +376,19 @@ void MeshEntity::changed(){
     gradUCache_.setValid(false);
 }
 
+bool MeshEntity::enforcePositiveDirection(){
+    // __MS(this->shape_->createJacobian().det())
+    // if (this->shape_->createJacobian().det() < 0){
+    //     std::reverse(nodeVector_.begin(), nodeVector_.end());
+    //     this->changed();
+
+        // __MS(this->shape_->createJacobian().det())
+    //     return true;
+    // }
+    __M
+    return false;
+}
+
 //############### Cell ##################
 
 Cell::Cell() : MeshEntity(), attribute_(){
@@ -375,8 +400,18 @@ Cell::Cell(const std::vector < Node * > & nodes)
 }
 
 Cell::~Cell(){
+    for (auto *n: secondaryNodes_) this->deRegisterSecNode_(n);
     deRegisterNodes_();
 }
+
+void Cell::registerSecNode_(Node *n){
+    n->insertCell(this);
+}
+
+void Cell::deRegisterSecNode_(Node *n){
+    n->eraseCell(this);
+}
+
 
 Node * Cell::oppositeTo(const Boundary & bound){
     THROW_TO_IMPL
@@ -562,10 +597,16 @@ Boundary::~Boundary(){
 void Boundary::registerNodes_(){
     for (auto n: nodeVector_) n->insertBoundary(this);
 }
-
 void Boundary::deRegisterNodes_(){
     for (auto n: nodeVector_) n->eraseBoundary(this);
 }
+void Boundary::registerSecNode_(Node *n){
+    n->insertBoundary(this);
+}
+void Boundary::deRegisterSecNode_(Node *n){
+    n->eraseBoundary(this);
+}
+
 
 RVector3 Boundary::rst(uint i) const {
     if (this->nodeCount() == shape_->nodeCount()) return shape_->rst(i);
@@ -863,8 +904,9 @@ void PolygonFace::insertNode(Node * n, double tol){
     n->setSecondaryParent(this);
 }
 
-void PolygonFace::addSubface(const std::vector < Node * > & nodes){
+void PolygonFace::addSubface(const std::vector < Node * > & nodes, bool isHole){
     this->subfaces_.push_back(nodes);
+    if (!isHole) for (auto *n: nodes) n->insertBoundary(this);
 }
 const std::vector < Node * >  & PolygonFace::subface(Index i) const {
     return this->subfaces_[i];
@@ -1298,6 +1340,19 @@ std::vector < PolynomialFunction < double > > Pyramid13::createShapeFunctions() 
     return std::vector < PolynomialFunction < double > >();
 }
 
+std::ostream & operator << (std::ostream & str, const std::set < GIMLI::MeshEntity * > & ents){
+    for (auto *e: ents){
+        str << e->id() << " ";
+    }
+    return str;
+}
+
+DLLEXPORT std::ostream & operator << (std::ostream & str, const std::set < GIMLI::Boundary * > & bounds){
+    for (auto *b: bounds){
+        str << b->id() << " ";
+    }
+    return str;
+}
 
 
 } // namespace GIMLI{

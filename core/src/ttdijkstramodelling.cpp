@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *   Thomas Günther thomas@resistivity.net                                    *
  *                                                                            *
@@ -36,6 +36,8 @@
 #include <vector>
 #include <queue>
 #include <map>
+#include <omp.h>
+
 
 namespace GIMLI {
 
@@ -494,11 +496,34 @@ void TravelTimeDijkstraModelling::createJacobian(const RVector & slowness) {
                          slowness);
 }
 
+void fillWayMatrix(std::vector < std::vector < IndexArray > > & wayM,
+                   const Dijkstra        & dijk,
+                   const IndexArray      & shotNodes,
+                   const IndexArray      & recNodes){
+
+    ASSERT_EQUAL_SIZE(wayM, shotNodes)
+    ASSERT_EQUAL_SIZE(wayM[0], recNodes)
+
+    Dijkstra _dijkstra(dijk);
+
+    for (Index shot = 0; shot < shotNodes.size(); shot ++) {
+        _dijkstra.setStartNode(shotNodes[shot]);
+#pragma omp parallel if (useOMP())
+{
+
+    //print("A:", omp_get_thread_num());
+        for (Index i = 0; i < recNodes.size(); i ++) {
+            wayM[shot][i] = _dijkstra.shortestPathTo((recNodes)[i]);
+        }
+}
+    }
+}
+
 void TravelTimeDijkstraModelling::createJacobian(RSparseMapMatrix & jacobian,
                                                  const RVector & slowness) {
+
     if (min(this->mesh_->cellMarkers()) < 0){
-        __M
-        log(Error, "There are cells with marker -1. "
+        log(Warning, "There are cells with marker -1. "
                 "Did you define a boundary region? (This is not needed).");
     }
     Stopwatch swatch(true);
@@ -526,9 +551,14 @@ void TravelTimeDijkstraModelling::createJacobian(RSparseMapMatrix & jacobian,
 
     Index nThreads = this->threadCount();
 
-    distributeCalc(CreateDijkstraRowMT(wayMatrix_, dijkstra_,
+    if (useOMP()){
+        __MS("DEBUG: OMP for fill Way Matrix")
+        fillWayMatrix(wayMatrix_, dijkstra_, shotNodeId_, receNodeId_);
+    } else {
+        distributeCalc(CreateDijkstraRowMT(wayMatrix_, dijkstra_,
                                        shotNodeId_, receNodeId_, this->verbose()),
-                   nShots, nThreads, this->verbose());
+                    nShots, nThreads, this->verbose());
+    }
 
     if (this->verbose()){
         std::cout << "/" << swatch.duration(true);
@@ -540,7 +570,6 @@ void TravelTimeDijkstraModelling::createJacobian(RSparseMapMatrix & jacobian,
     //         wayMatrix_[shot].push_back(dijkstra_.shortestPathTo(receNodeId_[i]));
     //     }
     // }
-
     for (Index dataIdx = 0; dataIdx < nData; dataIdx ++) {
         Index s = shotsInv_.at(Index((*dataContainer_)("s")[dataIdx]));
         Index g = receiInv_.at(Index((*dataContainer_)("g")[dataIdx]));
@@ -579,6 +608,7 @@ void TravelTimeDijkstraModelling::createJacobian(RSparseMapMatrix & jacobian,
     }
     if (this->verbose()){
         std::cout << "/" << swatch.duration(true) << " ";
+        std::cout << std::endl;
     }
 }
 

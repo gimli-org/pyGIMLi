@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""View ERT data
-"""
+"""Functions for visualizing ERT data."""
 
 from math import pi
 import numpy as np
@@ -9,39 +7,79 @@ from numpy import ma
 
 import pygimli as pg
 from pygimli.viewer.mpl.dataview import showValMapPatches
+from pygimli.viewer.mpl import showDataContainerAsMatrix
+
+
+def generateDataPDF(data, filename="data.pdf", **kwargs):
+    """Generate a multi-page pdf showing all data properties."""
+    if isinstance(data, str):
+        filename = data.replace('.txt', '-data.pdf')
+        data = pg.load(data)
+
+    from matplotlib.backends.backend_pdf import PdfPages
+    logToks = ["Uout(V)", "u", "i", "r", "rhoa"]
+    with PdfPages(filename) as pdf:
+        fig = pg.plt.figure()
+        for tok in data.tokenList().split():
+            if data.haveData(tok):
+                vals = data[tok]
+                logScale = min(vals) > 0 and tok in logToks
+                ax = fig.add_subplot()
+                pg.show(data, vals, ax=ax, label=tok, logScale=logScale,
+                        **kwargs)
+                fig.savefig(pdf, format='pdf')
+                fig.clf()
+
 
 def showERTData(data, vals=None, **kwargs):
     """Plot ERT data as pseudosection matrix (position over separation).
 
     Creates figure, axis and draw a pseudosection.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
+    data: :gimliapi:`DataContainerERT`
+        Data container with sensorPositions and a/b/m/n fields
 
-    data : :gimliapi:`BERT::DataContainerERT`
+    vals : array[nData] | str
+        Values to be plotted. Default is data['rhoa'].
+        Can be array or string whose data field is extracted.
 
-    **kwargs :
-
+    Keyword Args
+    ------------
+    **kwargs:
         * axes : matplotlib.axes
-            Axes to plot into. Default is None and a new figure and
-            axes are created.
-        * vals : Array[nData]
-            Values to be plotted. Default is data('rhoa').
+            Axes to plot into. By default (None), a new figure with
+            a single Axes is created.
+        * x and y : str | list(str)
+            forces using matrix plot (drawDataContainerAsMatrix)
+            x, y define the electrode number on x and y axis
+            can be strings ("a", "m", "mid", "sep") or lists of them ["a", "m"]
+        * style : str
+            predefined styles for choosing x and y arguments (x/y overrides)
+            - "ab-mn" (default): any combination of current/potential electrodes
+            - "a-m" : only a and m electrode (for unique dipole spacings as DD)
+            - "a-mn" : a and combination of mn electrode (PD with different MN)
+            - "ab-m" : a and combination of mn electrode
+            - "sepa-m" : current dipole length with a and m (multi-gradient)
+            - "a-sepm" : a and potential dipole length with m
+        * switchxy : bool
+            exchange x and y axes before plotting
+
+    Returns
+    -------
+    ax : matplotlib.axes
+        axis containing the plots
+    cb : matplotlib.colorbar
+        colorbar instance
     """
-    var = kwargs.pop('var', 0)
-    if var > 0:
-        import pybert as pb
-        pg._g(kwargs)
-        return pb.showData(data, vals, var=var, **kwargs)
-
-    # remove ax keyword global
+    # remove ax keyword globally (problems with colorbar)
     ax = kwargs.pop('ax', None)
-
     if ax is None:
         fig = pg.plt.figure()
         ax = None
         axTopo = None
-        if 'showTopo' in kwargs:
+        if 'showTopo' in kwargs:  # can be removed?
             ax = fig.add_subplot(1, 1, 1)
 #            axs = fig.subplots(2, 1, sharex=True)
 #            # Remove horizontal space between axes
@@ -58,15 +96,69 @@ def showERTData(data, vals=None, **kwargs):
 
     if isinstance(vals, str):
         if data.haveData(vals):
+            kwargs.setdefault('label', pg.utils.unit(vals))
             vals = data(vals)
         else:
             pg.critical('field not in data container: ', vals)
 
-    kwargs['cMap'] = kwargs.pop('cMap', pg.utils.cMap('rhoa'))
-    kwargs['label'] = kwargs.pop('label', pg.utils.unit('rhoa'))
-    kwargs['logScale'] = kwargs.pop('logScale', min(vals) > 0.0)
+    kwargs.setdefault('cMap', pg.utils.cMap('rhoa'))  # better vals?
+    kwargs.setdefault('label', pg.utils.unit('rhoa'))
+    kwargs.setdefault('logScale', min(vals) > 0.0)
 
-    ax, cbar = drawERTData(ax, data, vals=vals, **kwargs)
+    sty = kwargs.pop("style", None)
+    if isinstance(sty, str):
+        sty = sty.lower()
+    if sty == "a-m":
+        kwargs.setdefault("y", "a")
+        kwargs.setdefault("x", "m")
+    elif sty == "a-mn":
+        kwargs.setdefault("y", "a")
+        kwargs.setdefault("x", ["m", "n"])
+    elif sty == "ab-m":
+        kwargs.setdefault("y", ["a", "b"])
+        kwargs.setdefault("x", "m")
+    elif sty == "sepa-m":
+        data["ab"] = np.abs(data["b"] - data["a"])
+        kwargs.setdefault("y", ["ab", "a"])
+        kwargs.setdefault("x", "m")
+    elif sty == "a-sepm":
+        data["mn"] = np.abs(data["n"] - data["m"])
+        kwargs.setdefault("x", "a")
+        kwargs.setdefault("y", ["mn", "m"])
+    elif sty is not None and sty != 0:
+        kwargs.setdefault("y", ["a", "b"])
+        kwargs.setdefault("x", ["m", "n"])
+
+    if "x" in kwargs and "y" in kwargs:
+        if kwargs["y"] == "mid":
+            kwargs["y"] = (data["a"] + data["b"]) / 2
+        elif kwargs["y"] == "sep":
+            kwargs["y"] = np.abs(data["a"] - data["b"])
+
+        if kwargs["x"] == "mid":
+            kwargs["x"] = (data["m"] + data["n"]) / 2
+        elif kwargs["x"] == "sep":
+            kwargs["x"] = np.abs(data["m"] - data["n"])
+
+        if kwargs.pop("switchxy", False):
+            kwargs["x"], kwargs["y"] = kwargs["y"], kwargs["x"]
+
+        ax, cbar = showDataContainerAsMatrix(data, v=vals, ax=ax, **kwargs)
+    else:
+        equidistant = kwargs.pop("equidistant", False)
+        if not equidistant:
+            try:
+                ax, cbar = drawERTData(ax, data, vals=vals, **kwargs)
+            except Exception:
+                pg.warning('Something gone wrong while drawing data. '
+                           'Try fallback with equidistant electrodes.')
+                equidistant = True
+
+        if equidistant:
+            d = pg.DataContainerERT(data)
+            sc = data.sensorCount()
+            d.setSensors(list(zip(range(sc), np.zeros(sc), strict=False)))
+            ax, cbar = drawERTData(ax, d, vals=vals, **kwargs)
 
     # TODO here cbar handling like pg.show
 
@@ -90,8 +182,6 @@ def showERTData(data, vals=None, **kwargs):
         axTopo.set_ylim(min(pg.z(data)), max(pg.z(data)))
         axTopo.set_aspect(1)
 
-    # ax.set_aspect('equal')
-    # plt.pause(0.1)
     pg.viewer.mpl.updateAxes(ax)
     return ax, cbar
 
@@ -103,7 +193,7 @@ def drawERTData(ax, data, vals=None, **kwargs):
     ----------
     data : DataContainerERT
         data container with sensorPositions and a/b/m/n fields
-    vals : iterable of data.size() [data('rhoa')]
+    vals : iterable of data.size() [data['rhoa']]
         vector containing the vals to show
     ax : mpl.axis
         axis to plot, if not given a new figure is created
@@ -121,6 +211,7 @@ def drawERTData(ax, data, vals=None, **kwargs):
             indices to limit display
         * circular : bool
             Plot in polar coordinates when plotting via patchValMap
+
     Returns
     -------
     ax:
@@ -129,23 +220,26 @@ def drawERTData(ax, data, vals=None, **kwargs):
         The used Colorbar or None
     """
     if vals is None:
-        vals = data('rhoa')
+        vals = 'rhoa'
 
-    valid = data.get("valid").array().astype("bool")
+    if isinstance(vals, str):
+        vals = data[vals].array()
+
+    valid = data.get("valid").array().astype(bool)
     vals = ma.array(vals, mask=~valid)
 
     ind = kwargs.pop('ind', None)
-
+    sw = kwargs.pop("switch", False)
     if ind is not None:
         vals = vals[ind]
-        mid, sep = midconfERT(data, ind)
+        mid, sep = midconfERT(data, ind, switch=sw)
     else:
-        mid, sep = midconfERT(data, circular=kwargs.get('circular', False))
+        mid, sep = midconfERT(data, circular=kwargs.get('circular', False),
+                              switch=sw)
 
-    # var = kwargs.pop('var', 0)  # not used anymore
     cbar = None
-
-    dx = kwargs.pop('dx', np.median(np.diff(np.unique(mid))))*2
+    # dx = kwargs.pop('dx', np.median(np.diff(np.unique(mid))))
+    dx = kwargs.pop('dx', np.median(np.diff(pg.x(data))))
     ax, cbar, ymap = showValMapPatches(vals, xVec=mid, yVec=sep,
                                        dx=dx, ax=ax, **kwargs)
 
@@ -166,7 +260,8 @@ def drawERTData(ax, data, vals=None, **kwargs):
         ax.set_aspect(1)
 
     else:
-        ytl = generateConfStr(np.sort([int(k) for k in ymap]))
+        ytl = generateConfStr(np.sort([int(k) for k in ymap]), switch=sw)
+        # if only DD1/WE1 in WB/SL data rename to WB/SL
         if 'DD1' in ytl and 'WB2' in ytl and 'DD2'not in ytl:
             ytl[ytl.index('DD1')] = 'WB1'
         if 'WA1' in ytl and 'SL2' in ytl and 'WA2'not in ytl:
@@ -177,14 +272,15 @@ def drawERTData(ax, data, vals=None, **kwargs):
 #        if yt[0] == yt[1]:
 #            yt = yt[1:]
         dyt = np.diff(yt)
-        if dyt[-1] < dyt[-2]:
+        if len(dyt) > 1 and dyt[-1] < dyt[-2]:
             yt = yt[:-1]
+
         ax.set_yticks(yt)
         ax.set_yticklabels([ytl[int(yti)] for yti in yt])
     return ax, cbar
 
 
-def midconfERT(data, ind=None, rnum=1, circular=False):
+def midconfERT(data, ind=None, rnum=1, circular=False, switch=False):
     """Return the midpoint and configuration key for ERT data.
 
     Return the midpoint and configuration key for ERT data.
@@ -224,8 +320,11 @@ def midconfERT(data, ind=None, rnum=1, circular=False):
     x0 = data.sensorPosition(0).x()
     xe = pg.x(data.sensorPositions()) - x0
     ux = pg.unique(xe)
+    mI, mO, mT = 1, 100, 10000
+    if switch:
+        mI, mO = mO, mI
 
-    if len(ux) * 2 > data.sensorCount():  # 2D with topography case
+    if len(ux) * 2 > data.sensorCount() and not circular:  # 2D with topography
         dx = np.array(pg.utils.diff(pg.utils.cumDist(data.sensorPositions())))
         dxM = pg.mean(dx)
         if min(pg.y(data)) != max(pg.y(data)) or \
@@ -237,10 +336,10 @@ def midconfERT(data, ind=None, rnum=1, circular=False):
                 dx = np.ones(len(dx)) * dxM
             else:
                 # topography with probably missing electrodes
-                dx = np.floor(dx/np.round(dxM))*dxM
-                pass
+                dx = np.floor(dx/np.round(dxM)) * dxM
+
         if max(dx) < 0.5:
-            print("Detecting small distances, using mm accuracy")
+            pg.debug("Detecting small distances, using mm accuracy")
             rnum = 3
         xe = np.hstack((0., np.cumsum(np.round(dx, rnum)), np.nan))
 
@@ -250,7 +349,7 @@ def midconfERT(data, ind=None, rnum=1, circular=False):
         de = np.median(np.diff(ux)).round(1)
         ne = np.array(xe/de, dtype=int)
 
-    # a, b, m, n = data('a'), data('b'), data('m'), data('n')
+    # a, b, m, n = data['a'], data['b'], data['m'], data['n']
     # check if xe[a]/a is better suited (has similar size)
     if circular:
         # for circle geometry
@@ -279,10 +378,10 @@ def midconfERT(data, ind=None, rnum=1, circular=False):
         n = np.unwrap(n) % (np.pi*2)
 
     else:
-        a = np.array([ne[int(i)] for i in data('a')])
-        b = np.array([ne[int(i)] for i in data('b')])
-        m = np.array([ne[int(i)] for i in data('m')])
-        n = np.array([ne[int(i)] for i in data('n')])
+        a = np.array([ne[int(i)] for i in data['a']])
+        b = np.array([ne[int(i)] for i in data['b']])
+        m = np.array([ne[int(i)] for i in data['m']])
+        n = np.array([ne[int(i)] for i in data['n']])
 
     if ind is not None:
         a = a[ind]
@@ -301,18 +400,18 @@ def midconfERT(data, ind=None, rnum=1, circular=False):
             v[v > pi] = 2*pi - v[v > pi]
 
     # 2-point (default) 00000
-    sep = np.abs(a-m)
+    sep = np.abs(a-m)  # * mI # does not make sense here
     mid = (a+m) / 2
 
     # 3-point (PD, DP) (now only b==-1 or n==-<1, check also for a and m)
     imn = np.isfinite(n)*np.isnan(b)
     mid[imn] = (m[imn]+n[imn]) / 2
-    sep[imn] = np.minimum(am[imn], an[imn]) + 10000 + 100 * (mn[imn]-1) + \
-        (np.sign(a[imn]-m[imn])/2+0.5) * 10000
+    sep[imn] = np.minimum(am[imn], an[imn]) * mI + mT + mO * (mn[imn]-1) + \
+        (np.sign(a[imn]-m[imn])/2+0.5) * mT
     iab = np.isfinite(b)*np.isnan(n)
     mid[iab] = (a[iab]+b[iab]) / 2  # better 20000 or -10000?
-    sep[iab] = np.minimum(am[iab], bm[iab]) + 10000 + 100 * (ab[iab]-1) + \
-        (np.sign(a[iab]-n[iab])/2+0.5) * 10000
+    sep[iab] = np.minimum(am[iab], bm[iab]) * mI + mT + mO * (ab[iab]-1) + \
+        (np.sign(a[iab]-n[iab])/2+0.5) * mT
     #  + 10000*(a-m)
 
     # 4-point alpha: 30000 (WE) or 4000 (SL)
@@ -324,12 +423,12 @@ def midconfERT(data, ind=None, rnum=1, circular=False):
 
     mid[ialfa] = (m[ialfa] + n[ialfa]) / 2
     spac = np.minimum(bn[ialfa], bm[ialfa])
-    abmn3 = np.round((3*mn[ialfa]-ab[ialfa])*10000)/10000
-    sep[ialfa] = spac + (mn[ialfa]-1)*100*(abmn3 != 0) + \
-        30000 + (abmn3 < 0)*10000
+    abmn3 = np.round((3*mn[ialfa]-ab[ialfa])*mT)/mT
+    sep[ialfa] = spac * mI + (mn[ialfa]-1) * mO * (abmn3 != 0) + \
+        3*mT + (abmn3 < 0)*mT
     # gradient
 
-    # %% 4-point beta
+    # 4-point beta
     ibeta = np.copy(iabmn)
     ibeta[iabmn] = (bm[iabmn] >= mn[iabmn]) & (~ialfa[iabmn])
 
@@ -353,46 +452,54 @@ def midconfERT(data, ind=None, rnum=1, circular=False):
         mid[ibeta] = _averageAngle([abC, mnC])
 
         # special case when dipoles are completely opposite
-        iOpp = abs(abs((mnC - abC)) - np.pi) < 1e-3
+        iOpp = abs(abs(mnC - abC) - np.pi) < 1e-3
         mid[iOpp] = _averageAngle([b[iOpp], m[iOpp]])
 
         minAb = min(ab[ibeta])
-        sep[ibeta] = 50000 + (np.round(ab[ibeta]/minAb)) * 100 + \
+        sep[ibeta] = 5 * mT + (np.round(ab[ibeta]/minAb)) * mO + \
             np.round(np.minimum(np.minimum(am[ibeta], an[ibeta]),
-                                np.minimum(bm[ibeta], bn[ibeta])) / minAb)
+                                np.minimum(bm[ibeta], bn[ibeta])) / minAb) * mI
     else:
         mid[ibeta] = (a[ibeta] + b[ibeta] + m[ibeta] + n[ibeta]) / 4
 
-        sep[ibeta] = 50000 + (ab[ibeta]-1) * 100 + np.minimum(
-            np.minimum(am[ibeta], an[ibeta]), np.minimum(bm[ibeta], bn[ibeta]))
+        sep[ibeta] = 5 * mT + (ab[ibeta]-1) * mO + np.minimum(
+            np.minimum(am[ibeta], an[ibeta]),
+            np.minimum(bm[ibeta], bn[ibeta])) * mI
 
     # %% 4-point gamma
     # multiply with electrode distance and add first position
     if not circular:
         mid *= de
         mid += x0
+
     return mid, sep
 
 
-def generateConfStr(yy):
+def generateConfStr(yy, switch=False):
     """Generate configuration string to characterize array."""
+    mO, mT = 100, 10000
     types = ['PP', 'PD', 'DP', 'WA', 'SL', 'DD']  # base types
-    spac = yy % 100  # source-receiver distance
-    dip = np.round(yy//100) % 100  # MN dipole length
-    typ = np.round(yy//10000)
+    typ = np.round(yy//mT)
+    if switch:
+        dip = yy % mO  # source-receiver distance
+        spac = np.round(yy//mO) % mO  # MN dipole length
+    else:
+        spac = yy % mO  # source-receiver distance
+        dip = np.round(yy//mO) % mO  # MN dipole length
+
     # check if SL is actually GR (multi-gradient)
 
     # check if DD-n-n should be renamed
     rendd = (np.mean(spac / (dip+1)) < 2.1)
     keys = []
-    for s, d, t in zip(spac, dip, typ):
+    for s, d, t in zip(spac, dip, typ, strict=False):
         key = types[t]
         if d > 0:
             if rendd and d+1 == s and t == 5:
                 key = 'WB'
             else:
                 key = key + str(d+1) + '-'
-        key = key + "{:2d}".format(s)  # str(s)
+        key = key + f"{s:2d}"
         keys.append(key)
 
     return keys

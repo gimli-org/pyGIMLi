@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -30,6 +30,15 @@ std::ostream & operator << (std::ostream & str, const GIMLI::Node & n){
     return str;
 }
 
+std::ostream & operator << (std::ostream & str, 
+                            const std::vector < GIMLI::Node * > & nodes){
+    for (auto *n: nodes) {
+        str << n->id() << " "; 
+    }
+    str << std::endl;
+    return str;
+}
+
 Node::Node(){
     init_();
     marker_ = 0;
@@ -37,19 +46,16 @@ Node::Node(){
 
 Node::Node(double x, double y, double z)
 : pos_(RVector3(x, y, z)) {
-    pos_.round(1e-12);
     init_();
 }
 
 Node::Node(const RVector3 & pos)
 : pos_(pos) {
-    pos_.round(1e-12);
     init_();
 }
 
 Node::Node(const RVector3 & pos, int marker, int id)
 : pos_(pos) {
-    pos_.round(1e-12);
     init_();
     setMarker(marker);
     setId(id);

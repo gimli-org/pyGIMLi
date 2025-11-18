@@ -286,3 +286,40 @@ def readGeoRefTIF(file_name):
             [tify - im.shape[0] * dx, tify]]
 
     return im, bbox, projection
+
+def readCoordsFromKML(xmlfile, zone=32, ellps="WGS84"):
+    """Read coordinates from KML file and return UTM coordinates.
+
+    Parameters
+    ----------
+    xmlfile : str
+        XML or KML file
+    zone : int [32]
+        UTM zone
+
+    Returns
+    -------
+    pos : np.array (Nx3)
+        matrix of x, y, z positions
+    """
+    import utm
+    import xml.etree.ElementTree as ET
+
+    tree = ET.parse(xmlfile)
+    root = tree.getroot()
+    X, Y, Z = [], [], []
+    for line in root.iter("*"):
+        if line.tag.find("coordinates") >= 0:
+            try:
+                lin = line.text.replace("\n", "").replace("\t", "")
+            except AttributeError:
+                lin = root[0][4][2][1].text.replace("\n", "").replace("\t", "")
+            for col in lin.split(" "):
+                if col.find(",") > 0:
+                    vals = np.array(col.split(","), dtype=float)
+                    if len(vals) > 2:
+                        X.append(vals[0])
+                        Y.append(vals[1])
+                        Z.append(vals[2])
+
+    return np.vstack((*utm.from_latlon(X, Y), Z))

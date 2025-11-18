@@ -6,7 +6,7 @@ import pygimli as pg
 from pygimli.frameworks import MethodManager
 
 
-class PetroModelling(pg.core.ModellingBase):
+class PetroModelling(pg.Modelling):
     """
     Combine petrophysical relation m(p) with modelling class f(p).
 
@@ -60,7 +60,7 @@ class PetroModelling(pg.core.ModellingBase):
         self.jac.r = self.trans.deriv(model)  # set inner derivative
 
 
-class PetroJointModelling(pg.core.ModellingBase):
+class PetroJointModelling(pg.Modelling):
     """Cumulative (joint) forward operator for petrophysical inversions."""
 
     def __init__(self, f=None, p=None, mesh=None, verbose=True):
@@ -120,7 +120,7 @@ class PetroJointModelling(pg.core.ModellingBase):
             f.createJacobian(model)
 
 
-class JointPetroInversion(MethodManager):
+class JointPetroInversion(MethodManager):  # bad name: no inversion framework!
     """TODO."""
 
     def __init__(self, managers, trans, verbose=False, debug=False, **kwargs):
@@ -133,7 +133,7 @@ class JointPetroInversion(MethodManager):
         self.fops = []
         self.dataVals = pg.Vector(0)
         self.dataErrs = pg.Vector(0)
-        self.mod = pg.Vector(0) # resulting model
+        self.mod = pg.Vector(0)  # resulting model
         self.data = None
 
         self.tD = pg.trans.TransCumulative()
@@ -181,8 +181,9 @@ class JointPetroInversion(MethodManager):
                                            data[i](mgr.dataToken()))
 
                     if mgr.errIsAbsolute:
-                        self.dataErrs = pg.cat(self.dataErrs,
-                                data[i]('err') / data[i](mgr.dataToken()))
+                        self.dataErrs = pg.cat(
+                            self.dataErrs,
+                            data[i]('err') / data[i](mgr.dataToken()))
                     else:
                         self.dataErrs = pg.cat(self.dataErrs, data[i]('err'))
 
@@ -235,7 +236,6 @@ class JointPetroInversion(MethodManager):
         self.inv.setLambda(lam)
 
         self.mod = self.inv.run()
-        #self.mod = self.mod(self.fop.regionManager().paraDomain().cellMarkers())
         return self.mod
 
     def showModel(self, **showkwargs):

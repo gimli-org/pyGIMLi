@@ -10,7 +10,6 @@ coupling of different software packages and file-based data exchange. The idea
 of pyGIMLi is to present a very flexible framework for geophysical modelling and
 inversion, which allows standard and customized modelling and inversion
 workflows to be realized in a reproducible manner.
-levels.
 
 The software is written in Python on top of a C++ core library, which allows a
 combination of flexible scripting and numerical efficiency. pyGIMLi uses

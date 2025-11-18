@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Pygimli base functions.
 
 Some needs to be sorted. Need to fit nameing conventions!
@@ -9,21 +8,22 @@ import time
 import numpy as np
 import pygimli as pg
 
+
 def rms(v, axis=None):
     """Compute the root mean square."""
-    ### abs for complex values
+    # abs for complex values
     return np.sqrt(np.mean(np.abs(v)**2, axis))
 
 
 def rrms(a, b, axis=None):
     """Compute the relative (regarding a) root mean square."""
-    ### abs for complex values
+    # abs for complex values
     return rms(np.abs(a-b)/np.abs(a), axis)
 
 
 def nanrms(v, axis=None):
     """Compute the root mean square excluding nan values."""
-    ### abs for complex values
+    # abs for complex values
     return np.sqrt(np.nanmean(np.abs(v)**2, axis))
 
 
@@ -168,18 +168,17 @@ def createPath(pathList):
     pathList: str | list(str)
         Create Path with option subpaths
     """
-    if hasattr(pathList, '__iter__'):
+    if hasattr(pathList, '__iter__') and not isinstance(pathList, str):
         path = os.path.join('', *pathList)
     else:
         path = os.path.join('', pathList)
 
     try:
         os.makedirs(path)
+    except FileExistsError:
+        print(f'Path {path} already exists. Skipping')
     except OSError as e:
-        if os.path.exists(path):
-            print('Path "{}" already exists.'.format(path))
-        else:
-            pg.error('Unable to create path "{}".'.format(path))
+        pg.error(f'Unable to create path "{path}".')
         raise e
     return path
 

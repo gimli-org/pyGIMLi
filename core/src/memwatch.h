@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2012-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2012-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -26,10 +26,13 @@
 namespace GIMLI{
 
 /*! Convert byte into KByte. */
-inline double kByte(long byte){ return double(byte / 1024.0); }
+inline double KByte(long byte){ return double(byte / 1024.0); }
 
 /*! Convert byte into MByte */
-inline double mByte(long byte){ return double(byte / (1024.0 * 1024.0)); }
+inline double MByte(long byte){ return double(byte / (1024.0 * 1024.0)); }
+
+/*! Convert byte into GByte */
+inline double GByte(long byte){ return double(byte / (1024.0 * 1024.0 * 1024)); }
 
 //! Memory watch.
 /*! Class that might help debugging memory usage.
@@ -72,6 +75,7 @@ inline double memoryInUse(){
     return GIMLI::MemWatch::instance().inUse();
 }
 
+DLLEXPORT long maxMem();
 
 } // namespace GIMLI
 

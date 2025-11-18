@@ -3,9 +3,11 @@
 """Functions to draw various pygimli matrices with matplotlib."""
 
 import numpy as np
-import matplotlib.pyplot as plt
+# try to avoid plt impoert #
+# import matplotlib.pyplot as plt
 
 import pygimli as pg
+from .colorbar import cmapFromName
 
 
 def drawSparseMatrix(ax, mat, **kwargs):
@@ -28,7 +30,7 @@ def drawSparseMatrix(ax, mat, **kwargs):
     >>> import pygimli as pg
     >>> from pygimli.viewer.mpl import drawSparseMatrix
     >>> A = pg.randn((10,10), seed=0)
-    >>> SM = pg.core.SparseMapMatrix()
+    >>> SM = pg.matrix.SparseMapMatrix()
     >>> for i in range(10):
     ...     SM.setVal(i, i, 5.0)
     >>> fig, (ax1, ax2) = pg.plt.subplots(1, 2, sharey=True, sharex=True)
@@ -42,7 +44,7 @@ def drawSparseMatrix(ax, mat, **kwargs):
     mat = pg.utils.sparseMatrix2coo(mat)
     mat.row += row
     mat.col += col
-    gci = ax.spy(mat, color=color)
+    gci = ax.spy(mat, color=color, **kwargs)
 
     ax.autoscale(enable=True, axis='both', tight=True)
     return gci
@@ -90,13 +92,13 @@ def drawBlockMatrix(ax, mat, **kwargs):
     if kwargs.pop('spy', False):
         gci = []
         ids = pg.unique([e.matrixID for e in mat.entries()])
-        cMap = pg.plt.cm.get_cmap("Set3", len(ids))
+        cMap = cmapFromName("Set3", ncols=len(ids))
 
         for e in mat.entries():
             mid = e.matrixID
 
             mati = mat.mat(mid)
-            if isinstance(mati, pg.core.IdentityMatrix):
+            if isinstance(mati, pg.matrix.IdentityMatrix):
                 mati = np.eye(mati.size())
 
             gci.append(drawSparseMatrix(ax, mati,
@@ -111,17 +113,20 @@ def drawBlockMatrix(ax, mat, **kwargs):
             mid = e.matrixID
             widthy = mat.mat(mid).rows() - 0.1 # to make sure non-matrix regions are not connected in the plot
             widthx = mat.mat(mid).cols() - 0.1
-            plc = pg.meshtools.createRectangle([e.colStart, e.rowStart],
-                                   [e.colStart + widthx, e.rowStart + widthy],
-                                                marker=mid)
+            plc = pg.meshtools.createRectangle(
+                [e.colStart, e.rowStart],
+                [e.colStart + widthx, e.rowStart + widthy],
+                marker=mid)
             plcs.append(plc)
 
         bm = pg.meshtools.mergePLC(plcs)
-        gci, cBar = pg.viewer.mpl.drawPLC(ax, bm, fitView=False)
+        gci, cBar = pg.viewer.mpl.drawPLC(ax, bm, fitView=False, **kwargs)
         ax.invert_yaxis()
         ax.xaxis.tick_top()
-        cBar.set_label("Matrix ID")
+        if cBar is not None:
+            cBar.set_label("Matrix ID")
 
         if len(mat.entries()) > 10:
             gci.set_cmap("viridis")
+
         return gci, cBar

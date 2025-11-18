@@ -9,6 +9,7 @@ import numpy as np
 
 import pygimli as pg
 import pygimli.meshtools as mt
+from pygimli.physics import ert
 from pygimli.physics.petro import resistivityArchie
 
 
@@ -22,13 +23,13 @@ def solveDarcy(mesh, k=None, p0=1, verbose=False):
     if verbose:
         print("Solve Darcy equation ...")
 
-    uDir = [[2, p0],  # left aquiver
-            [3, p0],  # left bedrock
+    uDir = {2: p0,  # left aquifer
+            3: p0,  # left bedrock
             # [4, 0],  # bottom (paper)
-            [5, 0],  # right bedrock
-            [6, 0],  # right aquiver
-            [7, 0],  # right top
-            ]
+            5: 0,  # right bedrock
+            6: 0,  # right aquiver
+            7: 0,  # right top
+            }
 
     p = pg.solver.solve(mesh, a=k, bc={'Dirichlet': uDir}, verbose=True)
     vel = -pg.solver.grad(mesh, p) * np.asarray([k, k, k]).T
@@ -51,11 +52,14 @@ def solveAdvection(mesh, vel, times, diffusion, verbose=False):
     t = np.linspace(t[0], t[-1], len(t))
 
     c1 = pg.solver.solveFiniteVolume(mesh, a=diffusion, f=S, vel=vel,
-                                     times=t, uB=[1, 0],
+                                     times=t,  # uB=[1, 0],
+                                     bc={'Dirichlet': {1: 0}},
                                      scheme='PS', verbose=0)
 
     c2 = pg.solver.solveFiniteVolume(mesh, a=diffusion, f=0., vel=vel,
-                                     times=t, uB=[1, 0], u0=c1[-1],
+                                     times=t,  # uB=[1, 0],
+                                     bc={'Dirichlet': {1: 0}},
+                                     u0=c1[-1],
                                      scheme='PS', verbose=0)
     c = np.vstack((c1, c2))
 
@@ -67,8 +71,8 @@ def solveERT(mesh, concentration, verbose=0):
     if verbose:
         print("Solve for ERT ...")
 
-    ertScheme = pg.physics.ert.createERTData(pg.utils.grange(-20, 20, dx=1.0),
-                                             schemeName='dd')
+    ertScheme = ert.createData(pg.utils.grange(-20, 20, dx=1.0),
+                               schemeName='dd')
 
     meshERT = mt.createParaMesh(ertScheme, quality=33, paraMaxCellSize=0.2,
                                 boundaryMaxCellSize=50, smooth=[1, 2])
@@ -108,13 +112,13 @@ def solveERT(mesh, concentration, verbose=0):
     for i, rbI in enumerate(rArchie):
         resis[i] = 1. / ((1./rbI) + 1./rho0)
 
-    ert = pg.physics.ert.ERTManager(verbose=False)
-    ertScheme.set('k', ert.fop.calcGeometricFactors(ertScheme))
+    ertScheme['k'] = ert.createGeometricFactors(ertScheme)
 
     errPerc = 0.01
     errVolt = 1e-5
 
-    rhoa = ert.simulate(meshERT, resis, ertScheme, verbose=0, returnArray=True)
+    rhoa = ert.simulate(mesh=meshERT, scheme=ertScheme, res=resis,
+                        verbose=0, returnArray=True)
 
     voltage = rhoa / ertScheme('k')
     err = np.abs(errVolt / voltage) + errPerc
@@ -125,7 +129,7 @@ def solveERT(mesh, concentration, verbose=0):
     return meshERT, ertScheme, resis, rhoa, dRhoa, dErr
 
 
-class HydroGeophysicalModelling(pg.core.ModellingBase):
+class HydroGeophysicalModelling(pg.Modelling):
     """Forward Operator for fully coupled hydrogeophysical inversion."""
 
     def __init__(self, verbose=False, **kwargs):
@@ -222,7 +226,7 @@ def simulateSynth(model, tMax=5000, satSteps=150, ertSteps=10, area=0.1,
 
     # openblas have some problems with to high thread count ..
     # we need to dig into
-    print("ThreadCount:", pg.threadCount())
+    print("ThreadCount:", pg.core.threadCount())
     pg.setThreadCount(4)
 
     print('##### Simulate synthetic data ' + '#'*50)
@@ -321,19 +325,18 @@ def createFopWithParaDomain(paraRefine=0, ncpu=6):
 
         fop.setMesh(paraMesh)
 
-        for i in range(fop.regionManager().regionCount()):
-            fop.regionManager().region(i).setSingle(1)
+        # for i in range(fop.regionManager().regionCount()):
+        #     fop.regionManager().region(i).setSingle(1)
     else:
         fop.setMesh(paraMesh)
         fop.createRefinedForwardMesh(refine=False, pRefine=False)
 
+    fop.setRegionProperties("*", single=True)
     fopMesh = pg.meshtools.createMesh(fop.regionManager().paraDomain(),
                                       area=paraArea, smooth=[1, 10])
 
+    fop.setMesh(fopMesh)  # , ignoreRegionManager=False)
     fop.setVerbose(True)
-    fop.setMesh(fopMesh, ignoreRegionManager=False)
-    for i in range(fop.regionManager().regionCount()):
-        fop.regionManager().region(i).setSingle(1)
 
     return fop, rhoaR, err, paraMesh
 
@@ -345,10 +348,11 @@ if __name__ == '__main__':
 
     fop, rhoaR, err, paraMesh = createFopWithParaDomain(paraRefine=paraRefine,
                                                         ncpu=ncpu)
-
-    fop.regionManager().region(1).setFixValue(1e-8)  # top layer
-    fop.regionManager().region(0).setFixValue(1e-4)  # bedrock
-    fop.regionManager().region(0).setSingle(1)  # bedrock
+    fop.setRegionProperties(1, fix=1e-8)
+    fop.setRegionProperties(0, fix=1e-4)
+    # fop.regionManager().region(1).setFixValue(1e-8)  # top layer
+    # fop.regionManager().region(0).setFixValue(1e-4)  # bedrock
+    # fop.regionManager().region(0).setSingle(1)  # bedrock
 
     # Reflect the fix value setting here!!!!
     fop.createRefinedForwardMesh(refine=False, pRefine=False)

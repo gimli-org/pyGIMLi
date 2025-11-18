@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -324,16 +324,16 @@ inline bool operator != (const RVector3 & a , const RVector3 & b){
     return !(a == b);
 }
 inline bool operator < (const RVector3 & a , const RVector3 & b){
-    std::cout << WHERE_AM_I << std::endl; return true;
+    return a.distSquared() < b.distSquared();
 }
 inline bool operator <= (const RVector3 & a , const RVector3 & b){
-    std::cout << WHERE_AM_I << std::endl; return true;
+    return a.distSquared() <= b.distSquared();
 }
 inline bool operator > (const RVector3 & a , const RVector3 & b){
-    std::cout << WHERE_AM_I << std::endl; return true;
+    return a.distSquared() > b.distSquared();
 }
 inline bool operator >= (const RVector3 & a , const RVector3 & b){
-    std::cout << WHERE_AM_I << std::endl; return true;
+    return a.distSquared() >= b.distSquared();
 }
 inline RVector3 RINT(const RVector3 & a) {
     std::cout << WHERE_AM_I << std::endl;

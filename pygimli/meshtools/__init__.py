@@ -8,38 +8,41 @@ Mesh generation and modification.
     (unstructured), both objects are treated the same internally.
 """
 
-from pygimli.core import createMesh1D, createMesh1DBlock, createMesh2D, createMesh3D
+from pygimli.core import (createMesh1D, createMesh1DBlock,
+                          createMesh2D, createMesh3D)
 
 from .grid import (createGrid, createGridPieShaped,
                    appendBoundary,
                    appendBoundaryGrid,
-                   appendTriangleBoundary,
-                   appendTetrahedronBoundary, 
-                   )
+                   appendTriangleBoundary,  # why is this in grid.py?
+                   appendTetrahedronBoundary)
+
 from .mapping import (cellDataToBoundaryData, cellDataToNodeData,
                       fillEmptyToCellArray, interpolate, interpolateAlongCurve,
                       nodeDataToBoundaryData, nodeDataToCellData,
-                      tapeMeasureToCoordinates)
+                      tapeMeasureToCoordinates, extract2dSlice)
 
-from .mesh import (convert, convertMeshioMesh, convertHDF5Mesh, createMesh,
-                   createParaMesh, createParaMesh2DGrid, createMeshFromHull, exportFenicsHDF5Mesh, exportHDF5Mesh,
+from .mesh import (checkMeshConsistency, convert, convertMeshioMesh,
+                   convertHDF5Mesh, createMesh,
+                   createParaMesh, createParaMesh2DGrid, createMeshFromHull,
+                   exportFenicsHDF5Mesh, exportHDF5Mesh,
                    exportSTL, extrudeMesh, merge2Meshes, mergeMeshes,
                    readFenicsHDF5Mesh, readGmsh, readHDF5Mesh,
                    readHydrus2dMesh, readHydrus3dMesh, readSTL, readTetgen,
                    readTriangle, readMeshIO, refineHex2Tet, refineQuad2Tri,
-                   toSubsurface, fromSubsurface)
+                   toSubsurface, fromSubsurface, extractUpperSurface2dMesh)
 
 from .polytools import createParaDomain2D  # keep for backward compatibility
-from .polytools import (createCircle, createCube, createCylinder, createFacet,
-                        createLine, createParaMeshPLC, createPolygon,
+from .polytools import (createCircle, createCube, createSphere, createCylinder, createFacet,
+                        createSurface,
+                        createLine, createParaMeshPLC,
+                        createParaMeshSurface,
+                        createParaMeshPLC3D,
+                        createPolygon, merge,
                         createRectangle, createWorld, exportPLC, mergePLC,
                         mergePLC3D, readPLC, syscallTetgen, extrude)
-# little syntactic sugar
-merge = mergePLC
 
 from .quality import quality
-
-
 
 #  This is neither functional nor good practice  #  why?
 #  __all__ = [name for name in dir() if '_' not in name]
@@ -69,6 +72,7 @@ __all__ = [
     'createCircle',
     'createLine',
     'createParaMeshPLC',
+    'createParaMeshPLC3D',
     'convertHDF5Mesh',
     'exportHDF5Mesh',
     'exportFenicsHDF5Mesh',

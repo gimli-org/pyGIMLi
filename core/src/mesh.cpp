@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -19,16 +19,14 @@
 #include "mesh.h"
 
 #include "kdtreeWrapper.h"
+#include "line.h"
 #include "memwatch.h"
 #include "meshentities.h"
 #include "node.h"
-#include "line.h"
+#include "plane.h"
 #include "shape.h"
-
 #include "sparsematrix.h"
 #include "stopwatch.h"
-
-#include <boost/bind.hpp>
 
 #include <map>
 
@@ -101,7 +99,7 @@ void Mesh::copy_(const Mesh & mesh){
     for (Index i = 0; i < mesh.boundaryCount(); i ++){
         this->createBoundary(mesh.boundary(i));
     }
-
+    
     cellVector_.reserve(mesh.cellCount());
     for (Index i = 0; i < mesh.cellCount(); i ++){
         this->createCell(mesh.cell(i));
@@ -115,9 +113,9 @@ void Mesh::copy_(const Mesh & mesh){
     }
 
     // we don't need expensive tests for copying
-    setGeometry(mesh.isGeometry());
     setDataMap(mesh.dataMap());
     setCellAttributes(mesh.cellAttributes());
+    setGeometry(mesh.isGeometry());
 
     if (mesh.neighborsKnown()){
         this->createNeighborInfos(true);
@@ -178,6 +176,10 @@ Node * Mesh::createNodeGC_(const RVector3 & pos, int marker){
         Index oldCount = this->nodeCount();
         Node *n = this->createNodeWithCheck(pos);
         n->setMarker(marker);
+        
+        if ((this->nodeCount() == oldCount)){
+            if (n->state() == No) n->setState(Original);
+        }
 
         if ((this->dim() == 3) and (this->nodeCount() > oldCount)){
 
@@ -345,7 +347,16 @@ Boundary * Mesh::createBoundary(const Boundary & bound, bool check){
 
     if (bound.rtti() == MESH_POLYGON_FACE_RTTI){
         const PolygonFace & f = dynamic_cast< const PolygonFace & >(bound);
-        b = createBoundaryChecked_< PolygonFace >(nodes, bound.marker(), check);
+
+        Boundary * bt = findBoundary(nodes);
+       
+        if (bt && (bt->nodeCount() != bound.nodeCount())) {
+            // exclude the check if all nodes of bound are a hole in b
+            b = createBoundaryChecked_< PolygonFace >(nodes, bound.marker(), false);
+        } else {
+            b = createBoundaryChecked_< PolygonFace >(nodes, bound.marker(), check);
+        }
+        
         for (Index i = 0; i < f.subfaceCount(); i ++ ){
             dynamic_cast< PolygonFace* >(b)->addSubface(
                 this->nodes(ids(f.subface(i))));
@@ -361,6 +372,7 @@ Boundary * Mesh::createBoundary(const Boundary & bound, bool check){
     for (Index j = 0; j < bound.secondaryNodes().size(); j ++){
         b->addSecondaryNode(& this->node(bound.secondaryNodes()[j]->id()));
     }
+    
     return b;
 }
 
@@ -501,15 +513,40 @@ Boundary * findSecParent(const std::vector < Node * > & v){
     }
     return 0;
 }
+
 Boundary * Mesh::copyBoundary(const Boundary & bound, double tol, bool check){
+    bool debug = false;
+    #define _D(...) if (debug) __MSP(__VA_ARGS__)
+    // if (bound.id()== 4 ){
+    //     debug = true;
+    // }
+    _D("this:")
+    if (debug){
+        for (auto *b: this->boundaries()){
+            print(b->id(), ":", b->ids());
+            if (b->rtti() == MESH_POLYGON_FACE_RTTI){
+                auto *p = dynamic_cast< PolygonFace * >(b);
+                for (Index i = 0; i < p->subfaceCount(); i ++ ){
+                    print("\t", p->subface(i));
+                }
+            }
+        }
+    }
+
+    bool isHole = false;
+    if (bound.rtti() == MESH_POLYGON_FACE_RTTI){
+        auto *p = dynamic_cast< const PolygonFace * >(&bound);
+        isHole = p->holeMarkers().size() > 0;
+    }
+
+    _D("copyBoundary:", bound.id(), "Nodes:", bound.ids(), "hole:", isHole)
 
     std::vector < Node * > nodes(bound.nodeCount());
-    bool isFreeFace = false;
-    // bool isSubFace = false;
-
+    bool isFreeFace = false; //** the new face is no subface
+    
+    std::vector < Node * > oldNodes;
     std::vector < Node * > conNodes;
     std::vector < Node * > secNodes;
-    std::vector < Node * > subNodes;
 
     // __M
     for (Index i = 0; i < nodes.size(); i ++) {
@@ -517,92 +554,194 @@ Boundary * Mesh::copyBoundary(const Boundary & bound, double tol, bool check){
         if (bound.rtti() == MESH_POLYGON_FACE_RTTI){
             // this works with 3D poly tests but copy bounds into 2d mesh will double bounds
             nodes[i] = createNode(bound.node(i).pos(), tol);
+_D("new Node:", nodes[i]->id(), nodes[i]->state(), "Bounds:", nodes[i]->boundSet())
         } else {
             // 3D poly tests fail!! .. need to be checked and fixed  TODO
-            nodes[i] = createNodeWithCheck(bound.node(i).pos(), tol);
+            if (check== true){
+                nodes[i] = createNodeWithCheck(bound.node(i).pos(), tol);
+            } else {
+                nodes[i] = createNode(bound.node(i).pos());
+            }
         }
         nodes[i]->setMarker(bound.node(i).marker());
         // __MS(nodes[i]->state())
         switch (nodes[i]->state()){
             case NodeState::No:
-                // at least one node is not in boundary
+                // at least one node is not inside boundary
                 isFreeFace = true; break;
             case NodeState::Secondary:
                 secNodes.push_back(nodes[i]); break;
                 // __MS(*nodes[i])
             case NodeState::Connected:
                 conNodes.push_back(nodes[i]); break;
+            case NodeState::Original:
+                oldNodes.push_back(nodes[i]); 
+                break;
+
         }
     }
-    Boundary * b = 0;
     Boundary * parent = 0;
+    Boundary * ret = 0;
 
-    if (bound.rtti() == MESH_POLYGON_FACE_RTTI){
+    std::vector < Node * > subNodes; // nodes for the new subface
+    if (bound.rtti() == MESH_POLYGON_FACE_RTTI && check == true){
 
-        Boundary * conParent = findBoundary(conNodes);
+        _D("connectedNodes:", conNodes, 
+           "secondaryNodes:", secNodes,
+           "origNodes:", oldNodes)
+        _D("new face nodes:", nodes, "freeface:", isFreeFace)
+
         Boundary * secParent = findSecParent(secNodes);
 
-        // __MS("sizes:" << conNodes.size() <<" " <<secNodes.size())
-        // __MS("parents: " << conParent <<" " << secParent)
-
+        //** identify if face is freeface
         if (!isFreeFace){
-            conParent = findBoundary(conNodes);
+            std::set < Boundary * > conParentCand = findBoundaries(conNodes);
+            for (auto *n : conNodes){
+                _D("Connected Node:", n->id(), "Bounds:", n->boundSet())
+            }
+            if (conParentCand.size() == 0){
+                conParentCand = findBoundaries(oldNodes);
+                for (auto *n : oldNodes){
+                    _D("Original Node:", n->id(), "Bounds:", n->boundSet())
+                }
+            }
+
+            Boundary * conParent = 0;
+            if (conParentCand.size() > 0 ){
+                _D("Check connected parents candidates (",conParentCand.size(), ")..")
+                for (auto *b: conParentCand){
+                    _D("\t Candidate:", b->id(), b->shape().plane())
+                    if (b->shape().plane().compare(bound.shape().plane(), 
+                                                   TOLERANCE, true)){
+                        conParent = b;
+                        _D("\t found connected parent:", b->id())
+                        break;
+                    }
+                }            
+            }
 
             if (conNodes.size() && secNodes.size()){
-                if (conParent != secParent){
+
+                if (!conParent || conParent != secParent){
                     isFreeFace = true;
                 }
-                subNodes = conNodes;
-                subNodes.insert(subNodes.end(), secNodes.begin(), secNodes.end());
+                if (conParent){
+                    _D("conParent", conParent->id(), "Nodes:", conParent->ids())
+                } else {
+                    _D("no parent for connected nodes")
+                }
+                if (secParent){
+                    _D("secParent", secParent->ids())
+                } else {
+                    _D("no parent for secondary nodes")
+                }
+
+                // subNodes = conNodes;
+                // subNodes.insert(subNodes.end(), secNodes.begin(), secNodes.end());
+                subNodes = nodes;
+                _D("subNodes", subNodes)
                 parent = secParent;
-            }
-            if (conNodes.size()){
+            } else if (conNodes.size()){
                 if (!conParent){
                     isFreeFace = true;
+                    _D("no conParent")
+                } else {
+                    _D("conParent", conParent->ids())
+
+                    if (oldNodes.size()){
+                        //original nodes may not be part of connected Parent
+                        for (auto *n: oldNodes){
+                            if (!conParent->shape().touch(n->pos())) {
+                                _D("node not on connected parent", n->id())
+                                isFreeFace = true; 
+                            }
+                        }
+                    }
                 }
-                subNodes = conNodes;
+                subNodes = nodes;
                 parent = conParent;
-            }
-            if (secNodes.size()){
+            } else if (secNodes.size()){
                 if(!secParent){
+                    isFreeFace = true;
+                    _D("no secondary parent")
+                } else if (!secParent->shape().plane().compare(
+                                                bound.shape().plane(), TOLERANCE, true)){
+
+                    _D("secParent", secParent->ids())
+                    _D("secParent.Plane:", secParent->shape().plane());
+                    _D("bound.Plane:", bound.shape().plane());
                     isFreeFace = true;
                 }
                 subNodes = secNodes;
                 parent = secParent;
+            } else if (oldNodes.size()){
+                if (!conParent){
+                    isFreeFace = true;
+                } else {
+                    //** case Test3DMerge.test_cube_mult_cut2 (boundary 4)
+                    // all nodes are old nodes and are already part of another face
+                    parent = conParent;
+                    subNodes = nodes;
+                }
             }
         }
-
+        
+        //** create new face
+        _D("Subface freeface:", isFreeFace, 
+                "subsNodes:", subNodes.size(), 
+                "nodes", nodes.size())
+        
         if (isFreeFace){
-            b = createBoundaryChecked_< PolygonFace >(nodes,
-                                                      bound.marker(), check);
-            parent = b;
+            ret = createBoundaryChecked_< PolygonFace >(nodes,
+                                                        bound.marker(), check);
+            _D("added freeFace: ", ret->ids())
+            parent = ret;
         } else {
             if (subNodes.size() > 2){
                 if (parent){
                     for (auto *n: secNodes){
                         parent->delSecondaryNode(n);
+                        n->setState(No);
                     }
-                    dynamic_cast< PolygonFace * >(parent)->addSubface(subNodes);
+                    auto *p = dynamic_cast< PolygonFace * >(parent);
+                    _D("addSubface: ", p->subfaceCount())
+                    p->addSubface(subNodes, isHole);
+                    _D("subfacecount: ", p->subfaceCount())
+
+                    if (debug) for (auto i: range(p->subfaceCount())){
+                        _D("added subface:", p->subface(i))
+                    }
                 } else {
                     log(Error, "no parent boundary");
                 }
-                b = parent;
+                ret = parent;
+            } else {
+                if (nodes.size() > 2){
+                    //** case Test3DMerge.test_cube_mult_cut1 (boundary 4)
+                    auto *p = dynamic_cast< PolygonFace * >(parent);
+                    for (auto *n: secNodes){
+                        p->delSecondaryNode(n);
+                        n->setState(No);
+                    }
+                    p->addSubface(nodes, isHole);
+                } else {
+                    log(Error, "new subface but only two nodes");
+                }
             }
         }
         const PolygonFace & f = dynamic_cast< const PolygonFace & >(bound);
         if (f.subfaceCount() > 0){
             log(Error, "Can't yet copy a boundary with subfaces");
         }
-
         for (Index i = 0; i < f.holeMarkers().size(); i ++ ){
             dynamic_cast< PolygonFace* >(parent)->addHoleMarker(
                                                     f.holeMarkers()[i]);
         }
     } else { // if no Polygonface
-        b = createBoundary(nodes, bound.marker(), check);
+        ret = createBoundary(nodes, bound.marker(), check);
     }
 
-    return b;
+    return ret;
 }
 
 Node & Mesh::node(Index i) {
@@ -783,28 +922,37 @@ Cell * Mesh::findCell(const RVector3 & pos, size_t & count,
             throwError(WHERE_AM_I +
                        " no nearest node to pos. This is a empty mesh");
         }
-        if (refNode->cellSet().empty()){
+        if (refNode->cellSet().empty() && refNode->boundSet().empty()){
             std::cout << "Node: " << *refNode << std::endl;
+            
             throwError(WHERE_AM_I +
-                       " no cells for this node. This is a corrupt mesh");
+                       " no cells or boundaries for this node. This may be a corrupt mesh");
         }
 //         std::cout << "Node: " << *refNode << std::endl;
 
         // small fast precheck to avoid strange behaviour for symmetric SF.
-        for (std::set< Cell * >::iterator it = refNode->cellSet().begin();
-             it != refNode->cellSet().end(); it ++){
-//             std::cout << (*it)->id() << std::endl;
+        // __MS(pos << " " << refNode->pos())
 
-           if ((*it)->shape().isInside(pos, false)) return *it;
-
+        if (!refNode->cellSet().empty()){
+                
+            for (auto *c: refNode->cellSet()){
+                // std::cout << (*it)->id() << std::endl;
+                //** isInside useing shapefunctions only work for aligned dimensions
+                if (c->shape().isInside(pos, false)) return c;
+            }
+        
+            //         exportVTK("slopesearch");
+            //         exit(0);
+            cell = findCellBySlopeSearch_(pos, *refNode->cellSet().begin(),
+                                          count, false);
+            if (cell) return cell;
+        } else {
+            for (auto *b: refNode->boundSet()){
+                if (b->leftCell()) return b->leftCell();
+                if (b->rightCell()) return b->rightCell();
+            }
         }
 
-        cell = findCellBySlopeSearch_(pos, *refNode->cellSet().begin(),
-                                      count, false);
-        if (cell) return cell;
-
-//         exportVTK("slopesearch");
-//         exit(0);
         if (extensive || 0){
 //             __M
 //             std::cout << "More expensive test here" << std::endl;
@@ -1002,7 +1150,7 @@ void Mesh::setCellMarkers(const RVector & attribute){
 IVector Mesh::cellMarkers() const{
     IVector tmp(cellCount());
     std::transform(cellVector_.begin(), cellVector_.end(), tmp.begin(),
-                    std::mem_fn(&Cell::marker));
+                   std::mem_fn(&Cell::marker));
     return tmp;
 }
 
@@ -1242,29 +1390,30 @@ void Mesh::createRefined_(const Mesh & mesh, bool p2, bool h2){
 
                     for (Index j = 0; j < n.size(); j ++) {
 
-                        n[j] = createRefinementNode_(& this->node(c.node(Tet10NodeSplitZienk[j][0]).id()),
-                                                        & this->node(c.node(Tet10NodeSplitZienk[j][1]).id()),
+                        n[j] = createRefinementNode_(
+                        & this->node(c.node(Tet10NodeSplitZienk[j][0]).id()),
+                        & this->node(c.node(Tet10NodeSplitZienk[j][1]).id()),
                                                         nodeMatrix);
                     }
 
                     if (h2){
-                        this->createTetrahedron(*n[4], *n[6], *n[5], *n[0], cID);
-                        this->createTetrahedron(*n[4], *n[5], *n[6], *n[9], cID);
-                        this->createTetrahedron(*n[7], *n[9], *n[4], *n[1], cID);
-                        this->createTetrahedron(*n[7], *n[4], *n[9], *n[5], cID);
-                        this->createTetrahedron(*n[8], *n[7], *n[5], *n[2], cID);
-                        this->createTetrahedron(*n[8], *n[5], *n[7], *n[9], cID);
-                        this->createTetrahedron(*n[6], *n[9], *n[8], *n[3], cID);
-                        this->createTetrahedron(*n[6], *n[8], *n[9], *n[5], cID);
+                       this->createTetrahedron(*n[4], *n[6], *n[5], *n[0], cID);
+                       this->createTetrahedron(*n[4], *n[5], *n[6], *n[9], cID);
+                       this->createTetrahedron(*n[7], *n[9], *n[4], *n[1], cID);
+                       this->createTetrahedron(*n[7], *n[4], *n[9], *n[5], cID);
+                       this->createTetrahedron(*n[8], *n[7], *n[5], *n[2], cID);
+                       this->createTetrahedron(*n[8], *n[5], *n[7], *n[9], cID);
+                       this->createTetrahedron(*n[6], *n[9], *n[8], *n[3], cID);
+                       this->createTetrahedron(*n[6], *n[8], *n[9], *n[5], cID);
                     }
 
                 } else {
                     for (Index j = 0; j < n.size(); j ++) {
-                        n[j] = createRefinementNode_(& this->node(c.node(Tet10NodeSplit[j][0]).id()),
-                                                        & this->node(c.node(Tet10NodeSplit[j][1]).id()),
-                                                        nodeMatrix);
+                        n[j] = createRefinementNode_(
+                        & this->node(c.node(Tet10NodeSplit[j][0]).id()),
+                        & this->node(c.node(Tet10NodeSplit[j][1]).id()),
+                                                   nodeMatrix);
                     }
-
                     if (h2){
                         THROW_TO_IMPL
                     }
@@ -1496,17 +1645,13 @@ void Mesh::cleanNeighborInfos(){
 }
 
 void Mesh::createNeighborInfos(bool force){
-//     double med = 0.;
-//     __MS(neighborsKnown_ << " " <<force)
     if (!neighborsKnown_ || force){
         this->cleanNeighborInfos();
 
 //         Stopwatch sw(true);
 
         for (Index i = 0; i < cellCount(); i ++){
-//            if (i%10000 ==0) __MS(i);
             createNeighborInfosCell_(&cell(i));
-//             med+=sw.duration(true);
         }
         neighborsKnown_ = true;
     } else {
@@ -1939,7 +2084,7 @@ void Mesh::createMeshByCells(const Mesh & mesh, const std::vector < Cell * > & c
     }
 
     //! Create all remaining boundaries
-    createNeighborInfos();
+    // createNeighborInfos();
 }
 
 
@@ -2003,7 +2148,6 @@ Mesh Mesh::createSubMesh(const std::vector< Node * > & nodes) const {
     THROW_TO_IMPL
     return mesh;
 }
-
 
 void Mesh::addData(const std::string & name, const RVector & data) {
   //  std::cout << "add export Data: " << name << " " << min(data) << " "  << max(data) << std::endl;
@@ -2099,6 +2243,7 @@ void Mesh::mapBoundaryMarker(const std::map < int, int > & aMap){
         }
     }
 }
+
 void Mesh::prolongateEmptyCellsValues(RVector & vals, double background) const {
     IndexArray emptyList(find(abs(vals) < TOLERANCE));
     if (emptyList.size() == 0) return;
@@ -2389,8 +2534,12 @@ void Mesh::fillKDTree_() const {
     if (tree_->size() != nodeCount(true)){
 
         if (tree_->size() == 0){
-            for_each(nodeVector_.begin(), nodeVector_.end(), boost::bind(&KDTreeWrapper::insert, tree_, _1));
-            for_each(secNodeVector_.begin(), secNodeVector_.end(), boost::bind(&KDTreeWrapper::insert, tree_, _1));
+            // for_each(nodeVector_.begin(), nodeVector_.end(), boost::bind(&KDTreeWrapper::insert, tree_, _1));
+            // for_each(secNodeVector_.begin(), secNodeVector_.end(), boost::bind(&KDTreeWrapper::insert, tree_, _1));
+            for_each(nodeVector_.begin(), nodeVector_.end(), 
+                     [&](Node * n){tree_->insert(n);});
+            for_each(secNodeVector_.begin(), secNodeVector_.end(), 
+                     [&](Node * n){tree_->insert(n);});
 
             tree_->tree()->optimize();
         } else {
@@ -2585,6 +2734,7 @@ RegionMarker * Mesh::regionMarker(SIndex marker){
 }
 
 Index Mesh::hash() const {
+
     return GIMLI::hash(this->positions(true),
                        this->cellMarkers(),
                        this->boundaryMarkers(),

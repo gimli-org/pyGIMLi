@@ -45,7 +45,7 @@ for cell in mesh_layered.cells():
         vel = 1000.0
     vel_layered[cell.id()] = vel
 
-pg.show(mesh_layered, vel_layered, label="Velocity (m/s)")
+ax, cb = pg.show(mesh_layered, vel_layered, label="Velocity (m/s)")
 
 ###############################################################################
 # We now define the analytical solution. The traveltime at a given offset `x`
@@ -83,7 +83,7 @@ for node in mesh_gradient.nodes():
     vel_gradient.append(a + b * abs(node.y()))
 vel_gradient = pg.meshtools.nodeDataToCellData(mesh_gradient,
                                                np.array(vel_gradient))
-pg.show(mesh_gradient, vel_gradient, label="Velocity (m/s)")
+ax, cb = pg.show(mesh_gradient, vel_gradient, label="Velocity (m/s)")
 
 ###############################################################################
 # The traveltime for a gradient velocity model is given by:
@@ -178,8 +178,8 @@ for j, (case, mesh, vel) in enumerate(zip(["layered", "gradient"],
             sourceNode = mgr.fop.mesh().findNearestNode([0.0, 0.0])
 
             path = mgr.fop.dijkstra.shortestPath(sourceNode, recNode)
-            points = mgr.fop.mesh().positions(withSecNodes=True)[path]
-            ax[0, j].plot(pg.x(points), pg.y(points), cols[i], label=lab)
+            points = mgr.fop.mesh().positions(withSecNodes=True)[path].array()
+            ax[0, j].plot(points[:,0], points[:,1], cols[i], label=lab)
 
     t_ana = ana(px)
 

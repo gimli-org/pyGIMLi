@@ -1,68 +1,119 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Collection of several utility functions."""
-
-from __future__ import print_function
 import sys
 from math import floor, sqrt
 
 import numpy as np
-
 import pygimli as pg
 
-class ProgressBar(object):
-    """Animated text-based progressbar.
+# scooby is a soft dependency.
+try:
+    from scooby import Report as ScoobyReport
+except ImportError:
+    class ScoobyReport:
+        """Local scooby reporting class."""
+
+        def __init__(self, *args, **kwargs):
+            """Do nothing."""
+            pass
+
+        def __repr__(self):
+            """Representation."""
+            message = (
+                "`Report` requires `scooby`. Install via `pip install scooby` "
+                "or `conda install -c conda-forge scooby`."
+            )
+            return message
+
+        def to_dict(self):
+            """Convert to dictionary (empty for now)."""
+            return {}
+
+
+class ProgressBar:
+    """Animated text-based progress bar.
 
     Animated text-based progressbar for intensive loops. Should work in the
-    console and in the IPython Notebook.
-
-    Todo
-    ----
-     * optional: 'estimated time' instead of 'x of y complete'
-
-    Parameters
-    ----------
-    its : int
-        Number of iterations of the process.
-    width : int
-        Width of the ProgressBar, default is 80.
-    sign : str
-        Sign used to fill the bar.
-
-    Examples
-    --------
-    >>> from pygimli.utils import ProgressBar
-    >>> pBar = ProgressBar(its=20, width=40, sign='+')
-    >>> pBar.update(5)
-    \r[+++++++++++       30%                 ] 6 of 20 complete
+    console. In IPython Notebooks a 'tqdm' progressbar instance is created and
+    can be configured with appropriate keyword arguments.
     """
 
-    def __init__(self, its, width=80, sign=":"):
-        """Constructor."""
+    def __init__(self, its, width=80, sign=":", **kwargs):
+        #ruff: noqa: D301
+        """Create animated text-based progress bar.
+
+        TODO
+        * optional: 'estimated time' instead of 'x of y complete'
+
+        Arguments
+        ---------
+        its : int
+            Number of iterations of the process.
+        width : int
+            Width of the ProgressBar, default is 80.
+        sign : str
+            Sign used to fill the bar.
+
+        Keyword Args
+        ------------
+        Forwarded to create the tqdm progressbar instance. See
+        https://tqdm.github.io/docs/tqdm/
+
+        Examples
+        --------
+        >>> from pygimli.utils import ProgressBar
+        >>> pBar = ProgressBar(its=20, width=40, sign='+')
+        >>> pBar.update(5) # doctest: +ELLIPSIS
+        \r[+++++++++++       30%                 ] 6 of 20 complete
+        """
         self.its = int(its)
         self.width = width
         self.sign = sign[0]  # take first character only if sign is longer
         self.pBar = "[]"
         self._amount(0)
+        self.nbProgress = None
+        self._iter = -1
+
+        if pg.isNotebook():
+            tqdm = pg.optImport(
+                'tqdm', requiredFor="use nice progressbar in jupyter notebook")
+            if tqdm is not None:
+                from tqdm.notebook import tqdm
+                fmt = kwargs.pop(
+                    'bar_format',
+                    '{desc} {percentage:3.0f}%|{bar}|{n_fmt}/{total_fmt}' +
+                    ' [{elapsed} < {remaining}]')
+                self.nbProgress = tqdm(total=its, bar_format=fmt, **kwargs)
 
     def __call__(self, it, msg=""):
+        """Update progress."""
         self.update(it, msg)
 
     def update(self, iteration, msg=""):
-        """Update ProgressBar by iteration number starting at 0 with optional
-        message."""
-        self._setbar(iteration + 1)
-        if len(msg) >= 1:
-            self.pBar += " (" + msg + ")"
-        print("\r" + self.pBar, end="")
-        sys.stdout.flush()
+        """Update by iteration number starting at 0 with optional message."""
+        if self.nbProgress is not None:
+            # TODO maybe catch if someone doesn't call with iteration steps=1
+            self.nbProgress.update(n=iteration-self._iter)
+        else:
+            self._setbar(iteration + 1)
+            if len(msg) >= 1:
+                self.pBar += " (" + msg + ")"
+            print("\r" + self.pBar, end="")
+            sys.stdout.flush()
+
+        # last iteration here
         if iteration == self.its-1:
-            print()
+            if self.nbProgress is not None:
+                self.nbProgress.close()
+            else:
+                print()
+
+        self._iter = iteration
 
     def _setbar(self, elapsed_it):
         """Reset pBar based on current iteration number."""
         self._amount((elapsed_it / float(self.its)) * 100.0)
-        self.pBar += " %d of %s complete" % (elapsed_it, self.its)
+        self.pBar += f" {elapsed_it} of {self.its} complete"
 
     def _amount(self, new_amount):
         """Calculate amount by which to update the pBar."""
@@ -72,7 +123,7 @@ class ProgressBar(object):
         self.pBar = "[" + self.sign * num_signs + \
             " " * (full_width - num_signs) + "]"
         pct_place = (len(self.pBar) // 2) - len(str(pct_done))
-        pct_string = " %d%% " % pct_done
+        pct_string = f" {pct_done}% "
         self.pBar = self.pBar[0:pct_place] + \
             (pct_string + self.pBar[pct_place + len(pct_string):])
 
@@ -171,7 +222,7 @@ def prettify(value, roundValue=False):
         #             return super()._iterencode(o)
         #         except:
         #             return "{0} is not JSON serializable".format(type(o))
-            
+
         try:
             return json.dumps(value, indent=4)
         except Exception as e:
@@ -180,50 +231,146 @@ def prettify(value, roundValue=False):
     elif pg.isScalar(value):
         return prettyFloat(value, roundValue)
     pg.warn("Don't know how to prettify the string representation for: ",
-            value)
+            type(value), value)
     return value
 
 
-def prettyFloat(value, roundValue=False):
+def prettyFloat(value, roundValue=None):
     """Return prettified string for a float value.
 
-    TODO
+    Todo
     ----
-        add flag for round to
+        add number for round to
         add test
     """
-    ## test-cases:
-    # if change things her, look that they are still good (mod-dc-2d)
-    if roundValue and abs(round(value)-value) < 1e-4 and abs(value) < 1e3 and 0:
-        string = str(int(round(value, 2)))
+    # test-cases:
+    # if change things here, look that they are still good (mod-dc-2d)
+    if (isinstance(roundValue, int) and abs(round(value)-value) < 1e-4 and
+            abs(value) < 1e3 and 0):
+        string = str(int(round(value, roundValue)))
     elif abs(value) < 1e-14:
         string = "0"
     elif abs(value) > 1e4 or abs(value) <= 1e-3:
-        string = str("%.1e" % value)
+        string = f"{value:.1e}"
     elif abs(value) < 1e-2:
-        string = str("%.4f" % round(value, 4))
-    elif abs(value) < 1e-1:
-        string = str("%.3f" % round(value, 3))
+        string = f"{round(value, 4):.4f}"
+    # max two values after comma
+    # elif abs(value) < 1e-1:
+    #     string = str("%.3f" % round(value, 3))
     elif abs(value) < 1e0:
-        string = str("%.2f" % round(value, 2))
+        string = f"{round(value, 2):.2f}"
     elif abs(value) < 1e1:
-        string = str("%.2f" % round(value, 2))
+        string = f"{round(value, 2):.2f}"
     elif abs(value) < 1e2:
-        string = str("%.2f" % round(value, 2))
+        string = f"{round(value, 2):.2f}"
     else:
-        string = str("%.0f" % round(value, 2))
+        string = f"{round(value, 2):.0f}"
 
+    # pg._y(string)
+    # print(string.endswith("0") and string[-2] == '.')
     if string.endswith(".0"):
+        # pg._r(string.replace(".0", ""))
         return string.replace(".0", "")
-    elif '.' in string and string.endswith(".0"):
+    elif string.endswith(".00"):
+        return string.replace(".00", "")
+    elif '.' in string and 'e' not in string and string.endswith("00"):
+        return string[0:len(string)-2]
+    elif '.' in string and 'e' not in string and string.endswith("0"):
+        # pg._r(string[0:len(string)-1])
         return string[0:len(string)-1]
     else:
         return string
 
 
+def prettyTime(t):
+    """Return prettified time in seconds as string. No months, no leap year.
+
+    TODO
+    ----
+        * weeks (needed)
+        * > 1000 years
+
+    Args
+    ----
+    t: float
+        Time in seconds, should be > 0
+
+    Examples
+    --------
+    >>> from pygimli.utils import prettyTime
+    >>> print(prettyTime(1))
+    1 s
+    >>> print(prettyTime(3600*24))
+    1 day
+    >>> print(prettyTime(2*3600*24))
+    2 days
+    >>> print(prettyTime(365*3600*24))
+    1 year
+    >>> print(prettyTime(3600))
+    1 hour
+    >>> print(prettyTime(2*3600))
+    2 hours
+    >>> print(prettyTime(3660))
+    1h1m
+    >>> print(prettyTime(1e-3))
+    1 ms
+    >>> print(prettyTime(1e-6))
+    1 µs
+    >>> print(prettyTime(1e-9))
+    1 ns
+    """
+    if abs(t) > 1:
+        seconds = int(t)
+        years, seconds = divmod(seconds, 365*86400)
+        days, seconds = divmod(seconds, 86400)
+        hours, seconds = divmod(seconds, 3600)
+        minutes, seconds = divmod(seconds, 60)
+        if years > 0:
+            if days >= 1:
+                return f'{years}y{days}d'
+            else:
+                if years > 1:
+                    return f'{years} years'
+                else:
+                    return f'{years} year'
+        elif days > 0:
+            if hours >= 1:
+                return f'{days}d{hours}h'
+            else:
+                if days > 1:
+                    return f'{days} days'
+                else:
+                    return f'{days} day'
+        elif hours > 0:
+            if minutes >= 1:
+                return f'{hours}h{minutes}m'
+            else:
+                if hours > 1:
+                    return f'{hours} hours'
+                else:
+                    return f'{hours} hour'
+        elif minutes > 0:
+            if seconds >= 1:
+                return f'{minutes}m{seconds}s'
+            else:
+                if minutes > 1:
+                    return f'{minutes} minutes'
+                else:
+                    return f'{minutes} minute'
+        else:
+            return '{seconds} s'
+    else:
+        if abs(t) >= 1e-3 and abs(t) <= 0.1:
+            return prettyFloat(t*1e3) + " ms"
+        elif abs(t) >= 1e-6 and abs(t) <= 1e-3:
+            return prettyFloat(t*1e6) + " µs"
+        elif abs(t) >= 1e-9 and abs(t) <= 1e-6:
+            return prettyFloat(t*1e9) + " ns"
+        return prettyFloat(t) + " s"
+
+
 def niceLogspace(vMin, vMax, nDec=10):
-    """Create nice logarithmic space from the next decade lower to vMin to
-    decade larger then vMax.
+    """Nice logarithmic space from decade < vMin to decade > vMax.
 
     Parameters
     ----------
@@ -254,7 +401,7 @@ def niceLogspace(vMin, vMax, nDec=10):
     """
     if vMin > vMax or vMin < 1e-12:
         print("vMin:", vMin, "vMax", vMax)
-        raise Exception('vMin > vMax or vMin <= 0.')
+        raise ValueError('vMin > vMax or vMin <= 0.')
 
     vMin = 10**np.floor(np.log10(vMin))
     vMax = 10**np.ceil(np.log10(vMax))
@@ -272,14 +419,14 @@ def niceLogspace(vMin, vMax, nDec=10):
 def grange(start, end, dx=0, n=0, log=False):
     """Create array with possible increasing spacing.
 
-    Create either array from start step-wise filled with dx until end reached
-    [start, end] (like np.array with defined end).
-    Fill the array from start to end with n steps.
-    [start, end] (like np.linespace)
-    Fill the array from start to end with n steps but logarithmic increasing,
-    dx will be ignored.
+    Create either array from start step-wise filled with `dx` until end reached
+    `[start, end]` (like `np.array` with defined end).
+    Fill the array from `start` to `end` with `n` steps.
+    `[start, end]` (like `np.linespace`)
+    Fill the array from `start` to `end` with `n` steps but logarithmic
+    increasing, `dx` will be ignored.
 
-    Parameters
+    Attributes
     ----------
     start: float
         First value of the resulting array
@@ -292,6 +439,12 @@ def grange(start, end, dx=0, n=0, log=False):
     log: bool
         Logarithmic increasing range of length = n from start to end.
         dx will be ignored.
+
+    Returns
+    -------
+    ret: :gimliapi:`GIMLI::Vector`
+        Return resulting array
+
     Examples
     --------
     >>> from pygimli.utils import grange
@@ -301,11 +454,6 @@ def grange(start, end, dx=0, n=0, log=False):
     4 [0.0, 3.0, 6.0, 9.0]
     >>> print(v2)
     3 [0.0, 5.0, 10.0]
-
-    Returns
-    -------
-    ret: :gimliapi:`GIMLI::RVector`
-        Return resulting array
     """
     s = float(start)
     e = float(end)
@@ -329,7 +477,7 @@ def grange(start, end, dx=0, n=0, log=False):
         else:
             return pg.core.increasingRange(start, end, n)[1:]
     else:
-        raise Exception('Either dx or n have to be given.')
+        raise ValueError('Either dx or n have to be given.')
 
 
 def diff(v):
@@ -339,7 +487,7 @@ def diff(v):
 
     Parameters
     ----------
-    v : array(N) | pg.core.R3Vector(N)
+    v : array(N) | pg.PosVector(N)
         Array of double values or positions
 
     Returns
@@ -351,7 +499,7 @@ def diff(v):
     --------
     >>> import pygimli as pg
     >>> from pygimli.utils import diff
-    >>> p = pg.core.R3Vector(4)
+    >>> p = pg.PosVector(4)
     >>> p[0] = [0.0, 0.0]
     >>> p[1] = [0.0, 1.0]
     >>> print(diff(p)[0])
@@ -372,20 +520,20 @@ def diff(v):
     if isinstance(v, np.ndarray):
         if v.ndim == 2:
             if v.shape[1] < 4:
-                # v = pg.core.R3Vector(v.T)
+                # v = pg.PosVector(v.T)
                 vt = v.copy()
-                v = pg.core.R3Vector(len(vt))
+                v = pg.PosVector(len(vt))
                 for i, vi in enumerate(vt):
                     v.setVal(pg.RVector3(vi), i)
             else:
-                v = pg.core.R3Vector(v)
+                v = pg.PosVector(v)
         else:
             v = pg.Vector(v)
     elif isinstance(v, list):
-        v = pg.core.R3Vector(v)
+        v = pg.PosVector(v)
 
-    if isinstance(v, pg.core.R3Vector) or isinstance(v, pg.core.stdVectorRVector3):
-        d = pg.core.R3Vector(len(v) - 1)
+    if isinstance(v, (pg.PosVector, pg.core.stdVectorRVector3)):
+        d = pg.PosVector(len(v) - 1)
     else:
         d = pg.Vector(len(v) - 1)
 
@@ -399,7 +547,7 @@ def dist(p, c=None):
 
     Parameters
     ----------
-    p : ndarray(N,2) | ndarray(N,3) | pg.core.R3Vector
+    p : ndarray(N,2) | ndarray(N,3) | pg.PosVector
 
         Position array
     c : [x,y,z] [None]
@@ -415,7 +563,7 @@ def dist(p, c=None):
     >>> import pygimli as pg
     >>> from pygimli.utils import dist
     >>> import numpy as np
-    >>> p = pg.core.R3Vector(4)
+    >>> p = pg.PosVector(4)
     >>> p[0] = [0.0, 0.0]
     >>> p[1] = [0.0, 1.0]
     >>> print(dist(p))
@@ -442,18 +590,18 @@ def dist(p, c=None):
 
 
 def cumDist(p):
-    """The progressive, i.e., cumulative length for a path p.
+    """Create the progressive, i.e., cumulative length for a path p.
 
-    d = [0.0, d[0]+ | p[1]-p[0] |, d[1] + | p[2]-p[1] | + ...]
+    `d = [0.0, d[0]+ | p[1]-p[0] |, d[1] + | p[2]-p[1] | + ...]`
 
-    Parameters
+    Attributes
     ----------
-    p : ndarray(N,2) | ndarray(N,3) | pg.core.R3Vector
+    p: ndarray(N,2) | ndarray(N,3) | pg.PosVector
         Position array
 
     Returns
     -------
-    d : ndarray(N)
+    d: ndarray(N)
         Distance array
 
     Examples
@@ -461,7 +609,7 @@ def cumDist(p):
     >>> import pygimli as pg
     >>> from pygimli.utils import cumDist
     >>> import numpy as np
-    >>> p = pg.core.R3Vector(4)
+    >>> p = pg.PosVector(4)
     >>> p[0] = [0.0, 0.0]
     >>> p[1] = [0.0, 1.0]
     >>> p[2] = [0.0, 1.0]
@@ -473,12 +621,14 @@ def cumDist(p):
     d[1:] = np.cumsum(dist(diff(p)))
     return d
 
+
 def cut(v, n=2):
-    """Cuts the array v into n parts"""
+    """Cut array v into n parts."""
     N = len(v)
     Nc = N//n
     cv = [v[i*Nc:(i+1)*Nc] for i in range(n)]
     return cv
+
 
 def randn(n, seed=None):
     """Create n normally distributed random numbers with optional seed.
@@ -542,11 +692,7 @@ def getIndex(seq, f):
 def filterIndex(seq, idx):
     """TODO DOCUMENTME."""
     pg.error('filterIndex in use?')
-    if isinstance(seq, pg.Vector):
-        # return seq(idx)
-        ret = pg.Vector(len(idx))
-    else:
-        ret = list(range(len(idx)))
+    ret = pg.Vector(len(idx)) if isinstance(seq, pg.Vector) else list(range(len(idx)))
 
     for i, ix in enumerate(idx):
         ret[i] = seq[ix]
@@ -586,13 +732,13 @@ def unique_everseen(iterable, key=None):
     >>> list(unique_everseen(s2, key=str.lower))
     ['A', 'B', 'C', 'D']
 
-    See also
+    See Also
     --------
     unique, unique_rows
     """
     try:
         from itertools import ifilterfalse
-    except BaseException as _:
+    except BaseException:
         from itertools import filterfalse
 
     seen = set()
@@ -602,7 +748,7 @@ def unique_everseen(iterable, key=None):
             for element in ifilterfalse(seen.__contains__, iterable):
                 seen_add(element)
                 yield element
-        except BaseException as _:
+        except BaseException:
             for element in filterfalse(seen.__contains__, iterable):
                 seen_add(element)
                 yield element
@@ -623,37 +769,14 @@ def unique(a):
     >>> unique((1,1,2,2,3,1))
     [1, 2, 3]
 
-    See also
+    See Also
     --------
     unique_everseen, unique_rows
     """
     return list(unique_everseen(a))
 
 
-def unique_rows(array):
-    """Return unique rows in a 2D array.
-
-    Examples
-    --------
-    >>> from pygimli.utils import unique_rows
-    >>> import numpy as np
-    >>> A = np.array(([1,2,3],[3,2,1],[1,2,3]))
-    >>> unique_rows(A)
-    array([[1, 2, 3],
-           [3, 2, 1]])
-    """
-    b = array.ravel().view(
-        np.dtype((np.void, array.dtype.itemsize * array.shape[1])))
-    _, unique_idx = np.unique(b, return_index=True)
-
-    return array[np.sort(unique_idx)]
-    # A_1D = A.dot(np.append(A.max(0)[::-1].cumprod()[::-1][1:], 1))
-    # sort_idx = A_1D.argsort()
-    # mask = np.append(True, np.diff(A_1D[sort_idx]) !=0 )
-    # return A[sort_idx[np.nonzero(mask)[0][np.bincount(mask.cumsum()-1)==1]]]
-
-
-def uniqueRows(data, precition=2):
+def uniqueRows(data, precision=2):
     """Equivalent of Matlabs unique(data, 'rows') with tolerance check.
 
     Additionally returns forward and reverse indices
@@ -664,17 +787,15 @@ def uniqueRows(data, precition=2):
     >>> import numpy as np
     >>> A = np.array(([1,2,3],[3,2,1],[1,2,3]))
     >>> unA, ia, ib = uniqueRows(A)
-    >>> np.all(A[ia] == unA)
-    True
-    >>> np.all(unA[ib] == A)
+    >>> bool(np.all(A[ia] == unA))
     True
     """
-    fak = 100**precition
+    pg.deprecated(hint="Please use np.unique(axis=0) instead.")
+    fak = 100**precision
     dFix = np.fix(data * fak) / fak + 0.0
     dtype = np.dtype((np.void, dFix.dtype.itemsize * dFix.shape[1]))
     b = np.ascontiguousarray(dFix).view(dtype)
-    _, ia = np.unique(b, return_index=True)
-    _, ib = np.unique(b, return_inverse=True)
+    _, ia, ib = np.unique(b, return_index=True, return_inverse=True)
     return np.unique(b).view(dFix.dtype).reshape(-1, dFix.shape[1]), ia, ib
 
 
@@ -733,7 +854,7 @@ def uniqueAndSum(indices, to_sum, return_index=False, verbose=False):
     """
     flag_mult = len(indices) != indices.size
     if verbose:
-        print('Get {} indices for sorting'.format(np.shape(indices)))
+        print(f'Get {np.shape(indices)} indices for sorting')
     if flag_mult:
         ar = indices.ravel().view(
             np.dtype((np.void,
@@ -754,13 +875,10 @@ def uniqueAndSum(indices, to_sum, return_index=False, verbose=False):
     perm = ar.argsort(kind='mergesort')
     aux = ar[perm]
     flag = np.concatenate(([True], aux[1:] != aux[:-1]))
-    if flag_mult:
-        ret = (indices[perm[flag]], )
+    ret = (indices[perm[flag]], ) if flag_mult else (aux[flag], ) # unique indices
 
-    else:
-        ret = (aux[flag], )  # unique indices
     if verbose:
-        print('Identified {} unique indices'.format(np.shape(ret)))
+        print(f'Identified {np.shape(ret)} unique indices')
     if verbose:
         print('Performing reduceat...')
     summed = np.add.reduceat(to_sum[perm], np.nonzero(flag)[0])
@@ -774,10 +892,7 @@ def uniqueAndSum(indices, to_sum, return_index=False, verbose=False):
 
 
 def filterLinesByCommentStr(lines, comment_str='#'):
-    """
-    Filter all lines from a file.readlines output which begins with one of the
-    symbols in the comment_str.
-    """
+    """Filter lines from file.readlines() beginning with symbols in comment."""
     comment_line_idx = []
     for i, line in enumerate(lines):
         if line[0] in comment_str:
@@ -785,3 +900,33 @@ def filterLinesByCommentStr(lines, comment_str='#'):
     for j in comment_line_idx[::-1]:
         del lines[j]
     return lines
+
+
+class Report(ScoobyReport):
+    r"""Report date, time, system, and package version information.
+
+    Use ``scooby`` to report date, time, system, and package version
+    information in any environment, either as html-table or as plain text.
+
+    Parameters
+    ----------
+    additional : {package, str}, default: None
+        Package or list of packages to add to output information (must be
+        imported beforehand or provided as string).
+
+    """
+
+    def __init__(self, additional=None, **kwargs):
+        """Initialize a scooby.Report instance."""
+        # Mandatory packages.
+        core = ['pygimli', 'pgcore', 'numpy', 'matplotlib']
+        # Optional packages.
+        optional = ['scipy', 'tqdm', 'IPython', 'meshio', 'tetgen', 'pyvista']
+        inp = {
+            'additional': additional,
+            'core': core,
+            'optional': optional,
+            **kwargs  # User input overwrites defaults.
+        }
+
+        super().__init__(**inp)

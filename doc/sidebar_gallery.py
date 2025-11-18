@@ -13,9 +13,11 @@ import re
 from glob import glob
 from os.path import basename, dirname, join
 
+import pygimli as pg
 
 def make_gallery(src_path, out_path):
     """TODO DOCUMENTME."""
+    pg.info(f"Creating gallery: {src_path} at: {out_path}")
     example_dir = join(src_path, "examples")
     tutorial_dir = join(src_path, "tutorials")
     img_dir = "{{ pathto('_images', 1) }}"
@@ -29,16 +31,20 @@ def make_gallery(src_path, out_path):
     # Get captions
     def readRSTSecTitles(fname, verbose=False):
         """ Return list of section titles found in a given RST file. """
+        print('fname:', fname)
         rst_titles = re.compile(r"^(.+)\n[-=]+\n", flags=re.MULTILINE)
-        with open(fname) as f:
+        
+        with open(fname, encoding="utf8") as f:
+
             titles = re.findall(rst_titles, f.read())
             if verbose:
                 print(("File:", fname))
                 print(("Title:", titles))
+
         # go through lines only if compiled regex fails (py2/py3 issue)
         if not titles:
             print(("WARNING: Problem reading section title in", fname))
-            with open(fname) as f:
+            with open(fname, encoding="utf8") as f:
                 title = "unknown"
                 for line in f.readlines():
                     if "---" in line or "===" in line:
@@ -74,14 +80,14 @@ def make_gallery(src_path, out_path):
 
     html_bottom = """\
             </div>
-            <a class="carousel-control-prev" href="#sidebar_example_gallery" role="button"     data-slide="prev">
+            <button class="carousel-control-prev" type="button" data-bs-target="#sidebar_example_gallery" data-bs-slide="prev">
               <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-              <span class="sr-only">Previous</span>
-            </a>
-            <a class="carousel-control-next" href="#sidebar_example_gallery" role="button"     data-slide="next">
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#sidebar_example_gallery" data-bs-slide="next">
               <span class="carousel-control-next-icon" aria-hidden="true"></span>
-              <span class="sr-only">Next</span>
-            </a>
+              <span class="visually-hidden">Next</span>
+            </button>
           </div>"""
 
     html_item = """\

@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the resistivity.net development team          *
+ *   Copyright (C) 2006-2024 by the resistivity.net development team          *
  *   Carsten R�cker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *

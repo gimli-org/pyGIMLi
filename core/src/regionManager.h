@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2008-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2008-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *   Thomas Günther thomas@resistivity.net                                    *
  *                                                                            *
@@ -389,11 +389,12 @@ public:
         return this->interfaceConstraints_; 
     }
 
+    void findInterRegionInterfaces();
+    
 protected:
     void copy_(const RegionManager & rm);
 
     /*! Fill \ref interRegionInterfaceMap_ */
-    void findInterRegionInterfaces_();
 
     /*!
      * Internal method to create a region. The method is called from \ref setMesh()

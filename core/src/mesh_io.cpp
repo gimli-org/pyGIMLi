@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -912,10 +912,6 @@ void Mesh::exportVTK(const std::string & fbody,
             }
             file << std::endl;
 
-            RVector tmp(boundaryCount());
-            std::transform(boundaryVector_.begin(), boundaryVector_.end(),
-                           &tmp[0], std::mem_fun(&Boundary::marker));
-
             if (!bData.count("Marker")) bData["Marker"] = this->boundaryMarkers();
             
             if (bData.size() > 0){
@@ -1157,6 +1153,7 @@ void Mesh::importVTK(const std::string & fbody) {
 //     __MS(dimension_)
     //this->showInfos();
     file.close();
+
 }
 
 void Mesh::readVTKPoints_(std::fstream & file,
@@ -1241,12 +1238,41 @@ void Mesh::readVTKPolygons_(std::fstream & file, const std::vector < std::string
 
 void Mesh::readVTKScalars_(std::fstream & file, const std::vector < std::string > & row){
     std::string name(row[1]);
+    // __MS(str(row[0]) + " " + str(row[1]))
     std::vector < std::string > r(getRowSubstrings(file));
+    // __MS(r)
     if (r.size()){
         if (r[0] == "LOOKUP_TABLE"){
             r = getRowSubstrings(file);
         }
     }
+    // __MS(r)
+    // __MS(r.size())
+    // __MS((cellCount() > 1 || boundaryCount() > 1 || nodeCount() > 1))
+
+    std::vector < std::string > ri;
+    
+    if (r.size() == 1 && (cellCount() > 1 || boundaryCount() > 1 || nodeCount() > 1)){
+        // __M
+        bool go=true;
+        while (go){
+            ri = getNonEmptyRow(file);
+            if (ri.size() == 0){
+                go=false;
+            } else if (ri.size() > 1){
+                file.unget();
+                go=false;
+            } else{
+                r.push_back(ri[0]);
+            }
+        }
+        // std::vector < std::string > r(getRowSubstrings(file));
+        // THROW_TO_IMPL
+    }
+
+    // __MS(r)
+    // __MS(r.size())
+
     RVector data(r.size());
 //     std::cout.precision(14);
 //     std::cout << *r.begin() << std::endl;
@@ -1256,7 +1282,12 @@ void Mesh::readVTKScalars_(std::fstream & file, const std::vector < std::string 
 
     //std::copy(r.begin(), r.end(), data.begin(), bind< double >(toDouble);
     for (uint i = 0; i < data.size(); i ++) data[i] = toDouble(r[i]);
+    
     addData(name, data);
+    if (name == "Marker"){
+        if (data.size() == this->cellCount()) this->setCellMarkers(data);
+        if (data.size() == this->boundaryCount()) this->setBoundaryMarkers(data);
+    }
 }
 
 
@@ -1277,9 +1308,9 @@ void Mesh::exportVTU(const std::string & fbody, bool binary) const {
 
     std::map< std::string, RVector > data(dataMap_);
     if (cellCount() > 0){
-        RVector tmp(cellCount());
-        std::transform(cellVector_.begin(), cellVector_.end(), &tmp[0], std::mem_fun(&Cell::marker));
-        if (!data.count("_Marker")) data.insert(std::make_pair("_Marker",  tmp));
+        if (!data.count("_Marker")) {
+            data.insert(std::make_pair("_Marker",  this->cellMarkers()));
+        }
         if (!data.count("_Attribute")) data.insert(std::make_pair("_Attribute",  cellAttributes()));
     }
     addVTUPiece_(file, *this, data);
@@ -1315,12 +1346,10 @@ void Mesh::exportBoundaryVTU(const std::string & fbody, bool binary) const {
     //for (uint i =0; i < boundMesh.nodeCount(); i ++) std::cout << boundMesh.node(i)<< std::endl;
     std::map< std::string, RVector > boundData;
 
-    RVector tmp(boundMesh.boundaryCount());
-    std::transform(boundMesh.boundaries().begin(),
-                   boundMesh.boundaries().end(),
-                   &tmp[0], std::mem_fun(&Boundary::marker));
-
-    if (!boundData.count("_BoundaryMarker")) boundData.insert(std::make_pair("_BoundaryMarker",  tmp));
+    if (!boundData.count("_BoundaryMarker")) {
+        boundData.insert(std::make_pair("_BoundaryMarker", 
+                         boundMesh.boundaryMarkers()));
+    }
 
     //boundMesh.exportVTK(fbody, boundData);
     addVTUPiece_(file, boundMesh, boundData);
@@ -1529,7 +1558,6 @@ void Mesh::importSTL(const std::string & fileName, bool isBinary, double snap){
         int nFaces = 0;
         ret = fread(&nFaces, 4, 1, file);
         if (ret == 0) throwError(WHERE_AM_I + " Oops");
-        __MS(nFaces)
 
         float rd[48];
         char padding[2];

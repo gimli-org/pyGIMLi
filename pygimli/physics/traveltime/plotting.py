@@ -1,13 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Plotting functions for traveltime."""
-# general purpose
-import matplotlib.pyplot as plt
 import numpy as np
-# pygimli
+
 import pygimli as pg
-from pygimli.viewer.mpl import createColorBar  # , updateColorBar
-# local
+from pygimli.viewer.mpl import createColorBar
 from .utils import shotReceiverDistances
 
 
@@ -34,7 +30,7 @@ def drawTravelTimeData(ax, data, t=None):
 
     ax.set_xlim([min(x), max(x)])
     ax.set_ylim([max(tShow), -0.002])
-    ax.figure.show()
+    ax.figure.show()  # a draw function should never trigger a figure show
 
     for shot in shots:
         gIdx = pg.find(data('s') == shot)
@@ -55,7 +51,7 @@ def drawTravelTimeData(ax, data, t=None):
             np.zeros(len(geoph)) + 3. * yPixel, 'r^', markersize=8)
 
     ax.grid()
-    ax.set_ylim([max(tShow), +16. * yPixel])
+    ax.set_ylim([max(tShow), + 16. * yPixel])
     ax.set_xlim([min(x) - 5. * xPixel, max(x) + 5. * xPixel])
 
     ax.set_xlabel('x-Coordinate [m]')
@@ -70,27 +66,44 @@ def plotFirstPicks(ax, data, tt=None, plotva=False, marker='x-'):
 
 
 def drawFirstPicks(ax, data, tt=None, plotva=False, **kwargs):
-    """Plot first arrivals as lines."""
+    """Plot first arrivals as lines.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes
+        axis to draw the lines in
+    data : :gimliapi:`GIMLI::DataContainer`
+        data containing shots ("s"), geophones ("g") and traveltimes ("t").
+        (`:py:class:pygimli.physics.traveltime.DataContainerTT.`)
+    Return
+    ------
+    gci : list
+        list of plotting items (matplotlib lines)
+    """
     px = pg.x(data)
-    gx = np.array([px[int(g)] for g in data("g")])
-    sx = np.array([px[int(s)] for s in data("s")])
+    gx = np.array([px[int(g)] for g in data["g"]])
+    sx = np.array([px[int(s)] for s in data["s"]])
     if tt is None:
-        tt = np.array(data("t"))
+        tt = data["t"]
+
     if plotva:
         tt = np.absolute(gx - sx) / tt
 
     uns = np.unique(sx)
 
-    cols = plt.cm.tab10(np.arange(10))
+    cols = pg.plt.cm.tab10(np.arange(10))
     kwargs.setdefault('marker', 'x')
     kwargs.setdefault('markersize', 8)
     kwargs.setdefault('linestyle', '-')
+    plotSource = kwargs.pop('plotSource', True)
+    GCI = []
     for i, si in enumerate(uns):
         ti = tt[sx == si]
         gi = gx[sx == si]
         ii = gi.argsort()
-        ax.plot(gi[ii], ti[ii], color=cols[i % 10], **kwargs)
-        ax.plot(si, 0., 's', color=cols[i % 10])
+        GCI.append(ax.plot(gi[ii], ti[ii], color=cols[i % 10], **kwargs))
+        if plotSource:
+            ax.plot(si, 0., 's', color=cols[i % 10])
 
     ax.grid(True)
     if plotva:
@@ -100,15 +113,10 @@ def drawFirstPicks(ax, data, tt=None, plotva=False, **kwargs):
 
     ax.set_xlabel("x (m)")
     ax.invert_yaxis()
+    return ax
 
 
-def _getOffset(data, full=False):
-    """Return vector of offsets (in m) between shot and receiver."""
-    pg.deprecated('use shotReceiverDistances')  # 190429 ??
-    return shotReceiverDistances(data, full)
-
-
-# better be renamed to showData and optionally show first pick curves
+# better be renamed to showData and optionaly show first pick curves
 def showVA(data, usePos=True, ax=None, **kwargs):
     """Show apparent velocity as image plot.
 
@@ -122,7 +130,7 @@ def showVA(data, usePos=True, ax=None, **kwargs):
 
     cBar = createColorBar(gci, **kwargs)
 
-    return gci, cBar
+    return ax, cBar
 
 
 def drawVA(ax, data, vals=None, usePos=True, pseudosection=False, **kwargs):
@@ -132,7 +140,7 @@ def drawVA(ax, data, vals=None, usePos=True, pseudosection=False, **kwargs):
     ----------
     ax : mpl.Axes
 
-    data : pg.DataContainer()
+    data : pg.physics.traveltime.DataContainerTT()
         Datacontainer with 's' and 'g' Sensorindieces and 't' traveltimes.
 
     usePos: bool [True]
@@ -160,40 +168,25 @@ def drawVA(ax, data, vals=None, usePos=True, pseudosection=False, **kwargs):
         print(vals)
         pg.error('zero traveltimes found.')
     va = offset / vals
-
+    kwargs.setdefault('squeeze', True)
+    kwargs.setdefault('logScale', False)
+    kwargs.setdefault('label', pg.unit('va'))
+    kwargs.setdefault('cMap', pg.utils.cMap('va'))
     if pseudosection:
         midpoint = (gx + sx) / 2
-        gci = pg.viewer.mpl.dataview.drawVecMatrix(ax, midpoint, offset, va,
-                                                  queeze=True,
-                                                  label=pg.unit('as'))
+        gci = pg.viewer.mpl.dataview.drawVecMatrix(ax, midpoint, offset, va, **kwargs)
     else:
-        gci = pg.viewer.mpl.dataview.drawVecMatrix(ax, gx, sx, va,
-                                                  squeeze=True,
-                                                  label=pg.unit('as'))
+        gci = pg.viewer.mpl.dataview.drawVecMatrix(ax, data["g"], data["s"], va, **kwargs)
 
-    # A = np.ones((data.sensorCount(), data.sensorCount())) * np.nan
-    # for i in range(data.size()):
-    #     A[int(data('s')[i]), int(data('g')[i])] = va[i]
-    # gci = ax.imshow(A, interpolation='nearest')
-    # ax.grid(True)
+    ax.set_xlabel('Receiver Index')
+    ax.set_ylabel('Shot Index')
 
     if usePos:
-        xt = np.arange(0, data.sensorCount(), 50)
+        nt = np.maximum(data.sensorCount() // 50, 10)
+        xt = np.arange(0, data.sensorCount(), nt)
         ax.set_xticks(xt)
         ax.set_xticklabels([str(int(px[xti])) for xti in xt])
         ax.set_yticks(xt)
         ax.set_yticklabels([str(int(px[xti])) for xti in xt])
 
     return gci
-
-
-def plotLines(ax, line_filename, step=1):
-    xz = np.loadtxt(line_filename)
-    n_points = xz.shape[0]
-    if step == 2:
-        for i in range(0, n_points, step):
-            x = xz[i:i + step, 0]
-            z = xz[i:i + step, 1]
-            ax.plot(x, z, 'k-')
-    if step == 1:
-        ax.plot(xz[:, 0], xz[:, 1], 'k-')

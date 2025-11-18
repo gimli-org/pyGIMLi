@@ -36,7 +36,7 @@ extension-pkg-whitelist=
 # operator. Joining a lot of strings can lead to a maximum recursion error in
 # Pylint and this flag can prevent that. It has one side effect, the resulting
 # AST will be different than the one from reality.
-optimize-ast=no
+# optimize-ast=no
 
 
 [MESSAGES CONTROL]
@@ -59,7 +59,9 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=R0204,C0413,E0401,W1609,W1626,W1617,E1604,W1610,W1606,W1637,W1619,W1615,W1639,W1638,W1612,E1606,W1618,W1630,W1632,I0020,W1622,W1634,W1633,W1640,I0021,E1603,W1635,E1605,W1602,W1614,W1625,W1611,W1604,E1607,W1629,E1602,W1628,W1605,W1608,W1601,W0704,W1607,W1627,W1603,W1624,W1616,W1621,W1623,W1620,E1608,E1601,W1636,W1613
+# disable=R0204,C0413,E0401,W1609,W1626,W1617,E1604,W1610,W1606,W1637,W1619,W1615,W1639,W1638,W1612,E1606,W1618,W1630,W1632,I0020,W1622,W1634,W1633,W1640,I0021,E1603,W1635,E1605,W1602,W1614,W1625,W1611,W1604,E1607,W1629,E1602,W1628,W1605,W1608,W1601,W0704,W1607,W1627,W1603,W1624,W1616,W1621,W1623,W1620,E1608,E1601,W1636,W1613
+# disable=R0204,C0413,E0401,W1639,W1638,W1612,E1606,W1618,W1630,W1632,I0020,W1622,W1634,W1633,W1640,I0021,E1603,W1635,E1605,W1602,W1614,W1625,W1611,W1604,E1607,W1629,E1602,W1628,W1605,W1608,W1601,W0704,W1607,W1627,W1603,W1624,W1616,W1621,W1623,W1620,E1608,E1601,W1636,W1613,C0209,W0212,E1121,W0719,C0103
+disable=C0413,E0401,I0020,I0021,C0209,W0212,E1121,W0719,C0103
 
 
 [REPORTS]
@@ -72,7 +74,7 @@ output-format=text
 # Put messages in a separate file for each module / package specified on the
 # command line instead of printing them on stdout. Reports (if any) will be
 # written in a file name "pylint_global.[txt|html]".
-files-output=no
+# files-output=no
 
 # Tells whether to display a full report or only the messages
 reports=yes
@@ -102,7 +104,13 @@ ignore-long-lines=^\s*(# )?<?https?://\S+>?$
 single-line-if-stmt=no
 
 # List of optional constructs for which whitespace checking is disabled
-no-space-check=trailing-comma,dict-separator
+# no-space-check=trailing-comma,dict-separator
+
+# Unrecognized option found: optimize-ast, files-output, no-space-check, 
+# bad-functions, function-name-hint, method-name-hint, const-name-hint, 
+# argument-name-hint, class-attribute-name-hint, attr-name-hint, module-name-hint, 
+# class-name-hint, inlinevar-name-hint, variable-name-hint
+# PylintE0015:unrecognized-option
 
 # Maximum number of lines in a module
 max-module-lines=2000
@@ -166,7 +174,7 @@ callbacks=cb_,_cb
 [BASIC]
 
 # List of builtins function names that should not be used, separated by a comma
-bad-functions=map,filter
+# bad-functions=map,filter
 
 # Good variable names which should always be accepted, separated by a comma
 good-names=i,j,k,ex,Run,_

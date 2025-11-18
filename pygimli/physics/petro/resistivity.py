@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """For the manager look at BERT https://gitlab.com/resistivity-net/bert."""
 
 import numpy as np
@@ -42,11 +41,6 @@ def resistivityArchie(rFluid, porosity, a=1.0, m=2.0, sat=1.0, n=2.0,
         We experience some unstable nonlinear behavior.
         Until this is clarified all results are rounded to the precision 1e-6.
 
-    Examples
-    --------
-    >>> #
-
-    WRITEME
     """
     phi = porosity
     if isinstance(porosity, list):
@@ -125,7 +119,7 @@ def transFwdArchiePhi(rFluid=20, m=2):
 
     Returns
     -------
-    trans : :gimliapi:`GIMLI::RTransPower`
+    trans : :gimliapi:`TransPower`
         Transformation function
 
     Examples
@@ -175,8 +169,6 @@ def transInvArchieS(rFluid=20, phi=0.4, m=2, n=2):  # S(rho)
 
 def test_Archie():
     """Test Archie."""
-    import unittest
-
     dx = 0.01
     phivec = np.arange(dx, 0.5, dx)
     swvec = np.arange(dx, 1, dx)

@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *   Thomas Günther thomas@resistivity.net                                    *
  *                                                                            *
@@ -131,7 +131,7 @@ public:
         Edge_ second;
     };
 
-    template < class T > class ComparePairsClass_ : public std::binary_function< T, T, T > {
+    template < class T > class ComparePairsClass_ {
     public:
         bool operator() (const T & lhs, const T & rhs) {
             return lhs.first > rhs.first;

@@ -23,7 +23,7 @@ pg.show(mesh, savefig='mesh.pdf')
 # $\diverg(a\grad T)=0$ with $T(bottom)=1$, $T(top)=0$
 T = pg.solver.solve(mesh,
                     a=[[1, 1.0], [2, 2.0], [3, 3.0], [4, 0.1]],
-                    bc={'Dirichlet':{8:1.0, 4:0.0}},
+                    bc={'Dirichlet': {8: 1.0, 4: 0.0}},
                     verbose=True)
 
 ax, _ = pg.show(mesh, data=T, label='Temperature $T$', cMap="hot_r",

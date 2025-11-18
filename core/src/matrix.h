@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2007-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2007-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -134,7 +134,6 @@ Pos operator * (const Matrix3 < ValueType > & A, const Pos & b) {
 /*! Pure virtual interface class for matrices.
  * If you want your own Jacobian matrix to be used in \ref Inversion or \ref ModellingBase
  you have to derive your matrix from this class and implement all necessary members. */
-
 class DLLEXPORT MatrixBase{
 public:
 
@@ -156,29 +155,29 @@ public:
 
     /*! Return number of cols */
     virtual Index rows() const {
-       THROW_TO_IMPL
+       log(Warning, "no rows() implemented for: ", typeid(*this).name());
        return 0;
     }
 
     /*! Return number of colums */
     virtual Index cols() const {
-        THROW_TO_IMPL
+        log(Warning, "no cols() implemented for: ", typeid(*this).name());
         return 0;
     }
 
     /*! Resize this matrix to rows, cols */
     virtual void resize(Index rows, Index cols){
-       THROW_TO_IMPL
+       log(Warning, "no resize(Index rows, Index cols) implemented for: ", typeid(*this).name());
     }
 
     /*! Fill Vector with 0.0. Don't change size.*/
     virtual void clean() {
-        THROW_TO_IMPL
+        log(Warning, "no clean() implemented for: ", typeid(*this).name());
     }
 
     /*! Clear the data, set size to zero and frees memory. */
     virtual void clear() {
-        THROW_TO_IMPL
+        log(Warning, "no clear() implemented for: ", typeid(*this).name());
     }
 
     /*! Return this * a. For being numpy api-compatible  */
@@ -188,34 +187,34 @@ public:
 
     /*! Return this * a  */
     virtual RVector mult(const RVector & a) const {
-       THROW_TO_IMPL
+       log(Warning, "no RVector mult(const RVector & a) implemented for: ", typeid(*this).name());
        return RVector(rows());
     }
 
     /*! Return this * a  */
     virtual CVector mult(const CVector & a) const {
-       THROW_TO_IMPL
-       return CVector(rows());
+        log(Warning, "no CVector mult(const CVector & a) implemented for: ", typeid(*this).name());
+        return CVector(rows());
     }
 
     virtual RVector mult(const RVector & b, Index startI, Index endI) const {
-        THROW_TO_IMPL
+        log(Warning, "no RVector mult(const RVector & b, Index startI, Index endI) implemented for: ", typeid(*this).name());
         return RVector(rows());
     }
     virtual CVector mult(const CVector & b, Index startI, Index endI) const {
-        THROW_TO_IMPL
+        log(Warning, "no CVector mult(const CVector & b, Index startI, Index endI) implemented for: ", typeid(*this).name());
         return CVector(rows());
     }
 
     /*! Return this.T * a */
     virtual RVector transMult(const RVector & a) const {
-        THROW_TO_IMPL
+        log(Warning, "no RVector transMult(const RVector & a) implemented for: ", typeid(*this).name());
         return RVector(cols());
     }
 
     /*! Return this.T * a */
     virtual CVector transMult(const CVector & a) const {
-        THROW_TO_IMPL
+        log(Warning, "no CVector transMult(const CVector & a) implemented for: ", typeid(*this).name());
         return CVector(cols());
     }
 /*
@@ -270,7 +269,7 @@ public:
 
     /*! Save this matrix into the file filename given. */
     virtual void save(const std::string & filename) const {
-        log(Warning, "save for this matrix type is not supported");
+        log(Warning, "no save(const std::string & filename) implemented for: ", typeid(*this).name());
     }
 
 protected:
@@ -847,37 +846,9 @@ bool load(Matrix < ValueType > & A, const std::string & filename){
     return loadMatrixVectorsBin(A, filename);
 }
 
-/*! Force to load single matrix binary file.
-    Format: see \ref save(const Matrix < ValueType > & A, const std::string & filename). */
-template < class ValueType >
-bool loadMatrixSingleBin(Matrix < ValueType > & A,
-                          const std::string & filename){
 
-    FILE *file; file = fopen(filename.c_str(), "r+b");
-
-    if (!file) {
-        throwError(WHERE_AM_I + " " +
-                   filename + ": " + strerror(errno));
-    }
-    Index ret;
-    uint32 rows = 0;
-    ret = fread(&rows, sizeof(uint32), 1, file);
-    if (ret == 0) throwError("fail reading file " + filename);
-    uint32 cols = 0;
-    ret = fread(&cols, sizeof(uint32), 1, file);
-    if (ret == 0) throwError("fail reading file " + filename);
-
-    A.resize(rows, cols);
-    for (uint32 i = 0; i < rows; i ++){
-        for (uint32 j = 0; j < cols; j ++){
-            ret = fread((char*)&A[i][j], sizeof(ValueType), 1, file);
-            if (ret == 0) throwError("fail reading file " + filename);
-        }
-    }
-    fclose(file);
-    A.rowFlag().fill(1);
-    return true;
-}
+DLLEXPORT bool loadMatrixSingleBin(RMatrix & A, const std::string & filename);
+DLLEXPORT bool loadMatrixSingleBin(CMatrix & A, const std::string & filename);
 
 /*! Force to load multiple binary vector files into one matrix (row-based). File name will be determined from filenamebody + successive increased number (read while files exist). \n
 e.g. read "filename.0.* ... filename.n.* -> Matrix[0--n)[0..vector.size())\n
@@ -885,38 +856,8 @@ kCount can be given to use as subcounter. \n
 e.g. read "filename.0_0.* ... filename.n_0.* ... filename.0_kCount-1.* ... filename.n_kCount-1.* ->
 Matrix[0--n*kCount)[0..vector.size())
 */
-template < class ValueType >
-bool loadMatrixVectorsBin(Matrix < ValueType > & A,
-                            const std::string & filenameBody, uint kCount = 1){
-
-    A.clear();
-    Vector < ValueType > tmp;
-    std::string filename;
-
-    for (uint i = 0; i < kCount; i++){
-        uint count = 0;
-        while (1){ // load as long as posible
-            if (kCount > 1){
-                filename = filenameBody + "." + str(count) + "_" + str(i) + ".pot";
-            } else {
-                filename = filenameBody + "." + str(count) + ".pot";
-            }
-
-            if (!fileExist(filename)){
-                filename = filenameBody + "." + str(count);
-                if (!fileExist(filename)){
-                    if (count == 0) {
-	               std::cerr << " can not found: " << filename << std::endl;
-                    }
-                    break;
-                }
-            }
-            if (load(tmp, filename, Binary )) A.push_back(tmp);
-            count ++;
-        } // while files exist
-    } // for each k count
-    return true;
-}
+DLLEXPORT bool loadMatrixVectorsBin(RMatrix & A, const std::string & filenameBody, uint kCount=1);
+DLLEXPORT bool loadMatrixVectorsBin(CMatrix & A, const std::string & filenameBody, uint kCount=1);
 
 /*! Save Matrix into Ascii File (column based). */
 template < class ValueType >
@@ -1092,6 +1033,12 @@ template < class Matrix > double det(const Matrix & A){
             det = A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]) -
                   A[0][1] * (A[1][0] * A[2][2] - A[1][2] * A[2][0]) +
                   A[0][2] * (A[1][0] * A[2][1] - A[1][1] * A[2][0]);
+
+            // .T
+            // det = A[0][0] * (A[1][1] * A[2][2] - A[2][1] * A[1][2])-
+            //       A[1][0] * (A[0][1] * A[2][2] - A[2][1] * A[0][2])+
+            //       A[2][0] * (A[0][1] * A[1][2] - A[1][1] * A[0][2]);
+
             break;
         default:
             std::cerr << WHERE_AM_I << " matrix determinant of dim not yet implemented -- dim: " << A.rows() << std::endl;

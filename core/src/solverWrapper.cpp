@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -21,28 +21,12 @@
 
 namespace GIMLI{
 
-SolverWrapper::SolverWrapper( ){ dummy_ = true; }
-
-SolverWrapper::SolverWrapper(const RSparseMatrix & S,
-                             bool verbose)
+SolverWrapper::SolverWrapper(bool verbose)
     : verbose_(verbose){
     dummy_ = true;
-    dim_ = S.size();
-    nVals_ = S.nVals();
     tolerance_ = 1e-12;
     dropTol_ = 0.0;
     isComplex_ = false;
-}
-
-SolverWrapper::SolverWrapper(const CSparseMatrix & S,
-                             bool verbose)
-    : verbose_(verbose){
-    dummy_ = true;
-    dim_ = S.size();
-    nVals_ = S.nVals();
-    tolerance_ = 1e-12;
-    dropTol_ = 0.0;
-    isComplex_ = true;
 }
 
 SolverWrapper::~SolverWrapper(){ }

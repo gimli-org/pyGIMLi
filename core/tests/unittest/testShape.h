@@ -86,6 +86,31 @@ public:
         CPPUNIT_ASSERT(::fabs(det(inv(tet1_->shape().createJacobian())) - 1.0) < TOLERANCE);
         CPPUNIT_ASSERT(::fabs(det(inv(tet2_->shape().createJacobian())) + 1.0) < TOLERANCE);
         CPPUNIT_ASSERT(::fabs(det(inv(tet3_->shape().createJacobian())) + 1.0) < TOLERANCE);
+
+        // need checks with alternative J calculation
+        // Mesh m2(2);
+        // Node *n20 = m2.createNode(0.0, 0.0, 0.0);
+        // Node *n21 = m2.createNode(1.0, 0.0, 0.0);
+        // Node *n22 = m2.createNode(0.0, 1.0, 0.0);
+        
+        // m2.createCell(GIMLI::IndexArray(std::vector< Index >{0,1,2}));
+        // __MS(::fabs(det(m2.cell(0).shape().createJacobian())))
+        
+        // m2.createCell(GIMLI::IndexArray(std::vector< Index >{2,1,0}));
+        // __MS(::fabs(det(m2.cell(1).shape().createJacobian())))
+
+
+        // Mesh m3(3);
+        // Node *n30 = m3.createNode(0.0, 0.0, 0.0);
+        // Node *n31 = m3.createNode(1.0, 0.0, 0.0);
+        // Node *n32 = m3.createNode(0.0, 1.0, 0.0);
+        // Node *n33 = m3.createNode(0.0, 0.0, 1.0);
+
+        // m3.createCell(GIMLI::IndexArray(std::vector< Index >{3,2,1,0}));
+        // __MS(::fabs(det(m3.cell(0).shape().createJacobian())))
+        
+        // m3.createCell(GIMLI::IndexArray(std::vector< Index >{0,1,2,3}));
+        // __MS(::fabs(det(m3.cell(1).shape().createJacobian())))
     }
     void testTouch(){
         CPPUNIT_ASSERT(t1_->shape().isInside(t1_->shape().center(), false));

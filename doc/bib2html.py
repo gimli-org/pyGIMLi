@@ -25,7 +25,7 @@ def write_html():
         entry["author"] = entry["author"].replace(" and ", ", ")
         entry["author"] = entry["author"].replace("~", " ")
         if not "journal" in entry:
-            entry["journal"] = entry.pop("booktitle")
+            entry["journal"] = entry.pop("booktitle", "JOURNAL_MISSING")
         entry["journal"] = "<i>%s</i>" % entry["journal"]
         if not "doi" in entry:
             string = ""

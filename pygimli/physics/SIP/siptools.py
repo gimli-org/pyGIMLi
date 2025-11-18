@@ -1,43 +1,43 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """pygimli functions for dc resistivity / SIP data."""
 
-# TODO Please sort the content into SIP package!
-
-import pylab as P
-import numpy as N
+from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
 
 import pygimli as pg
 from pygimli.utils import rndig
-
+from .importData import load
 
 def astausgleich(ab2org, mn2org, rhoaorg):
-    """shifts the branches of a dc sounding to generate a matching curve."""
-    ab2 = P.asarray(ab2org)
-    mn2 = P.asarray(mn2org)
-    rhoa = P.asarray(rhoaorg)
-    um = P.unique(mn2)
+    """Shift the branches of a dc sounding to generate a matching curve."""
+    ab2 = np.asarray(ab2org)
+    mn2 = np.asarray(mn2org)
+    rhoa = np.asarray(rhoaorg)
+    um = np.unique(mn2)
     for i in range(len(um) - 1):
         r0, r1 = [], []
-        ac = P.intersect1d(ab2[mn2 == um[i]], ab2[mn2 == um[i + 1]])
+        ac = np.intersect1d(ab2[mn2 == um[i]], ab2[mn2 == um[i + 1]])
         for a in ac:
             r0.append(rhoa[(ab2 == a) * (mn2 == um[i])][0])
             r1.append(rhoa[(ab2 == a) * (mn2 == um[i + 1])][0])
 
         if len(r0) > 0:
-            fak = P.mean(P.array(r0) / P.array(r1))
+            fak = np.mean(np.array(r0) / np.array(r1))
             print(fak)
-            if P.isfinite(fak) and fak > 0.:
+            if np.isfinite(fak) and fak > 0.:
                 rhoa[mn2 == um[i + 1]] *= fak
 
     return rhoa  # formerly pg as vector
 
 
 def loadSIPallData(filename, outnumpy=False):
-    """load SIP data with the columns ab/2,mn/2,rhoa and PHI with the
-    corresponding frequencies in the first row."""
+    """Load SIP data with the columns ab/2,mn/2,rhoa and PHI.
+
+    with the corresponding frequencies in the first row.
+    """
     if outnumpy:
-        A = N.loadtxt(filename)
+        A = np.loadtxt(filename)
         fr = A[0, 3:]
         ab2 = A[1:, 0]
         mn2 = A[1:, 1]
@@ -59,31 +59,31 @@ def loadSIPallData(filename, outnumpy=False):
 
 
 def makeSlmData(ab2, mn2, rhoa=None, filename=None):
-    """generate a pygimli data container from ab/2 and mn/2 array."""
+    """Generate a pygimli data container from ab/2 and mn/2 array."""
     data = pg.DataContainer()
     data.resize(len(ab2))
-    pos = N.unique(N.hstack((ab2, mn2)))
+    pos = np.unique(np.hstack((ab2, mn2)))
 
-    for elx in N.hstack((-pos[::-1], pos)):
+    for elx in np.hstack((-pos[::-1], pos)):
         data.createElectrode(elx, 0., 0.)
 
     if filename is not None:
-        f = open(filename, 'w')
-        f.write(str(len(pos) * 2) + '\n#x y z\n')
-        for elx in N.hstack((-pos[::-1], pos)):
-            f.write(str(elx) + '\t0\t0\n')
-            f.write(str(len(ab2)) + '\n#a\tb\tm\tn\tk\trhoa\n')
+        with Path(filename).open('w') as f:
+            f.write(str(len(pos) * 2) + '\n#x y z\n')
+            for elx in np.hstack((-pos[::-1], pos)):
+                f.write(str(elx) + '\t0\t0\n')
+                f.write(str(len(ab2)) + '\n#a\tb\tm\tn\tk\trhoa\n')
 
     lpos = len(pos)
     iab = pos.searchsorted(ab2)
     imn = pos.searchsorted(mn2)
 
     if (filename is not None) & (rhoa is None):
-        rhoa = N.ones(len(ab2))
+        rhoa = np.ones(len(ab2))
 
     for i in range(len(iab)):
         # print -pos[iab[i]], -pos[imn[i]], pos[imn[i]], pos[iab[i]]
-        k = (ab2[i]**2 - mn2[i]**2) * N.pi / mn2[i] / 2.0
+        k = (ab2[i]**2 - mn2[i]**2) * np.pi / mn2[i] / 2.0
         if filename is not None:
             f.write(str(lpos - iab[i]) + '\t' + str(lpos + iab[i] + 1) + '\t')
             f.write(str(lpos - imn[i]) + '\t' + str(lpos + imn[i] + 1) + '\t')
@@ -99,102 +99,94 @@ def makeSlmData(ab2, mn2, rhoa=None, filename=None):
 
 
 def showsounding(ab2, rhoa, resp=None, mn2=None, islog=True, xlab=None):
-    """
-        Display a sounding curve (rhoa over ab/2) and an additional response.
-    """
+    """Display a sounding curve (rhoa over ab/2) and an additional response."""
     if xlab is None:
         xlab = r'$\rho_a$ in $\Omega$m'
 
-    ab2a = N.asarray(ab2)
-    rhoa = N.asarray(rhoa)
+    ab2a = np.asarray(ab2)
+    rhoa = np.asarray(rhoa)
+    fig, ax = plt.subplots()
     if mn2 is None:
         if islog:
-            l1 = P.loglog(rhoa, ab2, 'rx-', label='observed')
+            l1 = ax.loglog(rhoa, ab2, 'rx-', label='observed')
         else:
-            l1 = P.semilogy(rhoa, ab2, 'rx-', label='observed')
+            l1 = ax.semilogy(rhoa, ab2, 'rx-', label='observed')
 
-        P.hold(True)
         if resp is not None:
             if islog:
-                l2 = P.loglog(resp, ab2, 'bo-', label='simulated')
+                l2 = ax.loglog(resp, ab2, 'bo-', label='simulated')
             else:
-                l2 = P.semilogy(resp, ab2, 'bo-', label='simulated')
+                l2 = ax.semilogy(resp, ab2, 'bo-', label='simulated')
 
-            P.legend((l1, l2), ('obs', 'sim'), loc=0)
+            ax.legend((l1, l2), ('obs', 'sim'), loc=0)
     else:
-        for unmi in N.unique(mn2):
+        for unmi in np.unique(mn2):
             if islog:
-                l1 = P.loglog(rhoa[mn2 == unmi], ab2a[mn2 == unmi],
+                l1 = ax.loglog(rhoa[mn2 == unmi], ab2a[mn2 == unmi],
                               'rx-', label='observed')
             else:
-                l1 = P.semilogy(rhoa[mn2 == unmi], ab2a[mn2 == unmi],
+                l1 = ax.semilogy(rhoa[mn2 == unmi], ab2a[mn2 == unmi],
                                 'rx-', label='observed')
 
-            P.hold(True)
             if resp is not None:
-                l2 = P.loglog(resp[mn2 == unmi], ab2a[mn2 == unmi],
+                l2 = ax.loglog(resp[mn2 == unmi], ab2a[mn2 == unmi],
                               'bo-', label='simulated')
-                P.legend((l1, l2), ('obs', 'sim'))
+                ax.legend((l1, l2), ('obs', 'sim'))
 
-    P.axis('tight')
-    P.ylim((max(ab2), min(ab2)))
-    locs = P.yticks()[0]
+    # ax.axis('tight')
+    ax.set_ylim((max(ab2), min(ab2)))
+    locs = ax.set_yticks()[0]
     if len(locs) < 2:
-        locs = N.hstack((min(ab2), locs, max(ab2)))
+        locs = np.hstack((min(ab2), locs, max(ab2)))
     else:
         locs[0] = max(locs[0], min(ab2))
         locs[-1] = min(locs[-1], max(ab2))
 
     a = []
     for l in locs:
-        a.append('%g' % rndig(l))
+        a.append(f'{rndig(l):g}')
 
-    P.yticks(locs, a)
-
-    locs = P.xticks()[0]
-
+    ax.set_yticks(locs, a)
+    locs = ax.get_xticks()[0]
     a = []
     for l in locs:
-        a.append('%g' % rndig(l))
+        a.append(f'{rndig(l):g}')
 
-    P.xticks(locs, a)
-
-    P.grid(which='both')
-    P.xlabel(xlab)
-    P.ylabel('AB/2 in m')
-    # P.legend()
-    P.show()
-    return
+    ax.set_xticks(locs, a)
+    ax.grid(which='both')
+    ax.set_xlabel(xlab)
+    ax.set_ylabel('AB/2 in m')
+    # plt.legend()
+    return ax
 
 
 def showsip1ddata(PHI, fr, ab2, mn2=None, cmax=None, ylab=True, cbar=True):
-    """display SIP phase data as image plot."""
-    P.cla()
-    ax = P.gca()
-    pal = P.cm.get_cmap()
+    """Display SIP phase data as image plot."""
+    fig, ax = plt.subplots()
+    pal = plt.cm.get_cmap()
     pal.set_under('w')
     pal.set_bad('w')
     if isinstance(PHI, pg.Vector):
-        PHI = N.asarray(PHI)
+        PHI = np.asarray(PHI)
 
-    im = P.imshow(PHI.reshape((len(ab2), len(fr))),
+    im = plt.imshow(PHI.reshape((len(ab2), len(fr))),
                   interpolation='nearest', cmap=pal)
     if cmax is None:
-        cmax = N.max(PHI)
+        cmax = np.max(PHI)
 
     im.set_clim((0., cmax))
 
     ax.xaxis.set_label_position('top')
-    P.xlabel('f in Hz')
+    ax.set_xlabel('f in Hz')
 
     a = []
     df = 1
     for f in fr[::df]:
-        a.append("%g" % rndig(f))
+        a.append(f"{rndig(f):g}")
 
-    P.xticks(N.arange(0, len(fr), df), a)
+    ax.set_xticks(np.arange(0, len(fr), df), a)
     xtl = ax.get_xticklabels()
-    for i, xtli in enumerate(xtl):
+    for xtli in xtl:
         xtli.set_rotation('vertical')
 
     if ylab:
@@ -206,96 +198,93 @@ def showsip1ddata(PHI, fr, ab2, mn2=None, cmax=None, ylab=True, cbar=True):
         else:
             yla = yla + '-MN/2'
             for i in range(len(ab2)):
-                a.append('%g%g' % (rndig(ab2[i]), rndig(mn2[i])))
+                a.append(f'{rndig(ab2[i]):g}{rndig(mn2[i]):g}')
 
-        P.yticks(N.arange(len(ab2)), a)
-        P.ylabel(yla + ' in m')
+        ax.set_yticks(np.arange(len(ab2)), a)
+        ax.set_ylabel(yla + ' in m')
 
     if cbar:
-        P.colorbar(aspect=40, shrink=0.6)
+        fig.colorbar(aspect=40, shrink=0.6)
 
-    P.ylim((len(ab2) - 0.5, -0.5))
-    P.show()
-    P.ylim((len(ab2) - 0.5, -0.5))
+    plt.ylim((len(ab2) - 0.5, -0.5))
+    plt.show()
+    plt.ylim((len(ab2) - 0.5, -0.5))
     return
 
 
 def showsip1dmodel(M, tau, thk, res=None, z=None,
                    cmin=None, cmax=None, islog=True):
-    """
-        Display an SIP Debye block model as image.
-    """
+    """Display an SIP Debye block model as image."""
     if z is None:
-        z = N.cumsum(N.hstack((0., thk)))
+        z = np.cumsum(np.hstack((0., thk)))
 
-    P.cla()
-    pal = P.cm.get_cmap()
+    plt.cla()
+    pal = plt.cm.get_cmap()
     pal.set_under('w')
     pal.set_bad('w')
     if isinstance(M, pg.Vector):
-        M = N.asarray(M)
+        M = np.asarray(M)
 
     if islog:
-        M = N.log10(M)
+        M = np.log10(M)
 
     M = M.reshape((len(z), len(tau)))
-    im = P.imshow(M, interpolation='nearest', cmap=pal)
+    im = plt.imshow(M, interpolation='nearest', cmap=pal)
     if cmax is None:
-        cmax = N.max(M)
+        cmax = np.max(M)
 
     if cmax is None:
-        cmax = N.max(M)
+        cmax = np.max(M)
 
     im.set_clim((cmin, cmax))
 
     a = []
     for t in tau[::2]:
-        a.append("%g" % rndig(t * 1000, 2))
+        a.append(f"{rndig(t * 1000, 2):g}")
 
-    P.xticks(N.arange(0, len(tau), 2), a)
+    plt.xticks(np.arange(0, len(tau), 2), a)
 
     a = []
     for zi in z:
         a.append(str(zi))
 
-    P.yticks(N.arange(len(z)) - 0.5, a)
-    P.xlabel(r'$\tau$ in ms')
-    P.ylabel('z in m')
-    P.ylim((len(z) - 0.5, -0.5))
-    P.colorbar(orientation='horizontal', aspect=40, shrink=0.6)
+    plt.yticks(np.arange(len(z)) - 0.5, a)
+    plt.xlabel(r'$\tau$ in ms')
+    plt.ylabel('z in m')
+    plt.ylim((len(z) - 0.5, -0.5))
+    plt.colorbar(orientation='horizontal', aspect=40, shrink=0.6)
 
     if res is not None:
-        xl = P.xlim()[1]
+        xl = plt.xlim()[1]
         for i in range(len(res)):
-            P.text(xl, i, r' %g $\Omega$m' % rndig(res[i], 2))
+            plt.text(xl, i, rf' {rndig(res[i], 2):g} $\Omega$m')
 
-    lgm = N.zeros((len(z), 1))
-    tch = N.zeros((len(z), 1))
-    lgt = N.log(tau)
+    lgm = np.zeros((len(z), 1))
+    tch = np.zeros((len(z), 1))
+    lgt = np.log(tau)
     if islog:
         M = 10**M
 
     for n in range(len(M)):
-        m = N.abs(M[n])
-        tch[n] = N.sum(m)
-        lgm[n] = N.exp(N.sum(m * lgt) / N.sum(m))
+        m = np.abs(M[n])
+        tch[n] = np.sum(m)
+        lgm[n] = np.exp(np.sum(m * lgt) / np.sum(m))
 
-    tpos = N.interp(N.log(lgm), N.log(tau), N.arange(len(tau)))
-    P.plot(tpos, N.arange(len(z)), 'w*')
+    tpos = np.interp(np.log(lgm), np.log(tau), np.arange(len(tau)))
+    plt.plot(tpos, np.arange(len(z)), 'w*')
 
-    P.title('logarithmized spectral chargeability')
-    P.show()
+    plt.title('logarithmized spectral chargeability')
+    plt.show()
     return lgm, tch
 
 
 class DebyeModelling(pg.core.ModellingBase):
-
-    """forward operator for Debye decomposition."""
+    """Forward operator for Debye decomposition."""
 
     def __init__(self, fvec, tvec=None, zero=False, verbose=False):
 
         if tvec is None:
-            tvec = N.logspace(-4, 0, 5)
+            tvec = np.logspace(-4, 0, 5)
 
         mesh = pg.meshtools.createMesh1D(len(tvec))
 
@@ -309,10 +298,10 @@ class DebyeModelling(pg.core.ModellingBase):
         self.zero_ = zero
 
     def response(self, par):
-        """phase spectrum as function of spectral chargeabilities."""
+        """Phase spectrum as function of spectral chargeabilities."""
         y = pg.Vector(len(self.f_), 0.0)
-        for (t, p) in zip(self.t_, par):
-            wt = self.f_ * 2.0 * P.pi * t
+        for (t, p) in zip(self.t_, par, strict=False):
+            wt = self.f_ * 2.0 * np.pi * t
             y = y + wt / (wt * wt + 1.) * p
 
         return y
@@ -325,15 +314,15 @@ def DebyeDecomposition(fr, phi, maxfr=None, tv=None, verbose=False,
         idx = (fr <= maxfr) & (phi >= 0.)
         phi1 = phi[idx]
         fr1 = fr[idx]
-        print("using frequencies from ", N.min(fr), " to ", N.max(fr), "Hz")
+        print("using frequencies from ", np.min(fr), " to ", np.max(fr), "Hz")
     else:
         phi1 = phi
         fr1 = fr
 
     if tv is None:
-        tmax = 1. / N.min(fr1) / 2. / N.pi * 4.
-        tmin = 1. / N.max(fr1) / 2. / N.pi / 8.
-        tvec = N.logspace(N.log10(tmin), N.log10(tmax), 30)
+        tmax = 1. / np.min(fr1) / 2. / np.pi * 4.
+        tmin = 1. / np.max(fr1) / 2. / np.pi / 8.
+        tvec = np.logspace(np.log10(tmin), np.log10(tmax), 30)
     else:
         tvec = tv
 
@@ -368,14 +357,11 @@ def DebyeDecomposition(fr, phi, maxfr=None, tv=None, verbose=False,
     mvec = inv.run()
     resp = inv.response()
 
-    return tvec, mvec, N.array(resp) * 1e3, idx
+    return tvec, mvec, np.array(resp) * 1e3, idx
 
 
 class DoubleColeColeModelling(pg.core.ModellingBase):
-
-    """
-        Modelling using two Cole-Cole terms
-    """
+    """Modelling using two Cole-Cole terms."""
 
     def __init__(self, mesh, fvec, si=1.0, verbose=False):
         pg.core.ModellingBase.__init__(self, mesh, verbose)
@@ -383,27 +369,26 @@ class DoubleColeColeModelling(pg.core.ModellingBase):
         self.si_ = si
 
     def response(self, par):
-        """yields phase response response of double Cole Cole model."""
+        """Phase response response of double Cole Cole model."""
         y = pg.Vector(self.f_.size(), 0.0)
-        wti = self.f_ * par[1] * 2.0 * P.pi
-        wte = self.f_ * par[4] * 2.0 * P.pi
+        wti = self.f_ * par[1] * 2.0 * np.pi
+        wte = self.f_ * par[4] * 2.0 * np.pi
         for i in range(0, y.size()):
-            cpI = 1. / (N.power(wti[i] * 1j, par[2]) + 1.)
-            cpE = 1. / (N.power(wte[i] * 1j, par[5]) + 1.)
-            y[i] = - N.imag(cpI) * par[0] - N.imag(cpE) * par[3] * self.si_
-#            y[i] = - par[0] - N.imag(cpE) * par[3] * self.si_
+            cpI = 1. / (np.power(wti[i] * 1j, par[2]) + 1.)
+            cpE = 1. / (np.power(wte[i] * 1j, par[5]) + 1.)
+            y[i] = - np.imag(cpI) * par[0] - np.imag(cpE) * par[3] * self.si_
+#            y[i] = - par[0] - np.imag(cpE) * par[3] * self.si_
 
         return y
 
-def ReadAndRemoveEM(filename, readsecond=False, doplot=False,
-                    dellast=True, ePhi=0.5, ePerc=1., lam=2000.):
-    """
-        Read res1file and remove EM effects using a double-Cole-Cole model
-        fr,rhoa,phi,dphi = ReadAndRemoveEM(filename, readsecond/doplot bools)
-    """
-    fr, rhoa, phi, drhoa, dphi = read1resfile(filename,
-                                              readsecond,
-                                              dellast=dellast)
+# can very probably be deleted
+def ReadAndRemoveEM(filename, readsecond:bool=False, doplot:bool=False,
+                    dellast:bool=True, ePhi:float=0.5, ePerc:float=1,
+                    lam:float=2000):
+    """Read res1file and remove EM effects using a double-Cole-Cole model."""
+    fr, rhoa, phi, _drhoa, dphi = load(filename),
+                                            #   readsecond,
+                                            #   dellast=dellast)
     # forward problem
     mesh = pg.meshtools.createMesh1D(1, 6)  # 6 independent parameters
     f = DoubleColeColeModelling(mesh, pg.asvector(fr), phi[2] / abs(phi[2]))
@@ -432,10 +417,10 @@ def ReadAndRemoveEM(filename, readsecond=False, doplot=False,
             " c =" + str(rndig(erg[2]))
         s += "  EM: m= " + str(rndig(erg[3])) + " t=" + str(rndig(erg[4])) + \
             " c =" + str(rndig(erg[5]))
-        fig = P.figure(1)
+        fig = plt.figure(1)
         fig.clf()
-        ax = P.subplot(111)
-        P.errorbar(
+        ax = plt.subplot(111)
+        plt.errorbar(
             fr,
             phi *
             1000.,
@@ -444,17 +429,17 @@ def ReadAndRemoveEM(filename, readsecond=False, doplot=False,
             fmt='x-',
             label='measured')
         ax.set_xscale('log')
-        P.semilogx(fr, emphi * 1000., label='EM term (CC)')
-        P.errorbar(fr, resid, yerr=dphi * 1000., label='IP term')
+        plt.semilogx(fr, emphi * 1000., label='EM term (CC)')
+        plt.errorbar(fr, resid, yerr=dphi * 1000., label='IP term')
         ax.set_yscale('log')
-        P.xlim((min(fr), max(fr)))
-        P.ylim((0.1, max(phi) * 1000.))
-        P.xlabel('f in Hz')
-        P.ylabel(r'-$\phi$ in mrad')
-        P.grid(True)
-        P.title(s)
-        P.legend(loc=2)  # ('measured','2-cole-cole','residual'))
+        plt.xlim((min(fr), max(fr)))
+        plt.ylim((0.1, max(phi) * 1000.))
+        plt.xlabel('f in Hz')
+        plt.ylabel(r'-$\phi$ in mrad')
+        plt.grid(True)
+        plt.title(s)
+        plt.legend(loc=2)  # ('measured','2-cole-cole','residual'))
         fig.show()
 
-    return N.array(fr), N.array(rhoa), N.array(resid), N.array(
-        phi) * 1e3, dphi, chi2, N.array(emphi) * 1e3
+    return np.array(fr), np.array(rhoa), np.array(resid), np.array(
+        phi) * 1e3, dphi, chi2, np.array(emphi) * 1e3

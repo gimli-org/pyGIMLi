@@ -1,15 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Method Manager for Electrical Resistivity Tomography (ERT)"""
-
-import os.path
+"""Method Manager for Electrical Resistivity Tomography (ERT)."""
+from pathlib import Path
 import numpy as np
-import matplotlib.pyplot as plt
-
 import pygimli as pg
 from pygimli.frameworks import MeshMethodManager
 from .ertModelling import ERTModelling, ERTModellingReference
-from .ert import createInversionMesh, createGeometricFactors, estimateError
+from .ert import createInversionMesh, estimateError, simulate
 from pygimli.utils import getSavePath
 
 
@@ -59,7 +54,7 @@ class ERTManager(MeshMethodManager):
 
     def setSingularityRemoval(self, sr=True):
         """Turn singularity removal on or off."""
-        self.reinitForwardOperator(sr=True)
+        self.reinitForwardOperator(sr=sr)
 
     def createForwardOperator(self, **kwargs):
         """Create and choose forward operator."""
@@ -97,18 +92,17 @@ class ERTManager(MeshMethodManager):
 
         Forwarded to :py:mod:`pygimli.physics.ert.createInversionMesh`
         """
-        d = data or self.data
+        data = data or self.data
 
-        if d is None:
+        if data is None:
             pg.critical('Please provide a data file for mesh generation')
 
-        return createInversionMesh(d, **kwargs)
+        mesh = createInversionMesh(data, **kwargs)
+        self.setMesh(mesh)
+        return mesh
 
-    def setPrimPot(self, pot):
-        """Set primary potential from external is not supported anymore."""
-        pg.critical("Not implemented.")
-
-    def simulate(self, mesh, scheme, res, **kwargs):
+    # def simulate(self, mesh, scheme, res, **kwargs):
+    def simulate(self, *args, **kwargs):
         """Simulate an ERT measurement.
 
         Perform the forward task for a given mesh, resistivity distribution &
@@ -135,11 +129,10 @@ class ERTManager(MeshMethodManager):
         res : float, array(mesh.cellCount()) | array(N, mesh.cellCount()) |
               list
             Resistivity distribution for the given mesh cells can be:
-            . float for homogeneous resistivity (e.g. 1.0)
-            . single array of length mesh.cellCount()
-            . matrix of N resistivity distributions of length mesh.cellCount()
-            . resistivity map as [[regionMarker0, res0],
-                                  [regionMarker0, res1], ...]
+            - float for homogeneous resistivity (e.g. 1.0)
+            - single array of length mesh.cellCount()
+            - matrix of N resistivity distributions of length mesh.cellCount()
+            - resistivity map [[regionMarker0, res0], [regionMarker0, res1],...]
 
         scheme : :gimliapi:`GIMLI::DataContainerERT`
             Data measurement scheme.
@@ -185,188 +178,41 @@ class ERTManager(MeshMethodManager):
         # >>> world = mt.createWorld(start=[-50, 0], end=[50, -50],
         # ...                        layers=[-1, -5], worldMarker=True)
         # >>> scheme = ert.createData(
-        # ...                     elecs=pg.utils.grange(start=-10, end=10, n=21),
-        # ...                     schemeName='dd')
+        # ...     elecs=pg.utils.grange(start=-10, end=10, n=21),
+        # ...     schemeName='dd')
         # >>> for pos in scheme.sensorPositions():
         # ...     _= world.createNode(pos)
         # ...     _= world.createNode(pos + [0.0, -0.1])
         # >>> mesh = mt.createMesh(world, quality=34)
         # >>> rhomap = [
-        # ...    [1, 100. + 0j],
-        # ...    [2, 50. + 0j],
-        # ...    [3, 10.+ 0j],
+        # ...     [1, 100. + 0j],
+        # ...     [2, 50. + 0j],
+        # ...     [3, 10.+ 0j],
         # ... ]
-        # >>> data = ert.simulate(mesh, res=rhomap, scheme=scheme, verbose=True)
+        # >>> data = ert.simulate(mesh, res=rhomap, scheme=scheme, verbose=1)
         # >>> rhoa = data.get('rhoa').array()
         # >>> phia = data.get('phia').array()
         """
-        verbose = kwargs.pop('verbose', self.verbose)
-        calcOnly = kwargs.pop('calcOnly', False)
-        returnFields = kwargs.pop("returnFields", False)
-        returnArray = kwargs.pop('returnArray', False)
-        noiseLevel = kwargs.pop('noiseLevel', 0.0)
-        noiseAbs = kwargs.pop('noiseAbs', 1e-4)
-        seed = kwargs.pop('seed', None)
-        sr = kwargs.pop('sr', self.sr)
+        kwargs.setdefault("scheme", self.data)  # to use existing data
+        kwargs.setdefault("sr", self.sr)
+        return simulate(*args, **kwargs)
 
-        # segfaults with self.fop (test & fix)
-        fop = self.createForwardOperator(useBert=self.useBert,
-                                         sr=sr, verbose=verbose)
-        fop.data = scheme
-        fop.setMesh(mesh, ignoreRegionManager=True)
-
-        rhoa = None
-        phia = None
-
-        isArrayData = False
-        # parse the given res into mesh-cell-sized array
-        if isinstance(res, int) or isinstance(res, float):
-            res = np.ones(mesh.cellCount()) * float(res)
-        elif isinstance(res, complex):
-            res = np.ones(mesh.cellCount()) * res
-        elif hasattr(res[0], '__iter__'):  # ndim == 2
-            if len(res[0]) == 2:  # res seems to be a res map
-                # check if there are markers in the mesh that are not defined
-                # the rhomap. better signal here before it results in errors
-                meshMarkers = list(set(mesh.cellMarkers()))
-                mapMarkers = [m[0] for m in res]
-                if any([mark not in mapMarkers for mark in meshMarkers]):
-                    left = [m for m in meshMarkers if m not in mapMarkers]
-                    pg.critical("Mesh contains markers without assigned "
-                                "resistivities {}. Please fix given "
-                                "rhomap.".format(left))
-                res = pg.solver.parseArgToArray(res, mesh.cellCount(), mesh)
-            else:  # probably nData x nCells array
-                # better check for array data here
-                isArrayData = True
-
-        if isinstance(res[0], np.complex) or isinstance(res, pg.CVector):
-            pg.info("Complex resistivity values found.")
-            fop.setComplex(True)
-        else:
-            fop.setComplex(False)
-
-        if not scheme.allNonZero('k') and not calcOnly:
-            if verbose:
-                pg.info('Calculate geometric factors.')
-            scheme.set('k', fop.calcGeometricFactor(scheme))
-
-        ret = pg.DataContainerERT(scheme)
-        # just to be sure that we don't work with artifacts
-        ret['u'] *= 0.0
-        ret['i'] *= 0.0
-        ret['r'] *= 0.0
-
-        if isArrayData:
-            rhoa = np.zeros((len(res), scheme.size()))
-            for i, r in enumerate(res):
-                rhoa[i] = fop.response(r)
-                if verbose:
-                    print(i, "/", len(res), " : ", pg.dur(), "s",
-                          "min r:", min(r), "max r:", max(r),
-                          "min r_a:", min(rhoa[i]), "max r_a:", max(rhoa[i]))
-        else:  # res is single resistivity array
-            if len(res) == mesh.cellCount():
-
-                if calcOnly:
-                    fop.mapERTModel(res, 0)
-
-                    dMap = pg.core.DataMap()
-                    fop.calculate(dMap)
-                    if fop.complex():
-                        pg.critical('Implement me')
-                    else:
-                        ret["u"] = dMap.data(scheme)
-                        ret["i"] = np.ones(ret.size())
-
-                    if returnFields:
-                        return pg.Matrix(fop.solution())
-                    return ret
-                else:
-                    if fop.complex():
-                        res = pg.utils.squeezeComplex(res)
-
-                    resp = fop.response(res)
-
-                    if fop.complex():
-                        rhoa, phia = pg.utils.toPolar(resp)
-                    else:
-                        rhoa = resp
-            else:
-                print(mesh)
-                print("res: ", res)
-                raise BaseException(
-                    "Simulate called with wrong resistivity array.")
-
-        if not isArrayData:
-            ret['rhoa'] = rhoa
-
-            if phia is not None:
-                ret.set('phia', phia)
-        else:
-            ret.set('rhoa', rhoa[0])
-            if phia is not None:
-                ret.set('phia', phia[0])
-
-        if returnFields:
-            return pg.Matrix(fop.solution())
-
-        if noiseLevel > 0:  # if errors in data noiseLevel=1 just triggers
-            if not ret.allNonZero('err'):
-                # 1A  and #100µV
-                ret.set('err', self.estimateError(ret,
-                                                  relativeError=noiseLevel,
-                                                  absoluteUError=noiseAbs,
-                                                  absoluteCurrent=1))
-                print("Data error estimate (min:max) ",
-                      min(ret('err')), ":", max(ret('err')))
-
-            rhoa *= 1. + pg.randn(ret.size(), seed=seed) * ret('err')
-            ret.set('rhoa', rhoa)
-
-            ipError = None
-            if phia is not None:
-                if scheme.allNonZero('iperr'):
-                    ipError = scheme('iperr')
-                else:
-                    # np.abs(self.data("phia") +TOLERANCE) * 1e-4absoluteError
-                    if noiseLevel > 0.5:
-                        noiseLevel /= 100.
-
-                    if 'phiErr' in kwargs:
-                        ipError = np.ones(ret.size()) * kwargs.pop('phiErr') \
-                            / 1000
-                    else:
-                        ipError = abs(ret["phia"]) * noiseLevel
-
-                    if verbose:
-                        print("Data IP abs error estimate (min:max) ",
-                              min(ipError), ":", max(ipError))
-
-                phia += pg.randn(ret.size(), seed=seed) * ipError
-                ret['iperr'] = ipError
-                ret['phia'] = phia
-
-        # check what needs to be setup and returned
-
-        if returnArray:
-            if phia is not None:
-                return rhoa, phia
-            else:
-                return rhoa
-
-        return ret
-
-    def checkData(self, data):
+    def checkData(self, data=None):
         """Return data from container.
 
         THINKABOUT: Data will be changed, or should the manager keep a copy?
         """
-        if isinstance(data, pg.DataContainer):
+        data = data or pg.DataContainerERT(self.data)
+        # topo = min(pg.z(data)) != max(pg.z(data))  # not used!!
 
+        if isinstance(data, pg.DataContainer):
             if not data.allNonZero('k'):
-                pg.warn("Data file contains no geometric factors (token='k').")
-                data['k'] = createGeometricFactors(data, verbose=True)
+                pg.critical("Data contains no geometric factors data['k'].")
+                # numeric = min(pg.z(data)) != max(pg.z(data))
+                # data['k'] = createGeometricFactors(data,
+                #                                 numerical=topo,
+                #                                 #p2=True,
+                #                                 verbose=self.verbose)
 
             if self.fop.complex():
                 if not data.haveData('rhoa'):
@@ -388,24 +234,37 @@ class ERTManager(MeshMethodManager):
                         pg.info("Creating apparent resistivies from "
                                 "impedences rhoa = r * k")
                         data['rhoa'] = data['r'] * data['k']
+
                     elif data.allNonZero('u') and data.allNonZero('i'):
+
                         pg.info("Creating apparent resistivies from "
                                 "voltage and currrent rhoa = u/i * k")
                         data['rhoa'] = data['u']/data['i'] * data['k']
+
                     else:
                         pg.critical("Datacontainer have neither: "
                                     "apparent resistivies 'rhoa', "
                                     "or impedances 'r', "
                                     "or voltage 'u' along with current 'i'.")
 
+                if any(data['rhoa'] < 0) and \
+                        isinstance(self.inv.dataTrans, pg.trans.TransLog):
+                    # print(pg.find(data['rhoa'] < 0))
+                    # print(data['rhoa'][data['rhoa'] < 0])
+                    pg.warning("Found negative apparent resistivities. "
+                               "These can't be processed with logarithmic "
+                               "data transformation. You should consider to "
+                               "filter them out using "
+                               "data.remove(data['rhoa'] < 0).")
+
                 return data['rhoa']
 
         return data
 
     def checkErrors(self, err, dataVals):
-        """Return relative error.
+        """Check (estimate) and return relative error.
 
-        Default we assume 'err' are relative vales.
+        By default we assume 'err' are relative values.
         """
         if isinstance(err, pg.DataContainer):
             rae = None
@@ -420,20 +279,17 @@ class ERTManager(MeshMethodManager):
                 rae = err['err']
 
             if self.fop.complex():
-
                 ipe = None
 
                 if err.haveData('iperr'):
-                    amp, phi = pg.utils.toPolar(dataVals)
+                    _, phi = pg.utils.toPolar(dataVals)
                     # assuming ipErr are absolute dPhi in mrad
-                    ipe = err['iperr'] / abs((phi*1000))
+                    ipe = err['iperr'] / abs(phi*1000)
                 else:
                     pg.warn("Datacontainer have no 'iperr' values. "
                             "Fallback set to 0.01")
                     ipe = np.ones(err.size()) * 0.01
 
-                # pg._y("err", min(rae), max(rae), rae)
-                # pg._y("iperr", min(ipe), max(ipe), ipe)
                 return pg.cat(rae, ipe)
 
         return rae  # not set if err is no DataContainer (else missing)
@@ -479,11 +335,65 @@ class ERTManager(MeshMethodManager):
         for c in self.fop.paraDomain.cells():
             paramSizes[c.marker()] += c.size()
 
-        return np.log10(covTrans / paramSizes)
+        wCovLog = np.log10(covTrans / paramSizes)
+        return wCovLog[self.fop.paraDomain.cellMarkers()]
 
-    def standardizedCoverage(self, threshhold=0.01):
+    def standardizedCoverage(self, threshold=0.01):
         """Return standardized coverage vector (0|1) using thresholding."""
-        return 1.0*(abs(self.coverage()) > threshhold)
+        return 1.0*(self.coverage() > threshold)
+
+    def showMisfit(self, errorWeighted=False, **kwargs):
+        """Show relative or error-weighted data misfit."""
+        if errorWeighted:
+            misfit = (np.log(self.data["rhoa"]) - np.log(self.inv.response)) /\
+                self.data["err"]
+            kwargs.setdefault("label", "error-weighted misfit")
+        else:
+            misfit = - self.inv.response / self.data["rhoa"] * 100 + 100
+            kwargs.setdefault("label", "relative misfit (%)")
+
+        kwargs.setdefault("cMax", np.max(np.abs(misfit)))
+        kwargs.setdefault("cMin", -kwargs["cMax"])
+        kwargs.setdefault("cMap", "bwr")
+        kwargs.setdefault("logScale", False)
+
+        self.showData(vals=misfit, **kwargs)
+
+    def showModel(self, model=None, ax=None, elecs=True, **kwargs):
+        """Show the last inversion result.
+
+        Parameters
+        ----------
+        model : iterable [None]
+            Model vector to be drawn. Default is self.model from the last run
+        ax : mpl axes
+            Axes object to draw into. Create a new if its not given.
+        elecs : bool
+            Draw electrodes
+
+        **kwargs : dict
+            arguments passed to pg.show (cMin, cMax, cMap, logScale)
+
+        Returns
+        -------
+        ax, cbar
+        """
+        if model is None:
+            model = self.model
+
+        if ax is None:
+            _, ax = pg.plt.subplots()
+
+        kwargs.setdefault("coverage", self.coverage())
+        color = kwargs.pop("color", "magenta")
+        ax, cBar = self.fop.drawModel(ax, model, **kwargs)
+        if elecs:
+            if isinstance(elecs, str):
+                color = elecs
+
+            pg.viewer.mpl.drawSensors(ax, self.fop.data.sensors(), color=color)
+
+        return ax, cBar
 
     def saveResult(self, folder=None, size=(16, 10), **kwargs):
         """Save all results in the specified folder.
@@ -496,31 +406,44 @@ class ERTManager(MeshMethodManager):
             Mesh (bms and vtk with results)
         """
         subfolder = self.__class__.__name__
-        path = getSavePath(folder, subfolder)
-
-        pg.info('Saving resistivity data to: {}'.format(path))
-
-        np.savetxt(path + '/resistivity.vector',
-                   self.model)
-        np.savetxt(path + '/resistivity-cov.vector',
-                   self.coverage())
-        np.savetxt(path + '/resistivity-scov.vector',
+        path = Path(getSavePath(folder, subfolder))
+        pg.info(f'Saving inversion results to: {path}')
+        np.savetxt(path / 'resistivity.vector', self.model)
+        np.savetxt(path / 'resistivity-cov.vector', self.coverage())
+        np.savetxt(path / 'resistivity-scov.vector',
                    self.standardizedCoverage())
 
+        self.mesh.save(str(path / 'mesh.bms'))
+
         m = pg.Mesh(self.paraDomain)
-        m['Resistivity'] = self.paraModel(self.model)
+        m['Resistivity'] = self.model
         m['Resistivity (log10)'] = np.log10(m['Resistivity'])
         m['Coverage'] = self.coverage()
         m['S_Coverage'] = self.standardizedCoverage()
-        m.exportVTK(os.path.join(path, 'resistivity'))
-        m.saveBinaryV2(os.path.join(path, 'resistivity-pd'))
-        self.fop.mesh().save(os.path.join(path, 'resistivity-mesh'))
+        nM = m.cellCount()
+        for k, v in kwargs.items():
+            if hasattr(v, "__iter__") and len(v) == nM:
+                m[k] = v
+
+        m.exportVTK(str(path / 'resistivity.vtk'))
+        m.saveBinaryV2(str(path / 'resistivity-pd.bms'))
+        self.fop.mesh().save(str(path / 'resistivity-mesh'))
+
+        np.savetxt(path / 'response.vector', self.inv.response)
+        residual = self.inv.residual()  # includes error-(re)weighting
+        np.savetxt(path / 'residual.vector', residual)
+        data = self.fop.data.copy()
+        data['response'] = self.inv.response
+        data['residual'] = residual
+        data.save(str(path / 'data.dat'),
+                  'a b m n rhoa k err ip iperr response residual')
 
         if self.paraDomain.dim() == 2:
-            fig, ax = plt.subplots(figsize=size)
-            self.showResult(ax=ax, coverage=self.coverage(), **kwargs)
-            fig.savefig(path + '/resistivity.pdf', bbox_inches="tight")
+            fig, ax = pg.plt.subplots(figsize=size)
+            self.showModel(ax=ax, **kwargs)
+            fig.savefig(path / 'resistivity.pdf', bbox_inches="tight")
             return path, fig, ax
+
         return path
 
 

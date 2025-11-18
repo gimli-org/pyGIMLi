@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -20,32 +20,39 @@
 
 #include "node.h"
 
+double _Node_Bracket_accessor:: operator()(GIMLI::Node * n, size_t i) const {
+    return n->pos()[i]; 
+}
+
 namespace GIMLI{
 
-inline double tac( Node * n, size_t i ) { return n->pos()[ i ]; }
+// inline double tac(Node * n, size_t i) { 
+//     return n->pos()[i]; 
+// }
 
 KDTreeWrapper::KDTreeWrapper(){
-    tree_ = new NodeKDTree( std::ptr_fun( tac ) );
+    tree_ = new NodeKDTree();
+    // tree_ = new NodeKDTree(std::ptr_fun(tac));
 }
 
 KDTreeWrapper::~KDTreeWrapper(){
-    if ( tree_ ) delete tree_;
+    if (tree_) delete tree_;
 }
 
-void KDTreeWrapper::insert( Node * node ){
-    tree_->insert( node );
+void KDTreeWrapper::insert(Node * node){
+    tree_->insert(node);
 }
 
-Node * KDTreeWrapper::nearest( const RVector3 & pos ){
-    Node testNode( pos );
-    return *tree_->find_nearest( &testNode ).first;
+Node * KDTreeWrapper::nearest(const RVector3 & pos){
+    Node testNode(pos);
+    return *tree_->find_nearest(&testNode).first;
 }
 
-uint KDTreeWrapper::size( ) const{
+uint KDTreeWrapper::size() const{
     return tree_->size();
 }
 
-NodeKDTree * KDTreeWrapper::tree() {
+NodeKDTree * KDTreeWrapper::tree(){
     return tree_;
 }
 

@@ -25,13 +25,13 @@ st = range(N)
 """
 
 class TestPerf(unittest.TestCase):
-    
+
     def test_Performance(self):
         """
         """
         #pg.setDebug(True)
-        
-        sw = pg.core.Stopwatch(True)
+
+        sw = pg.Stopwatch(True)
         #print(timeit.repeat('r = grid.cellSizes() * np1', setup=setup, number=1000))
         #print(timeit.repeat('r = c * np1', setup=setup, number=1000))
 
@@ -62,8 +62,58 @@ class TestPerf(unittest.TestCase):
         print((sum(pg1 * pg1)))
         print((sum(np1 * pg1)))
         print((sum(pg1 * np1)))
-            
+
+
+class TestMT(unittest.TestCase):
+
+    def test_WayMatrix(self):
+        """ MT-OMP Test
+        run with env OMP_NUM_THREADS=4 GIMLI_NUM_THREADS=3 PG_USE_OMP=1
+
+        OMP THREADS if USE_OMP=1 else DISTR_CALC with GIMLI_NUM_THREADS
+
+        USE_OMP=0 and GIMLI_NUM_THREADS > 1 segfaults on py312
+        """
+        from pygimli.physics import traveltime as tt
+
+        x, y = 25, 25
+        mesh = pg.createGrid(x, y)
+        data = tt.createRAData([(0, 0)] + [(x, i) for i in range(y)],
+                               shotDistance=y+1)
+        data["t"] = 1.0
+        mgr = tt.Manager(data, verbose=False)
+        mgr.applyMesh(mesh, secNodes=10)
+        pg.tic()
+        mgr.fop.createJacobian(np.full(mgr.fop.parameterCount, 1))
+        pg.toc()
+
+
+    def test_ERTJacobian(self):
+        """ MT-OMP Test
+        run with env OMP_NUM_THREADS=4 GIMLI_NUM_THREADS=3 PG_USE_OMP=1
+
+        OMP THREADS if USE_OMP=1 else DISTR_CALC with GIMLI_NUM_THREADS
+
+        USE_OMP=0 and GIMLI_NUM_THREADS > 1 segfaults on py312
+        """
+        from pygimli.physics import ert
+
+        dat = pg.getExampleFile('ert/gallery.dat', load=True, verbose=True)
+        dat['k'] = ert.createGeometricFactors(dat)
+        mesh = pg.meshtools.createParaMesh(dat.sensors(),
+                                           quality=30.0,
+                                           paraDX=0.3,
+                                           paraMaxCellSize=0.5, paraDepth=8)
+
+        mgr = ert.ERTManager(sr=True, useBert=True, verbose=False, debug=False)
+        mgr.setMesh(mesh)
+        mgr.setData(dat)
+        pg.tic()
+        mgr.fop.createJacobian(np.full(mgr.fop.parameterCount, 1))
+        pg.toc()
+
+
 if __name__ == '__main__':
-    
+
     unittest.main()
 

@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Import/Export for SIP data."""
 
 import codecs
 from datetime import  datetime
-
+from pathlib import Path
 import numpy as np
 import re
 
@@ -44,8 +43,8 @@ def load(fileName, verbose=False, **kwargs):
     elif 'SIP-Quad' in firstLine:
         if verbose:
             pg.info("Reading SIP Quad file")
-        f, amp, phi, header = readFuchs3File(fileName,
-                                             verbose=verbose, **kwargs)
+        f, amp, phi, header = readFuchs3File(fileName, nfr=9, namp=10, nphi=11,
+                                             nk=7, verbose=verbose, **kwargs)
         phi *= -np.pi/180.
     elif 'SIP-Fuchs' in firstLine:
         if verbose:
@@ -54,10 +53,10 @@ def load(fileName, verbose=False, **kwargs):
                                                      verbose=verbose, **kwargs)
         phi *= -np.pi/180.
     elif fnLow.endswith('.txt') or fnLow.endswith('.csv'):
-        f, amp, phi = readTXTSpectrum(filename)
+        f, amp, phi = readTXTSpectrum(fileName)
         amp *= 1.0 # scale it with k if available
     else:
-        raise Exception("Don't know how to read data.")
+        raise NotImplementedError("Don't know how to read data.")
 
     return f, amp, phi
 
@@ -65,37 +64,36 @@ def load(fileName, verbose=False, **kwargs):
 def fstring(fri):
     """Format frequency to human-readable (mHz or kHz)."""
     if fri > 1e3:
-        fstr = '{:d} kHz'.format(int(np.round(fri/1e3)))
+        fstr = f'{int(np.round(fri/1e3)):d} kHz'
     elif fri < 1.:
-        fstr = '{:d} mHz'.format(int(np.round(fri*1e3)))
+        fstr = f'{int(np.round(fri*1e3)):d} mHz'
     elif fri < 10.:
-        fstr = '{:3.1f} Hz'.format(fri)
+        fstr = f'{fri:3.1f} Hz'
     elif fri < 100.:
-        fstr = '{:4.1f} Hz'.format(fri)
+        fstr = f'{fri:4.1f} Hz'
     else:
-        fstr = '{:d} Hz'.format(int(np.round(fri)))
+        fstr = f'{int(np.round(fri)):d} Hz'
     return fstr
 
 
-def readTXTSpectrum(filename):
+def readTXTSpectrum(filename, nfr=0, namp=1, nphi=3, sphi=-1):
     """Read spectrum from ZEL device output (txt) data file."""
-    fid = open(filename)
-    lines = fid.readlines()
-    fid.close()
     f, amp, phi = [], [], []
-    for line in lines[1:]:
-        snums = line.replace(';', ' ').split()
-        if len(snums) > 3:
-            f.append(float(snums[0]))
-            amp.append(float(snums[1]))
-            phi.append(-float(snums[3]))
-        else:
-            break
+    with Path(filename).open() as fid:
+        lines = fid.readlines()
+        for line in lines[1:]:
+            snums = line.replace(';', ' ').split()
+            if len(snums) > 3:
+                f.append(float(snums[nfr]))
+                amp.append(float(snums[namp]))
+                phi.append(sphi*float(snums[nphi]))
+            else:
+                break
 
-    return np.asarray(f), np.asarray(amp), np.asarray(phi)
+        return np.asarray(f), np.asarray(amp), np.asarray(phi)
 
 
-def readFuchs3File(resfile, k=1.0, verbose=False):
+def readFuchs3File(resfile, k=1.0, verbose=False, nfr=11, namp=12, nphi=13, nk=9):
     """Read Fuchs III (SIP spectrum) data file.
 
     Parameters
@@ -108,8 +106,8 @@ def readFuchs3File(resfile, k=1.0, verbose=False):
     header = {}
     LINE = []
     dataAct = False
-    with codecs.open(resfile, 'r', encoding='iso-8859-15', errors='replace') as f:
-        for line in f:
+    with codecs.open(resfile, 'r', encoding='iso-8859-15', errors='replace') as fid:
+        for line in fid:
             line = line.replace('\r\n', '\n') # correct for carriage return
             if dataAct:
                 LINE.append(line)
@@ -118,12 +116,12 @@ def readFuchs3File(resfile, k=1.0, verbose=False):
                     for li in LINE:
                         sline = li.split()
                         if len(sline) > 12:
-                            fi = float(sline[11])
+                            fi = float(sline[nfr])
                             if np.isfinite(fi):
                                 f.append(fi)
-                                amp.append(float(sline[12]))
-                                phi.append(float(sline[13]))
-                                kIn.append(float(sline[9]))
+                                amp.append(float(sline[namp]))
+                                phi.append(float(sline[nphi]))
+                                kIn.append(float(sline[nk]))
 
                     if k != 1.0 and verbose is True:
                         pg.info("Geometric value changed to:", k)
@@ -148,14 +146,10 @@ def readFuchs3File(resfile, k=1.0, verbose=False):
                     else:
                         value = line[line.rfind(']') + 1:]
                         try:  # direct line information
-                            if '.' in value:
-                                num = float(value)
-                            else:
-                                num = int(value)
+                            num = float(value) if '.' in value else int(value)
                             header[token] = num
-                        except BaseException as e:
+                        except BaseException:
                             # maybe beginning or end of a block
-                            #print(e)
                             pass
 
                 else:
@@ -165,7 +159,7 @@ def readFuchs3File(resfile, k=1.0, verbose=False):
 
 
 def readRadicSIPFuchs(filename, readSecond=False, delLast=True):
-    """Read SIP-Fuchs Software rev.: 070903
+    """Read SIP-Fuchs Software rev.: 070903.
 
     Read Radic instrument res file containing a single spectrum.
 
@@ -200,7 +194,7 @@ def readRadicSIPFuchs(filename, readSecond=False, delLast=True):
     phi : array [float]
         Measured phase error
     """
-    with codecs.open(resfile, 'r', encoding='iso-8859-15', errors='replace') as f:
+    with codecs.open(filename, 'r', encoding='iso-8859-15', errors='replace') as f:
         line = f.readline()
         fr = []
         rhoa = []
@@ -242,9 +236,7 @@ def readRadicSIPFuchs(filename, readSecond=False, delLast=True):
 
 
 def toTime(t, d):
-    """ convert time format into timestamp
-    11:08:02, 21/02/2019
-    """
+    """Convert time format into timestamp 11:08:02, 21/02/2019."""
     tim = [int(_t) for _t in t.split(':')]
     if '/' in d:  # 03/02/1975
         day = [int(_t) for _t in d.split('/')]
@@ -328,7 +320,7 @@ def readSIP256file(resfile, verbose=False):
                         else:
                             try:
                                 num = int(value)
-                            except:
+                            except BaseException:
                                 num = 0
                                 pass
                         header[token] = num
@@ -341,7 +333,7 @@ def readSIP256file(resfile, verbose=False):
                     header[activeBlock].append(nums)
 
     DATA, dReading, dFreq, AB, RU, ru = [], [], [], [], [], []
-    tMeas = []
+    # tMeas = []
     for i, line in enumerate(LINE):
         # print(i, line)
         line = line.replace(' nc ', ' 0 ') # no calibration should 0
@@ -358,7 +350,7 @@ def readSIP256file(resfile, verbose=False):
             if rdno > 1 and dReading:
                 dReading.append(np.array(dFreq))
                 DATA.append(dReading)
-                pg.verbose('Reading {0}:{1} RUs'.format(rdno-1, len(dReading)))
+                pg.verbose(f'Reading {rdno-1}:{len(dReading)} RUs')
                 dReading, dFreq = [], []
         elif line.find('Remote Unit') == 0:
             ru.append(int(sline[2]))
@@ -371,24 +363,19 @@ def readSIP256file(resfile, verbose=False):
             # search for two numbers (with .) without a space inbetween
             # variant 1: do it for every part
             for i, ss in enumerate(sline):
-                if re.search('\.20[01][0-9]', ss) is None:  # no date
-                    fd = re.search('\.[0-9-]*\.', ss)
+                if re.search(r'\.20[01][0-9]', ss) is None:  # no date
+                    fd = re.search(r'\.[0-9-]*\.', ss)
                     if fd:
-                        if '-' in ss[1:]:
-                            bpos = ss[1:].find('-') + 1
-                        else:
-                            bpos = fd.start() + 4
+                        bpos = ss[1:].find('-') + 1 if '-' in ss[1:] else fd.start() + 4
 
                         # print(ss[:bpos], ss[bpos:])
-                        sline.insert(i, ss[:bpos])
-                        sline[i+1] = ss[bpos:]
+                        if ss[5:8] != ".20":
+                            sline.insert(i, ss[:bpos])
+                            sline[i+1] = ss[bpos:]
                         # print(sline)
-                    fd = re.search('NaN[0-9-]*\.', ss)
+                    fd = re.search(r'NaN[0-9-]*\.', ss)
                     if fd:
-                        if '-' in ss[1:]:
-                            bpos = ss.find('-')
-                        else:
-                            bpos = fd.start() + 3
+                        bpos = ss.find('-') if '-' in ss[1:] else fd.start() + 3
 
                         # print(ss[:bpos], ss[bpos:])
                         sline.insert(i, ss[:bpos])
@@ -427,22 +414,24 @@ def readSIP256file(resfile, verbose=False):
 
                 if sline[c].find('c') >= 0:
                     sline[c] = '1.0'
-            #Frequency /Hz       RA/Ohmm    PA/�      ERA/%     EPA/�     Cal?     IA/mA     K.-F./m    Gains  Time/h:m:s    Date/d.m.y
-            #20000.00000000        0.4609  -6.72598   0.02234   0.01280    1      20.067        1.00      0     11:08:02     21/02/2019
             try:
                 dFreq.append(
                     np.array(sline[:8] + [toTime(sline[-2], sline[-1])],
                              dtype=float))
-            except:
+            except BaseException as e:
                 # dFreq.append(np.array(sline[:8], dtype=float))
                 print(i, line, sline)
-                raise ImportError()
+                raise IndexError("Could not convert line!") from e
 
     dReading.append(np.array(dFreq))
     DATA.append(dReading)
-    pg.verbose('Reading {0}:{1} RUs'.format(rdno, len(dReading)))
+    pg.verbose(f'Reading {rdno}:{len(dReading)} RUs')
     return header, DATA, AB, RU
 
 
+#Frequency /Hz       RA/Ohmm    PA/�      ERA/%     EPA/�     Cal?     IA/mA     K.-F./m
+#     Gains  Time/h:m:s    Date/d.m.y
+#20000.00000000        0.4609  -6.72598   0.02234   0.01280    1      20.067        1.00
+#     0     11:08:02     21/02/2019
 if __name__ == "__main__":
     pass

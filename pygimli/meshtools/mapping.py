@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """Mesh based data transformation and mapping, interpolation, extrapolation."""
 
 import numpy as np
-
 import pygimli as pg
 
 
@@ -19,9 +18,6 @@ def nodeDataToCellData(mesh, data):
     data : iterable [float]
         Data of len mesh.nodeCount().
         TODO complex, R3Vector, ndarray
-
-    Examples
-    --------
     """
     if len(data) != mesh.nodeCount():
         raise BaseException(
@@ -93,9 +89,10 @@ def cellDataToNodeData(mesh, data, style='mean'):
 
 
 def nodeDataToBoundaryData(mesh, data):
-    """
-        Assuming [NodeCount, dim] data
-        DOCUMENT_ME
+    """Convert node data to boundary data.
+
+    Assuming [NodeCount, dim] data
+    DOCUMENT_ME
     """
     if len(data) != mesh.nodeCount():
         raise BaseException(
@@ -103,7 +100,7 @@ def nodeDataToBoundaryData(mesh, data):
             str(mesh.nodeCount()) + " got: " + str(len(data)),
             str(len(data[0])))
 
-    if isinstance(data, pg.core.R3Vector):
+    if isinstance(data, pg.PosVector):
         ret = np.zeros((mesh.boundaryCount(), 3))
         for b in mesh.boundaries():
             ret[b.id()] = sum(data[b.ids()]) / b.nodeCount()
@@ -138,7 +135,7 @@ def nodeDataToBoundaryData(mesh, data):
 
 
 def cellDataToBoundaryData(mesh, data):
-    """ TODO DOCUMENT_ME """
+    """Convert cell data to boundary data."""
     if len(data) != mesh.cellCount():
         raise BaseException(
             "Dimension mismatch, expecting cellCount(): " +
@@ -147,7 +144,7 @@ def cellDataToBoundaryData(mesh, data):
 
     CtB = mesh.cellToBoundaryInterpolation()
 
-    if isinstance(data, pg.core.R3Vector()):
+    if isinstance(data, pg.PosVector()):
         return np.array([CtB * pg.x(data), CtB * pg.y(data),
                          CtB * pg.z(data)]).T
     else:
@@ -155,8 +152,7 @@ def cellDataToBoundaryData(mesh, data):
 
 
 def fillEmptyToCellArray(mesh, vals, slope=True):
-    """
-    Prolongate empty cell values to complete cell attributes.
+    """Prolongate empty cell values to complete cell attributes.
 
     It is possible to have zero values that are filled with appropriate
     attributes. This function tries to fill empty values successively by
@@ -178,14 +174,15 @@ def fillEmptyToCellArray(mesh, vals, slope=True):
     Examples
     --------
     >>> import pygimli as pg
+    >>> import pygimli.meshtools as mt
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>>
     >>> # Create a mesh with 3 layers and an outer region for extrapolation
-    >>> layers = pg.meshtools.createWorld([0,-50],[100,0], layers=[-15,-35])
-    >>> inner = pg.meshtools.createMesh(layers, area=3)
-    >>> mesh = pg.meshtools.appendTriangleBoundary(inner, xbound=120, ybound=50,
-    ...                                            area=20, marker=0)
+    >>> layers = mt.createWorld([0,-50],[100,0], layers=[-15,-35])
+    >>> inner = mt.createMesh(layers, area=3)
+    >>> mesh = mt.appendTriangleBoundary(inner, xbound=120, ybound=50,
+    ...                                  area=20, marker=0)
     >>>
     >>> # Create data for the inner region only
     >>> layer_vals = [20,30,50]
@@ -198,9 +195,9 @@ def fillEmptyToCellArray(mesh, vals, slope=True):
     >>> data_with_outer = np.array([0] + layer_vals)[mesh.cellMarkers()]
     >>>
     >>> # Actual extrapolation
-    >>> extrapolated_data = pg.meshtools.fillEmptyToCellArray(mesh,
+    >>> extrapolated_data = mt.fillEmptyToCellArray(mesh,
     ...                                  data_with_outer, slope=False)
-    >>> extrapolated_data_with_slope = pg.meshtools.fillEmptyToCellArray(mesh, 
+    >>> extrapolated_data_with_slope = mt.fillEmptyToCellArray(mesh,
     ...                                 data_with_outer, slope=True)
     >>>
     >>> # Visualization
@@ -265,7 +262,7 @@ def interpolateAlongCurve(curve, t, **kwargs):
 
     Parameters
     ----------
-    curve : [[x,z]] | [[x,y,z]] | [:gimliapi:`GIMLI::RVector3`] | :gimliapi:`GIMLI::R3Vector`
+    curve : [[x,z]] | [[x,y,z]] | [:gimliapi:`GIMLI::Pos`,]
         Discrete curve for 2D :math:`x,z` curve=[[x,z]], 3D :math:`x,y,z`
 
     t: 1D iterable
@@ -278,9 +275,9 @@ def interpolateAlongCurve(curve, t, **kwargs):
         periodic : bool [False]
             Curve is periodic.
             Usefull for closed parametric spline interpolation.
+
     Returns
     -------
-
     p : np.array
         Curve positions at query points :math:`t`.
         Dimension of p match the size of curve the coordinates.
@@ -334,7 +331,7 @@ def interpolateAlongCurve(curve, t, **kwargs):
         ], axis=0)
         tCurve = np.append(tCurve, max(t))
 
-    if isinstance(curve, pg.core.R3Vector) or isinstance(
+    if isinstance(curve, pg.PosVector) or isinstance(
             curve, pg.core.stdVectorRVector3):
         xC = pg.x(curve)
         yC = pg.y(curve)
@@ -410,68 +407,77 @@ def tapeMeasureToCoordinates(tape, pos):
 
 
 def interpolate(*args, **kwargs):
-    r"""Interpolation convinience function.
+    r"""Interpolate different kind of data.
 
-    Convenience function to interpolate different kind of data.
-    Currently supported interpolation schemes are:
+    Convenience function for different interpolation schemes:
 
-    * Interpolate mesh based data from one mesh to another
-     (syntactic sugar for the core based interpolate (see below))
+    **1. Interpolate mesh based data from one mesh to another**
+      syntactic sugar for the core based `pg.core.interpolate`
 
-      Parameters:
-        args: :gimliapi:`GIMLI::Mesh`, :gimliapi:`GIMLI::Mesh`, iterable
-            `outData = interpolate(outMesh, inMesh, vals)`
-            Interpolate values based on inMesh to outMesh.
-            Values can be of length inMesh.cellCount() interpolated to
-            outMesh.cellCenters() or inMesh.nodeCount() which are interpolated
-            to outMesh.positions().
+    Parameters
+    ----------
+        args: :gimliapi:`GIMLI::Mesh`, :gimliapi:`GIMLI::Mesh`, values
+            `outData = pg.core.interpolate(outMesh, inMesh, values)`
 
-      Returns:
+            Interpolated values based on inMesh to outMesh.
+
+            Values can be of length `inMesh.cellCount()` interpolated to
+            `outMesh.cellCenters()`, or `inMesh.nodeCount()` which are
+            interpolated to `outMesh.positions()`.
+
+    Returns
+    -------
         Interpolated values.
 
-    * Mesh based values to arbitrary points, based on finite element
-      interpolation (from gimli core).
+    **2. Mesh based values to arbitrary points, based on finite elements**
+      syntactic sugar for the core based `pg.core.interpolate`
 
-      Parameters:
+    Parameters
+    ----------
         args: :gimliapi:`GIMLI::Mesh`, ...
             Arguments forwarded to :gimliapi:`GIMLI::interpolate`
         kwargs:
             Arguments forwarded to :gimliapi:`GIMLI::interpolate`
 
-        `interpolate(srcMesh, destMesh)`
+            `interpolate(srcMesh, destMesh)`
             All data from inMesh are interpolated to outMesh
 
-      Returns:
+    Returns
+    -------
         Interpolated values
 
-    * Interpolate along curve.
+    **3. Interpolate along curve.**
       Forwarded to :py:mod:`pygimli.meshtools.interpolateAlongCurve`
 
-      Parameters:
+    Parameters
+    ----------
         args: curve, t
 
         kwargs:
             Arguments forwarded to
             :py:mod:`pygimli.meshtools.interpolateAlongCurve`
 
-            periodic : bool [False]
-                Curve is periodic.
-                Useful for closed parametric spline interpolation.
+        periodic: bool [False]
+            Curve is periodic.
+            Useful for closed parametric spline interpolation.
 
-    * 1D point set :math:`u(x)` for ascending :math:`x`.
+    **4. 1D interpolation**
+      1D point set :math:`u(x)` for ascending :math:`x`.
       Find interpolation function :math:`I = u(x)` and
       returns :math:`u_{\text{i}} = I(x_{\text{i}})`
       (interpolation methods are [**linear** via matplotlib,
       cubic **spline** via scipy, fit **harmonic** functions' via pygimli])
       Note, for 'linear' and 'spline' the interpolate contains all original
       coordinates while 'harmonic' returns an approximate best fit.
-      The amount of harmonic coefficients can be specfied with the 'nc' keyword.
+      The amount of harmonic coefficients can be specified by the 'nc' keyword.
 
-      Parameters:
+    Parameters
+    ----------
         args: xi, x, u
             * :math:`x_{\text{i}}` - target sample points
             * :math:`x` - function sample points
             * :math:`u` - function values
+
         kwargs:
             * method : string
                 Specify interpolation method 'linear, 'spline', 'harmonic'
@@ -481,24 +487,23 @@ def interpolate(*args, **kwargs):
                 Curve is periodic.
                 Useful for closed parametric spline interpolation.
 
-      Returns:
+    Returns
+    -------
         ui: array of length xi
             :math:`u_{\text{i}} = I(x_{\text{i}})`, with :math:`I = u(x)`
-
 
     To use the core functions :gimliapi:`GIMLI::interpolate` start with a
     mesh instance as first argument or use the appropriate keyword arguments.
 
     TODO
-
-    * 2D parametric to points (method=['linear, 'spline', 'harmonic'])
-    * 2D/3D point cloud to points/grids
-        ('Delauney', 'linear, 'spline', 'harmonic')
-    * Mesh to points based on nearest neighbor values (pg.core)
+    ----
+        * 2D parametric to points (method=['linear, 'spline', 'harmonic'])
+        * 2D/3D point cloud to points/grids
+            ('Delauney', 'linear, 'spline', 'harmonic')
+        * Mesh to points based on nearest neighbor values (pgcore)
 
     Examples
     --------
-
     >>> import numpy as np
     >>> import pygimli as pg
     >>> fig, ax = pg.plt.subplots(1, 1, figsize=(10, 5))
@@ -519,69 +524,78 @@ def interpolate(*args, **kwargs):
     fallback = kwargs.pop('fallback', 0.0)
     verbose = kwargs.pop('verbose', False)
     pgcore = False
+
     if 'srcMesh' in kwargs:
         pgcore = True
 
     elif len(args) > 0:
         if isinstance(args[0], pg.Mesh):
             if len(args) == 2 and isinstance(args[1], pg.Mesh):
-                return pg.core.pgcore.interpolate(args[0], args[1],
-                                                  fillValue=fallback,
-                                                  verbose=verbose)
+                return pg.core.interpolate(args[0], args[1],
+                                           fillValue=fallback,
+                                           verbose=verbose)
 
             if len(args) == 3 and isinstance(args[1], pg.Mesh):
                 pgcore = False  # (outMesh, inMesh, vals)
             else:
-                pgcore = True
+                pgcore = True   # (inMesh, *args)
 
     if pgcore:
         if len(args) == 3:  # args: outData = (inMesh, inData, outPos)
 
-            if args[1].ndim == 2:  # outData = (inMesh, mat, vR3)
+            if args[1].ndim == 2:  # outData = (inMesh, mat(dim>1), vR3)
+
 
                 outMat = pg.Matrix()
-                pg.core.pgcore.interpolate(args[0], inMat=np.array(args[1]),
-                                           destPos=args[2], outMat=outMat,
-                                           fillValue=fallback,
-                                           verbose=verbose)
+                pg.core.interpolate(args[0], inMat=np.array(args[1]),
+                                    destPos=args[2], outMat=outMat,
+                                    fillValue=fallback,
+                                    verbose=verbose)
                 return np.array(outMat)
 
-        if len(args) == 4:  # args: (inMesh, inData, outPos, outData)
+        if len(args) == 4:  # args: (inMesh, inData(dim==1), outPos, outData)
 
             if args[1].ndim == 1 and args[2].ndim == 1 and args[3].ndim == 1:
-                return pg.core.pgcore.interpolate(args[0], inVec=args[1],
-                                                     x=args[2], y=args[3],
-                                                     fillValue=fallback,
-                                                     verbose=verbose)
+                return pg.core.interpolate(args[0], inVec=args[1],
+                                           x=args[2], y=args[3],
+                                           fillValue=fallback,
+                                           verbose=verbose)
 
             if isinstance(args[1], pg.Matrix) and \
                isinstance(args[3], pg.Matrix):
-                return pg.core.pgcore.interpolate(args[0], inMat=args[1],
-                                                     destPos=args[2],
-                                                     outMat=args[3],
-                                                     fillValue=fallback,
-                                                     verbose=verbose)
+                return pg.core.interpolate(args[0], inMat=args[1],
+                                           destPos=args[2],
+                                           outMat=args[3],
+                                           fillValue=fallback,
+                                           verbose=verbose)
             if isinstance(args[1], pg.Vector) and \
                isinstance(args[3], pg.Vector):
-                return pg.core.pgcore.interpolate(args[0], inVec=args[1],
-                                                     destPos=args[2],
-                                                     outVec=args[3],
-                                                     fillValue=fallback,
-                                                     verbose=verbose)
+                return pg.core.interpolate(args[0], inVec=args[1],
+                                           destPos=args[2],
+                                           outVec=args[3],
+                                           fillValue=fallback,
+                                           verbose=verbose)
 
         if len(args) == 5:
             if args[1].ndim == 1 and args[2].ndim == 1 and \
                args[3].ndim == 1 and args[4].ndim == 1:
-                return pg.core.pgcore.interpolate(args[0], inVec=args[1],
-                                                     x=args[2], y=args[3],
-                                                     z=args[4],
-                                                     fillValue=fallback,
-                                                     verbose=verbose)
+                return pg.core.interpolate(args[0], inVec=args[1],
+                                           x=args[2], y=args[3],
+                                           z=args[4],
+                                           fillValue=fallback,
+                                           verbose=verbose)
 
-        return pg.core.pgcore.interpolate(*args, **kwargs,
-                                             fillValue=fallback,
-                                             verbose=verbose)
-        # end if pg.core:
+        if len(args) == 3 and pg.isPosList(args[2]):
+            # args: (inMesh, inData(dim==1), posList)
+            return pg.core.interpolate(args[0], args[1], destPos=args[2],
+                                   fillValue=fallback,
+                                   verbose=verbose)
+
+        return pg.core.interpolate(*args, **kwargs,
+                                   fillValue=fallback,
+                                   verbose=verbose)
+
+    # end if pg.core:
 
     if len(args) == 3:
 
@@ -590,7 +604,7 @@ def interpolate(*args, **kwargs):
             inMesh = args[1]
             data = args[2]
 
-            if isinstance(data, pg.core.R3Vector) or isinstance(
+            if isinstance(data, pg.PosVector) or isinstance(
                     data, pg.core.stdVectorRVector3):
                 x = pg.interpolate(outMesh, inMesh, pg.x(data))
                 y = pg.interpolate(outMesh, inMesh, pg.y(data))
@@ -648,6 +662,92 @@ def interpolate(*args, **kwargs):
         curve = args[0]
         t = args[1]
         return interpolateAlongCurve(curve, t, **kwargs)
+
+
+def extract2dSlice(mesh, origin=None, normal=None, angle=0, dip=0, **kwargs):
+    """Extract slice from 3D mesh as triangle mesh.
+
+    Parameters
+    ----------
+    mesh : pg.Mesh
+        Input mesh
+    origin : [float, float, float]
+        origin to be shifted [x, y, z]
+    normal : [float, float, float] | str
+        normal vector for extracting plane, or
+        "x", "y", "z" equal to "yz", "xz", "yz", OR
+    angle : float [0]
+        azimuth of plane in the xy plane (0=x, 90=y)
+    dip : float [0]
+        angle to be tilted into the x'z plane (0=vertical)
+
+    Optional keywords
+    -----------------
+    x,y,z : float [None]
+        axis-parallel flices, determines normal and origin
+
+    Returns
+    -------
+    2d triangular pygimli mesh with all data fields
+    """
+    from pygimli.viewer.pv import pgMesh2pvMesh
+    # from pygimli.meshtools import convertPVPolyData  # to be written yet
+    meshtmp = pg.Mesh(mesh)
+    if origin is None and normal is None:  # use x/y/z
+        if "z" in kwargs:
+            origin = [0, 0, kwargs["z"]]
+            normal = "z"
+        elif "y" in kwargs:
+            origin = [0, kwargs["y"], 0]
+            normal = "y"
+        elif "x" in kwargs:
+            origin = [kwargs["x"], 0, 0]
+            normal = "x"
+        else:
+            normal = "y"
+
+    if origin == "center":
+        bb = mesh.boundingBox()
+        origin = [(bb.xMin()+bb.xMax())/2, (bb.yMin()+bb.yMax())/2, 0]
+
+    if origin is not None:
+        meshtmp.translate(-pg.Pos(origin))
+
+    if isinstance(normal, str):  # "x", "yz" etc.
+        if normal == "z" or normal == "xy":
+            normal = [0, 0, 1]
+        elif normal == "y" or normal == "xz":
+            normal = [0, 1, 0]
+        elif normal == "x" or normal == "yz":
+            normal = [1, 0, 0]
+
+    if angle:
+        meshtmp.rotate(pg.Pos(0, 0, np.deg2rad(-angle)))
+    if dip:
+        meshtmp.rotate(pg.Pos(0, np.deg2rad(-dip), 0))
+
+    pvmesh = pgMesh2pvMesh(meshtmp)
+
+    pvs = pvmesh.slice(normal=normal, origin=[0, 0, 0],
+                       generate_triangles=True)
+    # return convertPVPolyData(pvs)  # that's the better way
+    tri = pvs.faces.reshape((-1, 4))[:, 1:]
+    mesh2d = pg.Mesh(dim=2)
+    for point in pvs.points:
+        mesh2d.createNode(point)
+
+    for face in tri:
+        mesh2d.createTriangle(*[mesh2d.node(p) for p in face])
+
+    if normal == [1, 0, 0]:
+        mesh2d.swapCoordinates(0, 1)
+
+    for key in mesh.dataKeys():
+        mesh2d[key] = pvs[key]
+
+    mesh2d.setCellMarkers(pvs["Cell Marker"])
+    mesh2d.swapCoordinates(1, 2)
+    return mesh2d
 
 
 if __name__ == '__main__':

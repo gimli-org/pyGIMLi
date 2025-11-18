@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -31,7 +31,12 @@
 //#define KDTREE_DEFINE_OSTREAM_OPERATORS
 #include <kdtree++/kdtree.hpp>
 
-typedef KDTree::KDTree< 3, GIMLI::Node *, std::pointer_to_binary_function< GIMLI::Node *, size_t, double > > NodeKDTree;
+struct _Node_Bracket_accessor { 
+    typedef double result_type;
+    result_type operator()(GIMLI::Node * n, size_t i) const;
+};
+
+typedef KDTree::KDTree< 3, GIMLI::Node *, _Node_Bracket_accessor > NodeKDTree;
 
 namespace GIMLI{
 

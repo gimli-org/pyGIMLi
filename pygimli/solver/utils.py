@@ -55,6 +55,7 @@ def createConstitutiveMatrix(lam=None, mu=None, E=None, nu=None, dim=2,
 
     TODO
     ----
+        * dim == 1
         * Tests
         * Examples
         * comparision Voigts/Kelvin notation
@@ -94,7 +95,9 @@ def createConstitutiveMatrix(lam=None, mu=None, E=None, nu=None, dim=2,
         lam = (E * nu) / ((1 + nu) * (1-2*nu))
         mu  = E / (2*(1 + nu))
 
-    if dim == 2:
+    if dim == 1:
+        pg.critical('not yet implemented')
+    elif dim == 2:
         ## for pure 2d plane stress
         C = ConstitutiveMatrix(np.zeros((3, 3)),
                                voigtNotation=voigtNotation)

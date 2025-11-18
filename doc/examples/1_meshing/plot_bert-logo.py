@@ -31,7 +31,7 @@ for n in patch.get_verts() * 10:
 for i in range(poly.nodeCount() - 1):
     poly.createEdge(poly.node(i), poly.node(i + 1))
 
-poly.createEdge(poly.node(poly.nodeCount() - 1), poly.node(0))
+edge = poly.createEdge(poly.node(poly.nodeCount() - 1), poly.node(0))
 
 ###############################################################################
 # We create mesh from the polygone and set the x values as the

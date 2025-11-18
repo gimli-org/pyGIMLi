@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2005-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2005-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -55,22 +55,26 @@ ModellingBase::ModellingBase(const Mesh & mesh, DataContainer & data, bool verbo
 }
 
 ModellingBase::~ModellingBase() {
+    // __MS("delete: " << this)
     if (ownRegionManager_) delete regionManager_;
     if (mesh_) delete mesh_;
     if (jacobian_ && ownJacobian_) delete jacobian_;
     if (constraints_ && ownConstraints_) delete constraints_;
+
 }
 
 void ModellingBase::init_() {
     regionManager_      = new RegionManager(verbose_);
     regionManagerInUse_ = false;
 
+    // __MS("ModellingBase::init_: " << this <<  " rm:" << regionManager_)
+
     mesh_               = 0;
     jacobian_           = 0;
     constraints_        = 0;
     dataContainer_      = 0;
 
-    nThreads_           = numberOfCPU();
+    nThreads_           = min(8, numberOfCPU()-2);
     nThreadsJacobian_   = 1;
 
     ownJacobian_        = false;
@@ -94,9 +98,6 @@ void ModellingBase::setThreadCount(Index nThreads) {
 Index ModellingBase::threadCount(){
     bool verbose = this->verbose();
 
-    this->nThreads_ = getEnvironment("GIMLI_NUM_THREADS",
-                                     this->nThreads_, verbose);
-
     if (verbose){
         std::cout << "J(" << numberOfCPU() << "/" << this->nThreads_;
     #if USE_BOOST_THREAD
@@ -109,7 +110,7 @@ Index ModellingBase::threadCount(){
     if (verbose){
         std::cout << std::endl;
     }
-    return this->nThreads_;
+    return max(1, this->nThreads_);
 }
 
 void ModellingBase::setData(DataContainer & data){
@@ -160,11 +161,14 @@ void ModellingBase::createRefinedForwardMesh(bool refine, bool pRefine){
     if (regionManager_->pMesh()){
         if (refine){
             if (pRefine){
+                log(Info, "Create P2 refined mesh for forward tasks.");
                 setMesh_(regionManager_->mesh().createP2());
             } else {
+                log(Info, "Create H2 refined mesh for forward tasks.");
                 setMesh_(regionManager_->mesh().createH2());
             }
         } else {
+            log(Info, "copy mesh for forward tasks.");
             setMesh_(regionManager_->mesh());
         }
     } else {
@@ -176,9 +180,14 @@ void ModellingBase::setMesh(const Mesh & mesh, bool ignoreRegionManager) {
     Stopwatch swatch(true);
     if (regionManagerInUse_ && !ignoreRegionManager){
         // && holdRegionInfos e.g., just give it a try to ignore the regionmanager if necessary
-        regionManager_->setMesh(mesh);//#, ignoreRegionManger);
-        if (verbose_) std::cout << "ModellingBase::setMesh() switch to regionmanager mesh" << std::endl;
-        setMesh_(regionManager_->mesh());
+        // if (ownRegionManager_ == true){
+        //     __M
+            regionManager_->setMesh(mesh);//#, ignoreRegionManger);
+            if (verbose_) std::cout << "ModellingBase::setMesh() switch to regionmanager mesh" << std::endl;
+            setMesh_(regionManager_->mesh());
+        // } else {
+        //     __MS("omiiting")
+        // }
     } else {
         if (verbose_) std::cout << "ModellingBase::setMesh() copying new mesh ... ";
         setMesh_(mesh);
@@ -366,7 +375,9 @@ void ModellingBase::createConstraints(){
 }
 
 void ModellingBase::clearConstraints(){
-    if (constraints_) constraints_->clear();
+    if (constraints_) {
+        constraints_->clear();
+    }
 }
 
 MatrixBase * ModellingBase::constraints() {
@@ -387,10 +398,12 @@ RSparseMapMatrix & ModellingBase::constraintsRef() {
     return *dynamic_cast < RSparseMapMatrix *>(constraints_);
 }
 
-RVector ModellingBase::createMappedModel(const RVector & model, double background) const {
+RVector ModellingBase::createMappedModel(const RVector & model,
+                                         double background) const {
     if (mesh_ == 0) throwError("ModellingBase has no mesh for ModellingBase::createMappedModel");
 
-    // __MS("createMappedModel: " << model.size() << " " <<  mesh_->cellCount())
+    // __MS("ModellingBase::createMappedModel: " << this << " rm: " << regionManager_
+    //             << " " << model.size() << " " <<  mesh_->cellCount())
 
     if (model.size() == mesh_->cellCount()) {
         IVector cM(mesh_->cellMarkers());
@@ -442,6 +455,8 @@ RVector ModellingBase::createMappedModel(const RVector & model, double backgroun
     if (background != 0.0){
         mesh_->prolongateEmptyCellsValues(cellAtts, background);
     }
+    // __MS(regionManager_->regionCount())
+    // exit(1);
 
     bool warned = false;
     // search for fixed regions
@@ -449,20 +464,28 @@ RVector ModellingBase::createMappedModel(const RVector & model, double backgroun
         // if (abs(cellAtts[i]) < TOLERANCE){ // this will never work since the prior prolongation
         if (mesh_->cell(i).marker() <= MARKER_FIXEDVALUE_REGION){
                 // setting fixed values
-            SIndex regionMarker = -(mesh_->cell(i).marker() - MARKER_FIXEDVALUE_REGION);
+            SIndex regionMarker = -(mesh_->cell(i).marker() -
+                                    MARKER_FIXEDVALUE_REGION);
+
+            // __MS(regionManagerInUse_ << " " << this <<  " " <<
+            //         regionManager_->region(regionMarker)->fixValue())
+
             if (regionManagerInUse_){
                 double val = regionManager_->region(regionMarker)->fixValue();
                 if (warned == false){
-                    log(Warning, "fixing region: ", regionMarker," to: ", val);
+                    log(Info, "fixing region: ", regionMarker," to: ", val);
                     warned = true;
                 }
                 cellAtts[i] = val;
+                // __MS(val)
             } else {
                 // temporay hack until fixed in modelling.py
                 if (warned == false){
-                    __MS(cellAtts[i])
+                    // __MS(cellAtts[i])
                     log(Warning, "** TMP HACk ** fixing region: ", regionMarker, " to: ", 1/0.058);
                     warned = true;
+                    __MS(this << " rm:" << regionManager_)
+                    THROW_TO_IMPL
                 }
                 cellAtts[i] = 1./0.058;
             }
@@ -479,12 +502,15 @@ void ModellingBase::mapModel(const RVector & model, double background){
 }
 
 void ModellingBase::initRegionManager() {
+    // clean this up .. this will fail for second try with mesh
+
     if (!regionManagerInUse_){
         if (mesh_){
             regionManager_->setMesh(*mesh_);
             this->setMesh_(regionManager_->mesh());
         }
         regionManagerInUse_ = true;
+        // __MS("ModellingBase::initRegionManager " << this << " rm: " << regionManager_)
     }
 }
 
@@ -494,12 +520,16 @@ void ModellingBase::setRegionManager(RegionManager * reg){
         delete regionManager_;
         regionManager_ = reg;
         ownRegionManager_ = false;
-
+        // __MS("ModellingBase::setRegionManager reg " << this << " rm: " << regionManager_)
     } else {
         regionManagerInUse_ = false;
         regionManager_      = new RegionManager(verbose_);
-        ownRegionManager_   = true; // we really refcounter
+        ownRegionManager_   = true;
+        // __MS("ModellingBase::setRegionManager new " << this << " rm: " << regionManager_)
     }
+    // __MS("MB:setRegionManager: " << this << " rm: " << regionManager_)
+    // __MS(regionManagerInUse_ << " " << this)
+    // THROW_TO_IMPL
 }
 
 const RegionManager & ModellingBase::regionManager() const {

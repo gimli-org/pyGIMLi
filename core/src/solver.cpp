@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *   Thomas Günther thomas@resistivity.net                                    *
  *                                                                            *
@@ -20,6 +20,7 @@
 #include "matrix.h"
 #include "vectortemplates.h"
 #include "solver.h"
+#include "sparsematrix.h"
 
 namespace GIMLI{
 
@@ -87,8 +88,13 @@ int solveCGLSCDWWhtrans(const MatrixBase & S, const MatrixBase & C,
 // __MS(min(transMult(S,Vec(bR.size(), 1))) << " " 
 //      << max(transMult(S,Vec(bR.size(), 1))) << " " 
 //      << mean(transMult(S,Vec(bR.size(), 1))))
-// if (z.size() > 100 )exit(1);
+// // if (z.size() > 100 )exit(1);
 
+//     RVector sv(dynamic_cast< const RSparseMapMatrix *> (&S)->values());
+//     __MS("S:" << " " << min(sv) << " " << max(sv) << " " << mean(sv))
+//     RVector cv(dynamic_cast< const RSparseMapMatrix *> (&C)->values());
+//     __MS("C:" << " " << min(cv) << " " << max(cv) << " " << mean(cv))
+ 
     double accuracy = tol;
     if (accuracy < 0.0) accuracy = max(TOLERANCE, 1e-08 * dot(r, r));
     r = p;
@@ -105,22 +111,56 @@ int solveCGLSCDWWhtrans(const MatrixBase & S, const MatrixBase & C,
     // std::cout << "###############################################" << std::endl;
     // std::cout << 0 << "  " << accuracy << std::endl;
 
+    // hack until matMult with expression templates
+    Vec pwm(nConst, 0.0);
+    Vec p_tm(nModel, 0.0);
+    Vec x_tm(nModel, 0.0);
+    Vec zdWtd(nData, 0.0);
+    Vec wmx(nConst, 0.0);
+    Vec wcwcCwmx(nConst, 0.0);
+    Vec Cpwm(nConst, 0.0);
+
     while (count < maxIter && normR2 > accuracy){
         count ++;
-        q = S * Vec(p / tm) * dW * td;
+        p_tm.assign(p / tm);
+        q = (S * p_tm) * (dW * td);
+        // q = S * Vec(p / tm) * dW * td;
         // std::cout << "q " << min(q) << " " << max(q) << " " << mean(q) << std::endl;
         // q = round(q, 1e-10);
         // std::cout << "q " << min(q) << " " << max(q) << " " << mean(q) << std::endl;
+        pwm.assign(p * wm);
+        Cpwm.assign(C * pwm);
         
-        wcp = wc * (C * Vec(p * wm));
+        //** try to avoid accuracy problems with unsorted C
+        Cpwm.round(1e-10);
+
+        // Vec Cpwm((C * pwm));
+        wcp = wc * Cpwm;
+        
+        // std::cout << "pwm " << min(pwm) << " " << max(pwm) << " " << mean(pwm) << std::endl;
+        // std::cout << "Cpwm " << min(Cpwm) << " " << max(Cpwm) << " " << mean(Cpwm) << std::endl;
+        // std::cout << "wcp " << min(wcp) << " " << max(wcp) << " " << mean(wcp) << std::endl;
+
+        if (count == 1 && std::fabs(mean(Cpwm)+17.00029) < 1e-2){
+            // C.save("C17000.bmat");
+            // pwm.save("pwm1700.bmat");
+            //throwError("debug halt");
+__MS("##################################################################")
+        }
+        // if (count == 1 && std::fabs(mean(Cpwm)+17.708) < 1e-2){
+        //     // C.save("C17708.bmat");
+        //     // pwm.save("pwm17708.bmat");
+        //     throwError("debug halt");
+        // }
+        // wcp = wc * (C * pwm);
         // wcp = round(wcp, 1e-10);
 
-        // std::cout << "wcp " << min(wcp) << " " << max(wcp) << " " << mean(wcp) << std::endl;
 
         aQ = (dot(q, q) + lambda * dot(wcp, wcp));
         // if (aQ < 1e-10){
         //     aQ = 1e-10;
         // }
+        
         // std::cout << "aQ " << aQ<< std::endl;
         alpha = normR2 / aQ;
         //alpha = std::round(alpha * 1e10) / 1e10;
@@ -128,16 +168,23 @@ int solveCGLSCDWWhtrans(const MatrixBase & S, const MatrixBase & C,
         x += p * alpha;
 
         if ((count % 10) == -1) { // TOM
-            z = bR - S * Vec(x / tm) * td; // z exakt durch extra Mult.
+            x_tm.assign(x / tm);
+            z = bR - (S * x_tm) * td; // z exakt durch extra Mult.
             z *= dW;
         } else {
             z -= q * alpha;
         }
         //z = round(z, 1e-10);
 
-        r = transMult(S, Vec(z * dW * td)) / tm 
-            - transMult(C, Vec(wc * wc * (C * Vec(wm * x)))) * wm * lambda 
-            - cdx;
+        zdWtd.assign(z * dW * td);
+        wmx.assign(wm * x);
+        wcwcCwmx.assign(wc * wc * (C * wmx));
+
+        r =   transMult(S, zdWtd) / tm 
+            - transMult(C, wcwcCwmx) * wm * lambda - cdx;
+        // r = transMult(S, Vec(z * dW * td)) / tm 
+        //     - transMult(C, Vec(wc * wc * (C * Vec(wm * x)))) * wm * lambda 
+        //     - cdx;
         //r = round(r, 1e-8);
 
         normR2old = normR2;
@@ -147,13 +194,13 @@ int solveCGLSCDWWhtrans(const MatrixBase & S, const MatrixBase & C,
 
         p = r + p * beta;
 
-        // std::cout << "\n" << count << " +++++"  << " " << normR2<< std::endl;
-        // std::cout << alpha << " " << beta<< " " << alpha << std::endl;
-        // std::cout << "q " << min(q) << " " << max(q) << " " << mean(q) << std::endl;
-        // std::cout << "wcp "  << min(wcp) << " " << max(wcp) << " " << mean(wcp) << std::endl;
-        // std::cout << "x "  << min(x) << " " << max(x) << " " << mean(x) << std::endl;
-        // std::cout << "r "  << min(r) << " " << max(r) << " " << mean(r) << std::endl;
-        // std::cout << "p "  << min(p) << " " << max(p) << " " << mean(p) << std::endl;
+//         std::cout << "\n" << count << " +++++"  << " " << normR2<< std::endl;
+//         std::cout << alpha << " " << beta<< " " << alpha << std::endl;
+//         std::cout << "q " << min(q) << " " << max(q) << " " << mean(q) << std::endl;
+//         std::cout << "wcp "  << min(wcp) << " " << max(wcp) << " " << mean(wcp) << std::endl;
+//         std::cout << "x "  << min(x) << " " << max(x) << " " << mean(x) << std::endl;
+//         std::cout << "r "  << min(r) << " " << max(r) << " " << mean(r) << std::endl;
+//         std::cout << "p "  << min(p) << " " << max(p) << " " << mean(p) << std::endl;
         
 // __MS("---" << count << "-------" << normR2 << "-------------------------")
 // __MS(min(q) << " " << max(q) << " " << mean(q))

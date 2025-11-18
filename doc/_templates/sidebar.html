@@ -1,93 +1,65 @@
-      {%- if pagename == 'index' %}
-      <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <strong>Check out the <a href="https://github.com/gimli-org/transform2021" target="blank">pyGIMLi tutorial</a> at Transform 2021!</strong>
-      </div>
-      {%- endif %}
-      {%- if display_toc %}
-      <div class="card bg-light mb-4">
-        <div class="card-header">Contents</div>
-        <div class="card-body">
-        <nav id="myScrollspy">
-        {{ toc|replace('<ul>', '<ul class="nav flex-column">') }}
-        </nav>
-        </div>
-      </div>
-      {%- endif %}
-      <div class="card bg-light mb-4">
-        <div class="card-header">Tutorial & example gallery</div>
-        <div class="card-body" id="sidebar-gallery">
-          {% include 'gallery.html' %}
-        </div>
-      </div>
-      {%- if pagename != 'index' %}
-      <script>
-        ! function($) {
-          $(function() {
-            $('#sidebar-example-gallery').carousel({
-              interval: 4000 // 4 sec
-            })
-          })
-        }(window.jQuery)
-      </script>
-      {%- endif %}
-      <div class="card bg-light mb-4">
-        <div class="card-header">Quick links</div>
-        <div class="card-body">
-          <ul class="nav flex-column">
-            <li class="nav-item">
-              <a href="{{ pathto('pygimliapi/index.html', 1) }}"><i class="fas fa-book fa-fw"></i> API documentation</a>
-            </li>
-            <li class="nav-item">
-              <a target="_blank" href="https://github.com/gimli-org/gimli"><i class="fab fa-github fa-fw"></i> Code repository</a>
-            </li>
-            <li class="nav-item">
-              <a target="_blank" href="https://github.com/gimli-org/gimli/issues"><i class="fas fa-bug fa-fw"></i> Report a bug</a>
-            </li>
-            <li class="nav-item">
-              <a target="_blank" href="https://www.researchgate.net/project/pyGIMLi-Geophysical-Inversion-and-Modelling-Library-in-Python"><i class="fab fa-researchgate fa-fw"></i> Researchgate project</a>
-            </li>
-            <li class="nav-item">
-              <a href="{{ pathto('citation') }}"><i class="fas fa-quote-right fa-fw"></i> Citation</a>
-            </li>
-            {%- if 'index' not in pagename and 'pygimliapi' not in pagename %}
-            {%- if show_srclink_url %}
-            <div class="border-top my-3"></div>
-            <li class="nav-item">
-              <a href="{{ show_srclink_url }}" rel="nofollow" target="_blank"><i class="fas fa-code fa-fw"></i> View page source</a>
-            </li>
-            {%- endif %} {%- if history_srclink_url %}
-            <li class="nav-item">
-              <a href="{{ history_srclink_url }}" rel="nofollow" target="_blank"><i class="fas fa-history fa-fw"></i> View page history</a>
-            </li>
-            {%- endif %} {%- if edit_srclink_url %}
-            <li class="nav-item">
-              <a href="{{ edit_srclink_url }}" rel="nofollow" style="font-weight: 550" target="_blank"><i class="fas fa-edit fa-fw"></i> Improve this page</a>
-            </li>
-            {%- endif %}
-            {%- endif %}
-          </ul>
-        </div>
-      </div>
-
-      {%- if pagename == 'index' %}
-      <div class="card bg-light mb-4">
-        <div class="card-header">Code Status</div>
-        <div class="card-body">
-          <h6 class="card-subtitle mb-2 text-muted">
-            <i class="fas fa-check"></i> Latest release<br><br>
-            <a target="_blank" href="https://github.com/gimli-org/gimli/releases/latest"><img
-                src="https://img.shields.io/github/release/gimli-org/gimli.svg?style=flat-square"
-                alt="Latest release tag" /></a>
-          </h6>
-          <h6 class="card-subtitle mb-2 text-muted">
-            <i class="fas fa-flask"></i> Development version<br><br>
-            <a target="_blank" href="https://github.com/gimli-org/gimli/tree/dev"><img
-                src="https://img.shields.io/github/commits-since/gimli-org/gimli/latest.svg?style=flat-square"
-                alt="Commits since latest release" /></a><br>
-<a href='http://jenkins.pygimli.org/job/pyGIMLi_dev/'><img src='http://jenkins.pygimli.org/job/pyGIMLi_dev/badge/icon'></a>
-          </h6>
-        </div>
-      </div>
-      {%- endif %}
-
-      <br>
+<div class="sticky-md-top">
+  <div class="sd-card mb-4">
+    <div class="sd-card-header">Tutorial & example gallery</div>
+    <div class="sd-card-body" id="sidebar-gallery">
+      {% include 'gallery.html' %}
+    </div>
+  </div>
+  {%- if pagename != 'index' %}
+  <script>
+    ! function ($) {
+      $(function () {
+        $('#sidebar-example-gallery').carousel({
+          interval: 4000, // 4 sec
+          ride: true
+        })
+      })
+    }(window.jQuery)
+  </script>
+  {%- endif %}
+  <div class="sd-card mb-4">
+    <div class="sd-card-header">Quick links</div>
+    <div class="sd-card-body">
+      <ul class="nav flex-column">
+        <!-- <li class="nav-item">
+          <a href="{{ pathto('pygimliapi', 1) }}"><i class="fas fa-book fa-fw"></i> API documentation</a>
+        </li> -->
+        <li class="nav-item">
+          <a target="_blank" href="https://github.com/gimli-org/gimli"><i class="fab fa-github fa-fw"></i> Code
+            repository</a>
+        </li>
+        <li class="nav-item">
+          <a target="_blank" href="https://github.com/gimli-org/gimli/issues"><i class="fas fa-bug fa-fw"></i> Report a
+            bug</a>
+        </li>
+        <li class="nav-item">
+          <a target="_blank" href="https://softwareunderground.org/mattermost"><i class="fab fa-slack fa-fw"></i> pyGIMLi
+            chat</a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ pathto('citation') }}"><i class="fas fa-quote-right fa-fw"></i> Citation</a>
+        </li>
+        {%- if 'index' not in pagename and 'pygimliapi' not in pagename %}
+        {%- if show_srclink_url %}
+        <div class="border-top my-3"></div>
+        <li class="nav-item">
+          <a href="{{ show_srclink_url }}" rel="nofollow" target="_blank"><i class="fas fa-code fa-fw"></i> View page
+            source</a>
+        </li>
+        {%- endif %} {%- if history_srclink_url %}
+        <li class="nav-item">
+          <a href="{{ history_srclink_url }}" rel="nofollow" target="_blank"><i class="fas fa-history fa-fw"></i> View
+            page history</a>
+        </li>
+        {%- endif %} {%- if edit_srclink_url %}
+        <li class="nav-item">
+          <a href="{{ edit_srclink_url }}" rel="nofollow" style="font-weight: 550" target="_blank"><i
+              class="fas fa-edit fa-fw"></i> Improve this page</a>
+        </li>
+        {%- endif %}
+        {%- endif %}
+      </ul>
+    </div>
+  </div>
+  <br>
+</div>

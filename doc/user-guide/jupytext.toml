@@ -1,0 +1,2 @@
+notebook_metadata_filter="kernelspec,jupytext,-kernelspec.display_name,-jupytext.text_representation.jupytext_version"
+cell_metadata_filter="all,-autoscroll,-collapsed,-scrolled,-trusted,-ExecuteTime,-editable,-slideshow"

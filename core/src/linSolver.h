@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2007-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2007-2024 by the GIMLi development team                    *
  *   Carsten Ruecker carsten@resistivity.net                                  *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -20,7 +20,9 @@
 #define _GIMLI_LINSOLVER__H
 
 #include "gimli.h"
+#include "solverWrapper.h"
 #include <cmath>
+#include <map>
 
 namespace GIMLI{
 
@@ -28,10 +30,11 @@ class SolverWrapper;
 
 enum SolverType{AUTOMATIC,LDL,CHOLMOD,UMFPACK,UNKNOWN};
 
-class DLLEXPORT LinSolver{
+
+class DLLEXPORT LinSolver : public SolverWrapper{
 public:
     LinSolver(bool verbose=false);
-
+    
     LinSolver(RSparseMatrix & S, bool verbose=false);
 
     LinSolver(RSparseMapMatrix & S, bool verbose=false);
@@ -53,7 +56,9 @@ public:
     RVector solve(const RVector & rhs);
     CVector solve(const CVector & rhs);
 
-    void setSolverType(SolverType solverType = AUTOMATIC);
+    void setSolverType(SolverType solverType=AUTOMATIC);
+    
+    // void setSolver(const std::string & name);
 
     /*! Forwarded to the wrapper to overwrite settings within S. stype =-2 -> use S.stype()*/
     void setMatrix(RSparseMatrix & S, int stype=-2);
@@ -65,6 +70,8 @@ public:
 
     std::string solverName() const;
 
+    std::string name() const { return solverName(); }
+
 protected:
     void init_();
 
@@ -74,7 +81,7 @@ protected:
     MatrixBase * cacheMatrix_;
     SolverType      solverType_;
     SolverWrapper * solver_;
-    bool            verbose_;
+
     uint rows_;
     uint cols_;
 };

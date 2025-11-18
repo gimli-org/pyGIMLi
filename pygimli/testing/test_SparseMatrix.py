@@ -166,6 +166,7 @@ class TestSparseMatrix(unittest.TestCase):
         B.add(A, 10, 10)
         print(B)
 
+
     def test_Misc(self):
         D = pg.SparseMapMatrix(3, 4)
         for i in range(D.rows()):
@@ -180,6 +181,8 @@ class TestSparseMatrix(unittest.TestCase):
 
         D.cleanCol(1)
         np.testing.assert_allclose(D.row(2), [1.0, 0.0, 1.0, 1.0])
+
+
 
 
 if __name__ == '__main__':

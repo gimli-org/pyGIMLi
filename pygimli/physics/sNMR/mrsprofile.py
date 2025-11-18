@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
-"""classes for inverting profile data with magnetic resonance soundings (MRS)
+#!/usr/bin/env python
+"""Classes for inverting profile data with magnetic resonance soundings (MRS).
+
 The preferred LCI type of MRS inversion was published in:
 Costabel, S., Günther, T., Dlugosch, R. & Müller-Petke, M. (2016):
 Torus-nuclear magnetic resonance: Quasi-continuous airborne magnetic resonance
 profiling by using a helium-filled balloon. Geophysics 81(4), W119-W129,
-doi:10.1190/geo2015-0467.1."""
+doi:10.1190/geo2015-0467.1.
+"""
 
 import sys
 import os
 from glob import glob
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.cm import Spectral
 
 import pygimli as pg
 from pygimli.viewer.mpl import showStitchedModels
@@ -101,13 +101,12 @@ class MRSLCI(pg.core.ModellingBase):
 
 
 class MRSprofile():
-    """manager class for several MRS data along a profile for joint inversion
+    """Manager class for several MRS data along a profile for joint inversion.
 
     Attributes
     ----------
-    mrs : list of MRS objects (single soundings)
-
-    x : list of positions for the soundings
+    mrs: list of MRS objects (single soundings)
+    x: list of positions for the soundings
 
 
     Methods
@@ -132,10 +131,10 @@ class MRSprofile():
     def __init__(self, filename=None, x=None, dx=1, x0=0, **kwargs):
         """Initialize profile object by mrs objects and optional positions.
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         filename : list of str | str
-            list of files OR filenames(with *) OR directory to load
+            list of files OR filenames(with wildcard '*') OR directory to load
         x : iterable
             position vector of individual soundings
         x0 : float [0]
@@ -377,7 +376,7 @@ class MRSprofile():
         print('Total RMS/Chi^2 value:')
         print(np.round(self.totalRMS, 2), np.round(self.totalChi2, 2))
 
-    def showWC(self, wlim=(0, 0.5), ax=None, cmap=Spectral,
+    def showWC(self, wlim=(0, 0.5), ax=None, cmap='Spectral',
                title=r'$\theta$ (-)'):
         """Show water content distribution as stitched model section."""
         fig = None
@@ -389,7 +388,7 @@ class MRSprofile():
                            title=title, cmin=wlim[0], cmax=wlim[1])
         return fig, ax
 
-    def showT2(self, tlim=(0.05, 0.5), ax=None, cmap=Spectral,
+    def showT2(self, tlim=(0.05, 0.5), ax=None, cmap='Spectral',
                title=r'$T_2^*$ (s)'):
         """Show relaxation time distribution as stitched model section."""
         fig = None
@@ -413,7 +412,7 @@ class MRSprofile():
         ax.legend(numpoints=1, loc=2)
         axb.legend(numpoints=1, loc=1)
 
-    def showModel(self, showFit=0, cmap=Spectral, figsize=(13, 12),
+    def showModel(self, showFit=0, cmap='Spectral', figsize=(13, 12),
                   wlim=(0, 0.5), tlim=(0.05, 0.5)):
         """Show 2d model as stitched 1d models along with fit."""
         fig, ax = plt.subplots(nrows=2+showFit, figsize=figsize, sharex=True)

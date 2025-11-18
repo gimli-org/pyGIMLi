@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2006-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2006-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *   Thomas Günther thomas@resistivity.net                                    *
  *                                                                            *
@@ -669,7 +669,7 @@ public:
             if (verbose_) echoStatus(responseNew, modelNew, "LS new");
         }
 
-        if (verbose_) std::cout << "Linesearch tau = " << tau << std::endl;
+        if (verbose_) std::cout << "Performing line search with tau = " << tau << std::endl;
 
         return tau;
     }

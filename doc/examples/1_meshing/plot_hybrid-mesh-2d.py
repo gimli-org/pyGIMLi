@@ -66,5 +66,4 @@ mesh3 = mt.mergeMeshes([mesh1, mesh2])
 mesh = mt.appendTriangleBoundary(mesh3, xbound=100., ybound=100., quality=31, smooth=True,
                                  marker=3, isSubSurface=True, addNodes=5)
 
-pg.show(mesh, markers=True, showMesh=True)
-pg.wait()
+ax, cb = pg.show(mesh, markers=True, showMesh=True)

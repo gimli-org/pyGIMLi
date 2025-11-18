@@ -1,18 +1,17 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""TODO DOCUMENT ME"""
+"""Finite-element solver and utility functions."""
 from copy import deepcopy
 
 import numpy as np
-import numpy.matlib
 import pygimli as pg
 
 
 def parseDictKey_(key, markers):
+    """Parse dictionary key of type str to marker list."""
     return parseMarkersDictKey(key, markers)
 
+
 def parseMarkersDictKey(key, markers):
-    """ Parse dictionary key of type str to marker list.
+    """Parse dictionary key of type str to marker list.
 
     Utility function to parse a dictionary key string into a valid list of
     markers containing in a given markers list.
@@ -55,17 +54,17 @@ def parseMarkersDictKey(key, markers):
             if len(sse) > 0:
                 try:
                     start = int(sse[0])
-                except BaseException as _:
+                except BaseException:
                     pass
             if len(sse) > 1:
                 try:
                     stop = int(sse[1])
-                except BaseException as _:
+                except BaseException:
                     pass
             if len(sse) > 2:
                 try:
                     step = int(sse[2])
-                except BaseException as _:
+                except BaseException:
                     pass
 
             mas = list(range(start, stop, step))
@@ -76,14 +75,17 @@ def parseMarkersDictKey(key, markers):
 
     return [m for m in mas if m in markers]
 
-def boundaryIdsFromDictKey(mesh, key, outside=True):
-    """Find all boundaries matching a dictionary keys
 
-    Attribute
-    ---------
+def boundaryIdsFromDictKey(mesh, key, outside=True):
+    """Find all boundaries matching a dictionary key.
+
+    Attributes
+    ----------
     mesh: :gimliapi:`GIMLI::Mesh`
+
     key: str|int
-        Representation for boundary marker. Will be parsed by    :py:mod:`pygimli.solver.solver.parseMarkersDictKey`
+        Representation for boundary marker. Will be parsed by
+        :py:mod:`pygimli.solver.solver.parseMarkersDictKey`
     outside: bool [True]
         Only select outside boundaries.
 
@@ -102,43 +104,44 @@ def boundaryIdsFromDictKey(mesh, key, outside=True):
             ret[m].append(i)
     return ret
 
+
 def cellValues(mesh, arg, **kwargs):
     """Get a value for each cell.
 
     Returns a array or vector of length mesh.cellCount() based on arg.
     The preferable arg is a dictionary for the cell marker and the appropriate
     cell value. The designated value can be calculated using a
-    callable(cell, **kwargs), which is called on demand
+    `callable(cell, **kwargs)`, which is called on demand.
 
-    Parameters
+    Attributes
     ----------
-    mesh : :gimliapi:`GIMLI::Mesh`
+    mesh: :gimliapi:`GIMLI::Mesh`
         Used if arg is callable
 
-    arg : float | int | complex | ndarray | iterable | callable | dict
+    arg: float | int | complex | ndarray | iterable | callable | dict
         Argument to be parsed as cell data.
-        If arg is a dictionary, the dict key will be interpreted as cell marker:
+        If arg is a dictionary, its key will be interpreted as cell marker:
 
         Dictionary is key: value. Value can be float, int, complex or ndarray.
         The last for anistropic or elastic tensors.
 
         Key can be integer for cell marker or str, which will be interpreted as
-        splice or list. See examples or parseDictKey_.
+        splice or list.
+        See examples or `py:mod:pygimli.solver.parseMarkersDictKey`.
 
-        Iterable of length mesh.nodeCount() will be interpolated to cellCenters.
+        Iterable of length mesh.nodeCount() to be interpolated to cell centers.
 
-    userData : class
+    userData: class
         Used if arg is callable
 
     Returns
     -------
-    ret : :gimliapi:`GIMLI::RVector` | ndarray(mesh.cellCount(), xx )
+    ret: :gimliapi:`GIMLI::Vector` | ndarray(mesh.cellCount(), xx )
         Array of desired length filled with the appropriate values.
 
     Examples
     --------
     >>> import pygimli as pg
-    >>>
     >>> mesh = pg.createGrid(x=range(5))
     >>> mesh.setCellMarkers([1, 1, 2, 2])
     >>> print(mesh.cellCount())
@@ -189,7 +192,7 @@ def cellValues(mesh, arg, **kwargs):
 
         try:
             val = list(arg.values())[0]
-        except BaseException as _:
+        except BaseException:
             pg.error("Can't interpret empty dictionary:", arg)
             val = 1.0
 
@@ -217,12 +220,12 @@ def cellValues(mesh, arg, **kwargs):
 
     # if arg if scalar or global data type, ndarray or Matrix but not the right
     # size assume global tensor
-    if isinstance(arg, np.ndarray) or \
-        isinstance(arg, pg.core.RMatrix) or \
-        isinstance(arg, pg.core.CMatrix) or \
-        isinstance(arg, float) or \
-        isinstance(arg, int) or \
-        isinstance(arg, complex):
+    if isinstance(arg, (np.ndarray,
+                        pg.core.RMatrix,
+                        pg.core.CMatrix,
+                        float,
+                        int,
+                        complex)):
         return [arg]*mesh.cellCount()
 
     return parseArgToArray(arg,
@@ -231,12 +234,11 @@ def cellValues(mesh, arg, **kwargs):
 
 
 def parseArgToArray(arg, nDof, mesh=None, userData={}):
-    """
-    Parse array related arguments to create a valid value array.
+    """Parse array related arguments to create a valid value array.
 
     Parameters
     ----------
-    arg : float | int | iterable | callable
+    arg: float | int | iterable | callable
         The target array value that will be converted to an array.
 
         If arg is a callable with it must fulfill:
@@ -251,28 +253,27 @@ def parseArgToArray(arg, nDof, mesh=None, userData={}):
         mesh.nodeCount() or mesh.boundaryCount(),
         respectively.
 
-    nDof : int | [int]
+    nDof: int | [int]
         Desired array size.
 
-    mesh : :gimliapi:`GIMLI::Mesh`
+    mesh: :gimliapi:`GIMLI::Mesh`
         Used if arg is callable
 
-    userData : class
+    userData: class
         Used if arg is callable
 
     Returns
     -------
-
-    ret : :gimliapi:`GIMLI::RVector`
+    ret: :gimliapi:`GIMLI::Vector`
         Array of desired length filled with the appropriate values.
     """
-    #pg.warn('check if obsolete: parseArgToArray')
+    # pg.warn('check if obsolete: parseArgToArray')
     if not hasattr(nDof, '__len__'):
         nDof = [nDof]
 
     try:
         return pg.Vector(nDof[0], float(arg))
-    except BaseException as _:
+    except BaseException:
         pass
 
     if hasattr(arg, '__len__'):
@@ -280,7 +281,7 @@ def parseArgToArray(arg, nDof, mesh=None, userData={}):
             if len(arg) == nDof[0]:
                 return arg
             else:
-                raise Exception('Given array does not have requested (' +
+                raise ValueError('Given array does not have requested (' +
                                 str(nDof) + ') size (' +
                                 str(len(arg)) + ')')
 
@@ -291,14 +292,14 @@ def parseArgToArray(arg, nDof, mesh=None, userData={}):
         try:
             # [marker, val] || [[marker, val]]
             return parseMapToCellArray(arg, mesh)
-        except:
-            raise Exception("Array 'arg' has the wrong size: " +
-                            str(len(arg)) + " != " + str(nDof))
-    elif hasattr(arg, '__call__'):
+        except BaseException:
+            raise ValueError("Array 'arg' has the wrong size: " +
+                             str(len(arg)) + " != " + str(nDof))
+    elif callable(arg):
         ret = pg.Vector(nDof[0], 0.0)
 
         if not mesh:
-            raise Exception("Please provide a mesh for the callable"
+            raise ValueError("Please provide a mesh for the callable"
                             "argument to parse ")
 
         if nDof[0] == mesh.nodeCount():
@@ -351,9 +352,11 @@ def generateBoundaryValue(boundary, arg, time=0.0, userData={},
 
         :: arg(boundary=:gimliapi:`GIMLI::Boundary`, time=0.0, userData={})
 
-        The callable function arg have to return appropriate values
-        for all nodes of the boundary or one value for all nodes (scalar field only).
-        Value can be scalar or vector field value, e.g., return force values for all nodes at a boundary need to return a ndarray((nodes, dims)) like 'lambda _b: np.array([[force_x, force_y, force_z] for n in _b.nodes()]).T'
+        The callable function arg have to return appropriate values for all
+        nodes of the boundary or one value for all nodes (scalar field only).
+        Value can be scalar or vector field value, e.g., return force values
+        for all nodes at a boundary to return an ndarray((nodes, dims)), e.g.
+        'lambda _b: np.array([[forc_x, forc_y, forc_z] for n in _b.nodes()]).T'
 
     Returns
     -------
@@ -393,9 +396,8 @@ def generateBoundaryValue(boundary, arg, time=0.0, userData={},
 
     # transform val into list of length nodeCount
 
-    if expectList is True:
-        if np.array(val).ndim != 2:
-            val = np.atleast_1d(val)
+    if expectList is True and np.array(val).ndim != 2:
+        val = np.atleast_1d(val)
 
     if isinstance(boundary, pg.core.Node):
         return val
@@ -405,7 +407,8 @@ def generateBoundaryValue(boundary, arg, time=0.0, userData={},
             val = np.ones(boundary.nodeCount(), dtype=float) * val
         if len(val) != boundary.nodeCount():
             print(val)
-            pg.critical("Boundary value can not be generated for nCoeff=1 val:", val,)
+            pg.critical("Boundary value cannot be generated for nCoeff=1 val:",
+                        val)
     else:
         val = np.atleast_2d(val)
         # pg._y(val)
@@ -416,29 +419,26 @@ def generateBoundaryValue(boundary, arg, time=0.0, userData={},
 
 
 def parseArgPairToBoundaryArray(pair, mesh):
-    """
-    Parse boundary related pair argument to create a list of
-    [ :gimliapi:`GIMLI::Boundary`, value|callable ].
+    r"""Parse boundary-related argument pairs.
+
+    Creates a list of [:gimliapi:`GIMLI::Boundary`, value|callable].
 
     Parameters
     ----------
     pair: tuple
         - [marker, arg]
-        - [marker, [callable, *kwargs]]
+        - [marker, [callable, \*\*kwargs]]
         - [marker, [arg_x, arg_y, arg_z]]
         - [boundary, arg]
-        - ['*', arg]
+        - ['\*', arg]
         - [node, arg]
-        - [[marker, ...], arg] (REMOVE ME because of bad design)
-        - [[boundary,...], arg]  (REMOVE ME because of bad design)
-        - [marker, callable, *kwargs] (REMOVE ME because of bad design)
-        - [[marker, ...], callable, *kwargs]  (REMOVE ME because of bad design)
 
         arg will be parsed by
         :py:mod:`pygimli.solver.solver.generateBoundaryValue`
         and distributed to each boundary.
         Callable functions will be executed at run time.
-        '*' will be interpreted as all boundary elements with one neighboring cell
+        Wildcard string '\*' is interpreted as all boundary elements with one
+        neighboring cell
     mesh: :gimliapi:`GIMLI::Mesh`
         Used to find boundaries by marker.
 
@@ -449,10 +449,9 @@ def parseArgPairToBoundaryArray(pair, mesh):
     """
     bc = []
     bounds = []
-    if isinstance(pair[1], list):
-        #  [marker, [callable, *kwargs]]
-        if callable(pair[1][0]):
-            pair = [pair[0]] + pair[1]
+    #  [marker, [callable, *kwargs]]
+    if isinstance(pair[1], list) and callable(pair[1][0]):
+        pair = [pair[0]] + pair[1]
 
     if pair[0] == '*':
         mesh.createNeighborInfos()
@@ -467,10 +466,8 @@ def parseArgPairToBoundaryArray(pair, mesh):
 
     for b in bounds:
         val = None
-        if len(pair) > 2:
-            val = pair[1:]
-        else:
-            val = pair[1]
+        val = pair[1:] if len(pair) > 2 else pair[1]
+
         bc.append([b, val])
 
         # print('-'*50)
@@ -484,17 +481,17 @@ def parseArgPairToBoundaryArray(pair, mesh):
         #     else:
         #         val = pair[1]
         # else:
-            # this will be executed
-            #val = generateBoundaryValue(b, pair[1])
+        #     this will be executed
+        #     val = generateBoundaryValue(b, pair[1])
 
-    #print('#'*30)
+    # print('#'*30)
     return bc
 
 
 def parseArgToBoundaries(args, mesh):
-    """
-    Parse boundary related arguments to create a valid boundary value list:
-    [ :gimliapi:`GIMLI::Boundary`, value|callable ]
+    """Parse boundary-related arguments.
+
+    Create a valid list [ :gimliapi:`GIMLI::Boundary`, value|callable]
 
     TODO
     ----
@@ -504,10 +501,11 @@ def parseArgToBoundaries(args, mesh):
     ----------
     args : dict, float, callable
         Dictionary is preferred (key=value|callable).
-        If args is just a callable or float every outer boundary will be processed with args.
+        If args is just a callable or float every outer boundary is processed
+        with args.
 
-        List pairs will be removed or not correct parsed for vector valued problems.
-        Callable will be evaluated at runtime. See examples.
+        List pairs will be removed or not correct parsed for vector valued
+        problems. Callable will be evaluated at runtime. See examples.
         Else see :py:mod:`pygimli.solver.solver.parseArgPairToBoundaryArray`
 
     mesh : :gimliapi:`GIMLI::Mesh`
@@ -607,39 +605,33 @@ def parseArgToBoundaries(args, mesh):
 
         return boundaries
 
-    if hasattr(args, '__call__') or \
-        isinstance(args, float) or isinstance(args, int):
+    if callable(args) or isinstance(args, (float, int)):
         return parseArgToBoundaries({'*': args}, mesh)
-
     else:
-        raise Exception('cannot interpret boundary token', args)
+        raise TypeError('cannot interpret boundary token', args)
 
     return boundaries
 
 
 def _bcIsForVectorValues(bc, mesh):
-    """Guess if boundary condition is supposed to be for vector valued problems
-    """
+    """Guess if boundary condition is for vector-valued problems."""
     verbose = False
 
     def testForV3(t):
         if verbose:
             print("test for v3", t)
         try:
-            if callable(t):
-                test = t(mesh.boundary(0))
-            else:
-                test = t
+            test = t(mesh.boundary(0)) if callable(t) else t
 
             if verbose:
                 print("test for v3 test", test)
 
             if hasattr(test, '__iter__'):
                 test = np.array(test)
-                ## call(b): [v_i] in R with i==1..nodeCount() -> scalar values
-                ## call(b): [v_i] in R³ with i==1..nodeCount() -> value values
-                if len(test) == mesh.boundary(0).nodeCount():
-                    if len(test[0]) == mesh.dim():
+                # call(b): [v_i] in R with i==1..nodeCount() -> scalar values
+                # call(b): [v_i] in R³ with i==1..nodeCount() -> value values
+                if len(test) == mesh.boundary(0).nodeCount() and \
+                    len(test[0]) == mesh.dim():
                         return True
 
                 if test.ndim == 2 and len(test[0]) == mesh.dim():
@@ -658,22 +650,22 @@ def _bcIsForVectorValues(bc, mesh):
 
         if isinstance(_bVal, list):
             if isinstance(_bVal[0], list):
-                ### [[nodeID, [x, y, z]], [nodeID, [x, y, z]]]
+                # [[nodeID, [x, y, z]], [nodeID, [x, y, z]]]
                 if testForV3(_bVal[0][1]):
                     return True
             else:
-                ### [nodeID, [x, y, z]]
+                # [nodeID, [x, y, z]]
                 if testForV3(_bVal[1]):
                     return True
 
         elif isinstance(_bVal, dict):
-            ### {key, bc}
+            # {key, bc}
             for key, test in _bVal.items():
                 if testForV3(test):
                     return True
 
         else:
-            ### [x, y, z] = call(boundary)
+            # [x, y, z] = call(boundary)
             if testForV3(_bVal):
                 return True
 
@@ -681,8 +673,7 @@ def _bcIsForVectorValues(bc, mesh):
 
 
 def parseMapToCellArray(attributeMap, mesh, default=0.0):
-    """
-    Parse a value map to cell attributes.
+    """Parse a value map to cell attributes.
 
     A map should consist of pairs of marker and value.
     A marker is an integer and corresponds to the cell.marker().
@@ -704,11 +695,22 @@ def parseMapToCellArray(attributeMap, mesh, default=0.0):
     att : array
         Array of length mesh.cellCount()
     """
-    #pg.warn('check if obsolete: parseMapToCellArray')
+    # pg.warn('check if obsolete: parseMapToCellArray')
     att = pg.Vector(mesh.cellCount(), default)
 
     if isinstance(attributeMap, dict):
-        raise Exception("Please implement me!")
+        for marker, value in attributeMap.items():
+            idx = pg.find(mesh.cellMarkers() == marker)
+            if len(idx) == 0:
+                pg.warn("parseMapToCellArray: cannot find marker " +
+                        str(marker) + " within mesh.")
+            else:
+                if isinstance(value, complex):
+                    if not isinstance(att, pg.CVector):
+                        att = pg.math.toComplex(att)
+                    att.setVal(val=value, ids=idx)
+                else:
+                    att.setVal(val=float(value), ids=idx)
     elif hasattr(attributeMap, '__len__'):
         if not hasattr(attributeMap[0], '__len__'):
             # assuming [marker, value]
@@ -721,9 +723,9 @@ def parseMapToCellArray(attributeMap, mesh, default=0.0):
                     pg.warn("parseMapToCellArray: cannot find marker " +
                             str(pair[0]) + " within mesh.")
                 else:
-                    #print('---------------------')
-                    #print(att, idx, pair[1], type(pair[1]), float(pair[1]))
-                    if isinstance(pair[1], np.complex):
+                    # print('---------------------')
+                    # print(att, idx, pair[1], type(pair[1]), float(pair[1]))
+                    if isinstance(pair[1], complex):
                         if not isinstance(att, pg.CVector):
                             att = pg.math.toComplex(att)
                         att.setVal(val=pair[1], ids=idx)
@@ -740,7 +742,8 @@ def parseMapToCellArray(attributeMap, mesh, default=0.0):
 
 
 def grad(mesh, u, r=None):
-    r"""
+    r"""Return the discrete interpolated gradient.
+
     Return the discrete interpolated gradient :math:`\mathbf{v}`
     for a given scalar field :math:`\mathbf{u}`.
 
@@ -772,20 +775,20 @@ def grad(mesh, u, r=None):
 
     Parameters
     ----------
-    mesh : :gimliapi:`GIMLI::Mesh`
+    mesh: :gimliapi:`GIMLI::Mesh`
         Discretization base, interpolation will be performed via finite element
         base shape functions.
-    u : array | callable
+    u: array | callable
         Scalar field per mesh node position or an appropriate
-        callable([[x,y,z]])
-    r : ndarray((M, 3)) [mesh.cellCenter()]
-        Alternative target coordinates :math:`\mathbf{r} for the resulting
+        `callable([[x,y,z]])`
+    r: ndarray((M, 3)) [mesh.cellCenter()]
+        Alternative target coordinates :math:`\mathbf{r}` for the resulting
         gradient field. i.e., the positions where the vector field is defined.
         Default are all cell centers.
 
     Returns
     -------
-    v : ndarray((M, 3))
+    v: ndarray((M, 3))
         Resulting vector field defined on
         :math:`\mathbf{v}(\mathbf{r}_{\mathcal{C}})`.
         M is number of cells or length of given alternative coordinates r.
@@ -793,17 +796,19 @@ def grad(mesh, u, r=None):
     Examples
     --------
     >>> import numpy as np
-    >>> import matplotlib.pyplot as plt
     >>> import pygimli as pg
-    >>> fig, ax = plt.subplots()
+    >>> fig, ax = pg.plt.subplots()
     >>> mesh = pg.createGrid(x=np.linspace(0, 1, 20), y=np.linspace(0, 1, 20))
     >>> u = lambda p: pg.x(p)**2 * pg.y(p)
-    >>> _ = pg.show(mesh, u(mesh.positions()), ax=ax)
-    >>> _ = pg.show(mesh, [2.*pg.y(mesh.cellCenters())*pg.x(mesh.cellCenters()),
-    ...             pg.x(mesh.cellCenters())**2], ax=ax)
-    >>> _ = pg.show(mesh, pg.solver.grad(mesh, u), ax=ax, color='w',
-    ...             linewidth=0.4)
-    >>> plt.show()
+    >>> pg.show(mesh, u(mesh.positions()), ax=ax) # doctest: +ELLIPSIS
+    (<Axes...
+    >>> pg.show(mesh, [2.*pg.y(mesh.cellCenters())*pg.x(mesh.cellCenters()),
+    ...              pg.x(mesh.cellCenters())**2], ax=ax)  # doctest: +ELLIPSIS
+    (<Axes...
+    >>> pg.show(mesh, pg.solver.grad(mesh, u), ax=ax, color='w',
+    ...        linewidth=0.4) # doctest: +ELLIPSIS
+    (<Axes...
+    >>> pg.plt.show()
     """
     if r is None:
         r = mesh.cellCenters()
@@ -866,8 +871,8 @@ def div(mesh, v):
     9 [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
     >>> divCells = pg.solver.div(mesh, v(mesh.cellCenters()))
     >>> # divergence from boundary values are exact where the divergence from
-    >>> # interpolated cell center values are wrong due to interpolation to the boundary
-    >>> print(sum(divCells))
+    >>> # interpolated cell center values wrong due to interpolation to boundary
+    >>> print(np.round(sum(divCells),12))
     12.0
     >>> mesh = pg.createGrid(x=np.linspace(0, 1, 4),
     ...                      y=np.linspace(0, 1, 4),
@@ -875,7 +880,7 @@ def div(mesh, v):
     >>> print(sum(pg.solver.div(mesh, v(mesh.boundaryCenters()))))
     81.0
     >>> divCells = pg.solver.div(mesh, v(mesh.cellCenters()))
-    >>> print(sum(divCells))
+    >>> print(np.round(sum(divCells),12))
     54.0
     """
     mesh.createNeighborInfos()
@@ -892,9 +897,9 @@ def div(mesh, v):
                                           CtB*pg.z(v)]).T)
         else:
             print(len(v), mesh)
-            raise BaseException("implement me")
+            raise NotImplementedError("implement me")
     elif callable(v):
-        raise BaseException("implement me")
+        raise NotImplementedError("implement me")
 
     return d
 
@@ -904,14 +909,18 @@ def divergence(mesh, func=None, normMap=None, order=1):
 
     MOVE THIS to a better place
 
-    Divergence for callable function func((x,y,z)).
     Return sum div over boundary.
 
     Parameters
     ----------
+    func : function
+        function to be called
+    normMap : [[]]
+        mapping
 
     Returns
     -------
+    div : iterable
     """
     if func is None:
         func = lambda r: r
@@ -941,7 +950,7 @@ def divergence(mesh, func=None, normMap=None, order=1):
         if directionCheck:
             if b.leftCell() is None and b.rightCell() is None:
                 # print(b.id(), b.leftCell(), b.rightCell())
-                sw = pg.core.Stopwatch(True)
+                sw = pg.Stopwatch(True)
                 mesh.createNeighborInfos()
                 print("NeighborInfos()", sw.duration(True))
                 # return gauss(grid, F)
@@ -961,7 +970,8 @@ def divergence(mesh, func=None, normMap=None, order=1):
                     func(shape.center())) * shape.domainSize()
         else:
             weights = pg.core.IntegrationRules.instance().weights(shape, order)
-            abscissa = pg.core.IntegrationRules.instance().abscissa(shape, order)
+            abscissa = pg.core.IntegrationRules.instance().abscissa(shape,
+                                                                    order)
 
             for i, p in enumerate(abscissa):
                 rPos = shape.xyz(p)
@@ -1043,17 +1053,20 @@ def showSparseMatrix(mat, full=False):
         if full:
             print(np.array(matD))
 
-class LinSolver(object):
-    """Proxy class for the direct solution of linear systems of equations."""
+
+class LinSolver:
+    """Proxy class for the solution of linear systems of equations."""
+
     def __init__(self, mat=None, solver=None, verbose=False, **kwargs):
-        """Init the solver class with Matrix and starts factorization.
+        """Init the solver proxy class with a matrix and start factorization.
 
         Args
         ----
-        solver: str
-            If solver is none decide form Matrix type
+        solver: str [None]
+            Name for the used solver (pg (umfpack or cholmod), scipy).
+            If solver is none decide from matrix type.
         """
-        self._m = None ## hold local copy if we need to convert the matrix first
+        self._m = None  # hold local copy if we need to convert the matrix
         self.verbose = verbose
         self._solver = None
         self.factorTime = 0.0
@@ -1068,9 +1081,8 @@ class LinSolver(object):
                 solver = 'PG'
             elif isinstance(mat, np.ndarray):
                 solver = 'numpy'
-                implementme
+                pg.critical("Not yet implemented!")
             else:
-                #import scipy.sparse
                 from scipy.sparse import spmatrix
                 if isinstance(mat, spmatrix):
                     solver = 'SciPy'
@@ -1085,15 +1097,17 @@ class LinSolver(object):
         self._factorize = 'factorize' + self.solver
 
         if self.verbose:
-            pg.info("Solving with {0}".format(self.solver))
+            pg.info(f"Solving with {self.solver}")
 
         if mat is not None:
             self.factorize(mat)
 
     def isFactorized(self):
+        """Is factorized."""
         return self._factorized
 
     def factorize(self, mat):
+        """Factorization."""
         swatch = pg.Stopwatch()
 
         getattr(self, self._factorize)(mat)
@@ -1104,24 +1118,23 @@ class LinSolver(object):
         self._factorized = True
 
     def factorizePG(self, mat):
-        """"""
+        """Generate solver using pyGIMLi linear solver."""
         self._m = pg.utils.toSparseMatrix(mat)
         self._desiredArrayType = pg.Vector
         self._solver = pg.core.LinSolver(self._m, verbose=self.verbose)
 
     def factorizeSciPy(self, mat):
-        """"""
+        """Generate solver/factorization using SciPy linear solver."""
         self._m = pg.utils.sparseMatrix2csr(mat)
-        scipy = pg.optImport('scipy', 'Used for sparse linear solver.')
-
-        import scipy.sparse
+        # scipy is not dependency
+        # scipy = pg.optImport('scipy', 'Used for sparse linear solver.')
         from scipy.sparse.linalg import factorized
 
         self._desiredArrayType = np.array
         self._solver = factorized(self._m)
 
     def __call__(self, b):
-        """short cut to self.solve(b)"""
+        """Shortcut to self.solve(b)."""
         return self.solve(b)
 
     def _convertRHS(self, b):
@@ -1131,7 +1144,7 @@ class LinSolver(object):
         return b
 
     def solve(self, b):
-        """ """
+        """Solve system with right-hand side vector."""
         swatch = pg.Stopwatch()
         x = self._solver(self._convertRHS(b))
         self.solverTime = swatch.duration(restart=True)
@@ -1141,62 +1154,64 @@ class LinSolver(object):
 
 
 def linSolve(mat, b, solver=None, verbose=False, **kwargs):
-    r"""Direct solution after :math:`\textbf{x}` using core LinSolver.
+    r"""Direct linear solution after :math:`\textbf{x}` using core LinSolver.
 
     .. math::
+
         \textbf{A}\textbf{x} = \textbf{b}
 
     If :math:`\textbf{A}` is symmetric, sparse and positive definite.
 
     Parameters
     ----------
-    mat : :gimliapi:`GIMLI::RSparseMatrix` | :gimliapi:`GIMLI::RSparseMapMatrix` |
+    mat: :gimliapi:`GIMLI::SparseMatrix`, :gimliapi:`GIMLI::SparseMapMatrix`,
         numpy.array
+
         System matrix. Need to be symmetric, sparse and positive definite.
 
-    b : iterable array
+    b: iterable array
         Right hand side of the equation.
 
-    solver : str [None]
+    solver: str [None]
         Try to choose a solver, 'pg' for pygimli core cholmod or umfpack.
         'np' for numpy linalg or scipy.sparse.linalg.
         Automatic choosing if solver is None depending on matrixtype.
 
-    verbose : bool [False]
+    verbose: bool [False]
         Be verbose.
 
     Returns
     -------
-    x : :gimliapi:`GIMLI::RVector`
-        Solution vector
+    x: :gimliapi:`GIMLI::Vector`
+        Solution vector.
     """
-    ## TODO!! refactor with LinSolver
+    # TODO!! refactor with LinSolver
     swatch = pg.Stopwatch()
     reorder = kwargs.pop('reorder', False)
-    perm = None
+    # perm = None
 
-    ### determine the solver if none set
+    # determine the solver if none set
     if solver is None:
         if isinstance(mat, pg.matrix.MatrixBase):
             solver = 'pg'
         elif isinstance(mat, np.ndarray):
             solver = 'numpy'
         else:
-            #import scipy.sparse
             from scipy.sparse import spmatrix
             if isinstance(mat, spmatrix):
                 solver = 'scipy'
 
     if solver == 'pg':
-        ### core proxy to cholmod and LDL for float and umfpack for complex
+        # core proxy to cholmod and LDL for float and umfpack for complex
         if reorder is True:
-            pg.warning('Matrix reordering for pg core solver not yet implemented')
+            pg.warning(
+                'Matrix reordering for pg core solver not yet implemented')
         _m = pg.utils.toSparseMatrix(mat)
 
         solver = pg.core.LinSolver(_m, verbose=verbose)
 
         if verbose:
-            pg.info("Solving with {0}".format(solver.solverName()))
+            pg.info(f"Solving with {solver.solverName()}")
             pg.info("Matrix factorization:", swatch.duration(restart=True))
 
         x = solver.solve(b)
@@ -1215,24 +1230,23 @@ def linSolve(mat, b, solver=None, verbose=False, **kwargs):
         _m = pg.utils.sparseMatrix2csr(mat)
         # pg._r('convert', swatch.duration(restart=True))
 
-        scipy = pg.optImport('scipy', 'Used for sparse linear solver.')
+        # scipy is now a dependency
+        # scipy = pg.optImport('scipy', 'Used for sparse linear solver.')
         # pg._r('import', swatch.duration(restart=True))
 
-        import scipy.sparse
         from scipy.sparse.linalg import spsolve
 
         if verbose:
             pg.info("Solving with scipy.sparse.spsolve")
 
-        if reorder is True and 0:
-
+        if reorder is True and 0:  # deactivated
             def permCOO(M, perm):
                 # M.indices = perm.take(M.indices)
                 # M = M.tocsc()
                 # M.indices = perm.take(M.indices)
                 # return M.tocsr()
 
-                return M[np.ix_(perm,perm)]
+                return M[np.ix_(perm, perm)]
 
                 # print(M.row.shape, M.col.shape)
                 # rowP = perm[M.row]
@@ -1242,20 +1256,20 @@ def linSolve(mat, b, solver=None, verbose=False, **kwargs):
                 #                              shape=M.shape)
                 # return MP
 
-            #perm = scipy.sparse.csgraph.reverse_cuthill_mckee(_m)
-            #pg._r('reverse_cuthill_mckee', swatch.duration(restart=True))
+            # perm = scipy.sparse.csgraph.reverse_cuthill_mckee(_m)
+            # pg._r('reverse_cuthill_mckee', swatch.duration(restart=True))
 
-            #ax, _ = pg.show(_m)
-            #_m = permCOO(_m, perm)
-            #_m = permCOO(_m.tocoo(), perm).tocsr()
-            #pg.show(_m, ax=ax, color='green')
+            # ax, _ = pg.show(_m)
+            # _m = permCOO(_m, perm)
+            # _m = permCOO(_m.tocoo(), perm).tocsr()
+            # pg.show(_m, ax=ax, color='green')
 
-            #pg._r('perm matrix', swatch.duration(restart=True))
+            # pg._r('perm matrix', swatch.duration(restart=True))
 
-            #x = spsolve(_m, b.array())[perm]
+            # x = spsolve(_m, b.array())[perm]
 
-            #x = spsolve(_m, b.array()[perm])#[perm]
-            #x = x[perm]
+            # x = spsolve(_m, b.array()[perm])#[perm]
+            # x = x[perm]
         else:
             x = spsolve(_m, b)
 
@@ -1264,8 +1278,8 @@ def linSolve(mat, b, solver=None, verbose=False, **kwargs):
 
 
 def applyDirichlet(mat, rhs, uDirIndex, uDirichlet):
-    """This should be moved directly into the core"""
-
+    """Apply Dirichlet BC. This should be moved into the core."""
+    # idx = np.argsort(uDirIndex)
     if mat is not None:
         if rhs is not None:
             uDir = pg.Vector(mat.rows(), 0.0)
@@ -1279,12 +1293,12 @@ def applyDirichlet(mat, rhs, uDirIndex, uDirichlet):
 
     if rhs is not None:
         rhs[uDirIndex] = uDirichlet
-        #rhs.setVal(uDirichlet, uDirIndex)
+        # rhs.setVal(uDirichlet, uDirIndex)
+
 
 def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
-                    nodePairs=None,
-                    dofOffset=0, nCoeff=1, dofPerCoeff=None):
-    """Get map of index: dirichlet value
+                    nodePairs=None, dofOffset=0, nCoeff=1, dofPerCoeff=None):
+    r"""Get map of index: dirichlet value.
 
     Apply Dirichlet boundary condition to the system matrix S and rhs vector.
     The right hand side values for h can be given for each boundary
@@ -1292,11 +1306,12 @@ def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
 
     .. math::
         u(\textbf{r}, t) = h
-        \quad\text{for}\quad\textbf{r}\quad\text{on}\quad\delta\Omega=\Gamma_{\text{Dirichlet}}
+        \quad\text{for}\quad\textbf{r}\quad\text{on}\quad\delta\Omega=
+        \Gamma_{\text{Dirichlet}}
 
     Parameters
     ----------
-    mat: :gimliapi:`GIMLI::RSparseMatrix`
+    mat: :gimliapi:`GIMLI::SparseMatrix`
         System matrix of the system equation.
     boundaryPair: list()
         List of pairs [:gimliapi:`GIMLI::Boundary`, h].
@@ -1320,21 +1335,17 @@ def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
         Offset for matrix index.
     """
     if not hasattr(boundaryPairs, '__getitem__'):
-        raise BaseException("Boundary pairs need to be a list of "
-                            "[boundary, value]")
+        raise AttributeError("Boundary pairs need to be a list of [boundary, value]")
 
-    #uDirNodes = []   ## []
-    uDirVal = dict() ## {nID: val}
+    # uDirNodes = []   # []
+    uDirVal = dict()  # {nID: val}
 
     def _genVecUd(n, ud, dofOffset, nCoeff=1, dofPerCoeff=None):
         ret = {}
         if callable(ud):
             pg.error("callable node pairs need to be implemented.")
 
-        if isinstance(n, pg.core.Node):
-            idx = dofOffset + n.id()
-        else:
-            idx = dofOffset + n
+        idx = dofOffset + n.id() if isinstance(n, pg.core.Node) else dofOffset + n
 
         if hasattr(ud, '__iter__'):
             # vector valued problem
@@ -1351,11 +1362,11 @@ def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
 
             for i in range(nCoeff):
                 if ud[i] is not None:
-                    ret[idx +  i * dofPerCoeff] = ud[i]
+                    ret[idx + i * dofPerCoeff] = ud[i]
         else:
             if nCoeff > 1:
-                print('nCoeff:', nCoeff, 'ud:', ud, 'idx:',idx)
-                pg.error('number of coefficents > 1 but u dirichlet is scalar.')
+                print('nCoeff:', nCoeff, 'ud:', ud, 'idx:', idx)
+                pg.error('number of coefficents > 1 but uDirichlet is scalar.')
 
             if ud is not None:
                 ret[idx] = ud
@@ -1380,13 +1391,14 @@ def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
                     # print('uD', uD, nCoeff, dofPerCoeff)
                     for i, n in enumerate(ent.nodes()):
                         uDirVal.update(_genVecUd(n, uD[i], dofOffset,
-                                                 nCoeff=nCoeff, dofPerCoeff=dofPerCoeff))
+                                                 nCoeff=nCoeff,
+                                                 dofPerCoeff=dofPerCoeff))
                 else:
                     pg.error('Dirichlet values per boundary need to have '
                              'length of boundary.nodeCount()')
 
     if nodePairs is not None:
-        #print("nodePairs", nodePairs)
+        # print("nodePairs", nodePairs)
 
         if len(nodePairs) == 2 and isinstance(nodePairs[0], int):
             # assume a single Node [NodeId, val]
@@ -1398,14 +1410,14 @@ def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
 
     return uDirVal
 
+
 def assembleDirichletBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
-                        nodePairs=None,
-                        dofOffset=0, nCoeff=1, dofPerCoeff=None):
+                        nodePairs=None, dofOffset=0, nCoeff=1, dofPerCoeff=None):
     r"""Apply Dirichlet boundary condition.
 
     Args
     ----
-    rhs: :gimliapi:`GIMLI::RVector`
+    rhs: :py:mod:`Vector`
         Right hand side vector of the system equation will bet set to
         :math:`u_{\text{D}}`
     """
@@ -1422,6 +1434,7 @@ def assembleDirichletBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
 
     applyDirichlet(mat, rhs, list(uDirVal.keys()), list(uDirVal.values()))
     return uDirVal
+
 
 def assembleNeumannBC(rhs, boundaryPairs, nDim=1, time=0.0, userData={},
                       dofOffset=0, nCoeff=1, dofPerCoeff=None):
@@ -1506,17 +1519,17 @@ def assembleNeumannBC(rhs, boundaryPairs, nDim=1, time=0.0, userData={},
                 if hasattr(gd, '__iter__') and not np.any(gd):
                     continue
 
-                #print(nDim, g, gd)
+                # print(nDim, g, gd)
                 if isinstance(rhs, pg.Vector):
                     # print(Se)
                     # pg.info(sum(Se.row(0)))
                     # pg.info(Se.row(0), gd, idx)
                     rhs.addVal(Se.row(0) * gd, idx)
-                    #rhs.setVal(Se.row(0) * gd, idx)
+                    # rhs.setVal(Se.row(0) * gd, idx)
                     # rhs.add(Se, g)
                 else:
                     # check
-                    #pg.error('check')
+                    # pg.error('check')
                     rhs[idx] += Se.row(0) * gd
 
                     # for i, j in enumerate(Se.ids()):
@@ -1527,7 +1540,7 @@ def assembleRobinBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
                     dofOffset=0, nCoeff=1, dofPerCoeff=None):
     r"""Apply Robin boundary condition.
 
-    Apply Robin boundary condition to the system matrix and the rhs vector
+    Apply Robin boundary condition to the system matrix and the rhs vector:
 
     .. math::
         \frac{\partial u(\textbf{r}, t)}{\partial\textbf{n}}
@@ -1535,21 +1548,27 @@ def assembleRobinBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
         \beta\frac{\partial u(\textbf{r}, t)}{\partial\textbf{n}}
         + \alpha u
         & = \gamma \\
-        & \quad\text{for}\quad\textbf{r}\quad\text{on}\quad\delta\Omega=\Gamma_{\text{Robin}}\\
+        & \quad\text{for}\quad\textbf{r}\quad\text{on}\quad\delta\Omega=
+        \Gamma_{\text{Robin}}\\
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     mat: :gimliapi:`GIMLI::SparseMatrix`
         System matrix of the system equation.
-    boundaryPair: list()
-        List of pairs [:gimliapi:`GIMLI::Boundary`, :math:`a, u_0` | :math:`\alpha, \beta, \gamma`].
+
+    boundaryPair: list
+        List of pairs [:gimliapi:`GIMLI::Boundary`,
+        :math:`a, u_0` | :math:`\alpha, \beta, \gamma`].
         The values will assigned to the nodes of the boundaries.
         Later assignment overwrites prior.
 
-        Values can be a single value for :math:`\alpha` or :math:`a`, two values will be interpreted as :math:`a, u_0`,
+        Values can be a single value for :math:`\alpha` or :math:`a`,
+        two values will be interpreted as :math:`a, u_0`,
         and three values will be :math:`\alpha, \beta, \gamma`.
-        Also generator (callable) is possible which will be executed at run time. See :py:mod:`pygimli.solver.solver.parseArgToBoundaries`
+        Also generator (callable) is possible which will be executed at runtime
+        See :py:mod:`pygimli.solver.solver.parseArgToBoundaries`
         :ref:`tut:modelling_bc` or testing/test_FEM.py for example syntax.
+
     time: float
         Will be forwarded to value generator.
     userData: dict
@@ -1564,15 +1583,15 @@ def assembleRobinBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
     S_Dir = pg.matrix.ElementMatrix()
     S_Neu = pg.matrix.ElementMatrix()
 
-    #if isinstance(rhs, np.ndarray):
-        #rhs = pg.Vector(rhs)
+    # if isinstance(rhs, np.ndarray):
+    #     rhs = pg.Vector(rhs)
 
     for pair in boundaryPairs:
         boundary = pair[0]
         val = pair[1]
-        ## print('val:', val)
-        ## du/dn = a(u0-u) || \beta du/dn + \alpha u = \gamma
-        ## combines to Matrix + au = RHS + au0
+        # print('val:', val)
+        # du/dn = a(u0-u) || \beta du/dn + \alpha u = \gamma
+        # combines to Matrix + au = RHS + au0
 
         u0 = None
         a = generateBoundaryValue(boundary, val, time, userData,
@@ -1581,7 +1600,7 @@ def assembleRobinBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
         try:
             if a.ndim == 2 and len(a) == boundary.nodeCount():
                 a = a[0]
-        except:
+        except BaseException:
             # expecting [[a| a, u0 | a b g]_i] for i in boundary.nodes()
             print(boundary)
             print(a)
@@ -1600,19 +1619,21 @@ def assembleRobinBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
                 if alpha != 0:
                     u0 = gamma/alpha
                 else:
-                    pg.warn('Robin boundary condition parmeter alpha is zero, falling back to Neumann condition.')
+                    pg.warn('Robin boundary condition parameter alpha is zero, '
+                            'falling back to Neumann condition.')
                     u0 = 0.0
                 if beta != 0:
                     a = alpha/beta
                 else:
-                    pg.warn('Robin boundary condition parmeter beta is zero, please consider using Dirichlet instead.')
+                    pg.warn('Robin boundary condition parameter beta is zero, '
+                            'please consider using Dirichlet instead.')
                     a = 0.0
 
         if a is not None and a != 0.0:
             S_Dir.u2(boundary)
             mat.add(S_Dir, scale=a)
-            #Sp *= p
-            #S += Sp
+            # Sp *= p
+            # S += Sp
         if u0 is not None and u0 != 0.0:
             S_Neu.u(boundary)
             rhs.add(S_Neu, a * u0)
@@ -1620,27 +1641,35 @@ def assembleRobinBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
 
 def assembleBC(bc, mesh, mat, rhs, time=None, userData={}, dofOffset=0,
                nCoeff=1):
-    r"""Shortcut to apply all boundary conditions.
+    r"""Assemble all types of boundary conditions.
 
-    Shortcut to apply all boundary conditions will only forward to
-    appropriate assemble functions.
+    Forward to appropriate assemble functions.
 
     Parameters
     ----------
+    mesh : pg.Mesh
+        mesh
+    mat : pg.SparseMapMatrix
+        system matrix
+    rhs : vector
+        right-hand side
+    time : float|iterable
+        time vector
+    userData : dict
+        user data passed to the assembly functions
+    dofOffset : int
+        offset for degree of freedom numbering
 
     Returns
     -------
     map{id: uDirichlet}: Map of index to Dirichlet value.
-
-    None
     """
-    ## we can't iterate because we want the following fixed order
+    # we can't iterate because we want the following fixed order
     dirichletMap = {}
     bct = dict(bc)
     nDim = 1
-    if mat is not None:
-        if mat.rows() == mesh.nodeCount() * mesh.dim():
-            nDim = mesh.dim()
+    if mat is not None and mat.rows() == mesh.nodeCount() * mesh.dim():
+        nDim = mesh.dim()
 
     if 'Neumann' in bct:
         assembleNeumannBC(rhs, parseArgToBoundaries(bct.pop('Neumann'), mesh),
@@ -1653,16 +1682,16 @@ def assembleBC(bc, mesh, mat, rhs, time=None, userData={}, dofOffset=0,
                         dofOffset=dofOffset,
                         nCoeff=nCoeff, dofPerCoeff=mesh.nodeCount())
     if 'Dirichlet' in bct:
-        uD = assembleDirichletBC(mat,
-                            parseArgToBoundaries(bct.pop('Dirichlet'), mesh),
-                            rhs=rhs, time=time, userData=userData,
-                            dofOffset=dofOffset,
-                            nCoeff=nCoeff, dofPerCoeff=mesh.nodeCount())
+        uD = assembleDirichletBC(
+            mat, parseArgToBoundaries(bct.pop('Dirichlet'), mesh),
+            rhs=rhs, time=time, userData=userData,
+            dofOffset=dofOffset,
+            nCoeff=nCoeff, dofPerCoeff=mesh.nodeCount())
         dirichletMap.update(uD)
 
     if 'Nodes' in bct:
-        ## 'Nodes' : [list(Nodes), callable(Node)] ## for selected Nodes
-        ## 'Nodes' : callable(Node) ## for all nodes
+        # 'Nodes' : [list(Nodes), callable(Node)] ## for selected Nodes
+        # 'Nodes' : callable(Node) ## for all nodes
         bc = bct.pop('Nodes')
         if isinstance(bc, list):
             nodes = bc[0]
@@ -1678,45 +1707,46 @@ def assembleBC(bc, mesh, mat, rhs, time=None, userData={}, dofOffset=0,
         else:
             pg.critical("Nodes boundary need a callable(Node)")
 
-        uD = assembleDirichletBC(mat, [], nodePairs=nP,
-                            rhs=rhs, time=time, userData=userData, dofOffset=dofOffset,
-                            nCoeff=nCoeff, dofPerCoeff=mesh.nodeCount())
+        uD = assembleDirichletBC(
+            mat, [], nodePairs=nP,
+            rhs=rhs, time=time, userData=userData, dofOffset=dofOffset,
+            nCoeff=nCoeff, dofPerCoeff=mesh.nodeCount())
         dirichletMap.update(uD)
 
     if 'Node' in bct:
-        uD = assembleDirichletBC(mat, [], nodePairs=bct.pop('Node'),
-                            rhs=rhs, time=time, userData=userData, dofOffset=dofOffset,
-                            nCoeff=nCoeff, dofPerCoeff=mesh.nodeCount())
+        uD = assembleDirichletBC(
+            mat, [], nodePairs=bct.pop('Node'),
+            rhs=rhs, time=time, userData=userData, dofOffset=dofOffset,
+            nCoeff=nCoeff, dofPerCoeff=mesh.nodeCount())
         dirichletMap.update(uD)
 
     if len(bct.keys()) > 0:
-        pg.warn("Unknown boundary condition[s]" + \
-                       str(bct.keys()) + " will be ignored")
+        pg.warn("Unknown boundary condition[s]" +
+                str(bct.keys()) + " will be ignored")
 
     return dirichletMap
 
+
 def assembleLoadVector(mesh, f, userData={}):
-    r"""Assemble the load vector. See createLoadVector.
-    Maybe we will remove this
-    """
-    pg.deprecate('createLoadVector') # 20200115
-    return VectorcreateLoadVector(mesh, f, userData)
+    r"""Assemble the load vector. See createLoadVector."""
+    pg.deprecate('createLoadVector')  # 20200115
+    return createLoadVector(mesh, f, userData)
 
 
 def createForceVector(mesh, f, userData={}):
-    """ Create a right hand side vector for vector valued solutions.
+    """Create a right hand side vector for vector valued solutions.
 
     Parameters
     ----------
-    f: [ convertable ]
+    f: convertible
         List of rhs side options. Must be convertable to createLoadVector.
         See :py:mod:`createLoadVector`
     rhs: np.array()
         Squeezed vector of length mesh.nodeCount() * mesh.dimensions()
-
     """
     if not isinstance(f, list):
-        pg.error("Create Force Vector need list of attribute f with an entry for each dimension.")
+        pg.error("Create Force Vector need list of attribute f with an entry "
+                 "for each dimension.")
 
     rhs = np.zeros(mesh.nodeCount() * mesh.dim())
 
@@ -1729,40 +1759,40 @@ def createForceVector(mesh, f, userData={}):
 
 
 def createLoadVector(mesh, f=1.0, userData={}):
-    """Create right hand side vector based on the given mesh and load values
-    (scalar solution) or force vectors (vector value solution).
+    """Create right-hand-side vector from load/force vectors.
 
-    Create right hand side based on the given mesh and load or force
-    values.
+    Based on given mesh and load values (scalar solution) or
+    force vectors (vector value solution).
 
     TODO
     ----
-    - Callable for vector valued problems
-    - Callable called dynamic on demand
+        * Callable for vector valued problems
+        * Callable called dynamic on demand
 
     Parameters
     ----------
     f: float[1.0], array, callable(cell, [userData]), [f_x, f_y, f_z]
 
-        - float will be assumed as constant for all cells
-        like rhs = rhs(np.ones(mesh.cellCount() * f),
-        - array of length mesh.cellCount() will be processed as load value for
-        each cell: rhs = rhs(f),
-        - array of length mesh.nodeCount() will be assumed to be allready processed correct: rhs = f
-        - callable is evaluated on once for each cell and need to return a load
-        value for each cell and can have  optional a userData dictionary:
-        `f_cell = f(cell, [userData={}])`
-        rhs = rhs(f(c, userData) for c in mesh.cells())
-        - list with length of mesh.dimension() of float or array entries will
-        create a squeezed rhs for vector valued problems
-        rhs = squeeze([rhs(f[0]), rhs(f[1]), rhs(f[2])])
+        * float will be assumed as constant for all cells
+            like rhs = rhs(np.ones(mesh.cellCount() * f),
+        * array of length mesh.cellCount() will be processed as load value for
+            each cell: rhs = rhs(f),
+        * array of length mesh.nodeCount() is assumed to be already processed
+            correct: rhs = f
+        * callable is evaluated on once for each cell and need to return a load
+            value for each cell and can have  optional a userData dictionary:
+            `f_cell = f(cell, [userData={}])`
+            rhs = rhs(f(c, userData) for c in mesh.cells())
+        * list with length of mesh.dimension() of float or array entries will
+            create a squeezed rhs for vector valued problems
+            rhs = squeeze([rhs(f[0]), rhs(f[1]), rhs(f[2])])
 
     Returns
     -------
     rhs: pg.Vector(mesh.nodeCount())
-        Right hand side load vector for scalar values or squeezed vector values.
+        Right-hand side load vector for scalar values or squeezed vector values
     """
-    ### f is dict('Node':callable, 'Cell': callable)
+    # f is dict('Node':callable, 'Cell': callable)
     if isinstance(f, dict):
         if 'Node' in f:
             fn = []
@@ -1770,8 +1800,8 @@ def createLoadVector(mesh, f=1.0, userData={}):
                 for n in mesh.nodes():
                     fn.append(f['Node'](n, **userData))
             if hasattr(fn[0], '__iter__'):
-                ### result is vector valued
-                return createLoadVector(mesh, [fi for fi in np.array(fn).T],
+                # result is vector valued
+                return createLoadVector(mesh, list(np.array(fn).T),
                                         userData=userData)
 
             return createLoadVector(mesh, fn, userData=userData)
@@ -1779,16 +1809,15 @@ def createLoadVector(mesh, f=1.0, userData={}):
         elif 'Cell' in f:
             pg.error('Implement me!, createLoadVector()')
 
-    ### fix for the lazy
+    # fix for the lazy
     if isinstance(f, int):
         f = float(f)
 
-    ### f is list [fx, fy, [fz]] for vector problems
-    if isinstance(f, list):
-        if len(f) == mesh.dim():
-            return createForceVector(mesh, f, userData=userData)
+    # f is list [fx, fy, [fz]] for vector problems
+    if isinstance(f, list) and len(f) == mesh.dim():
+        return createForceVector(mesh, f, userData=userData)
 
-    ### f is list of array [f_0, f_1, ..., f_n] for scalar problems
+    # f is list of array [f_0, f_1, ..., f_n] for scalar problems
     if isinstance(f, list) or hasattr(f, 'ndim'):
         if isinstance(f, list):
             rhs = np.zeros((len(f), mesh.nodeCount()))
@@ -1798,7 +1827,7 @@ def createLoadVector(mesh, f=1.0, userData={}):
             return rhs
 
         elif f.ndim == 2:
-            ### assume rhs [n, nNodes] array is already a valid
+            # assume rhs [n, nNodes] array is already a valid
             if len(f[0]) == mesh.nodeCount():
                 return f
 
@@ -1847,12 +1876,12 @@ def createLoadVector(mesh, f=1.0, userData={}):
 #            print("Remove revtest in assembleLoadVector after check")
 
     elif len(fArray) == mesh.nodeCount():
-        ### nodal values
+        # nodal values
         fA = pg.Vector(fArray)
         b_l = pg.matrix.ElementMatrix()
         for c in mesh.cells():
             b_l.u(c)
-                # rhs.addVal(b_l.row(0) * fArray[b_l.idx()], b_l.idx())
+            # rhs.addVal(b_l.row(0) * fArray[b_l.idx()], b_l.idx())
             rhs.add(b_l, fA)
 
         # print("test reference solution:")
@@ -1880,28 +1909,26 @@ def createStiffnessMatrix(mesh, a=None, isVector=False):
     Calculates the Stiffness matrix :math:`{\bf S}` for the given mesh scaled
     with the per cell values a.
 
-    ..math::
-            ...
-
     Parameters
     ----------
     mesh : :gimliapi:`GIMLI::Mesh`
         Arbitrary mesh to calculate the stiffness for.
         Type of base and shape functions depends on the cell types.
 
-    a : iterable of type float, int, complex, RMatrix, CMatrix
-        Per cell values., e.g., physical parameter. Length of a need to be mesh.cellCount().
+    a : iterable of type float, int, complex, :gimliapi:`GIMLI::Matrix`
+        Per cell values., e.g., physical parameter.
+        Length of a need to be `mesh.cellCount()`.
         If None given default is 1.
 
     isVector : bool [False]
         We want to solve for vector valued problems. Resulting SparseMatrix is
         a SparseMapMatrix and have the dimension
-        (nNodes * nDims, nNodes * nDims) with nNodes = mesh.nodeCount() and
-        nDims = mesh.dimension().
+        `(nNodes x nDims, nNodes x nDims)` with `nNodes = mesh.nodeCount()` and
+        `nDims = mesh.dimension()`.
 
     Returns
     -------
-    A : :gimliapi:`GIMLI::[C]SparseMatrix` | [C]SparseMapMatrix
+    A : :gimliapi:`GIMLI::SparseMatrix` | SparseMapMatrix
         Stiffness matrix, with real or complex values.
     """
     if mesh.cellCount() == 0:
@@ -1911,12 +1938,13 @@ def createStiffnessMatrix(mesh, a=None, isVector=False):
     if a is None:
         a = pg.Vector(mesh.cellCount(), 1.0)
 
+    if isinstance(a, (float, int)):
+        a = pg.Vector(mesh.cellCount(), a)
+
     A = None
 
     if isVector is False:
-        if isinstance(a[0], float) or \
-           isinstance(a[0], int) or \
-           isinstance(a[0], np.float64):
+        if isinstance(a[0], (float, int, np.float64)):
             A = pg.matrix.SparseMatrix()
             A.fillStiffnessMatrix(mesh, a)
             return A
@@ -1927,7 +1955,7 @@ def createStiffnessMatrix(mesh, a=None, isVector=False):
         dof = mesh.nodeCount()
         nDof = mesh.nodeCount() * mesh.dimension()
 
-    #### if vector or scalar(Complex)
+    # if vector or scalar(Complex)
     if pg.isComplex(a[0]):
         isComplex = True
         A = pg.matrix.CSparseMapMatrix(nDof, nDof)
@@ -1942,7 +1970,7 @@ def createStiffnessMatrix(mesh, a=None, isVector=False):
 
     for c in mesh.cells():
         if isComplex is True:
-            #al.gradU2(c, 1.0)
+            # al.gradU2(c, 1.0)
             al.ux2uy2uz2(c)
             A.add(al, scale=a[c.id()])
         else:
@@ -1955,7 +1983,7 @@ def createStiffnessMatrix(mesh, a=None, isVector=False):
                 else:
                     vN = False
 
-                #al.gradU2(c, a[c.id()], voigtNotation=vN)
+                # al.gradU2(c, a[c.id()], voigtNotation=vN)
                 al.gradU2(c, np.array(a[c.id()]), voigtNotation=vN)
                 A.add(al)
 
@@ -1968,7 +1996,7 @@ def createStiffnessMatrix(mesh, a=None, isVector=False):
 def createMassMatrix(mesh, b=None):
     r"""Create the mass matrix.
 
-    Calculates the Mass matrix (Finite element identity matrix) the given mesh.
+    Calculates the Mass matrix (Finite element identity) for the given mesh.
 
     ..math::
             ...
@@ -1985,10 +2013,9 @@ def createMassMatrix(mesh, b=None):
 
     Returns
     -------
-    A : :gimliapi:`GIMLI::RSparseMatrix`
+    A : :gimliapi:`GIMLI::SparseMatrix`
         Mass element matrix
     """
-
     # need callable here
     if b is None:
         b = pg.Vector(mesh.cellCount(), 1.0)
@@ -2012,7 +2039,7 @@ def createMassMatrix(mesh, b=None):
 
 
 def intDomain(u, mesh=None):
-    """Return integral over nodal solution :math:`u`.
+    r"""Return integral over nodal solution :math:`u`.
 
     .. math::
         \int_{\Omega} u
@@ -2040,8 +2067,9 @@ def _feNorm(u, mat):
 def normL2(u, mat=None, mesh=None):
     r"""Create Lebesgue (L2) norm for finite element space.
 
-    Find the L2 Norm for a solution for the finite element space. :math:`u` exact solution
-    :math:`{\bf M}` Mass matrix, i.e., Finite element identity matrix.
+    Find the L2 Norm for a solution for the finite element space. :math:`u`
+    exact solution     :math:`{\bf M}` Mass matrix, i.e., Finite element
+    identity matrix.
 
     .. math::
 
@@ -2118,7 +2146,7 @@ def normH1(u, mat=None, mesh=None):
         mat = pg.solver.createStiffnessMatrix(mesh)
 
     if mat is None:
-        raise Exception("Need Stiffness matrix or a mesh here to calculate H1-Norm")
+        raise Exception("Need Stiffness matrix or mesh to calculate H1 norm")
 
     return _feNorm(u, mat)
 
@@ -2153,39 +2181,33 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
         c \frac{\partial u}{\partial t} & = \nabla\cdot(a \nabla u)
         + b u + f(\mathbf{r},t)~~|~~\Omega_{\text{Mesh}}\\
         u & = h~~|~~\Gamma_{\text{Dirichlet}}\\
-        \frac{\partial u}{\partial \mathbf{n}} & = g~~|~~\Gamma_{\text{Neumann}}\\
-        \alpha u + \beta\frac{\partial u}{\partial \mathbf{n}} & = \gamma~~|~~\Gamma_{\text{Robin}}\\
-        \frac{\partial u}{\partial \mathbf{n}} & = \alpha(u_0-u)~~|~~\Gamma_{\text{Robin}}
+        a\frac{\partial u}{\partial \mathbf{n}} & =
+        g~~|~~\Gamma_{\text{Neumann}}\\
+        \alpha u + \beta\frac{\partial u}{\partial \mathbf{n}} & =
+        \gamma~~|~~\Gamma_{\text{Robin}}\\
+        \frac{\partial u}{\partial \mathbf{n}} & =
+        \alpha(u_0-u)~~|~~\Gamma_{\text{Robin}}
 
-    for the scalar :math:`u(\mathbf{r}, t)` or
-    vector :math:`\mathbf(u)(\mathbf{r}, t)` solution at each node of a given mesh.
+    for the scalar :math:`u(\mathbf{r}, t)` or vector
+    :math:`\mathbf(u)(\mathbf{r}, t)` solution at each node of a given mesh.
     The Domain :math:`\Omega` and the Boundary :math:`\Gamma` are defined
     through the mesh with appropriate boundary marker.
 
-    Note, to ensure vector solution either set vector forces or at least on
+    To ensure vector solution, either set vector forces or at least one
     vector component boundary condition.
 
-    TODO:
-
-        * unsteady ub and dub
-        * 'Infinity' Boundary condition (u vanishes at infinity)
-        * 'Cauchy' Boundary condition
-        (guaranties u and du on same boundary, will never work here because the
-        problem becomes ill posed and would need some inverse strategy to
-        solve.)
-        * Example for
-            * elastic parameter
-            * anisotropic (float/complex)
-            * dynamic boundary conditions
-            * dynamic load vector
-            * nonlinearity
+    TODO
+    ----
+    * unsteady ub and dub
+    * 'Infinity' Boundary condition (u vanishes at infinity)
 
     Parameters
     ----------
     mesh: :gimliapi:`GIMLI::Mesh`
         Mesh represents spatial discretization of the calculation domain
     a: value | array | callable(cell, userData)
-        Cell values of type float or complex can be scalar, anisotropic matrix or elastic tensor.
+        Cell values of type float or complex can be scalar, anisotropy matrix
+        or elastic tensor.
     b: value | array | callable(cell, userData) [None]
         Cell values. None means the term is unused.
     c: value | array | callable(cell, userData) [None]
@@ -2195,15 +2217,19 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
     bc: dict()
         Dictionary of boundary conditions.
         Current supported boundary conditions by dictionary keys:
-        'Dirichlet', 'Neumann', 'Robin', 'Node'.
+        ``Dirichlet``, ``Neumann``, ``Robin``, ``Node``.
 
-        The dictionary can contain multiple "key: Arg"
-        Arg will be parsed by :py:mod:`pygimli.solver.solver.parseArgPairToBoundaryArray`
+        The dictionary can contain multiple `key: Arg`. `Arg` will be parsed
+        by :py:mod:`pygimli.solver.solver.parseArgPairToBoundaryArray`
 
-        If the dictionary key is 'Node' then fixed values for single node
-        indices can by be given. e.g., bc={'Node': [nodeID, value]}.
-        Note this is only a shortcut for
-        bc={'Dirichlet': [mesh.node(nodeID), value]}.
+        If the dictionary key is ``Node`` then fixed values for single node
+        indices can by be given. e.g., `bc={'Node': [nodeID, value]}`.
+        Note this is only a shortcut
+        for `bc={'Dirichlet': [mesh.node(nodeID), value]}`.
+
+        The parameter `a` for Neumann boundary condition is choosen
+        automatically from the diffusivity parameter `a` of the associated cell.
+
     times: array [None]
         Solve as time dependent problem for the given times.
 
@@ -2213,13 +2239,14 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
         u0: value | array | callable(pos, userData)
             Node values
         theta: float [1]
-            - :math:`theta = 0` means explicit Euler, maybe stable for
-            :math:`\Delta t \quad\text{near}\quad h`
-            - :math:`theta = 0.5`, Crank-Nicolson scheme, maybe instable
-            - :math:`theta = 2/3`, Galerkin scheme
-            - :math:`theta = 1`, implicit Euler
+            * :math:`\theta = 0` means explicit Euler, maybe stable for
+                :math:`\Delta t \quad\text{near}\quad h`
+            * :math:`\theta = 0.5`, Crank-Nicolson scheme, maybe instable
+            * :math:`\theta = 2/3`, Galerkin scheme
+            * :math:`\theta = 1`, implicit Euler
 
-            If unsure choose :math:`\theta = 0.5 + \epsilon`, which is probably stable.
+            If unsure choose :math:`\theta = 0.5 + \epsilon` (probably stable).
+
         dynamic: bool [False]
             Boundary conditions for time depending problems will be considered
             dynamic for each time step.
@@ -2232,13 +2259,13 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
             Returns the system matrix A and the rhs vector.
         fixPureNeumann: bool [auto]
             If set or detected automatic, we add the additional condition:
-            :math:`\int_domain u dv = 0` which makes elliptic problems well posed again.
+            :math:`\int_\Omega u dv = 0` making elliptic problems well-posed.
         rhs: iterable
             Pre assembled rhs. Will preferred on any f settings.
         ws: dict
             The WorkSpace is a dictionary that will get
             some temporary data during the calculation.
-            Any keyvalue 'u' in the dictionary will be used for the resulting array.
+            Any keyvalue 'u' in the dictionary is used for the resulting array.
         vectorValued: bool (False)
             Solution forced to vector valued, in case the auto detection fails
 
@@ -2250,24 +2277,21 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
 
     See also
     --------
-        :ref:`tut:modelling` and :py:mod:`pygimli.solver.solve`
+    :ref:`tut:modelling` and :py:mod:`pygimli.solver.solve`
 
     Examples
     --------
+    >>> # no need to import matplotlib, pygimli show does.
     >>> import pygimli as pg
-    >>> from pygimli.meshtools import polytools as plc
-    >>> from pygimli.viewer.mpl import drawField, drawMesh
-    >>> import matplotlib.pyplot as plt
-    >>> world = plc.createWorld(start=[-10, 0], end=[10, -10],
-    ...                         marker=1, worldMarker=False)
-    >>> c1 = plc.createCircle(pos=[0.0, -5.0], radius=3.0, area=.1, marker=2)
-    >>> mesh = pg.meshtools.createMesh([world, c1], quality=34.3)
+    >>> import pygimli.meshtools as mt
+    >>> world = mt.createWorld(start=[-10, 0], end=[10, -10],
+    ...                        marker=1, worldMarker=False)
+    >>> c1 = mt.createCircle(pos=[0.0, -5.0], radius=3.0, area=.1, marker=2)
+    >>> mesh = mt.createMesh([world, c1], quality=34.3)
     >>> u = pg.solver.solveFiniteElements(mesh, a={1: 100.0, 2: 1.0},
-    ...                                   bc={'Dirichlet':{4: 1.0, 2: 0.0}})
-    >>> fig, ax = plt.subplots()
-    >>> pc = drawField(ax, mesh, u)
-    >>> drawMesh(ax, mesh)
-    >>> plt.show()
+    ...                                   bc={'Dirichlet':{4: 1.0, 3: 0.0}})
+    >>> ax = pg.show(mesh, u, showMesh=True)[0]
+    >>> _ = pg.show(c1, ax=ax, fillRegion=False)
     """
     if bc is None:
         bc = {}
@@ -2280,11 +2304,11 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
     if verbose:
         print("Mesh: ", str(mesh))
 
-    ## scalar solution default
+    # scalar solution default
     vectorValues = False
     dof = mesh.nodeCount()
 
-    ## check if force vector is a vector
+    # check if force vector is a vector
     rhs = kwargs.pop('rhs', createLoadVector(mesh, f, userData=userData))
 
     # pg._g('###############')
@@ -2301,7 +2325,7 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
     swatch = pg.core.Stopwatch(True)
 
     # check for material parameter
-    #a = parseArgToArray(a, nDof=mesh.cellCount(), mesh=mesh, userData=userData)
+#   a = parseArgToArray(a, nDof=mesh.cellCount(), mesh=mesh, userData=userData)
     a = cellValues(mesh, a, userData=userData)
     isComplex = False
     if pg.utils.isComplex(a):
@@ -2314,13 +2338,12 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
     if b is not None and b != 0:
         b = cellValues(mesh, b, userData=userData)
         M = createMassMatrix(mesh, b)
-        #pg.warn("check me")
+        # pg.warn("check me")
         A = S - M
     else:
         A = S
 
     if times is None:
-
         if len(list(bc.items())) == 0 or \
            (len(list(bc.items())) == 1 and list(bc.keys())[0] == 'Neumann'):
             pn = True
@@ -2361,7 +2384,7 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
             A.add(r, 0, mesh.nodeCount())
             A.add(r, mesh.nodeCount(), 0, transpose=True)
 
-            rhs = pg.cat(rhs, pg.Vector(1,0))
+            rhs = pg.cat(rhs, pg.Vector(1, 0))
 
         assembleTime = swatch.duration(True)
 
@@ -2384,7 +2407,8 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
                 uc = pg.solver.linSolve(A, rhs, 'scipy')
                 u = uc[0:mesh.nodeCount()]
             else:
-                pg.criticale('Non single force for pure Neumann not yet implemented')
+                pg.critical(
+                    'Non-single force for pure Neumann not yet implemented')
         else:
             solver = pg.core.LinSolver(False)
             solver.setMatrix(A, 0)
@@ -2410,8 +2434,8 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
             pg.warn("Unused arguments", *kwargs)
         return u
 
-    else: # times given
-        pg.solver.checkCFL(times, mesh, max(a))
+    else:  # times given
+        pg.solver.checkCFL(times, mesh, max(np.array(a).flatten()))
 
         if debug:
             print("start TL", swatch.duration())
@@ -2468,7 +2492,7 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
             swatch.reset()
             # (A + a*B)u is fastest,
             # followed by A*u + (B*u)*a and finally A*u + a*B*u and
-            br = (M + (dt * (theta - 1.)) * S) * U[n - 1] + \
+            br = (M + S*(dt * (theta - 1.))) * U[n - 1] + \
                 dt * ((1.0 - theta) * rhs[n - 1] + theta * rhs[n])
 
             # print ('a',swatch.duration(True))
@@ -2509,6 +2533,7 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
                   measure, measure / len(times))
         return U
 
+
 def checkCFL(times, mesh, vMax, verbose=False):
     """Check Courant-Friedrichs-Lewy condition.
 
@@ -2544,13 +2569,14 @@ def checkCFL(times, mesh, vMax, verbose=False):
         pg.info("Courant-Friedrichs-Lewy Number:", c)
     return c
 
+
 def crankNicolson(times, S, I, f=None,
                   u0=None, theta=1.0, dirichlet=None,
                   solver=None, progress=None):
-    """Generic Crank Nicolson solver for time dependend problems.
+    """Solve time dependend problems using Crank-Nicolson scheme.
 
     Limitations so far:
-        S = Needs to be constant over time (i.e. no change in model coefficients)
+        S = Needs to be constant over time (i.e. no change in coefficients)
         f = constant over time (would need assembling in every step)
 
     Args
@@ -2570,8 +2596,9 @@ def crankNicolson(times, S, I, f=None,
     theta: float [1.0]
         * 0: Backward difference scheme (implicit)
         * 1: Forward difference scheme (explicit)
-        strong time steps dependency .. will be unstable for to small values
+            strong time steps dependency .. will be unstable for to small values
         * 0.5: probably best tradeoff but can also be unstable
+
     dirichlet: dirichlet generator
         Genertor object to applay dirichlet boundary conditions
     solver: LinSolver [None]
@@ -2586,7 +2613,8 @@ def crankNicolson(times, S, I, f=None,
     """
     if len(times) < 2:
         raise BaseException("We need at least 2 times for "
-                            "Crank-Nicolsen time discretization." + str(len(times)))
+                            "Crank-Nicolsen time discretization." +
+                            str(len(times)))
     # sw = pg.core.Stopwatch(True)
     timeAssemble = []
     timeSolve = []
@@ -2615,9 +2643,9 @@ def crankNicolson(times, S, I, f=None,
     for n in range(1, len(times)):
         newDt = times[n] - times[n-1]
         if abs(newDt - dt) > 1e-8:
-            ## new dt, so we need to factorize the matrix again
+            # new dt, so we need to factorize the matrix again
             dt = newDt
-            #pg.info('dt', dt)
+            # pg.info('dt', dt)
 
             A = I + S * (dt * theta)
 
@@ -2633,13 +2661,13 @@ def crankNicolson(times, S, I, f=None,
 
         if theta == 0:
             if St is None:
-                St = I - S * dt # cache what's possible
+                St = I - S * dt  # cache what's possible
             b = St * u[n-1] + dt * rhs[n-1]
         elif theta == 1:
             b = I * u[n-1] + dt * rhs[n]
         else:
             if St is None:
-                St = I - S *(dt*(1.-theta)) # cache what's possible
+                St = I - S * (dt*(1.-theta))  # cache what's possible
             b = St * u[n-1] + dt * ((1.0 - theta) * rhs[n-1] + theta * rhs[n])
 
         if dirichlet is not None:
@@ -2654,16 +2682,16 @@ def crankNicolson(times, S, I, f=None,
             timeSolve.append(pg.dur(key='CrankNicolsonLoop'))
 
         if progress:
-            progress.update(n,
-                            't_prep: ' + pg.pf(timeAssemble[-1]*1000) + 'ms ' + \
-                            't_step: ' + pg.pf(timeSolve[-1]*1000) + 'ms')
+            progress.update(
+                n, 't_prep: ' + pg.pf(timeAssemble[-1]*1000) + 'ms ' +
+                't_step: ' + pg.pf(timeSolve[-1]*1000) + 'ms')
 
-        #if verbose and (n % verbose == 0):
-            ## print(min(u[n]), max(u[n]))
-            #print("timesteps:", n, "/", len(times),
-                  #'runtime:', sw.duration(), "s",
-                  #'assemble:', np.mean(timeAssemble),
-                  #'solve:', np.mean(timeSolve))
+        # if verbose and (n % verbose == 0):
+        #     # print(min(u[n]), max(u[n]))
+        #     print("timesteps:", n, "/", len(times),
+        #           'runtime:', sw.duration(), "s",
+        #           'assemble:', np.mean(timeAssemble),
+        #           'solve:', np.mean(timeSolve))
     return u
 
 
@@ -2765,7 +2793,7 @@ class RungeKutta(object):
                 if isinstance(self.resU, list):
                     for i in range(len(self.resU)):
                         self.resU[i] = self.rk4a[jRK] * self.resU[i] + \
-                                       self.dt * rhs[i]
+                            self.dt * rhs[i]
 
                         self.u[i] += self.rk4b[jRK] * self.resU[i]
                 else:

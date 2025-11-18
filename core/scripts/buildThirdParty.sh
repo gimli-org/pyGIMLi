@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 
-BOOST_VERSION_DEFAULT=1.68.0
+#BOOST_VERSION_DEFAULT=1.68.0
+#BOOST_VERSION_DEFAULT=1.76.0
+#BOOST_VERSION_DEFAULT=1.83.0
+BOOST_VERSION_DEFAULT=1.86.0
 #since 63 libboost_numpy
 #since 64 python build broken
 
 BOOST_URL=http://sourceforge.net/projects/boost/files/boost/
+#https://archives.boost.io/release/1.86.0/source/boost_1_86_0.tar.gz
 
 LAPACK_VERSION=3.4.2
 LAPACK_URL=http://www.netlib.org/lapack/
@@ -22,28 +26,49 @@ CASTXML_URL=https://github.com/CastXML/CastXML.git
 #CASTXML_REV=9d7a46d639ce921b8ddd36ecaa23c567d003294a #last functional
 
 # Check for updates https://data.kitware.com/#search/results?query=castxml&mode=text
-CASTXML_BIN_LINUX=https://data.kitware.com/api/v1/file/5b6c5b4d8d777f06857c323b/download
-#CASTXML_BIN_LINUX=https://data.kitware.com/api/v1/item/57b5de948d777f10f2696371/download # seems broken
-#CASTXML_BIN_LINUX=https://data.kitware.com/api/v1/file/57b5dea08d777f10f2696379/download # old ok
-CASTXML_BIN_MAC=https://data.kitware.com/api/v1/file/57b5de9f8d777f10f2696378/download
-CASTXML_BIN_WIN=https://data.kitware.com/api/v1/file/5b68bfc28d777f06857c1f44/download
+CASTXML_BIN_LINUX=https://data.kitware.com/api/v1/item/63bed74d6d3fc641a02d7e98/download # 0.5.0
+#CASTXML_BIN_WIN=https://data.kitware.com/api/v1/file/63bed83a6d3fc641a02d7ea3/download # 0.5.0
+CASTXML_BIN_WIN=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/castxml-windows.zip
 
-PYGCCXML_URL=https://github.com/gccxml/pygccxml
-PYGCCXML_REV=84be3367bf43cb494512f343068cb23704a47460 # for py3.8
+if [[ $(uname -m) == 'arm64' ]]; then
+    # ARM means new Apple M chips
+    CASTXML_BIN_MAC_NAME="castxml-macos-arm.tar.gz"
+else
+    CASTXML_BIN_MAC_NAME="castxml-macosx.tar.gz"
+fi
+CASTXML_BIN_MAC=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/$CASTXML_BIN_MAC_NAME
+
+#.. needs testing
+# Check for updates https://github.com/CastXML/CastXMLSuperbuild/releases/tag/v0.6.5
+#CASTXML_BIN_LINUX=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/
+
+PYGCCXML_URL=https://github.com/CastXML/pygccxml
+PYGCCXML_REV=v2.2.1
 
 # old bitbucked project not working anymore and moved to github
 # PYPLUSPLUS_URL=https://bitbucket.org/ompl/pyplusplus
 # PYPLUSPLUS_REV=1e30641 # tag 1.8.3 for py3.8
 PYPLUSPLUS_URL=https://github.com/ompl/pyplusplus
-PYPLUSPLUS_REV=d4811c8 # tag 1.8.3 for py3.8
+PYPLUSPLUS_REV=1.8.5
 
 CPPUNIT_URL=http://svn.code.sf.net/p/cppunit/code/trunk
 
+
 checkTOOLSET(){
+    echo "checkTOOLSET:" $TOOLSET $SYSTEM
     if [ "$TOOLSET" == "none" ]; then
         echo "No TOOLSET set .. using default gcc"
-        SYSTEM=UNIX
+        echo "OS:" $OS
+
+        if [ "$OS" == "Windows_NT" ]; then
+            SYSTEM=WIN
+        else
+            SYSTEM=UNIX
+        fi
+        echo "SYSTEM:" $SYSTEM
+
         SetGCC_TOOLSET
+
     elif [ "$TOOLSET" == "clang" ]; then
         SetCLANG_TOOLSET
     fi
@@ -88,11 +113,15 @@ SetMSVC_TOOLSET(){
 }
 SetGCC_TOOLSET(){
     needGCC
-    TOOLSET=gcc-`gcc -dumpversion`
+    TOOLSET=GNU-`gcc -dumpversion`
     B2TOOLSET=''
     MAKE=make
 
-    if [ "$OSTYPE" == "msys" -o "$MSYSTEM" == "MINGW32" ]; then
+    echo "OS:" $OS
+    echo "OSTYPE:" $OSTYPE
+    echo "MSTYPE:" $MSYSTEM
+
+    if [ "$OS" == "Windows_NT" -o "$OSTYPE" == "msys" -o "$MSYSTEM" == "MINGW32" ]; then
         #CMAKE_GENERATOR='MSYS Makefiles'
         CMAKE_GENERATOR='Unix Makefiles'
         #CMAKE_GENERATOR='MinGW Makefiles'
@@ -171,6 +200,28 @@ SetCLANG_TOOLSET(){
     fi
 }
 
+function copySRC_From_EXT_PATH(){
+    echo "GIMLI_THIRDPARTY_SRC: $GIMLI_THIRDPARTY_SRC"
+    if [ ! -d $_SRC_ ]; then
+        NAME=`basename $_SRC_`
+        echo "BASNAME=$NAME"
+        if [ ! -z $GIMLI_THIRDPARTY_SRC ]; then
+            echo "checking GIMLI_THIRDPARTY_SRC: $GIMLI_THIRDPARTY_SRC/$NAME"
+            if [ -d $GIMLI_THIRDPARTY_SRC/$NAME ]; then
+                echo "Found external Thirdparty Sources .. using them instead of downloading."
+                echo "cp -r $GIMLI_THIRDPARTY_SRC/$NAME $_SRC_"
+                cp -r $GIMLI_THIRDPARTY_SRC/$NAME $_SRC_
+            else
+                echo ".. not found."
+            fi
+        else
+            echo "GIMLI_THIRDPARTY_SRC no set"
+        fi
+    else
+        echo "$_SRC_ already exists"
+    fi
+}
+
 getWITH_WGET(){
     _URL_=$1
     _SRC_=$2
@@ -178,11 +229,14 @@ getWITH_WGET(){
 
     echo "** get with wget ** " $_URL_ $_SRC_ $_PAC_
     echo "wget -nc -nd $_URL_/$_PAC_"
+    echo "--------------------------------------------------"
 
     if [ -n "$CLEAN" ]; then
         rm -rf $_SRC_
         #rm -rf $_PAC_
     fi
+
+    copySRC_From_EXT_PATH
 
     if [ ! -d $_SRC_ ]; then
         echo "Copying sources into $_SRC_"
@@ -201,7 +255,7 @@ getWITH_WGET(){
                 echo "cp download.dir/$_PAC_ ."
                 mv download.dir/$_PAC_ .
             fi
-            
+
             if [ "${_PAC_##*.}" = "zip" ]; then
                 mkdir -p $_SRC_
                 pushd $_SRC_
@@ -275,6 +329,8 @@ getWITH_GIT(){
     echo "----GIT--$_URL_ -> $_SRC_ : $_BRANCH_----------------"
     echo "--------------------------------------------------"
 
+    copySRC_From_EXT_PATH
+
     if ( [ -d $_SRC_ ] ); then
         pushd $_SRC_
             "$GIT" stash
@@ -285,6 +341,8 @@ getWITH_GIT(){
             "$GIT" clone $_URL_ $_SRC_
         popd
     fi
+
+
     if [ -n $_BRANCH_ ]; then
         pushd $_SRC_
           echo $_SRC_ $_BRANCH_
@@ -299,19 +357,30 @@ needGCC(){
 }
 needPYTHON(){
 
-    if command -v python3 2>/dev/null; then
-        PYTHONEXE=python3
-    elif command -v python 2>/dev/null; then
-        PYTHONEXE=python
+    echo "*** Need python "
+
+    if [ "$SYSTEM" == "WIN" ]; then
+        # don't check for python3 in win .. it will find msys python not anaconda
+        if command -v python 2>/dev/null; then
+            PYTHONEXE=python
+        else
+            echo "Cannot find python interpreter. Please consider install anaconda."
+        fi
     else
-        echo "cannot find python interpreter"
+        if command -v python3 2>/dev/null; then
+            PYTHONEXE=python3
+        elif command -v python 2>/dev/null; then
+            PYTHONEXE=python
+        else
+            echo "cannot find python interpreter"
+        fi
     fi
 
     HAVEPYTHON=1
     PYTHONVERSION=`"$PYTHONEXE" -c 'import sys; print(sys.version)'`
     PYTHONMAJOR=`"$PYTHONEXE" -c 'import sys; print(sys.version_info.major)'`
     PYTHONMINOR=`"$PYTHONEXE" -c 'import sys; print(sys.version_info.minor)'`
-    #echo $PYTHONVERSION $PYTHONMAJOR
+    echo "Python version found py" $PYTHONMAJOR $PYTHONMINOR $PYTHONVERSION
 
     PYTHON_HOME=`which $PYTHONEXE`
     PYTHON_HOME=${PYTHON_HOME%/*}
@@ -333,7 +402,6 @@ needPYTHON(){
         fi
     fi
 }
-
 cmakeBuild(){
     _SRC_=$1
     _BUILD_=$2
@@ -377,7 +445,6 @@ prepBOOST(){
     BOOST_DIST_NAME=$BOOST_VER-$TOOLSET-$ADDRESSMODEL-'py'$PYTHONMAJOR$PYTHONMINOR
     BOOST_DIST=$DIST_DIR/$BOOST_DIST_NAME
     BOOST_BUILD=$BUILD_DIR/$BOOST_VER-'py'$PYTHONMAJOR$PYTHONMINOR
-    export BOOST_ROOT=$BOOST_DIST
 
     BOOST_ROOT_WIN=${BOOST_ROOT/\/c\//C:\/}
     BOOST_ROOT_WIN=${BOOST_ROOT_WIN/\/d\//D:\/}
@@ -386,31 +453,35 @@ prepBOOST(){
 buildBOOST(){
     checkTOOLSET
     prepBOOST
-
+    echo "*** building boost ... $BOOST_VER $BOOST_URL/$BOOST_VERSION/$BOOST_VER'.tar.gz'"
     getWITH_WGET $BOOST_URL/$BOOST_VERSION $BOOST_SRC $BOOST_VER'.tar.gz'
 
     if [ ! -d $BOOST_BUILD ]; then
         echo "copying sourcetree into build: $BOOST_BUILD"
         cp -r $BOOST_SRC $BOOST_BUILD
     fi
+
     pushd $BOOST_BUILD
         echo "Try to build b2 for TOOLSET: $B2TOOLSET"
 
         if [ "$SYSTEM" == "WIN" ]; then
             if [ ! -f ./b2.exe ]; then
-                echo "Try with cmd /c \"bootstrap.bat $B2TOOLSET\""
-                cmd.exe /c "bootstrap.bat $B2TOOLSET" # try this first .. works for 54 with mingw
-
-                if [ ! -f ./b2.exe ]; then
-                    echo "Try with ./bootstrap.sh --with-toolset=$B2TOOLSET"
-                    ./bootstrap.sh --with-toolset=$B2TOOLSET # only mingw does not work either
-                fi
+                echo "Building b2.exe for $SYSTEM"
+                ./bootstrap.sh  ## works with 1.86.0
+                # need to escape the python binary path
+                sed -i -s 's/\\/\\\\/g' project-config.jam
                 #sed -e s/gcc/mingw/ project-config.jam > project-config.jam
             fi
             B2="./b2.exe"
         elif [ "$SYSTEM" == "UNIX" ]; then
-            sh bootstrap.sh
             B2="./b2"
+
+            if [ -f "b2" ]; then
+                echo "*** using existing $B2"
+            else
+                echo "Building b2 for $SYSTEM"
+                sh bootstrap.sh
+            fi
         fi
 
         [ $HAVEPYTHON -eq 1 ] && WITHPYTHON='--with-python'
@@ -421,38 +492,62 @@ buildBOOST(){
         if [ $SYSTEM == 'WIN' -a $ADDRESSMODEL == '64' ]; then
             EXTRADEFINES='define=BOOST_USE_WINDOWS_H define=MS_WIN64'
             echo "+++++++++++++++++++ :$EXTRADEFINES"
+
+            #linkflags="-L C:\Users\carsten\anaconda311\libs" \
+            # venv does not have pyconfig.h so we add the base config to the build system
+            export PYTHON_BASE_LIB=` python -c 'import sys; print(sys.base_prefix.replace(r"\\\\",r"\\\\\\\\"))'`
+            export CPLUS_INCLUDE_PATH=$PYTHON_BASE_LIB\\include
+            echo "Setting extra include to pyconfig for mingw $CPLUS_INCLUDE_PATH"
+        else
+            PY_PLATFORM=cp$PYTHONMAJOR$PYTHONMINOR
+            PY_CONFIG_DIR=/opt/python/$PY_PLATFORM-$PY_PLATFORM/include/python3.$PYTHONMINOR
+
+            if [ -f $PY_CONFIG_DIR/pyconfig.h ]; then
+                # special includes for manylinux, since venv does not copy python
+                # config on alamlinux docker container
+                echo "Setting extra include to pyconfig for manylinux_$PY_PLATFORM-$PY_PLATFORM"
+                export CPLUS_INCLUDE_PATH=$PY_CONFIG_DIR
+            fi
+            #python3.7-config --includes --libs
         fi
-        echo "Build with python: $WITHPYTHON"
+        echo "*** Building boost in $PWD"
+        #/return
 
-        "$B2" toolset=$COMPILER variant=release link=static,shared threading=multi address-model=$ADDRESSMODEL $EXTRADEFINES install \
-        -j $PARALLEL_BUILD \
-        -d 0 \
-        -a \
-        --prefix=$BOOST_DIST \
-        --platform=msys \
-        --layout=tagged \
-        --debug-configuration \
-        $WITHPYTHON 
-    
-    	#--with-system \
-        #--with-thread 
-
-        # --with-date_time \
-        # --with-chrono \
-        # --with-regex \
-        # --with-filesystem \
-        # --with-atomic
+        "$B2" \
+            toolset=$COMPILER \
+            variant=release \
+            link=static,shared \
+            threading=multi \
+            cxxflags='-Wno-strict-aliasing -Wno-deprecated-declarations -Wno-attributes' \
+            linkflags="-L $PYTHON_BASE_LIB\libs" \
+            address-model=$ADDRESSMODEL $EXTRADEFINES install\
+            --platform=msys \
+            -j 8 \
+            -d 1 \
+            -a \
+            --prefix=$BOOST_DIST \
+            --layout=tagged \
+            --debug-configuration \
+            $WITHPYTHON
+            #address-model=$ADDRESSMODEL $EXTRADEFINES install \
     popd
-    echo $BOOST_DIST_NAME > $DIST_DIR/.boost-py$PYTHONMAJOR.dist
-}
 
+    if [ -n "$(find $BOOST_DIST/lib -maxdepth 1 -type f -name "libboost_python*" -print -quit)" ]; then
+        echo "Writing boost python distribution hint file: $DIST_DIR/.boost-py$PYTHONMAJOR$PYTHONMINOR.dist"
+        echo $BOOST_DIST_NAME > $DIST_DIR/.boost-py$PYTHONMAJOR$PYTHONMINOR.dist
+        export BOOST_ROOT=$BOOST_DIST
+    else
+        echo "libboost_python* not found in: $BOOST_DIST/lib"
+        echo "Something went wrong."
+    fi
+
+}
 prepCASTXMLBIN(){
     CASTXML_VER=castxml
     CASTXML_SRC=$SRC_DIR/$CASTXML_VER
     CASTXML_BUILD=$BUILD_DIR/$CASTXML_VER
     CASTXML_DIST=$DIST_DIR
 }
-
 buildCASTXMLBIN(){
     checkTOOLSET
     prepCASTXMLBIN
@@ -465,7 +560,10 @@ buildCASTXMLBIN(){
         cp -r $CASTXML_SRC/castxml/* $CASTXML_DIST
         CASTXMLBIN=castxml.exe
     elif [ "$SYSTEM" == "MAC" ]; then
-        getWITH_WGET $CASTXML_BIN_MAC $CASTXML_SRC castxml-macosx.tar.gz
+        if [ -n "$CLEAN" ]; then
+            rm -f $SRC_DIR/$CASTXML_BIN_MAC_NAME
+        fi
+        getWITH_WGET $CASTXML_BIN_MAC $CASTXML_SRC $CASTXML_BIN_MAC_NAME
         cp -r $CASTXML_SRC/* $CASTXML_DIST
         CASTXMLBIN=castxml
     else
@@ -485,15 +583,15 @@ buildCASTXMLBIN(){
         rm -rf $CASTXML_DIST/share/castxml
     fi
 }
-
 prepCASTXML(){
     CASTXML_VER=castxmlSRC
     CASTXML_SRC=$SRC_DIR/$CASTXML_VER
     CASTXML_BUILD=$BUILD_DIR/$CASTXML_VER
     CASTXML_DIST=$DIST_DIR
 }
-
 buildCASTXML(){
+    echo "Better use castxmlbin"
+    return
     checkTOOLSET
     prepCASTXML
 
@@ -536,9 +634,7 @@ buildCASTXML(){
         cmakeBuild $CASTXML_SRC $CASTXML_BUILD $CASTXML_DIST
 
     fi
-
 }
-
 prepPYGCCXML(){
     PYGCCXML_VER=pygccxml
     PYGCCXML_SRC=$SRC_DIR/$PYGCCXML_VER
@@ -554,7 +650,6 @@ prepPYGCCXML(){
     PYGCCXML_DIST_WIN=${PYGCCXML_DIST_WIN/\/d\//D:\\/}
     PYGCCXML_DIST_WIN=${PYGCCXML_DIST_WIN/\/e\//E:\\/}
 }
-
 buildPYGCCXML(){
     checkTOOLSET
     prepPYGCCXML
@@ -598,7 +693,6 @@ buildPYGCCXML(){
         #python setup.py install --prefix=$PYGCCXML_DIST_WIN
     popd
 }
-
 prepLAPACK(){
     LAPACK_VER=lapack-$LAPACK_VERSION
     LAPACK_SRC=$SRC_DIR/$LAPACK_VER
@@ -630,17 +724,22 @@ buildTRIANGLE(){
 
     pushd $TRIANGLE_BUILD
         if [ "$SYSTEM" == "WIN" ]; then
-            sed -i -e 's/-DLINUX/-DCPU86/g' makefile ;
+            sed -i -e 's/-DLINUX/-DCPU86 -D ANSI_DECLARATORS/g' makefile ;
             patch triangle.c -i $BUILDSCRIPT_HOME/patches/triangle-mingw-win64.patch
+        elif [ "$SYSTEM" == "UNIX" ]; then
+            echo "skipp for linux"
+            #sed -i -e 's/-DLINUX/-DCPU86/g' makefile ;
         elif [ "$SYSTEM" == "MAC" ]; then
             sed -i -e 's/-DLINUX//g' makefile ;
         fi
 
         if [ "$ADDRESSMODEL" == "64" ]; then
-            sed -i -e 's/CC = cc/CC = gcc -fPIC/g' makefile;
+            sed -i -e 's/CC = cc/CC = gcc -fPIC -Wno-old-style-definition -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast /g' makefile;
         else
             sed -i -e 's/CC = cc/CC = gcc/g' makefile;
         fi
+
+        sed -i -e 's/VOID/int/g' triangle.h;
 
         make trilibrary
         mkdir -p $TRIANGLE_DIST
@@ -696,7 +795,6 @@ buildSUITESPARSE(){
         popd
     popd
 }
-
 prepCPPUNIT(){
     CPPUNIT_VER=cppunit
     CPPUNIT_SRC=$SRC_DIR/$CPPUNIT_VER
@@ -720,7 +818,6 @@ buildCPPUNIT(){
     popd
 
 }
-
 slotAll(){
     buildBOOST
     buildLAPACK
@@ -738,7 +835,8 @@ showHelp(){
 if [ -z "$TOOLSET" ]; then
     TOOLSET=none
 fi
-echo "TOOLSET set to: " $TOOLSET
+echo "****** Third party build via bash script for: $@ ******"
+echo "env: TOOLSET set to: " $TOOLSET
 
 if [ -n "$BOOST_VERSION" ]; then
     BOOST_VERSION=$BOOST_VERSION
@@ -757,12 +855,11 @@ if [ -z "$PARALLEL_BUILD" ]; then
 fi
 echo "Installing at " $GIMLI_PREFIX
 
-
 CMAKE_BUILD_TYPE=Release
+
 
 for arg in $@
 do
-    echo $arg
     case $arg in
     msvc)
         SetMSVC_TOOLSET;;

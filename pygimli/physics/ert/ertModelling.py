@@ -1,9 +1,7 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""ERT modelling operator classes
+"""ERT modelling operator classes.
 
-* base class
-* standard BERT modelling class using pygimli.core (C++) functions
+* abstract base class providing a plotting function
+* standard BERT modelling class using pygimli.core (C++) functionality
 * 2.5D non-optimized totalfield forward operator for ERT (reference)
 """
 
@@ -11,29 +9,55 @@ import numpy as np
 
 import pygimli as pg
 from pygimli.frameworks import MeshModelling
-from .visualization import showERTData
-
 from pygimli import pf
+from .visualization import showERTData
 
 
 class ERTModellingBase(MeshModelling):
     """Modelling base class for ERT modelling."""
 
-    def __init__(self, **kwargs):
-        super(ERTModellingBase, self).__init__(**kwargs)
+    def __init__(self, **kwargs):  # actually useless def
+        super().__init__(**kwargs)
 
     def drawData(self, ax, data=None, **kwargs):
-        """Draw data in given axe."""
+        """Draw data on given axes.
+
+        Args
+        ----
+        ax: MPL Axe
+            Axes instance to draw into.
+        data: iterable | :py:func:pygimli.pyhsics.ert.DataContainer`
+            Datavalues to draw
+
+            * data is array, taken as values and draw on self.data structure
+            * data is Datacontainer, draw data['rhoa'] on data structure
+            * data is None, draw self.data['rhoa'] on self.data structure
+
+        Keyword Args
+        ------------
+        vals: iterable
+            Draw vals on self.data structure if no data are given.
+
+        Remaining kwargs are forwarded to
+        :py:func:pygimli.pyhsics.ert.showERTData`
+        """
         kwargs['label'] = kwargs.pop('label', pg.unit('res'))
         kwargs['cMap'] = kwargs.pop('cMap', pg.utils.cMap('res'))
 
+        vals = None
         if hasattr(data, '__iter__'):
+            # show data values from array
             vals = data
             data = self.data
-        elif data is None:
+        elif isinstance(data, pg.DataContainerERT):
+            # data is given DataContainer
+            pass
+        else:
+            # data is self.DataContainer
             data = self.data
 
-        vals = kwargs.pop('vals', data['rhoa'])
+        if vals is None:
+            vals = kwargs.pop('vals', data['rhoa'])
 
         return showERTData(data, vals=vals, ax=ax, **kwargs)
 
@@ -61,7 +85,7 @@ class ERTModelling(ERTModellingBase):
     """
 
     def __init__(self, sr=True, verbose=False):
-        super(ERTModelling, self).__init__()
+        super().__init__()
 
         # don't use DC*fop or its regionmanager directly
         #
@@ -70,6 +94,9 @@ class ERTModelling(ERTModellingBase):
             self._core = pg.core.DCSRMultiElectrodeModelling(verbose=verbose)
         else:
             self._core = pg.core.DCMultiElectrodeModelling(verbose=verbose)
+
+        # Its good that the core knows about the actual RM
+        self._core.setRegionManager(self.regionManagerRef())
 
         self._core.initJacobian()
         self.setJacobian(self._core.jacobian())
@@ -84,24 +111,55 @@ class ERTModelling(ERTModellingBase):
 
         self._conjImag = False  # the imaginary parts are flipped for log trans
 
-    def setDefaultBackground(self):
-        """Set the default background behaviour."""
-        if self.complex():
-            self.regionManager().addRegion(3, self._baseMesh, 2)
 
-        regionIds = self.regionManager().regionIdxs()
-        pg.info("Found {} regions.".format(len(regionIds)))
-        if len(regionIds) > 1:
-            bk = pg.sort(regionIds)[0]
-            pg.info("Region with smallest marker ({0}) "
-                    "set to background".format(bk))
-            self.setRegionProperties(bk, background=True)
+    def setVerbose(self, v):
+        """Set verbosity."""
+        super().setVerbose(v)
+        self._core.setVerbose(v)
+
+
+    def setDefaultBackground(self):
+        """Set the default background behavior."""
+        # if self.complex(): # deactivated, do it by hand
+        #     self.regionManager().addRegion(3, self._baseMesh, 2)
+        super().setDefaultBackground()
+        # regionIds = self.regionManager().regionIdxs()
+        # pg.info("Found {} regions.".format(len(regionIds)))
+
+        # if len(regionIds) > 1:
+        #     bk = pg.sort(regionIds)[0]
+        #     pg.info(f"(ERTModelling) Region with smallest marker ({bk}) "
+        #             "set to background.")
+        #     self.setRegionProperties(bk, background=True)
+
+
+    @property
+    def parameterCount(self):
+        """Return number of parameters."""
+        return self.regionManager().parameterCount() * (1 + self.complex())
+
+
+    def createConstraints(self, C=None):
+        """Create constraint matrix (special type for this)."""
+        super().createConstraints()  # standard C
+        if self.complex():
+            if C is not None:
+                self.C1 = C
+            elif isinstance(self.constraints(), pg.SparseMapMatrix):
+                self.C1 = pg.SparseMapMatrix(self.constraintsRef())
+                # make a copy because it will be overwritten
+            else:
+                self.C1 = self.constraints()
+
+            self.C = pg.matrix.RepeatDMatrix(self.C1, 2)
+            self.setConstraints(self.C)
+
 
     def createStartModel(self, dataVals):
         """Create Starting model for ERT inversion."""
         if self.complex():
             dataC = pg.utils.toComplex(dataVals)
-            nModel = self.regionManager().parameterCount() // 2
+            nModel = self.parameterCount // 2
             smRe = np.ones(nModel) * np.median(np.median(dataC.real))
             smIm = np.ones(nModel) * np.median(np.median(dataC.imag))
 
@@ -115,12 +173,12 @@ class ERTModelling(ERTModellingBase):
 
             return pg.utils.squeezeComplex(sm)  # complex impedance
         else:
-            return super(ERTModelling, self).createStartModel(dataVals)
+            return super().createStartModel(dataVals)
 
     def flipImagPart(self, v):
         """Flip imaginary port (convention)."""
         z = pg.utils.toComplex(v)
-        pg.warn('pre min/max={0} / {1} im: {2} / {3}'.format(
+        pg.warn('pre min/max={} / {} im: {} / {}'.format(
             pf(min(z.real)), pf(max(z.real)),
             pf(min(z.imag)), pf(max(z.imag))))
 
@@ -128,7 +186,7 @@ class ERTModelling(ERTModellingBase):
                                     conj=self._conjImag)
 
         z = pg.utils.toComplex(v)
-        pg.warn('pos min/max={0} / {1} im: {2} / {3}'.format(
+        pg.warn('pos min/max={} / {} im: {} / {}'.format(
             pf(min(z.real)), pf(max(z.real)),
             pf(min(z.imag)), pf(max(z.imag))))
         return v
@@ -137,6 +195,7 @@ class ERTModelling(ERTModellingBase):
         """Forward response (apparent resistivity)."""
         # ensure the mesh is initialized
         self.mesh()
+
         if self.complex() and self._conjImag:
             pg.warn('flip imaginary part for response calc')
             mod = self.flipImagPart(mod)
@@ -169,11 +228,11 @@ class ERTModelling(ERTModellingBase):
         return self._core.createJacobian(mod)
 
     def setDataPost(self, data):
-        """"""
+        """Set data (at a later stage)."""
         self._core.setData(data)
 
     def setMeshPost(self, mesh):
-        """"""
+        """Set mesh (at a later stage)."""
         self._core.setMesh(mesh, ignoreRegionManager=True)
 
 
@@ -181,7 +240,7 @@ class ERTModellingReference(ERTModellingBase):
     """Reference implementation for 2.5D Electrical Resistivity Tomography."""
 
     def __init__(self, **kwargs):
-        super(ERTModelling, self).__init__()
+        super().__init__()
 
         self.subPotentials = None
         self.lastResponse = None
@@ -201,7 +260,7 @@ class ERTModellingReference(ERTModellingBase):
         if not self.data.allNonZero('k'):
             pg.error('Need valid geometric factors: "k".')
             pg.warn('Fallback "k" values to -sign("rhoa")')
-            self.data.set('k', -pg.math.sign(self.data('rhoa')))
+            self.data.set('k', -pg.math.sign(self.data['rhoa']))
 
         mesh = self.mesh()
 
@@ -252,30 +311,29 @@ class ERTModellingReference(ERTModellingBase):
         r = np.zeros(nData)
 
         for i in range(nData):
-            iA = int(self.data('a')[i])
-            iB = int(self.data('b')[i])
-            iM = int(self.data('m')[i])
-            iN = int(self.data('n')[i])
+            iA = int(self.data['a'][i])
+            iB = int(self.data['b'][i])
+            iM = int(self.data['m'][i])
+            iN = int(self.data['n'][i])
 
             uAB = pM[iA] - pM[iB]
             r[i] = uAB[iM] - uAB[iN]
 
-        self.lastResponse = r * self.data('k')
+        self.lastResponse = r * self.data['k']
 
         if self.verbose:
-            print("Resp min/max: {0} {1} {2}s".format(min(self.lastResponse),
-                                                      max(self.lastResponse),
-                                                      pg.dur()))
+            print("Resp min/max: {} {} {}s".format(
+                min(self.lastResponse), max(self.lastResponse), pg.dur()))
 
         return self.lastResponse
 
     def createJacobian(self, model):
-        """TODO WRITEME."""
+        """Create Jacobian matrix for model and store it in self.jacobian()."""
         if self.subPotentials is None:
             self.response(model)
 
         J = self.jacobian()
-        J.resize(self.data.size(), self.regionManager().parameterCount())
+        J.resize(self.data.size(), self.parameterCount)
 
         cells = self.mesh().findCellByMarker(0, -1)
         Si = pg.matrix.ElementMatrix()
@@ -288,8 +346,7 @@ class ERTModellingReference(ERTModellingBase):
             print("Calculate sensitivity matrix for model: ",
                   min(model), max(model))
 
-        Jt = pg.Matrix(self.data.size(),
-                       self.regionManager().parameterCount())
+        Jt = pg.Matrix(self.data.size(), self.parameterCount)
 
         for kIdx, w in enumerate(self.w):
             k = self.k[kIdx]
@@ -298,7 +355,7 @@ class ERTModellingReference(ERTModellingBase):
             Jt *= 0.
             A = pg.matrix.ElementMatrixMap()
 
-            for i, c in enumerate(cells):
+            for c in cells:
                 modelIdx = c.marker()
 
                 # 2.5D
@@ -313,17 +370,17 @@ class ERTModellingReference(ERTModellingBase):
 
             for dataIdx in range(self.data.size()):
 
-                a = int(self.data('a')[dataIdx])
-                b = int(self.data('b')[dataIdx])
-                m = int(self.data('m')[dataIdx])
-                n = int(self.data('n')[dataIdx])
+                a = int(self.data['a'][dataIdx])
+                b = int(self.data['b'][dataIdx])
+                m = int(self.data['m'][dataIdx])
+                n = int(self.data['n'][dataIdx])
                 Jt[dataIdx] = A.mult(u[kIdx][a] - u[kIdx][b],
                                      u[kIdx][m] - u[kIdx][n])
 
             J += w * Jt
 
         m2 = model*model
-        k = self.data('k')
+        k = self.data['k']
 
         for i in range(J.rows()):
             J[i] /= (m2 / k[i])
@@ -341,16 +398,16 @@ class ERTModellingReference(ERTModellingBase):
         if pg.y(data.sensorPositions()) == pg.z(data.sensorPositions()):
             k = np.zeros(data.size())
             for i in range(data.size()):
-                a = data.sensorPosition(data('a')[i])
-                b = data.sensorPosition(data('b')[i])
-                m = data.sensorPosition(data('m')[i])
-                n = data.sensorPosition(data('n')[i])
+                a = data.sensorPosition(data['a'][i])
+                b = data.sensorPosition(data['b'][i])
+                m = data.sensorPosition(data['m'][i])
+                n = data.sensorPosition(data['n'][i])
                 k[i] = 1./(2.*np.pi) * (1./a.dist(m) - 1./a.dist(n) -
                                         1./b.dist(m) + 1./b.dist(n))
             return k
         else:
-            raise BaseException("Please use BERT for non-standard "
-                                "data sets" + str(data))
+            raise ImportError("Please use BERT for non-standard "
+                              "data sets" + str(data))
 
     def uAnalytical(self, p, sourcePos, k):
         """
@@ -364,13 +421,13 @@ class ERTModellingReference(ERTModellingBase):
 
         if r1A > 1e-12 and r2A > 1e-12:
             return (pg.math.besselK0(r1A * k) + pg.math.besselK0(r2A * k)) / \
-                    (2.0 * np.pi)
+                (2.0 * np.pi)
         else:
             return 0.
 
     def getIntegrationWeights(self, rMin, rMax):
         """TODO WRITEME."""
-        nGauLegendre = max(int((6.0 * np.log10(rMax / rMin))), 4)
+        nGauLegendre = max(int(6.0 * np.log10(rMax / rMin)), 4)
         nGauLaguerre = 4
 
         k = pg.Vector()
@@ -415,8 +472,7 @@ class ERTModellingReference(ERTModellingBase):
 
                 return k / rho * (r1.dot(n) / r1A * pg.math.besselK1(r1A * k) +
                                   r2.dot(n) / r2A * pg.math.besselK1(r2A * k))\
-                                / (pg.math.besselK0(r1A * k) +
-                                   pg.math.besselK0(r2A * k))
+                    / (pg.math.besselK0(r1A * k) + pg.math.besselK0(r2A * k))
             else:
                 return 0.
         else:
@@ -442,7 +498,6 @@ class ERTModellingReference(ERTModellingBase):
             c = mesh.findCell(e)
             rhs[i][c.ids()] = c.N(c.shape().rst(e))
         return rhs
-
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2008-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2008-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -246,7 +246,7 @@ Mesh createMesh3D(const Mesh & mesh, const RVector & z, int topMarker, int botto
             }
         }
     }
-
+    mesh3.createNeighborInfos();
     return mesh3;
 }
 

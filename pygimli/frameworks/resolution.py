@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 Methods to calculate the model resolution.
 """
@@ -6,6 +8,159 @@ import numpy as np
 
 import pygimli as pg
 
+
+def scaledJacobianMatrix(inv):
+    """Return error-weighted transformation-scaled Jacobian.
+
+    Parameters
+    ----------
+    inv : pg.Inversion (pygimli.framework.Inversion)
+
+    Returns
+    -------
+    DJ : numpy full matrix
+    """
+    J = inv.fop.jacobian()  # sensitivity matrix
+    d = inv.dataTrans.error(inv.response, inv.errorVals)
+    left = np.reshape(inv.dataTrans.deriv(inv.response) / d, [-1, 1])
+    right = np.reshape(1 / inv.modelTrans.deriv(inv.model), [1, -1])
+    if isinstance(J, pg.Matrix):  # e.g. ERT
+        return left * pg.utils.gmat2numpy(J) * right
+    elif isinstance(J, pg.SparseMapMatrix):  # e.g. Traveltime
+        return left * pg.utils.sparseMat2Numpy.sparseMatrix2Dense(J) * right
+    else:
+        raise TypeError("Matrix type cannot be converted")
+
+def resolutionMatrix(inv, returnRD=False):
+    r"""Formal model (and data) resolution matrix (MCM) from inversion.
+
+    .. math::
+
+        \mathbf{R_M} = (\mathbf{J}^T\mathbf{D}^T\mathbf{D}\mathbf{J} + \alpha
+        \mathbf{C}^T\mathbf{C})^{-1}
+        \mathbf{J}^T\mathbf{D}^T\mathbf{D}\mathbf{J}
+
+        \mathbf{R_D} = \mathbf{D}\mathbf{J}
+        (\mathbf{J}^T\mathbf{D}^T\mathbf{D}\mathbf{J} + \alpha
+        \mathbf{C}^T\mathbf{C})^{-1}
+        \mathbf{J}^T\mathbf{D}^T
+
+    Parameters
+    ----------
+    inv : pg.Inversion
+        pygimli inversion instance after inversion
+    returnRD : bool [false]
+        also return data resolution (information) matrix
+
+    Returns
+    -------
+    RM : numpy.array
+        model resolution matrix
+    RD : numpy.array
+        data resolution matrix
+    """
+    DJ = scaledJacobianMatrix(inv)
+    C = pg.utils.sparseMat2Numpy.sparseMatrix2Dense(inv.fop.constraints())
+    cw = inv.fop.regionManager().constraintWeights()
+    CC = np.reshape(cw ,[-1, 1]) * C
+    JTJ = DJ.T @ DJ
+    JI = np.linalg.inv(JTJ + CC.T @ CC * inv.lam)
+    RM = JI @ JTJ
+    if returnRD:
+        RD = DJ @ JI @ DJ.T
+        return RM, RD
+    else:
+        return RM
+
+def modelResolutionMatrix(inv):
+    r"""Formal model resolution matrix (MCM) from inversion.
+
+    .. math::
+
+        \mathbf{R_m} = (\mathbf{J}^T\mathbf{D}^T\mathbf{D}\mathbf{J} + \alpha
+        \mathbf{C}^T\mathbf{C})^{-1}
+        \mathbf{J}^T\mathbf{D}^T\mathbf{D}\mathbf{J}
+
+    Parameters
+    ----------
+    inv : pg.Inversion
+        pygimli inversion instance after inversion
+
+    Returns
+    -------
+    RM : numpy.array
+        model resolution matrix
+    """
+    return resolutionMatrix(inv)
+
+def modelResolutionKernel(inv, nr=0, maxiter=50):
+    """Compute single resolution kernel by solving an inverse problem.
+
+    Parameters
+    ----------
+    inv : pg.Inversion
+        inversion instance
+    nr : int
+        parameter/cell number
+    maxiter : int
+        maximum iterations for LSQR solver
+
+    Returns
+    -------
+    reskernel : np.array
+        resolution
+    """
+    from pygimli.solver.leastsquares import lsqr
+    td = inv.dataTrans  # data transformation (e.g. lin/log/symlog)
+    tm = inv.modelTrans  # model transformation (typically log or logLU)
+    C = inv.fop.constraints()  # (sparse) regularization matrix
+    left = td.deriv(inv.response) / inv.errorVals
+    right = 1 / tm.deriv(inv.model)
+    DS = pg.matrix.MultLeftRightMatrix(inv.fop.jacobian(), left, right)
+    JC = pg.BlockMatrix()
+    JC.addMatrix(DS, 0, 0)
+    JC.addMatrix(C, DS.rows(), 0, np.sqrt(inv.lam))
+    JC.recalcMatrixSize()
+    if isinstance(nr, int):
+        invec = pg.cat(pg.math.matrix.matrixColumn(DS, nr),
+                       pg.Vector(C.rows()))
+        return lsqr(JC, invec, maxiter=50)
+
+def modelResolutionRadius(inv, nr=None, RM=None):
+    """Compute resolution radius from model resolution matrix diagonal.
+
+    According to Friedel (2003), it is defined as the radius of a circle (2D) or
+    sphere (3D) having a resolution of 1, i.e. Sr = Se / RM(i, i) where Sr and
+    are the sizes (area or volume) of the circle/sphere and the element.
+
+    Parameters
+    ----------
+    nr : int|None [None]
+        compute only resolution radius for a single cell (otherwise all cells)
+    RM : numpy.matrix [None]
+        already existing resolution matrix, otherwise compute it
+    """
+    pd = inv.paraDomain
+    cs = pd.cellSizes()
+    if nr is not None:  # only a single one
+        if RM is not None:
+            rm = RM[:, nr]
+        else:
+            rm = modelResolutionKernel(inv, nr=nr)[nr]
+
+        cs = cs[nr]
+    else:
+        if RM is None:
+            RM = modelResolutionMatrix(inv)
+
+        rm = np.diag(RM)
+
+    if pd.dim() == 2:
+        return np.abs(cs/rm/np.pi)**0.5
+    elif pd.dim() == 3:
+        return np.abs(cs/rm*3/4/np.pi)**(1/3)
+    else: # 1D
+        return cs/rm
 
 def computeR(J, C, alpha=0.5):
     r"""Return diagional of model resolution matrix.
@@ -45,6 +200,49 @@ def computeR(J, C, alpha=0.5):
     RM = lin.solve(JTJ + alpha * CM_inv, JTJ)
     R = np.diag(RM)
     return R
+
+def modelCovariance(inv):
+    """Formal model covariance matrix (MCM) from inversion.
+
+    Parameters
+    ----------
+    inv : pygimli inversion object
+
+    Returns
+    -------
+    var  : variances (inverse square roots of MCM matrix)
+    MCMs : scaled MCM (such that diagonals are 1.0)
+
+    Examples
+    --------
+    >>> # import pygimli as pg
+    >>> # import matplotlib.pyplot as plt
+    >>> # from matplotlib.cm import bwr
+    >>> # INV = pg.Inversion(data, f)
+    >>> # par = INV.run()
+    >>> # var, MCM = modCovar(INV)
+    >>> # i = plt.imshow(MCM, interpolation='nearest',
+    >>> #                 cmap=bwr, vmin=-1, vmax=1)
+    >>> # plt.colorbar(i)
+    """
+    DJ = scaledJacobianMatrix(inv)
+    JTJ = DJ.T.dot(DJ)
+    try:
+        MCM = np.linalg.inv(JTJ)   # model covariance matrix
+        varVG = np.sqrt(np.diag(MCM))  # standard deviations from main diagonal
+        di = (1.0 / varVG)  # variances as column vector
+
+        # scaled model covariance (=correlation) matrix
+        MCMs = di.reshape(len(di), 1) * MCM * di
+        return varVG, MCMs
+
+    except BaseException as e:
+        print(e)
+        import traceback
+        import sys
+
+        traceback.print_exc(file=sys.stdout)
+        return np.zeros(len(inv.model()),), 0
 
 #
 # # self-made imports

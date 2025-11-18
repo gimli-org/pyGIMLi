@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2005-2021 by the GIMLi development team                    *
+ *   Copyright (C) 2005-2024 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -57,9 +57,9 @@ protected:
     Index _threadNumber;
 };
 template < class T > void distributeCalc(T calc, uint nCalcs, uint nThreads, bool verbose=false){
-    log(Debug, "Create distributed calculation of " + str(nCalcs) + " jobs on " 
-        + str(nThreads) + " threads for "  
-        + str(std::thread::hardware_concurrency()) + " CPU");
+    log(Debug, "Create distributed calculation of " + str(nCalcs) + " jobs on "
+        + str(nThreads) + " threads for " + str(numberOfCPU()) + " CPU");
+
     if (nThreads == 1){
         calc.setRange(0, nCalcs);
         Stopwatch swatch(true);
@@ -91,16 +91,16 @@ template < class T > void distributeCalc(T calc, uint nCalcs, uint nThreads, boo
         for (uint i = 0; i < calcObjs.size(); i++) {
             //threads.emplace_back(calcObjs[i]);
             threads[i] = std::thread( [&iomutex, i, &calcObjs] {
-                Stopwatch swatch(true);
+                // Stopwatch swatch(true);
                 {
                     std::lock_guard<std::mutex> iolock(iomutex);
-                    log(Debug, "Thread #" + str(i) + ": on CPU " 
-                    + str(schedGetCPU()) + " slice " + str(calcObjs[i].start()) + ":" + str(calcObjs[i].end()));
+                    //log(Debug, "Thread #" + str(i) + ": on CPU "
+                    //+ str(schedGetCPU()) + " slice " + str(calcObjs[i].start()) + ":" + str(calcObjs[i].end()));
                 }
                 calcObjs[i]();
                 {
                     std::lock_guard<std::mutex> iolock(iomutex);
-                    log(Debug, "time: #" + str(i) + " " + str(swatch.duration()) + "s");
+                    // log(Debug, "time: #" + str(i) + " " + str(swatch.duration()) + "s");
                 }
 
             });

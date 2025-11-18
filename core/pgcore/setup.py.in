@@ -1,0 +1,55 @@
+from setuptools import setup, find_packages
+from setuptools.dist import Distribution
+import sys, os
+from os import path
+
+if sys.version_info < (3, 0):
+    sys.exit('Sorry, Python < 3.0 is not supported')
+
+class BinaryDistribution(Distribution):
+    """Distribution which always forces a binary package with platform name"""
+    def has_ext_modules(foo):
+        return True
+
+HERE = path.abspath('@CMAKE_CURRENT_SOURCE_DIR@')
+
+CLASSIFIERS = [
+    "License :: OSI Approved :: Apache Software License",
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: C++",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering",
+]
+
+setup(
+    name='@TARGET_NAME@',
+    version='@LIBGIMLI_VERSION_WHL@',
+    author="Carsten Rücker, Thomas Günther, Florian Wagner",
+    author_email="mail@pygimli.org",
+    url="http://www.pygimli.org",
+    packages=find_packages(),
+    description="Geophysical modelling and inversion library",
+    long_description=open(
+        path.join(HERE, "readme.md"), encoding="utf-8"
+    ).read(),
+    long_description_content_type="text/markdown",
+    include_package_data=True,
+    package_data={
+        '': ['libs/*']
+    },
+    license="Apache 2.0",
+    keywords=["inversion", "modelling", "geophysics"],
+    install_requires=['numpy<2.3,>=1.23.5',
+                      ],
+    distclass=BinaryDistribution,
+    classifiers=CLASSIFIERS,
+)
