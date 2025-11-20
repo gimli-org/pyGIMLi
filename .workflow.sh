@@ -127,8 +127,28 @@ function build_pre(){
     pushd $PROJECT_ROOT
         new_venv $VENV_BUILD
 
-        echo "uv pip install -e $PROJECT_SRC/[build]"
-        uv pip install -e $PROJECT_SRC/[build]
+        # this prevents pgcore being in dependencies since it can't be resolved
+        # for new platforms or new python versions. Maybe add manual installation
+        # of build prerequisites here if necessary.
+
+        echo "Check if pgcore can be installed from PyPI"
+        if uv pip install pgcore --dry-run 2>/dev/null; then
+            echo "pgcore is available on PyPI"
+            echo "uv pip install -e $PROJECT_SRC/[build]"
+            uv pip install -e $PROJECT_SRC/[build]
+        else
+            yellow "pgcore is not available for the platform/pyversion
+            installing build dependencies manually"
+
+            uv pip install "numpy>=2.1.3"
+            uv pip install "pygccxml==2.5.0"
+            uv pip install "pyplusplus==1.8.5"
+            uv pip install build twine wheel
+            uv pip install "auditwheel; sys_platform == 'linux'"
+            uv pip install "delvewheel; sys_platform == 'win32'"
+            uv pip install "delocate; sys_platform == 'darwin'"
+        fi
+
         rm -rf $BUILD_DIR
         mkdir -p $BUILD_DIR
     popd
