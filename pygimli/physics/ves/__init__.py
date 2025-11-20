@@ -1,11 +1,19 @@
-#!/usr/bin/env python
-"""Direct current electromagnetics.
-
-This package contains tools, modelling operators, and managers for
+"""
 Vertical Electric Sounding (VES).
+
+Tools, modelling operators, and managers for VES.
+
+Main class:
+
+* VESManager - Manager for loading, inverting & plotting
+
+Modelling operators:
+
+* VESModelling - DC modelling operator using block model
+* VESRhoModelling - DC modelling operator
+* VESCModelling - DC/IP (complex-valued) modelling
 """
 
-import pygimli as pg
 from .vesManager import VESManager
 from .vesModelling import VESModelling, VESCModelling, VESRhoModelling
 
