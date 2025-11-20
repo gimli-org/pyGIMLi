@@ -402,14 +402,18 @@ function doc(){
             #touch CMakeCache.txt # to renew search for sphinx
             cmake $PROJECT_SRC
 
+            if [ ! -z "$SKIP_GALLERY" ]; then
+                NG='-NG'
+            fi
+
             #make clean-gallery # should not be necessary
             if [ -x "$(command -v xvfb-run)" ]; then
                 # xvfb is necessary for headless display of pyvista plots
                 echo "xvfb-run available: using it to build docs"
-                xvfb-run make doc
+                xvfb-run make doc$NG
             else
                 echo "xvfb-run not available: building docs without it"
-                make doc
+                make doc$NG
             fi
         popd
     popd
@@ -533,6 +537,7 @@ function help(){
     echo "    BASEPYTHON   base python interpreter. Default system python3."
     echo "    PYVERSION    python version (e.g. 3.11, 3.14t) if no BASEPYTHON is given"
     echo "    SOURCE_DIR   source directory (default: top-level directory of the project)"
+    echo "    SKIP_GALLERY Skip building the gallery in the documentation"
     echo ""
     echo "Examples:"
     echo "    bash ${BASH_SOURCE[0]} clean build test doc"
