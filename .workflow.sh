@@ -133,20 +133,22 @@ function build_pre(){
 
         echo "Check if pgcore can be installed from PyPI"
         if uv pip install pgcore --dry-run 2>/dev/null; then
-            echo "pgcore is available on PyPI"
+            green "pgcore is available on PyPI"
             echo "uv pip install -e $PROJECT_SRC/[build]"
             uv pip install -e $PROJECT_SRC/[build]
         else
-            yellow "pgcore is not available for the platform/pyversion
-            installing build dependencies manually"
+            yellow "pgcore is not available for the $PYVERSION platform ${OS} on PyPI."
+            yellow "Installing build dependencies manually"
 
+            uv pip install "setuptools>=75.8.2"
             uv pip install "numpy>=2.1.3"
-            uv pip install "pygccxml==2.5.0"
-            uv pip install "pyplusplus==1.8.5"
+            uv pip install "pygccxml"
+            uv pip install "pyplusplus"
             uv pip install build twine wheel
             uv pip install "auditwheel; sys_platform == 'linux'"
             uv pip install "delvewheel; sys_platform == 'win32'"
             uv pip install "delocate; sys_platform == 'darwin'"
+            uv pip install "scooby"
         fi
 
         rm -rf $BUILD_DIR
