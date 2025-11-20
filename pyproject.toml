@@ -41,9 +41,9 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy>=2.1.3",
     "setuptools>=75.8.2",
     "scooby",
+    "pgcore",
 ]
 
 [project.optional-dependencies]

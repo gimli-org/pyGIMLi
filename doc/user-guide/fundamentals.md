@@ -102,11 +102,13 @@ Please add docstrings for abovementioned classes and then use autosummary functi
 
 | pyGIMLi class              | Description |
 | :---------------- | :------: |
-| {py:class}`Matrix <pygimli.Matrix>` | All elements are stored column-wise, i.e. all rows *A[i]* are of type `pg.Vector`. This matrix is used for storing dense data (like ERT Jacobians) and doing simple algebra.   |
-| {py:class}`Vector <pygimli.Vector>` |  One dimensional array aka Vector of limited size to store data, like ERT sensitivities.   |
+| {py:class}`Pos <pygimli.Pos>` |  Position vector in R3 with operations.   |
+| {py:class}`Vector <pygimli.Vector>` |  One-dimensional array (vector) of limited size to store data, compatible to (float) numpy arrays.   |
+| {py:class}`Matrix <pygimli.Matrix>` | All elements are stored column-wise, i.e. all rows *A[i]* are of type `pg.Vector`. This matrix is used for storing dense data (like Jacobians) and doing simple algebra.   |
 | {py:class}`SparseMatrix <pygimli.SparseMatrix>` |  Used for numerical approximation of partial differential equations like finite-element or finite volume. Not typically used unless efficiency is of importance. It exists also complex-valued as pg.matrix.CSparseMatrix  |
 | {py:class}`BlockMatrix <pygimli.BlockMatrix>`     |   Arbitrary matrices are combined into a logical matrix. This is of importance for inversion frameworks, e.g., concatenated Jacobian matrices during joint inversions.   |
-| {py:class}`DataContainer <pygimli.DataContainer>`     |   Data container storing the individual data values as well as any description how they were obtained, e.g. the geometry of source and receivers.   |
+| {py:class}`DataContainer <pygimli.DataContainer>`     |   Container storing named data vectors as well as the geometry of sensors (e.g. sources and receivers).   |
+| {py:class}`Mesh <pygimli.Mesh>` |  Mesh (or geometry definition) with nodes, boundaries and cells.   |
 
 ## Viewer interface
 
@@ -151,7 +153,7 @@ The functions `pygimli.viewer.show()` and `pygimli.viewer.showMesh()` return the
 ax,cbar = pg.viewer.show(mesh, markers=True, showMesh=True, orientation="vertical")
 ax.set_title("Mesh with cell and boundary markers", fontweight="bold")
 ax.set_xlabel("x [m]")
-ax.set_ylabel("y [m]")
+_ = ax.set_ylabel("y [m]")
 ```
 
 If you want to plot data on top of a mesh, you can use the `data` argument. The following example shows electrical resistivities as cell data:
@@ -162,7 +164,7 @@ If you want to plot data on top of a mesh, you can use the `data` argument. The 
 ax, cbar = pg.viewer.show(mesh, data=res, logScale=True, cMin=1, cMax=1000, orientation="vertical", label="Resistivity [$\Omega$m]")
 ax.set_title("Electrical resistivities as cell data", fontweight="bold")
 ax.set_xlabel("x [m]")
-ax.set_ylabel("y [m]")
+_ = ax.set_ylabel("y [m]")
 ```
 
 If you want to plot node data, this can be done with the same argument `data`. The following example shows the same electrical resistivities as node data:
@@ -173,7 +175,7 @@ If you want to plot node data, this can be done with the same argument `data`. T
 ax, cbar = pg.viewer.show(mesh, data=nodeDta, logScale=True, cMin=1, cMax=1000, orientation = "vertical", label="Resistivity [$\Omega$m]")
 ax.set_title("Electrical resistivities as node data", fontweight="bold")
 ax.set_xlabel("x [m]")
-ax.set_ylabel("y [m]")
+_ = ax.set_ylabel("y [m]")
 ```
 
 :::{admonition} Convert cell to node data
