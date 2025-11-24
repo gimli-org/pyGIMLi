@@ -16,5 +16,6 @@ Modelling operators:
 
 from .vesManager import VESManager
 from .vesModelling import VESModelling, VESCModelling, VESRhoModelling
+from .ves import simulate
 
 Manager = VESManager
