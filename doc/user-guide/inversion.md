@@ -12,7 +12,7 @@ Inversion frameworks are generalized, abstract approaches to solve a specific in
 This can be a specific regularization strategy, an alternative formulation of the inverse problem or algorithms of routine inversion.
 It is initialized by specific forward operators or managers that provide them.
 
-### Minimization
+### The objective function
 
 For all inversion frameworks the minimization of an objective function is required.
 The most common approaches are based on least-squares minimization of a data misfit term between the individual data $d_i$ and the corresponding forwarc response $f_i(\mathbf{m})$ of the model $\mathbf{m})$.
@@ -27,7 +27,7 @@ $$ \mathbf{m}^{k+1} = \mathbf{m}^k + \tau^k\Delta \mathbf{m}^k $$
 
 The step length $\tau^k$ can be determined by line search strategies to ensure sufficient decrease of the objective function in each iteration.
 
-For inversion of a limited number of parameters (e.g., 1D layer models, spectral parameters) the minimization is performed directly ($\Phi_d\rightarrow\min$) by some stabilizing damping terms, as with the Levenberg-Marquardt {cite}`Levenberg1944, Marquardt1963` method.
+For inversion of a limited number of parameters (e.g., 1D layer models, spectral parameters) the minimization is performed solely based on the data ($\Phi_d\rightarrow\min$) by some stabilizing damping terms, as with the Levenberg-Marquardt {cite}`Levenberg1944, Marquardt1963` method.
 However, for large-scale problems (e.g., 2D/3D mesh-based inversion) the direct minimization is often not feasible.
 
 ### Regularization
@@ -40,6 +40,8 @@ $$ \Phi=\Phi_\text{d}+\lambda\Phi_\text{m} = \mathbf{W}_\text{d} (\mathbf{\mathc
 
 The dimensionless factor $\lambda$ scales the influence of the regularization term $\Phi_\text{m}$ (model objective function).
 
+### Minimization
+
 For minimizing the total objective function $\Phi$, there are different available strategies:
 
 - Steepest-descent methods
@@ -48,7 +50,34 @@ For minimizing the total objective function $\Phi$, there are different availabl
 - Quasi-Newton methods
 - Stochastic methods (e.g., genetic algorithms, Markov-Chain Monte Carlo)
 
-### Gauss-Newton inversion
+#### Gradient-based methods
+
+An improvement is sought in the direction where $\Phi$ descents most, i.e. the negative gradient $-\mathbf{g}(m^k)=-\nabla_m \Phi=-\{\frac{\partial\Phi}{\partial m^k_i}\}$ is uses as model update direction $\Delta\mathbf{m^k}$.
+Note that, assuming $\Phi_d$ (and by the choice of $\lambda$, $\Phi_m$ likewise) is dimensionless, the choice of $\tau^k$ depends on the model and is therefore crucial.
+
+The gradient of the data objective function $\Phi_d$ can be computed by
+
+$$ g_d(\mathbf{m}^k) = \mathbf{J}\mathbf{W}_d^T \mathbf{W}_d (\mathbf{f}(\mathbf{m^k})-\mathbf{d}) $$
+
+where the matrix $\mathbf{J}$ is the Jacobian (also named sensitivity, see transforms below) matrix holding the derivatives of the forward computation with respect to the model parameters
+
+$$ J_{i,j} = \frac{\partial f_i(\mathbf{m}^k)}{\partial m^k_j} $$
+
+In most cases, it can be computed without explicitly forming the Jacobian matrix.
+The gradient of the model objective function $\Phi_m$ is
+
+$$ \mathbf{g}_m(\mathbf{m}^k) = \mathbf{W}_m^T \mathbf{W}_m (\mathbf{m}^k-\mathbf{m}^0) $$
+
+and therefore the gradient of $\Phi$ calculates $\mathbf{g}=\mathbf{g}_d+\lambda \mathbf{g}_m$.
+This procedure defines the steepest-descent method, which is, however, known to be a slowly converging method.
+The method is available under `pygimli.frameworks.DescentInversion`.
+
+In the non-linear conjugate-gradient (NLCG) method, the model update directions are conjugated (i.e., they are pair-wise orthogonal) which speeds up the convergence a lot.
+The method is available under `pygimli.frameworks.NLCGInversion`.
+Both methods require the multiplication with the (transposed) sensitivity matrix, for which by default the Jacobian matrix is used, unless the function `fop.STy()` is implemented in the forward operator.
+
+### Newton-type methods
+#### Gauss-Newton method
 
 The default inversion framework is based on the generalized Gauss-Newton minimization scheme leading to the model update $\Delta\mathbf{m}^k$ in the $k^\text{th}$ iteration {cite}`ParkVan1991`:
 
@@ -74,6 +103,101 @@ computed on-the-fly. Therefore we differentiate between the Jacobian matrix of t
 forward operator using intrinsic properties like conductivity as input or apparent
 resistivity as output, also referred to as sensitivity matrix, and the Jacobian
 matrix of the inverse problem using transformed model and data parameters.
+
+### Transformations
+
+The inversion uses the term model $m$, data $d$ and a forward response $f(m)$ as they might be implemented in a forward operator, e.g. resistivity or apparent resistivity.
+For reasons of stability and parameter tuning, one often applies certain transformation of the intrinsic readings $r$ and model parameters $p$.
+A very common choice is to use logarithmic parameters, i.e., $m=\log p$, to ensure positive values for $p$ (any $m$ leads to $p=\exp(m)\gt 0$).
+One can also use a different lower boundary $p_l$ so that $m=\log(p-p_l)$ or an upper boundary $p_u$ so that $m=\log(p_u-p)$, both can be combined by $m=\log(p-p_l)-\log(p_u-p)=\log\frac{p-p_l}{p_u-p}$, alternatively using a cotangens function $m=-\cot\frac{p-p_l}{p_u-p}\pi$.
+
+Similar transformations can be used for the data.
+As their choice is done in inversion and therefore independent on the forward operator, we distinguish the terms sensitivity (of the forward operators intrinsic parameters) $S_{i,j}=\frac{\partial r}{\partial p}$ and the Jacobian using $m$ and $d$, which is computed as
+
+$$ J_{i,j} = \frac{\partial f_i(\mathbf{m})}{\partial m_i} = \frac{\partial r_i}{\partial p_j} \cdot \frac{\partial f}{\partial r} / \frac{\partial m}{\partial p} $$
+
+### Running inversion
+
+We will exemplify this by using a 1D Occam-style (smoothness constrained) inversion of vertical electric sounding (VES) data.
+We define a synthetic block model and compute a forward model for log-spaced AB/2 distances and use a forward operator with predefinied, log-equidistant thickness.
+
+```{code-cell}
+:tags: [hide-cell]
+
+import numpy as np
+import matplotlib.pyplot as plt
+import pygimli as pg
+```
+
+```{code-cell}
+from pygimli.physics import ves
+ab2 = np.logspace(0, 2.5, 21)
+synth = [10, 10, 100, 300, 30]
+data = ves.VESModelling(ab2=ab2).response(synth)
+thk = np.logspace(0, 1.8, 23)
+fop = ves.VESRhoModelling(ab2=ab2, thk=thk)
+```
+
+We set up a simple inversion instance
+
+```{code-cell}
+inv = pg.Inversion(fop=fop)
+inv.dataTrans = 'log' # inv.modelTrans is 'log' by default
+m0 = inv.run(data, 0.02, startModel=100, maxIter=0, verbose=True)
+```
+
+and obtain a homogeneous model vector of 100 Ohmm.
+At the beginning, $\Phi_m=0$ and $\mathbf{g}_m$ likewise.
+The data residual `inv.residual()` drives the inversion.
+Let's do a gradient inversion step by hand:
+
+```{code-cell}
+dm0 = -inv.dataGradient() # equals -inv.gradient()
+inv.model = np.exp(dm0)*inv.model
+inv.response = fop(inv.model)
+print(inv.chi2())
+fig, ax = plt.subplots()
+pg.viewer.mpl.drawModel1D(ax, model=synth, plot='loglog')
+pg.viewer.mpl.drawModel1D(ax, thk, inv.model)
+ax.invert_yaxis()
+```
+
+Note that usually `inv.model` and `inv.response` are updated by the minimization framework, but here we have to take the log-transformation into account.
+The model shows an increase in the upper part and a decrease in the lower part.
+The chi-square misfit has already reduced a fair amount.
+
+Now we go one step further and compute another gradient, both for the data part and the model part, the first one wants to further decrease the data misfit and the second wants to get rid of the existing roughness in the model.
+We assume a regularization strength balancing those two of $\lambda$=10.
+
+```{code-cell}
+dg = -inv.dataGradient()
+lam = 3
+mg = -inv.modelGradient() * lam
+ax, _ = pg.viewer.mpl.showModel1D(thk, inv.model, plot='loglog', label="model")
+pg.viewer.mpl.drawModel1D(ax, model=synth, label="synth", color="black")
+pg.viewer.mpl.drawModel1D(ax, thk, np.exp(dg)*inv.model, label="dataGradient")
+pg.viewer.mpl.drawModel1D(ax, thk, np.exp(mg)*inv.model, label="modelGradient")
+pg.viewer.mpl.drawModel1D(ax, thk, np.exp(mg+dg)*inv.model, ls="--", label="gradient")
+ax.legend()
+```
+
+Whereas the model gradient tries to turn back the model to the homogeneous case, the data gradient wants to further exaggerate the anomaly.
+Combining both results in a trade-off that is closer to the latter, i.e. the larger data misfit (still) dominates.
+We finally update the model, but now we want to optimize the step length
+
+```{code-cell}
+from pygimli.frameworks import lineSearch
+tau, resp = lineSearch(inv, mg+dg, method="quad", show=True)
+print(tau)
+newmodel = np.exp((mg+dg)*tau) * inv.model
+newresponse = fop(newmodel)
+print(inv.chi2(newresponse))
+```
+
+which fits a parabola through the old point ($\tau$=0), the full step ($\tau$=1) and a test ($\tau$=0.3) and optain an optimum line search parameter of about 0.6-0.65.
+As method, we can also use `'exact'` (forward calculations) or `'inter'` (interpolation), yielding almost the same results.
+The latter is the simplest one and the former takes the most effort.
+In total, the chi-square misfit decreases, but slowly.
 
 ### Controlling inversion
 
