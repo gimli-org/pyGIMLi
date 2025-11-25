@@ -24,7 +24,7 @@ Mesh.zmax = Mesh.zMax
 
 
 def __Mesh__show__(self, *args, **kwargs):
-    """Syntactic sugar to pg.show(mesh, *args, **kwargs)"""
+    """Syntactic sugar to pg.show(mesh, *args, **kwargs)."""
     import pygimli as pg
     return pg.show(self, *args, **kwargs)
 Mesh.show = __Mesh__show__
