@@ -674,6 +674,26 @@ from bib2html import write_html
 publications = write_html()
 
 
+###############################################################################
+# -- Options for mathjax
+###############################################################################
+
+mathjax3_config = {
+    'tex': {
+        'macros': {
+            'vb': ["\\boldsymbol{#1}", 1],
+            'order': ["{\\mathcal{O}\\left(#1\\right)}", 1],
+            'grad': ["\\nabla"],
+            'div': ["\\nabla\\cdot"],
+            'curl': ["\\nabla\\times"],
+            'laplacian': ["\\Delta"],
+            'sin': ["\\operatorname{sin}"],
+            'dd': ["\\,\\operatorname{d}"],
+        },
+    }
+}
+
+
 ################################################################################
 # -- Options for srclinks
 ################################################################################
