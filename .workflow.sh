@@ -127,8 +127,30 @@ function build_pre(){
     pushd $PROJECT_ROOT
         new_venv $VENV_BUILD
 
-        echo "uv pip install -e $PROJECT_SRC/[build]"
-        uv pip install -e $PROJECT_SRC/[build]
+        # this prevents pgcore being in dependencies since it can't be resolved
+        # for new platforms or new python versions. Maybe add manual installation
+        # of build prerequisites here if necessary.
+
+        echo "Check if pgcore can be installed from PyPI"
+        if uv pip install pgcore --dry-run 2>/dev/null; then
+            green "pgcore is available on PyPI"
+            echo "uv pip install -e $PROJECT_SRC/[build]"
+            uv pip install -e $PROJECT_SRC/[build]
+        else
+            yellow "pgcore is not available for the $PYVERSION platform ${OS} on PyPI."
+            yellow "Installing build dependencies manually"
+
+            uv pip install "setuptools>=75.8.2"
+            uv pip install "numpy>=2.1.3"
+            uv pip install "pygccxml"
+            uv pip install "pyplusplus"
+            uv pip install build twine wheel
+            uv pip install "auditwheel; sys_platform == 'linux'"
+            uv pip install "delvewheel; sys_platform == 'win32'"
+            uv pip install "delocate; sys_platform == 'darwin'"
+            uv pip install "scooby"
+        fi
+
         rm -rf $BUILD_DIR
         mkdir -p $BUILD_DIR
     popd
@@ -155,6 +177,7 @@ function build(){
 
                 ### MacOS configuration
                 echo "MacOS build with custom openblas and umfpack/cholmod paths. Expecting \$CMAKE_PREFIX to be set."
+                CMAKE_PREFIX=/Users/fwagner/miniforge3
                 cmake \
                     -DNOREADPROC=1 \
                     -DBLAS_openblas_LIBRARY=$CMAKE_PREFIX/lib/libopenblas.dylib \
@@ -202,6 +225,11 @@ function build_whls(){
     pushd $PROJECT_ROOT
         use_venv $VENV_BUILD
 
+        ### create pygimli wheel
+        pushd $PROJECT_SRC
+            python -m build --wheel --no-isolation --outdir $BUILD_DIR/dist/
+        popd
+
         pushd $BUILD_DIR
 
         # create pgcore wheel
@@ -216,28 +244,29 @@ function build_whls(){
 
                 WHLFILE=$(ls $WHEELHOUSE/pgcore*.whl | head -n 1)
 
-                if [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
-                    blue "Repairing pgcore whl for MacOS ($WHLFILE)"
-                    delocate-wheel -v $WHLFILE
-
-                elif [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
-                    blue "Repairing pgcore whl for Windows ($WHLFILE)"
-                    delvewheel repair $WHLFILE --add-path $BUILD_DIR/bin/
+                if [ ! -z "$AUDITWHEEL_POLICY" ] && [ ! -z "$AUDITWHEEL_PLAT" ] ; then
+                    blue "Repairing pgcore whl for $AUDITWHEEL_POLICY ($WHLFILE)"
+                    auditwheel repair $WHLFILE -w $BUILD_DIR/dist/
 
                 else
-                    blue "Repairing pgcore whl for Linux ($WHLFILE)"
-                    echo "Build pgcore whl for Linux"
+                    if [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
+                        blue "Repairing pgcore whl for $OS ($WHLFILE)"
+                        delocate-wheel -v $WHLFILE
+
+                    elif [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
+                        blue "Repairing pgcore whl for $OS ($WHLFILE)"
+                        delvewheel repair $WHLFILE --add-path $BUILD_DIR/bin/
+                    elif [ ! -z "$AUDITWHEEL_POLICY" ] && [ ! -z "$AUDITWHEEL_PLAT" ] ; then
+                        yellow "Unknown OS ($OS) for repairing pgcore whl."
+                    fi
+
+                    green "Copying pgcore whl ($WHLFILE) to build dist $BUILD_DIR/dist/"
+                    cp $WHLFILE $BUILD_DIR/dist/
                 fi
             popd
 
-            green "Copying pgcore whl ($WHLFILE) to build dist $BUILD_DIR/dist/"
-            cp $WHLFILE $BUILD_DIR/dist/
         popd
 
-        ### create pygimli wheel
-        pushd $PROJECT_SRC
-            python -m build --wheel --no-isolation --outdir $BUILD_DIR/dist/
-        popd
     popd
 }
 
@@ -247,13 +276,8 @@ function install_WHL_E(){
     green "*** install pygimli $opt from whl files (editable) ***"
 
     pushd $PROJECT_ROOT
-        # special case for windows .. pgcore install to ensuse mingw runtime libs are found
-        if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
-            # windows MSYS2
-            uv pip install $PROJECT_DIST/pgcore*.whl
-        fi
-        uv pip install -e $PROJECT_SRC$opt
-
+        uv pip install $PROJECT_DIST/pgcore*.whl
+        uv pip install --editable $PROJECT_SRC$opt
     popd
     testReport
 }
@@ -295,6 +319,11 @@ function build_post(){
 
         cp $BUILD_DIR/dist/pgcore*.whl $PROJECT_DIST/
         cp $BUILD_DIR/dist/pygimli*.whl $PROJECT_DIST/
+
+        if [ -d $PROJECT_ROOT/dist-manylinux ]; then
+            blue "Copying built whl files to manylinux dist: $PROJECT_ROOT/dist-manylinux"
+            cp $BUILD_DIR/dist/pgcore*.whl $PROJECT_ROOT/dist-manylinux/
+        fi
 
         # test editable whl install
         use_venv $VENV_BUILD
@@ -374,14 +403,18 @@ function doc(){
             #touch CMakeCache.txt # to renew search for sphinx
             cmake $PROJECT_SRC
 
+            if [ ! -z "$SKIP_GALLERY" ]; then
+                NG='-NG'
+            fi
+
             #make clean-gallery # should not be necessary
             if [ -x "$(command -v xvfb-run)" ]; then
                 # xvfb is necessary for headless display of pyvista plots
                 echo "xvfb-run available: using it to build docs"
-                xvfb-run make doc
+                xvfb-run make doc$NG
             else
                 echo "xvfb-run not available: building docs without it"
-                make doc
+                make doc$NG
             fi
         popd
     popd
@@ -505,6 +538,7 @@ function help(){
     echo "    BASEPYTHON   base python interpreter. Default system python3."
     echo "    PYVERSION    python version (e.g. 3.11, 3.14t) if no BASEPYTHON is given"
     echo "    SOURCE_DIR   source directory (default: top-level directory of the project)"
+    echo "    SKIP_GALLERY Skip building the gallery in the documentation"
     echo ""
     echo "Examples:"
     echo "    bash ${BASH_SOURCE[0]} clean build test doc"
@@ -540,6 +574,7 @@ elif [ -z $WORKSPACE ]; then
     WORKSPACE=$(realpath $(pwd))
     if [ -z $OS ]; then
         uname_s=$(uname -s 2>/dev/null || echo)
+        blue "Determining OS from uname: $uname_s"
         case "$uname_s" in
             MINGW*|MSYS*|CYGWIN*|Windows_NT)
                 OS=Windows

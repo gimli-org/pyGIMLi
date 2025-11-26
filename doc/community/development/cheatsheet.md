@@ -50,6 +50,23 @@ $$ (mymath2)
 
 The equation {eq}"mymath2" is also a quadratic equation.
 
+
+## Custom latex macros
+
+Some custom latex macros inspired by [physics latex package](https://ctan.org/):
+
+| Macro       | Output         |
+|-------------|----------------|
+| \order{h^{2}} | $\order{h^{2}}$ |
+| \vb{v}        | $\vb{v}$        |
+| \grad{u}    | $\grad{u}$    |
+| \div{\vb{v}}  | $\div{\vb{v}}$  |
+| \curl{\vb{v}}        | $\curl{\vb{v}}$ |
+| \laplacian{u}   | $\laplacian{u}$   |
+| \sin(x)        | $\sin(x)$        |
+| \dd x         | $\dd x$         |
+
+
 Some **text-like stuff**!
 
 :::{admonition} Here's my title
@@ -58,6 +75,8 @@ Some **text-like stuff**!
 Here's my admonition content.
 
 :::
+
+
 
 ### Tables
 

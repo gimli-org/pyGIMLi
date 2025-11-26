@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Different spectral induced polarization (SIP) tools."""
 
 import numpy as np
