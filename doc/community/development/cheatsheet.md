@@ -76,8 +76,6 @@ Here's my admonition content.
 
 :::
 
-
-
 ### Tables
 
 :::{table} Table caption
