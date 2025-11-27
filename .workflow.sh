@@ -177,6 +177,7 @@ function build(){
 
                 ### MacOS configuration
                 echo "MacOS build with custom openblas and umfpack/cholmod paths. Expecting \$CMAKE_PREFIX to be set."
+                CMAKE_PREFIX=/Users/fwagner/miniforge3
                 cmake \
                     -DNOREADPROC=1 \
                     -DBLAS_openblas_LIBRARY=$CMAKE_PREFIX/lib/libopenblas.dylib \

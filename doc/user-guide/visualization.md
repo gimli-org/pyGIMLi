@@ -113,7 +113,6 @@ sensors = np.random.rand(5, 2)
 fig, ax = pg.plt.subplots()
 mpl.drawSensors(ax, sensors, diam=0.02, coords=[0, 1])
 ax.set_aspect('equal')
-pg.wait()
 ```
 
 ## Plotting in 3D
@@ -123,7 +122,8 @@ The following examples demonstrate how to plot 3D meshes, cell data, and streaml
 
 ### Plotting meshes and models in 3D
 
-Plotting meshes using pyVista is straightforward with pyGIMLi. The `pygimli.viwer.pv.drawMesh()` function is called to visualize 3D meshes and models, leveraging pyVista's powerful rendering capabilities.
+Plotting meshes using pyVista is straightforward with pyGIMLi. The `pygimli.viewer.pv.drawMesh()` function is called to visualize 3D meshes and models, leveraging pyVista's powerful rendering capabilities.
+
 
 ```{code-cell}
 from pygimli.viewer import pv

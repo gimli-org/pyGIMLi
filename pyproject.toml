@@ -90,7 +90,7 @@ doc = [
     "sphinxcontrib-doxylink",
     "sphinxcontrib-programoutput",
     "sphinx-gallery",
-    "sphinx-design",
+    "sphinx_design",
 ]
 dev = [
     "pygimli[build, opt, test, doc]",

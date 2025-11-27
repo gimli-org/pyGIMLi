@@ -138,10 +138,7 @@ templates_path = [join(SPHINXDOC_PATH, "_templates"),
 # The suffix of source filenames.
 source_suffix = {
     '.rst': 'restructuredtext',
-    # '.ipynb': 'myst-nb',
-    # '.myst': 'myst-nb',
     '.md': 'myst-nb',
-    #'.md': 'markdown',
 }
 
 # The encoding of source files.
@@ -384,30 +381,25 @@ try:
         # Avoid representation of mpl axis, LineCollections, etc.
         "ignore_repr_types": r"matplotlib[text, axes, collections]",
         "notebook_extensions": {},
-        #"parallel": _parallel,
+        "show_signature": False,
+        "download_all_examples": False,
         "parallel": 1,
+        # 'matplotlib_animations': (True, 'mp4'),
     }
 
-    class matplotlib_svg_scraper(object):
-        def __repr__(self):
-            return self.__class__.__name__
+    # from sphinx_mpatch.patch_sphinx_gallery import _matplotlib_scraper as matplotlib_scraper
+    # class matplotlib_svg_scraper(object):
+    #     def __repr__(self):
+    #         return self.__class__.__name__
 
-        def __call__(self, *args, **kwargs):
-            return matplotlib_scraper(*args, format='svg', **kwargs)
+    #     def __call__(self, *args, **kwargs):
+    #         return matplotlib_scraper(*args, format='svg', **kwargs)
 
-    sphinx_gallery_conf['image_scrapers']=(matplotlib_svg_scraper(),)
+    # sphinx_gallery_conf['image_scrapers']=(matplotlib_svg_scraper(),)
+    sphinx_gallery_conf["image_scrapers"]=("matplotlib",)
 
     # ## allow svg images from mpl
     # import sphinx_mpatch.patch_sphinx_gallery
-    # #from sphinx_mpatch.patch_sphinx_gallery import _matplotlib_scraper as matplotlib_scraper
-
-    # def reset_mpl(gallery_conf, fname):
-    #     import matplotlib
-    #     # MPL configuration in API docs, tutorials and examples
-    #     plot_rcparams = {"savefig.bbox": "tight"}
-    #     matplotlib.rcParams.update(plot_rcparams)
-
-    # sphinx_gallery_conf["reset_modules"] = (reset_mpl)
 
     pyvista = pg.optImport("pyvista", "build the gallery with 3D visualizations")
     if pyvista:
@@ -424,8 +416,12 @@ try:
         pyvista.global_theme.font.label_size = 22
         pyvista.global_theme.font.title_size = 22
         pyvista.global_theme.return_cpos = False
+        pyvista.set_jupyter_backend("html")
         extensions += ["pyvista.ext.viewer_directive"]
-        sphinx_gallery_conf["image_scrapers"] = (DynamicScraper(), "matplotlib")
+
+        old_scrapers = list(sphinx_gallery_conf["image_scrapers"])
+        sphinx_gallery_conf["image_scrapers"] = tuple([DynamicScraper()] + old_scrapers)
+        pyvista.set_error_output_file("_pyvista_errors.txt")
 
 except ImportError:
     err = """
@@ -435,7 +431,7 @@ except ImportError:
 
     Install sphinx_gallery via:
 
-        sudo pip3 install sphinx-gallery
+        pip install sphinx-gallery
     """
     pg.warn(err)
 
@@ -697,7 +693,7 @@ mathjax3_config = {
 ################################################################################
 # -- Options for srclinks
 ################################################################################
-srclink_project = "https://github.com/gimli-org/gimli"
+srclink_project = "https://github.com/gimli-org/pygimli"
 srclink_src_path = "doc/"
 srclink_branch = "dev"
 
@@ -771,6 +767,8 @@ myst_enable_extensions = [
 ]
 myst_dmath_allow_labels = True
 # myst_heading_anchors = 2
+nb_execution_mode = "auto"
+nb_execution_timeout = 600
 nb_execution_excludepatterns = ["*.ipynb", "*Untitled*", "_examples_auto/**/*", "_tutorials_auto/**/*"]
 nb_execution_raise_on_error = True # Important for GitHub Action
 nb_execution_show_tb = True

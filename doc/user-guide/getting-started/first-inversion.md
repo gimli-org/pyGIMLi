@@ -37,7 +37,7 @@ model, the regularization and so on. The only function to overwrite is
 `response()`. If no function `createJacobian` is provided, the Jacobian matrix is
 computed by finite differences (brute force), i.e. forward calculations with altered parameters.
 
-```{code-cell} ipython3
+```{code-cell}
 class ExpModelling(pg.Modelling):
     """Exponential decay function modelling operator."""
     def __init__(self, tvec, verbose=False):
@@ -64,14 +64,14 @@ one is a default one for people who use the class and forget about a starting mo
 We first create an abscissa vector using numpy and generate synthetic data with two
 arbitrary $A$ and $\tau$ values.
 
-```{code-cell} ipython3
+```{code-cell}
 t = np.arange(0, 1, 1e-2)
 data = 10.5 * np.exp(-t/550e-3)
 ```
 
 We define an (absolute) error level and add Gaussian noise to the data.
 
-```{code-cell} ipython3
+```{code-cell}
 error = 0.5
 data += pg.randn(*data.shape) * error
 ```
@@ -85,7 +85,7 @@ the regularization parameter subsequently, starting with a relatively large
 regularization strength to avoid overshoot.
 A `verbose` flag can be added to provide some output the inversion.
 
-```{code-cell} ipython3
+```{code-cell}
 f = ExpModelling(t)
 inv = pg.frameworks.MarquardtInversion(f)
 ```
@@ -98,10 +98,10 @@ It can be a float or a vector of data length. One can also set a relative
 error.
 Finally run yields the coefficient vector and we plot some statistics.
 
-```{code-cell} ipython3
+```{code-cell}
 inv.modelTrans = "log" # already by default
 inv.dataTrans = "linear" # already by default
-coeff = inv.run(data, absoluteError=error, verbose=True)
+coeff = inv.run(data, absoluteError=error, verbose=False)
 print(inv.absrms(), inv.chi2())
 ```
 
@@ -115,7 +115,7 @@ second term does not contribute to Phi.
 
 We finally create a plotting figure and plot both data and model response.
 
-```{code-cell} ipython3
+```{code-cell}
 plt.figure()
 plt.plot(t, data, 'x', t, inv.response, '-')
 plt.grid(True)
@@ -133,8 +133,6 @@ If you are interested which way the inversion took, you can have a look at
 the model history.
 
 ```{code-cell}
-for model in inv.modelHistory:
-    print(model)
-
-plt.show()
+for i, model in enumerate(inv.modelHistory):
+    print(f"Iteration {i}: Model = {model}")
 ```

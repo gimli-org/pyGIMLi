@@ -30,6 +30,8 @@ clean:
 	rm -rf examples/modelling/*.geo*
 	rm -rf examples/modelling/*.msh*
 	rm -f _templates/gallery.html
+	rm -rf jupyter_execute
+	rm -rf .jupyter_cache
 
 doc: html
 
@@ -49,5 +51,4 @@ html: api
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)."
 
 serve:
-	cd $(BUILDDIR)/html
-	python -m http.server
+	python -m http.server 11000 --directory _build
