@@ -240,11 +240,11 @@ function build_whls(){
 
         pushd $BUILD_DIR
 
-        # create pgcore wheel
+            # create pgcore wheel
             make whlpgcoreCopyLibs
 
             pushd $BUILD_DIR/core/pgcore
-                
+
                 python -m pip wheel --wheel-dir=$WHEELHOUSE .
 
                 WHLFILE=$(ls -t $WHEELHOUSE/pgcore*.whl | head -n 1)
@@ -263,8 +263,11 @@ function build_whls(){
                     elif [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
                         blue "Repairing pgcore whl for $OS ($WHLFILE)"
                         delvewheel repair $WHLFILE --add-path $BUILD_DIR/bin/ -w $BUILD_DIR/dist/
-                    elif [ ! -z "$AUDITWHEEL_POLICY" ] && [ ! -z "$AUDITWHEEL_PLAT" ] ; then
+
+                    else
                         yellow "Unknown OS ($OS) for repairing pgcore whl."
+                        green "Copying pgcore whl ($WHLFILE) to build dist $BUILD_DIR/dist/"
+                        cp $WHLFILE $BUILD_DIR/dist/
                     fi
                 fi
             popd
