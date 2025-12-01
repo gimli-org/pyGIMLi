@@ -574,7 +574,8 @@ class InversionBase:
             print("Model transformation:", self.modelTrans)
 
             print("min/max (data): "+pf(min(self._dataVals))+"/"+pf(max(self._dataVals)))
-            print("min/max (error): "+pf(100*min(self._errorVals))+"%/"+pf(100 * max(self._errorVals))+"%")
+            print("min/max (error): "+pf(100*min(self._errorVals))+"%/" +
+                  pf(100 * max(self._errorVals))+"%")
             print("min/max (start model): "+pf(min(startModel))+"/"+pf(max(startModel)))
 
         # To ensure reproduceability of the run() call, inv.start() will
@@ -762,7 +763,7 @@ class GaussNewtonInversion(InversionBase):
 
         self.fop.createJacobian(model)
         # self.checkTransFunctions()
-        tD = self.dataTrans
+        # tD = self.dataTrans
         tM = self.modelTrans
         nData = len(self.dataVals)
         self.A = pg.BlockMatrix()  # to be filled with scaled J and C matrices

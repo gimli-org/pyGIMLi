@@ -77,6 +77,7 @@ The method is available under `pygimli.frameworks.NLCGInversion`.
 Both methods require the multiplication with the (transposed) sensitivity matrix, for which by default the Jacobian matrix is used, unless the function `fop.STy()` is implemented in the forward operator.
 
 ### Newton-type methods
+
 #### Gauss-Newton method
 
 The default inversion framework is based on the generalized Gauss-Newton minimization scheme leading to the model update $\Delta\mathbf{m}^k$ in the $k^\text{th}$ iteration {cite}`ParkVan1991`:
