@@ -113,31 +113,6 @@ class InversionBase:
         self.fop.modelTrans = mt  # self._modelTrans # ????
 
 
-    def convertStartModel(self, model):
-        """Convert scalar or array into startmodel vector.
-
-        Use valid range or self.fop.parameterCount, if possible.
-
-        Arguments
-        ---------
-        model: float|int|array|None
-            starting model value or array
-        """
-        if model is None:
-            return None
-        elif isinstance(model, (float, int)):
-            pg.debug("Homogeneous starting model set to:", float(model))
-            return np.full(self.fop.parameterCount, float(model))
-        elif hasattr(model, '__iter__'):
-            if len(model) == self.fop.parameterCount:
-                pg.debug("Starting model set from given array.", model)
-                return model
-            else:
-                pg.error(f"Starting model size invalid {len(model)} " +
-                         f"!= {self.fop.parameterCount}.")
-        return None
-
-
     @property
     def model(self):
         """The last active, i.e., current model."""
@@ -222,7 +197,7 @@ class InversionBase:
             pg.critical("Inversion framework needs error values to run")
 
         if min(abs(self._errorVals)) < 1e-12:
-            print(self._errorVals)
+            pg.info(self._errorVals)
             pg.warn(
                 "Found zero error values. Setting them to fallback value of 1")
             pg.core.fixZero(self._errorVals, 1)
@@ -298,6 +273,9 @@ class InversionBase:
         else:
             return pureRoughness
 
+    def pureRoughness(self, model=None):
+        """Return pure (unweighted) roughness (backward comp to SCCI)."""
+        return self.roughness(model, weighted=False)
 
     def phiModel(self, model=None):
         """Model objective function (norm of regularization term)."""
@@ -423,12 +401,12 @@ class InversionBase:
     def oneStep(self):
         """Carry out one iteration step (e.g. good for coupling etc.)."""
         dModel = self.modelUpdate()
-        if self.verbose is True:
-            print("dM: ", dModel)
+        if self.debug is True:
+            pg.info("dM: ", dModel)
         tau, responseLS = lineSearch(self, dModel)
 
         if self.verbose is True:
-            print("tau: ", tau)
+            pg.info("tau: ", tau)
 
         pg.debug(f"tau={tau}")
         if tau >= 0.95:  # practically 1
@@ -439,6 +417,31 @@ class InversionBase:
             self.response = responseLS
         else:  # compute new response
             self.response = self.fop.response(self.model)
+
+
+    def convertStartModel(self, model):
+        """Convert scalar or array into startmodel vector.
+
+        Use valid range or self.fop.parameterCount, if possible.
+
+        Arguments
+        ---------
+        model: float|int|array|None
+            starting model value or array
+        """
+        if model is None:
+            return None
+        elif isinstance(model, (float, int)):
+            pg.debug("Homogeneous starting model set to:", float(model))
+            return np.full(self.fop.parameterCount, float(model))
+        elif hasattr(model, '__iter__'):
+            if len(model) == self.fop.parameterCount:
+                pg.debug("Starting model set from given array.", model)
+                return model
+            else:
+                pg.error(f"Starting model size invalid {len(model)} " +
+                         f"!= {self.fop.parameterCount}.")
+        return None
 
 
     def start(self, dataVals, model=None, errorVals=None, response=None, **kwargs):
@@ -483,10 +486,12 @@ class InversionBase:
             raise AttributeError("Need valid forward operator for inversion run.")
 
         if model is None:
-            model = self.fop.startModel()
+            model = self.fop.createStartModel(dataVals)
+            # model = self.fop.startModel()
 
         self.model = model
         if response is None:
+            pg.verbose("Computing starting response")
             self.response = self.fop.response(model)
 
     def run(self, dataVals, errorVals=None, **kwargs):
@@ -541,7 +546,7 @@ class InversionBase:
         self.reset()
         startModel = self.convertStartModel(kwargs.pop('startModel', None))
         self.start(dataVals, errorVals=errorVals, model=startModel, **kwargs)
-        self.fop.setVerbose(False)  # gets rid of CHOLMOD messages
+        self.fop.setVerbose(self.debug)  # gets rid of CHOLMOD messages
         maxIter = kwargs.pop('maxIter', self.maxIter)
         minDPhi = kwargs.pop('dPhi', self.minDPhi)
         showProgress = kwargs.pop('showProgress', False)
@@ -569,23 +574,25 @@ class InversionBase:
 
         if self.verbose:
             pg.info('Starting inversion.')
-            print("fop:", self.fop)
-            print("Data transformation:", self.dataTrans)
-            print("Model transformation:", self.modelTrans)
+            pg.info("fop:", self.fop)
+            pg.info("Data transformation:", self.dataTrans)
+            pg.info("Model transformation:", self.modelTrans)
 
-            print("min/max (data): "+pf(min(self._dataVals))+"/"+pf(max(self._dataVals)))
-            print("min/max (error): "+pf(100*min(self._errorVals))+"%/" +
-                  pf(100 * max(self._errorVals))+"%")
-            print("min/max (start model): "+pf(min(startModel))+"/"+pf(max(startModel)))
+            pg.info("min/max (data): "+pf(min(self._dataVals))+"/"+pf(max(self._dataVals)))
+            pg.info("min/max (error): "+pf(100*min(self._errorVals))+"%/" +
+                pf(100 * max(self._errorVals))+"%")
+            if startModel is not None:
+                pg.info("min/max (start model): "+pf(min(startModel))+"/"+pf(max(startModel)))
 
         # To ensure reproduceability of the run() call, inv.start() will
-        # reset self.inv.model() to fop.startModel().
-        self.fop.setStartModel(startModel)
+        # reset self.inv.model() to fop.startModel(). Don't get it.
+        # self.fop.setStartModel(startModel)
+        self.fop.setStartModel(self.model)
+        pg.info("My model", self.model)
         if kwargs.pop("isReference", False):
-            self.referenceModel = startModel
+            self.referenceModel = self.model
             pg.info("Setting starting model as reference!")
 
-        self.model = pg.Vector(startModel)
         if self.verbose:
             print("-" * 80)
         if self._preStep and callable(self._preStep):
@@ -595,8 +602,8 @@ class InversionBase:
         # self.start() # what's done here?
         self.maxIter = maxIterTmp
         if self.verbose:
-            print(f"inv.iter 0 ... chi² = {self.chi2():7.2f}")
-            # print("inv.iter 0 ... chi² = {0}".format(round(self.chi2(), 2)))
+            pg.info(f"inv.iter 0 ... chi² = {self.chi2():7.2f}")
+            # pg.info("inv.iter 0 ... chi² = {0}".format(round(self.chi2(), 2)))
 
         if self._postStep and callable(self._postStep):
             self._postStep(0, self)
@@ -646,10 +653,10 @@ class InversionBase:
 
             if self.verbose:
                 dphi = (1 - dPhi) * 100
-                print(f"chi² = {chi2:7.2f} (dPhi = {dphi:.2f}%) lam: {self.lam:.1f}")
+                pg.info(f"chi² = {chi2:7.2f} (dPhi = {dphi:.2f}%) lam: {self.lam:.1f}")
 
             if chi2 <= 1 and self.stopAtChi1:
-                print("\n")
+                pg.info("\n")
                 if self.verbose:
                     pg.boxprint(f"Abort criterion reached: chi² <= 1 ({chi2:.2f})")
                 break
@@ -667,7 +674,7 @@ class InversionBase:
         # will never work as expected until we unpack kwargs .. any idea for
         # better strategy?
         # if len(kwargs.keys()) > 0:
-        #     print("Warning! unused keyword arguments", kwargs)
+        #     pg._y("Warning! unused keyword arguments", kwargs)
 
         return self.model
 
@@ -1143,7 +1150,7 @@ class ClassicInversion:
         # zero can be a valid data value
         #
         # if min(abs(self._dataVals)) < 1e-12:
-        #     print(self._dataVals)
+        #     pg.info(self._dataVals)
         #     pg.warn("Found zero data values. \
         #             Setting them to a TOLERANCE value of 1e-12")
         #     pg.core.fixZero(self._dataVals, 1e-12)
@@ -1166,7 +1173,7 @@ class ClassicInversion:
             pg.critical("Inversion framework needs error values to run")
 
         if min(abs(self._errorVals)) < 1e-12:
-            print(self._errorVals)
+            pg.info(self._errorVals)
             pg.warn(
                 "Found zero error values. Setting them to fallback value of 1")
             pg.core.fixZero(self._errorVals, 1)
@@ -1496,29 +1503,29 @@ class ClassicInversion:
 
         if self.verbose:
             pg.info('Starting inversion.')
-            print("fop:", self.inv.fop())
+            pg.info("fop:", self.inv.fop())
             if isinstance(self.inv.transData(), pg.trans.TransCumulative):
-                print("Data transformation (cumulative):")
+                pg.info("Data transformation (cumulative):")
                 for i in range(self.inv.transData().size()):
-                    print("\t", i, self.inv.transData().at(i))
+                    pg.info("\t", i, self.inv.transData().at(i))
             else:
-                print("Data transformation:", self.inv.transData())
+                pg.info("Data transformation:", self.inv.transData())
 
             if isinstance(self.inv.transModel(), pg.trans.TransCumulative):
-                print("Model transformation (cumulative):")
+                pg.info("Model transformation (cumulative):")
                 for i in range(self.inv.transModel().size()):
                     if i < 10:
-                        print("\t", i, self.inv.transModel().at(i))
+                        pg.info("\t", i, self.inv.transModel().at(i))
                     else:
                         print(".", end='')
             else:
-                print("Model transformation:", self.inv.transModel())
+                pg.info("Model transformation:", self.inv.transModel())
 
-            print("min/max (data): " + pf(min(self._dataVals)) + "/" +
+            pg.info("min/max (data): " + pf(min(self._dataVals)) + "/" +
                   pf(max(self._dataVals)))
-            print("min/max (error): " + pf(100 * min(self._errorVals)) + "%/" +
+            pg.info("min/max (error): " + pf(100 * min(self._errorVals)) + "%/" +
                   pf(100*max(self._errorVals))+"%")
-            print("min/max (start model): " + pf(min(startModel)) +
+            pg.info("min/max (start model): " + pf(min(startModel)) +
                   "/" + pf(max(startModel)))
 
         # To ensure reproduceability of the run() call, inv.start() will
@@ -1538,8 +1545,8 @@ class ClassicInversion:
         self.inv.start()
         self.maxIter = maxIterTmp
         if self.verbose:
-            print(f"inv.iter 0 ... chi² = {self.chi2():7.2f}")
-            # print("inv.iter 0 ... chi² = {0}".format(round(self.chi2(), 2)))
+            pg.info(f"inv.iter 0 ... chi² = {self.chi2():7.2f}")
+            # pg.info("inv.iter 0 ... chi² = {0}".format(round(self.chi2(), 2)))
 
         if self._postStep and callable(self._postStep):
             self._postStep(0, self)
@@ -1565,12 +1572,12 @@ class ClassicInversion:
                 else:
                     self.inv.oneStep()
             except RuntimeError as e:
-                print(e)
+                pg._y(e)
                 pg.error('One step failed. '
                          'Aborting and going back to last model')
 
             if np.isnan(self.model).any():
-                print(self.model)
+                pg.info("Model: ", self.model)
                 pg.critical('invalid model')
 
             # resp = self.inv.response()  # NOT USED
@@ -1595,7 +1602,7 @@ class ClassicInversion:
             dPhi = phi / lastPhi
 
             if self.verbose:
-                print(f"chi² = {chi2:7.2f} (dPhi = {(1 - dPhi) * 100:.2f}%) lam: {lam:.1f}")
+                pg.info(f"chi² = {chi2:7.2f} (dPhi = {(1 - dPhi) * 100:.2f}%) lam: {lam:.1f}")
 
             if chi2 <= 1 and self.stopAtChi1:
                 print("\n")
@@ -1618,7 +1625,7 @@ class ClassicInversion:
         # will never work as expected until we unpack kwargs .. any idea for
         # better strategy?
         # if len(kwargs.keys()) > 0:
-        #     print("Warning! unused keyword arguments", kwargs)
+        #     pg._y("Warning! unused keyword arguments", kwargs)
 
         self.model = self.inv.model()
         return self.model
@@ -1824,7 +1831,7 @@ class Block1DInversion(MarquardtInversion):
             self.fop.setRegionProperties(0, modelControl=1e6)
             if hasattr(fixLayers, '__iter__'):
                 if len(fixLayers) != self.fop.nLayers:
-                    print("fixLayers:", fixLayers)
+                    pg.info("fixLayers:", fixLayers)
                     pg.error("fixlayers needs to have a length of nLayers-1=" +
                              str(self.fop.nLayers - 1))
                 self.fop.setRegionProperties(0, startModel=fixLayers)
