@@ -135,6 +135,7 @@ from pygimli.physics import ves
 ab2 = np.logspace(0, 2.5, 21)
 synth = [10, 10, 100, 300, 30]
 data = ves.VESModelling(ab2=ab2).response(synth)
+data *= (np.random.randn(len(data))*0.03 + 1)
 thk = np.logspace(0, 1.8, 23)
 fop = ves.VESRhoModelling(ab2=ab2, thk=thk)
 ```
@@ -198,21 +199,80 @@ print(inv.chi2(newresponse))
 which fits a parabola through the old point ($\tau$=0), the full step ($\tau$=1) and a test ($\tau$=0.3) and optain an optimum line search parameter of about 0.6-0.65.
 As method, we can also use `'exact'` (forward calculations) or `'inter'` (interpolation), yielding almost the same results.
 The latter is the simplest one and the former takes the most effort.
-In total, the chi-square misfit decreases, but slowly.
+In total, the chi-square misfit, computed by $\Phi_d/N$, decreases slowly.
 
-### Controlling inversion
+As gradient-based minimization converges much slower, we switch to a Gauss-Newton framework.
+After initialization, we set the model transformations as strings (we can also create instances)
+We can choose `lin`, `log`, `logL` (L being lower bound), `logL-U` (two bounds), `cotL-U` or `symlogT` (T being the linear threshold).
+The model roughness vector (including model transformation and weighting) can be
+accessed by `inv.roughness()`.
+
+```{code-cell}
+from pygimli.frameworks.inversion import GaussNewtonInversion
+
+inv = GaussNewtonInversion(fop=fop)
+inv.modelTrans = 'log' # already default
+inv.dataTrans = 'log' # default linear
+```
+
+Like the transformations, there are a lot of options that can be set directly to the inversion instance:
+
+- `fop` - the forward operator
+- `robustData`, `blockyModel` - use L1 norm for data misfit and model roughness
+- `verbose` - to see some output
+- `model` - the current model
+- `response` - the model response
+- `dataVals`, `errorVals` - data and error vectors
+
+Most of them can also be passed to the inversion run and should better
+
+- `maxIter` - maximum iteration number
+- `lam` - the overall regularization strength
+- `zWeight` - the vertical-to-horizontal regularization ratio (2D/3D problems)
+- `startModel` - the starting model as float or array
+- `relativeError` and `absoluteError` to define the error model
+- `limits` - list of lower and upper parameter limits (overriding `inv.modelTrans`)
+
+After running the inversionq
+
+```{code-cell}
+model = inv.run(data, relativeError=0.03, verbose=True)
+```
+
+we observe that the data are fitted within noise in very few iterations.
+The chi-square value can be accessed by `inv.chi2()`, its convergence is stored in
+`inv.chi2History`. The data, model and total objective function values can be retrieved
+by `inv.phiData()`, `inv.phiModel()` and `inv.phi()`. By default, the current model and
+its response are used, alternatively you can pass `model=` to `phiModel()` or `phi()`
+and `response=` to `phiData()` and `phi()`.
+The important measure of data fit is the chi-square value
+
+$$ \chi^2 = \frac{\Phi_\text{d}}{N} = \frac1N\sum_{i=1}^{N} \left( \frac{f_i(\mathbf{m}) - d_i}{\epsilon_i} \right)^2 $$
+
+as it includes the error model (and the data transformation).
+In many cases, one has a better feeling by computing the (untransformed)
+root-mean-square (RMS), either absolute
+
+$$ \text{ARMS} = \sqrt{\frac1N \sum_{i=1}^{N} (f_i(\mathbf{m}) - d_i)^2} $$
+
+by using `inv.absrms()`, or relative
+
+$$ \text{RRMS} = \sqrt{\frac1N \sum_{i=1}^{N} \left( \frac{f_i(\mathbf{m}) - d_i}{d_i}\right)^2} $$
+
+by using `inv.relrms()`.
+Traveltime tomography is a good example for looking at ARMS (e.g. in ms), while in ERT
+one usually has a good feeling for RRMS (same for voltage, resistance or apparent
+resistivity) in %.
+
+### Data errors
 
 The data errors $\epsilon_i$ play a crucial role in the inversion process as they
-define the data weighting matrix $\mathbf{W_d}$. Sometimes they are well known from
-statistical considerations, but often they need to be estimated. We usually consider
-a so-called error model consisting of a relative and absolute errors.
-
 In case the errors are known, the regularization strength $\lambda$ needs to be chosen
 so that the mean squared data misfit $\chi^2$ reaches a value of about 1, indicating
 that the data are explained within their errors. To this end, the regularization
 strength should be adjusted so that, according to Occams razor principle, the simplest
 model explaining the data within their errors is found. In many cases, simple means
-smooth, so that the smoothest model reaching a $\chi^2$ of about 1 is sought.
+smooth, so that the smoothest model reaching $\chi^2\approx 1$ is sought.
 
 However, one can adapt the regularization in a way that the meaning of simple reflects
 the prior knowledge or assumption about the subsurface. This could be different weights
@@ -233,43 +293,16 @@ Examples that are already implemented in pyGIMLi are for example:
 - **Structurally coupled cooperative inversion** of disparate data based on structural similarity (e.g., {cite}`RonczkaHelGueWisDah2017NSG`
 - **Structure-based inversion** using layered 2D models {cite}`AttwaAkcBasGue2014JAG`
 
-+++
-
-## Input data
-
-### Data weights / errors
-
-### Data transforms
-
-+++
-
-## Model parametrization
-
-### Mesh-free inversion (0-D)
-
-### Mesh inversion
-
-#### 1-D
-
-#### 2-D
-
-#### 3-D
-
-+++
-
-## Regularization - Including prior information
-
-### Starting model
-
-### Reference model
-
-### Parameter limits
-
-### Damping
-
-### Smoothing
-
-### Advanced regularization
+<!-- Model parametrization
+Mesh-free inversion (0-D)
+Mesh inversion (1D, 2D, 3D)
+Regularization - Including prior information
+Starting model
+Reference model
+Parameter limits
+Damping
+Smoothing
+Advanced regularization -->
 
 +++
 
