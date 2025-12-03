@@ -2371,15 +2371,17 @@ def extrude(p2, z=-1.0, boundaryMarker=0, **kwargs):
         pg.critical("Implementme")
 
     poly = pg.Mesh(3, isGeometry=True)
-    top = []
-    for n in p2.nodes():
-        top.append(poly.createNode(n.pos()).id())
+    top = [poly.createNode(n.pos()).id() for n in p2.nodes()]
+    # top = []
+    # for n in p2.nodes():
+    #     top.append(poly.createNode(n.pos()).id())
 
-    bot = []
-    for n in p2.nodes():
-        bot.append(poly.createNode(n.pos() + [0.0, 0.0, z]).id())
+    bot = [poly.createNode(n.pos() + [0.0, 0.0, z]).id() for n in p2.nodes()]
+    # bot = []
+    # for n in p2.nodes():
+    #     bot.append(poly.createNode(n.pos() + [0.0, 0.0, z]).id())
+
     N = len(top)
-
     poly.createPolygonFace(poly.nodes(top), marker=boundaryMarker)
     poly.createPolygonFace(poly.nodes(bot[::-1]), marker=boundaryMarker)
 
