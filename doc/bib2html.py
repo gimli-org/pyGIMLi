@@ -19,8 +19,8 @@ def parse_bib(fname):
     return references
 
 
-def write_html():
-    db = parse_bib("gimliuses.bib")
+def write_html(bibfile="gimliuses.bib"):
+    db = parse_bib(bibfile)
     for entry in db:
         entry["author"] = entry["author"].replace(" and ", ", ")
         entry["author"] = entry["author"].replace("~", " ")
@@ -37,5 +37,27 @@ def write_html():
                 % (link, link)
             )
         entry["doi"] = string
+
+    return json.dumps(db, sort_keys=True, indent=4)
+
+
+def write_software_html(bibfile="gimlisoftware.bib"):
+    """Parse software BibTeX file and return JSON for DataTables."""
+    db = parse_bib(bibfile)
+    for entry in db:
+        # Clean up author field
+        entry["author"] = entry["author"].replace(" and ", ", ")
+        entry["author"] = entry["author"].replace("~", " ")
+        
+        # Process DOI field
+        if not "doi" in entry:
+            entry["doi"] = ""
+        else:
+            doi = entry["doi"]
+            link = "https://doi.org/%s" % doi
+            entry["doi"] = (
+                "<a target='_blank' href=%s data-toggle='tooltip' title='Go to %s'><i class='ai ai-doi ai-2x'></i></a>"
+                % (link, link)
+            )
 
     return json.dumps(db, sort_keys=True, indent=4)

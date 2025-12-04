@@ -292,7 +292,8 @@ html_sidebars = {
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 html_additional_pages = {"index": "index.html",
-                         "community/publications": "publications.html"}
+                         "community/publications": "publications.html",
+                         "community/other_software": "other_software.html"}
 
 # If false, no module index is generated.
 html_domain_indices = True
@@ -391,10 +392,10 @@ try:
     # class matplotlib_svg_scraper(object):
     #     def __repr__(self):
     #         return self.__class__.__name__
-
+    #
     #     def __call__(self, *args, **kwargs):
     #         return matplotlib_scraper(*args, format='svg', **kwargs)
-
+    #
     # sphinx_gallery_conf['image_scrapers']=(matplotlib_svg_scraper(),)
     sphinx_gallery_conf["image_scrapers"]=("matplotlib",)
 
@@ -662,12 +663,17 @@ doxylink = {
 ################################################################################
 
 bibtex_bibfiles = ["gimliuses.bib",
+                   "gimlisoftware.bib",
                    "about/libgimli.bib",
                    "references.bib"]
 bibtex_reference_style = "author_year"
 # Create HTML table
 from bib2html import write_html
 publications = write_html()
+
+# Create software list from BibTeX
+from bib2html import write_software_html
+other_software = write_software_html()
 
 
 ###############################################################################
@@ -785,6 +791,7 @@ from paper_carousel import showcase
 random.shuffle(showcase)  # mix it up
 html_context = {
     "showcase": showcase,
+    "other_software": other_software,
     "publications": publications,
     "default_mode": "light",
 }
