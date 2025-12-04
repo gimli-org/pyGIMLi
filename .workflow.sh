@@ -207,12 +207,15 @@ function build_whls(){
     if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
         LIBGIMLI=$(ls $BUILD_DIR/bin/libgimli.dll | head -n 1)
         echo "Checking for libgimli in $BUILD_DIR/bin: $LIBGIMLI"
+
     elif [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
         LIBGIMLI=$(ls $BUILD_DIR/lib/libgimli.dylib | head -n 1)
         echo "Checking for libgimli in $BUILD_DIR/lib: $LIBGIMLI"
+
     else
         LIBGIMLI=$(ls $BUILD_DIR/lib/libgimli.so | head -n 1)
         echo "Checking for libgimli in $BUILD_DIR/lib: $LIBGIMLI"
+
     fi
 
     if [ -z $LIBGIMLI ]; then
@@ -225,24 +228,26 @@ function build_whls(){
     pushd $PROJECT_ROOT
         use_venv $VENV_BUILD
 
-        ### create pygimli wheel
+        WHEELHOUSE=$BUILD_DIR/wheelhouse
+        mkdir -p $WHEELHOUSE
+        mkdir -p $BUILD_DIR/dist/
+
+        # ### create pygimli wheel
         pushd $PROJECT_SRC
+            rm -rf build/ dist/ *.egg-info/
             python -m build --wheel --no-isolation --outdir $BUILD_DIR/dist/
         popd
 
         pushd $BUILD_DIR
 
-        # create pgcore wheel
+            # create pgcore wheel
             make whlpgcoreCopyLibs
 
             pushd $BUILD_DIR/core/pgcore
-                WHEELHOUSE=$BUILD_DIR/wheelhouse
-                mkdir -p $WHEELHOUSE
-                mkdir -p $BUILD_DIR/dist/
 
                 python -m pip wheel --wheel-dir=$WHEELHOUSE .
 
-                WHLFILE=$(ls $WHEELHOUSE/pgcore*.whl | head -n 1)
+                WHLFILE=$(ls -t $WHEELHOUSE/pgcore*.whl | head -n 1)
 
                 if [ ! -z "$AUDITWHEEL_POLICY" ] && [ ! -z "$AUDITWHEEL_PLAT" ] ; then
                     blue "Repairing pgcore whl for $AUDITWHEEL_POLICY ($WHLFILE)"
@@ -252,21 +257,21 @@ function build_whls(){
                     if [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
                         blue "Repairing pgcore whl for $OS ($WHLFILE)"
                         delocate-wheel -v $WHLFILE
+                        green "Copying pgcore whl ($WHLFILE) to build dist $BUILD_DIR/dist/"
+                        cp $WHLFILE $BUILD_DIR/dist/
 
                     elif [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
                         blue "Repairing pgcore whl for $OS ($WHLFILE)"
-                        delvewheel repair $WHLFILE --add-path $BUILD_DIR/bin/
-                    elif [ ! -z "$AUDITWHEEL_POLICY" ] && [ ! -z "$AUDITWHEEL_PLAT" ] ; then
-                        yellow "Unknown OS ($OS) for repairing pgcore whl."
-                    fi
+                        delvewheel repair $WHLFILE --add-path $BUILD_DIR/bin/ -w $BUILD_DIR/dist/
 
-                    green "Copying pgcore whl ($WHLFILE) to build dist $BUILD_DIR/dist/"
-                    cp $WHLFILE $BUILD_DIR/dist/
+                    else
+                        yellow "Unknown OS ($OS) for repairing pgcore whl."
+                        green "Copying pgcore whl ($WHLFILE) to build dist $BUILD_DIR/dist/"
+                        cp $WHLFILE $BUILD_DIR/dist/
+                    fi
                 fi
             popd
-
         popd
-
     popd
 }
 
@@ -290,7 +295,7 @@ function install_WHL(){
     pushd $PROJECT_ROOT
         uv pip uninstall pygimli pgcore
         uv pip install --force-reinstall $PROJECT_DIST/pgcore*.whl
-        WHLFILE=$(ls $PROJECT_DIST/pygimli*.whl | head -n 1)
+        WHLFILE=$(ls -t $PROJECT_DIST/pygimli*.whl | head -n 1)
         uv pip install "$WHLFILE$opt"
     popd
     testReport
@@ -495,7 +500,7 @@ function deploy(){
     need_build_post
     use_venv $VENV_BUILD
 
-    TARGET_WHL=$(ls $PROJECT_DIST/$target_whl*.whl | head -n 1)
+    TARGET_WHL=$(ls -t $PROJECT_DIST/$target_whl*.whl | head -n 1)
 
     if [ -z $TARGET_WHL ]; then
         red "Target whl file $target_whl not found in $PROJECT_DIST"

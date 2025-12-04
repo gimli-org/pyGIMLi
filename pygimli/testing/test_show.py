@@ -289,28 +289,6 @@ def testShowPV():
     ax.show()
 
 
-def testPVBackends():
-    """Test different available backends for pygimli.show.
-
-    import pygimli as pg
-    from pygimli.testing.test_show import testPVBackends
-    import pyvista as pv
-    testPVBackends()
-    """
-    m1 = mt.createCube()
-
-    # pg.rc['view3D'] = 'fallback'
-    # pg.show(m1)
-
-    pg.rc['view3D'] = 'pyvista'
-    print('Default')
-    pg.show(m1)
-    print('Trame-client')
-    pg.show(m1, backend='client')
-    # print('ipyvtklink')
-    # pg.show(m1, backend='ipyvtklink')
-
-
 def testCoverage():
     grid = pg.createGrid(10, 10)
     cov = pg.y(grid.cellCenters()).array()
