@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Digital Elevation Model (DEM) class for interpolating elevations."""
-import os.path
 import math
+from pathlib import Path
 import numpy as np
 
 
@@ -42,8 +42,6 @@ class DEM:
             self.__init__(demfile[0], **kwargs)
             for addfile in demfile[1:]:
                 self.add(addfile)
-            self.dem = RegularGridInterpolator((self.x, self.y),
-                                    np.fliplr(self.z.T))
         elif isinstance(demfile, str):
             if demfile[-4:].lower() == '.asc':
                 self.loadASC(demfile)
@@ -54,7 +52,7 @@ class DEM:
         elif x is not None and y is not None:
             self.z = demfile
         else:
-            raise Exception("Either DEM file or z with x and y must be given!")
+            raise AttributeError("Either DEM file or z with x and y must be given!")
 
         if self.latlon:
             self._toLatLon = kwargs.pop('toLatLon', None)
@@ -63,6 +61,9 @@ class DEM:
                 zone = kwargs.pop('zone', 32)
                 self._toLatLon = lambda x_, y_: utm.to_latlon(x_, y_, zone, 'N')
 
+    def __repr__(self):
+        """Return string representation."""
+        return f"{len(self.x)}x{len(self.y)}={self.z.shape} grid interpolator."
 
     def __call__(self, x, y=None):
         """Interpolation function."""
@@ -72,10 +73,7 @@ class DEM:
         if y is None:
             return self.dem(x)
         else:
-            if hasattr(self, 'tri'):
-                out = self.dem(x, y)
-            else:
-                out = self.dem((x, y))
+            out = self.dem(x, y) if hasattr(self, 'tri') else self.dem((x, y))
 
         if isinstance(out, np.ma.MaskedArray):
             out = out.data
@@ -91,12 +89,10 @@ class DEM:
 
     def loadTXT(self, demfile):
         """Load column-based DEM."""
-        import matplotlib.tri as mtri
-        from scipy.interpolate import RegularGridInterpolator, LinearNDInterpolator
-
         xp, yp, zp = np.loadtxt(demfile, unpack=True)
-        be = self.fallback is None
         if len(np.unique(xp)) * len(np.unique(yp)) > len(xp):
+            import matplotlib.tri as mtri
+            from scipy.interpolate import LinearNDInterpolator
             self.x = xp
             self.y = yp
             self.z = zp
@@ -136,16 +132,11 @@ class DEM:
         self.z = zp
         self.x = x
         self.y = y
-        self.dem = RegularGridInterpolator((self.x, self.y),
-                                           self.z.T,
-                                           bounds_error=be)
-
+        self.createGridInterpolator()
 
     def loadASC(self, ascfile):
         """Load ASC (DEM matrix with location header) file."""
-        from scipy.interpolate import RegularGridInterpolator
-
-        with open(ascfile) as fid:
+        with Path(ascfile).open() as fid:
             header = {}
             sp = []
             nheader = 0
@@ -161,32 +152,27 @@ class DEM:
         dx = header.pop('cellsize', 1.0)  # just a guess
         self.x = np.arange(header['ncols']) * dx + header['xllcorner']
         self.y = np.arange(header['nrows']) * dx + header['yllcorner']
-        be = self.fallback is None
-        self.dem = RegularGridInterpolator((self.x, self.y),
-                                           self.z.T, bounds_error=be)
-
+        self.createGridInterpolator()
 
     def loadHGT(self, hgtfile):
         """Load ASC (DEM matrix with location header) file."""
-        from scipy.interpolate import RegularGridInterpolator
-        siz = os.path.getsize(hgtfile)
+        # siz = os.path.getsize(hgtfile)
+        siz = Path(hgtfile).stat().st_size
         samples = int(math.sqrt(siz/2))
         lat = int(hgtfile[-10:-8])
         lon = int(hgtfile[-7:-4])
         self.x = np.linspace(lon,lon+1,samples, endpoint=False)
         self.y = np.linspace(lat,lat+1,samples, endpoint=False)
         be = self.fallback is None
-        with open(hgtfile, 'rb') as hgt_data:
+        with Path(hgtfile).open('rb') as hgt_data:
             self.z = np.fromfile(hgt_data, np.dtype('>i2'),
                                  samples*samples).reshape((samples, samples))
             self.z[self.z < -32000] = 0
-
-        self.dem = RegularGridInterpolator((self.x, self.y),
-                                           np.fliplr(self.z.T), bounds_error=be)
+        self.z = np.flipud(self.z)
+        self.createGridInterpolator()
         self.latlon = True
 
-
-    def add(self, new):
+    def add(self, new, createGrid=True):
         """Combine two DEM by concatenatation.
 
         x or y vectors must be equal (e.g. for 1° SRTM models).
@@ -199,20 +185,30 @@ class DEM:
         if isinstance(new, (str, list, tuple)):
             new = DEM(new)
         assert isinstance(new, DEM), "No DEM instance!"
-        if np.allclose(self.y, new.y):
+        if len(self.y) == len(new.y) and np.allclose(self.y, new.y):
             if self.x[0] < new.x[0]:
                 self.x = np.concatenate([self.x, new.x])
                 self.z = np.hstack([self.z, new.z])
             else:
                 self.x = np.concatenate([new.x, self.x])
                 self.z = np.hstack([new.z, self.z])
-        elif np.allclose(self.x, new.x):
+        elif len(self.x) == len(new.x) and np.allclose(self.x, new.x):
             if self.y[0] < new.y[0]:
                 self.y = np.concatenate([self.y, new.y])
-                self.z = np.vstack([new.z, self.z])
+                self.z = np.vstack([self.z, new.z])
             else:
                 self.y = np.concatenate([new.y, self.y])
-                self.z = np.hstack([self.z, new.z])
+                self.z = np.vstack([new.z, self.z])
+
+        if createGrid:
+            self.createGridInterpolator()
+
+    def createGridInterpolator(self):
+        """Generate grid interpolator."""
+        from scipy.interpolate import RegularGridInterpolator
+        be = self.fallback is None
+        self.dem = RegularGridInterpolator((self.x, self.y),
+                                           self.z.T, bounds_error=be)
 
 
     def show(self, cmap="terrain", cbar=True, ax=None, **kwargs):
