@@ -1940,6 +1940,8 @@ def createStiffnessMatrix(mesh, a=None, isVector=False):
 
     if isinstance(a, (float, int)):
         a = pg.Vector(mesh.cellCount(), a)
+    elif isinstance(a, complex):
+        a = pg.CVector(mesh.cellCount(), a)
 
     A = None
 
@@ -2019,8 +2021,14 @@ def createMassMatrix(mesh, b=None):
     # need callable here
     if b is None:
         b = pg.Vector(mesh.cellCount(), 1.0)
-    elif not hasattr(b, '__iter__'):
+    # elif not hasattr(b, '__iter__'):
+        # b = pg.Vector(mesh.cellCount(), b)
+    elif isinstance(b, (float, int)):
         b = pg.Vector(mesh.cellCount(), b)
+    elif isinstance(b, complex):
+        b = pg.CVector(mesh.cellCount(), b)
+        B = pg.matrix.CSparseMatrix()
+        B.fillMassMatrix(mesh, b)
 
     B = pg.matrix.SparseMatrix()
     B.fillMassMatrix(mesh, b)
