@@ -448,7 +448,8 @@ def __deform__(self, u, magnify=1.0):
     elif len(u) == self.nodeCount() and u.ndim == 2:
         v = u.reshape(self.nodeCount() * u.shape[1], order='F')
 
-    return __Mesh_deform__(self, v, magnify)
+    __Mesh_deform__(self, v, magnify)
+    return self
 Mesh.deform = __deform__
 
 

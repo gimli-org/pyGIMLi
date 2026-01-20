@@ -22,6 +22,7 @@
 #include "pos.h"
 #include "vectortemplates.h"
 #include "utils.h"
+#include "stopwatch.h"
 
 #include <map>
 #include <fstream>
@@ -181,6 +182,8 @@ void Mesh::writeToStream(std::ostream & out) const {
 }
 
 void Mesh::readFromStream(std::istream & in) {
+{WITH_TICTOC("Mesh::readFromStream")
+{WITH_TICTOC("nodes")
     this->clear();
 
     uint8 dim; readStream(in, dim);
@@ -195,12 +198,12 @@ void Mesh::readFromStream(std::istream & in) {
     if (version == 3){
         uint8 *dummy = new uint8[128]; readStream(in, dummy[0], 128);
         this->setGeometry(bool(dummy[0]));
+        //__MS(dummy, this->isGeometry())
         delete [] dummy;
 
     } else if (version != 2){
         throwError(WHERE_AM_I + " wrong version " + str(version));
     }
-    //__MS(dummy)
     //** read nodes
     uint32 nVerts; readStream(in, nVerts);
 
@@ -224,10 +227,12 @@ void Mesh::readFromStream(std::istream & in) {
         delete [] coord;
         delete [] marker;
     }
+} // WITHTICTOC nodes
 
-    //** read cells
-    uint32 nCells; readStream(in, nCells);
     uint count = 0;
+    //** read cells
+{WITH_TICTOC("cells")
+    uint32 nCells; readStream(in, nCells);
 
     if (nCells > 0){
         uint8 * cellVerts = new uint8[nCells];
@@ -254,8 +259,10 @@ void Mesh::readFromStream(std::istream & in) {
         delete [] cellIdx;
         delete [] cellMarker;
     }
+} // WITHTICTOC cells
 
-    //** read bounds
+//** read bounds
+{WITH_TICTOC("bounds")
     uint32 nBound; readStream(in, nBound);
     if (nBound > 0){
         uint8 * boundVerts = new uint8[nBound];
@@ -297,7 +304,9 @@ void Mesh::readFromStream(std::istream & in) {
         delete [] leftCells;
         delete [] rightCells;
     }
+} // WITHTICTOC bounds
 
+{WITH_TICTOC("data")
     size_t nData; readStream(in, nData);
 
     for (uint i = 0; i < nData; i ++){
@@ -308,6 +317,8 @@ void Mesh::readFromStream(std::istream & in) {
         RVector dat(datLen); readStream(in, dat[0], datLen);
         this->addData(str, dat);
     }
+}
+} // WITHTICTOC Mesh::readFromStream
 }
 
 int Mesh::exportSimple(const std::string & fbody, const RVector & data) const {

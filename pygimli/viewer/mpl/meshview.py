@@ -62,8 +62,7 @@ class CellBrowser(object):
     """
 
     def __init__(self, mesh, data=None, ax=None):
-        """ Construct CellBrowser on a specific `mesh`.
-        """
+        """Construct CellBrowser on a specific `mesh`."""
         if ax:
             self.ax = ax
         else:
@@ -89,13 +88,11 @@ class CellBrowser(object):
         self.connect()
 
     def __del__(self):
-        """ Deregister if the cellBrowser has been deleted.
-        """
+        """Deregister if the cellBrowser has been deleted."""
         self.disconnect()
 
     def connect(self):
-        """ Connect to matplotlib figure canvas.
-        """
+        """Connect to matplotlib figure canvas."""
         if not self._connected:
             self.pid = self.fig.canvas.mpl_connect('pick_event', self.onPick)
             self.kid = self.fig.canvas.mpl_connect('key_press_event',
@@ -104,8 +101,7 @@ class CellBrowser(object):
             self._connected = True
 
     def disconnect(self):
-        """ Disconnect from matplotlib figure canvas.
-        """
+        """Disconnect from matplotlib figure canvas."""
         if self._connected:
             __CBCache__.remove(self)
             self.fig.canvas.mpl_disconnect(self.pid)
@@ -113,8 +109,7 @@ class CellBrowser(object):
             self._connected = False
 
     def initText(self):
-        """ Initialize hint text properties.
-        """
+        """Initialize hint text properties."""
         import matplotlib as mpl
         bbox = dict(boxstyle='round, pad=0.5', fc='w', alpha=0.5)
         arrowprops = dict(arrowstyle='->', connectionstyle='arc3,rad=0.5')
@@ -126,13 +121,11 @@ class CellBrowser(object):
         self.text = self.ax.annotate(None, xy=(0, 0), **kwargs)
 
     def setMesh(self, mesh):
-        """ Set mesh.
-        """
+        """Set mesh."""
         self.mesh = mesh
 
     def setData(self, data=None):
-        """ Set data, if not set look for the artist array data.
-        """
+        """Set data, if not set look for the artist array data."""
         self.hide()
         if data is not None:
             if len(data) == self.mesh.cellCount():
@@ -146,8 +139,7 @@ class CellBrowser(object):
                 self.data = data[self.mesh.cellMarkers()]
 
     def hide(self):
-        """ Hide info window.
-        """
+        """Hide info window."""
         self.cellID = -1
 
         if self.text is not None:
@@ -158,16 +150,14 @@ class CellBrowser(object):
         self.fig.canvas.draw()
 
     def removeHighlightCell(self):
-        """ Remove cell highlights.
-        """
+        """Remove cell highlights."""
         if self.highLight is not None:
             if self.highLight in self.ax.collections:
                 self.highLight.remove()
             self.highLight = None
 
     def highlightCell(self, cell):
-        """ Highlight selected cell.
-        """
+        """Highlight selected cell."""
         import matplotlib as mpl
         self.removeHighlightCell()
         self.highLight = mpl.collections.PolyCollection(
@@ -178,8 +168,7 @@ class CellBrowser(object):
         self.ax.add_collection(self.highLight)
 
     def onPick(self, event):
-        """ Call `self.update()` on mouse pick event.
-        """
+        """Call self.update() on mouse pick event."""
         self.event = event
         self.artist = event.artist
 
@@ -205,8 +194,7 @@ class CellBrowser(object):
             self.cellID = event.ind[0]
 
     def onPress(self, event):
-        """ Call `self.update()` if up, down, or escape keys are pressed.
-        """
+        """Call update() if up, down, or escape keys are pressed."""
         # print(event, event.key)
         if self.data is None:
             return
@@ -228,7 +216,7 @@ class CellBrowser(object):
             self.update()
 
     def update(self):
-        """ Update the information window.
+        """Update the information window.
 
         Hide the information window for self.cellID == -1
         """
@@ -261,7 +249,7 @@ class CellBrowser(object):
 
 
 def drawMesh(ax, mesh, fitView=True, **kwargs):
-    """ Draw a 2d mesh into a given ax.
+    """Draw a 2d mesh into a given ax.
 
     Set the limits of the ax tor the mesh extent.
 
@@ -311,7 +299,7 @@ def drawModel(ax, mesh, data=None, tri=False, rasterized=False,
               cMin=None, cMax=None, logScale=False,
               xlabel=None, ylabel=None, fitView=True, verbose=False,
               **kwargs):
-    """ Draw a 2d mesh and color the cell by the data.
+    """Draw a 2d mesh and color the cell by the data.
 
     Parameters
     ----------
@@ -506,7 +494,7 @@ def drawSelectedMeshBoundariesShadow(ax, boundaries, first='x', second='y',
 
 
 def drawBoundaryMarkers(ax, mesh, clipBoundaryMarkers=False, **kwargs):
-    """Draw boundary markers for mesh.boundaries with marker != 0
+    """Draw boundary markers for mesh.boundaries with marker != 0.
 
     Args
     ----
@@ -594,7 +582,6 @@ def drawBoundaryMarkers(ax, mesh, clipBoundaryMarkers=False, **kwargs):
                 #    )
                  )
 
-
     # for b in mesh.boundaries():
     #     if b.marker() != 0:
     #         x = b.center()[0]
@@ -656,37 +643,39 @@ def drawMeshBoundaries(ax, mesh, hideMesh=False, useColorMap=False,
 
     mesh.createNeighborInfos()
 
-    if not hideMesh:
+    lwd = lambda l, d: l if l is not None else d
+
+    if not hideMesh and lw > 0:
         drawSelectedMeshBoundaries(ax,
                                    mesh.findBoundaryByMarker(0),
                                    color=color or (0.0, 0.0, 0.0, 1.0),
-                                   linewidth=lw or 0.3)
+                                   linewidth=lwd(lw, 0.3))
 
     drawSelectedMeshBoundaries(
         ax, mesh.findBoundaryByMarker(pg.core.MARKER_BOUND_HOMOGEN_NEUMANN),
                                       color=(0.0, 1.0, 0.0, 1.0),
-                                      linewidth=lw or 1.0)
+                                      linewidth=lwd(lw, 1.0))
     drawSelectedMeshBoundaries(
         ax, mesh.findBoundaryByMarker(pg.core.MARKER_BOUND_MIXED),
                                       color=(1.0, 0.0, 0.0, 1.0),
-                                      linewidth=lw or 1.0)
+                                      linewidth=lwd(lw, 1.0))
 
     col = color
 
     b0 = [b for b in mesh.boundaries() if b.marker() > 0]
+
     if useColorMap:
         drawSelectedMeshBoundaries(ax, b0, color=None,
-                                   linewidth=lw or 1.5)
+                                   linewidth=lwd(lw, 1.5))
     else:
         drawSelectedMeshBoundaries(ax, b0,
                                    color=col or (0.0, 0.0, 0.0, 1.0),
-                                   linewidth=lw or 1.5)
+                                   linewidth=lwd(lw, 1.5))
 
     b4 = [b for b in mesh.boundaries() if b.marker() < -4]
     drawSelectedMeshBoundaries(ax, b4,
                                color=col or (0.0, 0.0, 0.0, 1.0),
-                               linewidth=lw or 1.5)
-
+                               linewidth=lwd(lw, 1.5))
     updateAxes_(ax)
 
 

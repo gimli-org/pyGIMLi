@@ -59,6 +59,22 @@ Here's my admonition content.
 
 :::
 
+## Custom latex macros
+
+Some custom latex macros inspired by [physics latex package](https://ctan.org/):
+
+| Macro       | Output         |
+|-------------|----------------|
+| \order{h^{2}} | $\order{h^{2}}$ |
+| \vb{v}        | $\vb{v}$        |
+| \grad{u}    | $\grad{u}$    |
+| \div{\vb{v}}  | $\div{\vb{v}}$  |
+| \curl{\vb{v}}        | $\curl{\vb{v}}$ |
+| \laplacian{u}   | $\laplacian{u}$   |
+| \sin(x)        | $\sin(x)$        |
+| \dd x         | $\dd x$         |
+
+
 ### Tables
 
 :::{table} Table caption

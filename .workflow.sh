@@ -467,7 +467,10 @@ function install(){
     pushd $PROJECT_ROOT
         use_venv $VENV_PYGIMLI
 
-        uv pip install $PROJECT_DIST/pgcore*.whl
+        if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
+            # windows MSYS2
+            uv pip install $PROJECT_DIST/pgcore*.whl
+        fi
         uv pip install -e $PROJECT_SRC/[opt]
 
         testReport
@@ -677,7 +680,7 @@ echo "PROJECT_DIST=$PROJECT_DIST"
 echo -e "\nStarting automatic build #$BUILD_NUMBER on" `date`
 start=$(date +"%s")
 
-[ $# -lt 1 ] && echo "No workflow target specified" && help
+[ $# -lt 1 ] && echo "No workflow target specified." && help
 
 for arg in $@
 do

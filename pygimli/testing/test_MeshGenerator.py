@@ -128,13 +128,28 @@ class TestMeshGenerator(unittest.TestCase):
 
         phi = 0.025*2*np.pi
         m = pg.meshtools.createGrid([1, 2], degree=phi/(2*np.pi)*360, h=0)
-        m.show(markers=True, showMesh=True)
+        #m.show(markers=True, showMesh=True)
         for b in m.boundaries():
             if b.marker() != 0:
                 if b.leftCell() is None:
                     pg._r(b)
 
         self.assertEqual(pg.meshtools.checkMeshConsistency(m), True)
+
+        mesh = pg.meshtools.createMesh(pg.meshtools.createPolygon([[0.0, 0.0],
+                                                                [10, 0.0],
+                                                                [10, 3.0],
+                                                                [0.0, 3.0]],
+                                                                isClosed=True,
+                                                 boundaryMarker=[1,2,3,4]),
+                          marker=1)
+
+        print(mesh.boundaryMarkers())
+        mesh.show(markers=True)
+        pg.wait()
+        #mesh.show(markers=True, showMesh=False)
+
+
 
 
     def test_createMesh3D(self):

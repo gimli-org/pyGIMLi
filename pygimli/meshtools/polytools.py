@@ -55,7 +55,7 @@ def _polyCreateDefaultEdges(poly, boundaryMarker=1, isClosed=True, **kwargs):
 
 def setPolyRegionMarker(poly, marker=1, area=0.0, markerPosition=None,
                         isHole=False, **kwargs):
-    """Internal to set region markers to single elementary geometry.
+    """Set region markers to single elementary geometry (internal).
 
     Internal to set region markers.
     If no absolute marker position is given.
@@ -305,10 +305,13 @@ def createWorld(start, end, marker=1, area=0., layers=None, worldMarkers=True,
                 **kwargs):
     """Create simple rectangular 2D or 3D world.
 
-    Create simple rectangular [hexagonal] world with appropriate boundary conditions.
+    Create simple rectangular [hexagonal] world with
+    appropriate boundary conditions.
     Surface boundary is set do pg.core.MARKER_BOUND_HOMOGEN_NEUMANN, i.e, -1
     and inner subsurface is set to pg.core.MARKER_BOUND_MIXED, i.e., -2 or
-    Numbered: 1, 2, 3, 4, 5, 6 for left, right, bottom, top, front and back, if worldMarkers is set to false and no layers are given. With layers, its numbered in ascending order.
+    Numbered: 1, 2, 3, 4, 5, 6 for left, right, bottom, top, front and back,
+    if worldMarkers is set to false and no layers are given. With layers,
+    its numbered in ascending order.
 
     TODO
     ----
@@ -328,7 +331,8 @@ def createWorld(start, end, marker=1, area=0., layers=None, worldMarkers=True,
     layers: [float] [None]
         List of depth coordinates for some layers.
     worldMarkers: bool [True]
-        Specify kind of preset boundary marker [-1, -2] or ascending order [1, 2, 3, 4 ..]
+        Specify kind of preset boundary marker [-1, -2] or
+        ascending order [1, 2, 3, 4 ..]
 
     Other Parameters
     ----------------
@@ -648,7 +652,7 @@ def createPolygon(pnts, isClosed=False, addNodes=0, interpolate='linear',
             Maximum cell size for resulting triangles after mesh generation
         isHole : bool [False]
             The polygon will become a hole instead of a triangulation
-        boundaryMarker : int [1] | [int]
+        boundaryMarker : int [1] | [int,]
             Marker for the resulting boundary edges.
             If boundaryMarker is a list, then the marker will be distributed
             in order of points.

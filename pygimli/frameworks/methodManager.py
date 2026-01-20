@@ -8,7 +8,7 @@ import numpy as np
 import pygimli as pg
 
 
-def fit(funct, data, err=None, **kwargs):
+def fit(func, data, err=None, **kwargs):
     """Fit generic function.
 
     Fit data to a given function.

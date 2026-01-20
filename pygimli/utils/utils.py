@@ -1002,12 +1002,15 @@ class Report(ScoobyReport):
 
 
 class Table(object):
-    """Simple table for nice formated output.
-    """
+    """Simple table for nice formated output."""
+
     def __init__(self, table, header=None, align=None, pn=None,
                  transpose:bool=None):
         """
         Create a simple but shiny table.
+
+        Forward to tabulate package for printing.
+        See: https://github.com/astanin/python-tabulate
 
         Arguments
         ---------
@@ -1140,9 +1143,30 @@ class Table(object):
             return '\n' + (self.table)
 
 
+    def format(self, fmt='plain'):
+        """Return string representation of the table in given format.
+
+        Parameters
+        ----------
+        fmt: str
+            Format style from tabulate package.
+
+        Returns
+        -------
+        s: str
+            String representation of the table.
+        """
+        from tabulate import tabulate
+
+        if self.header is None:
+            return '\n' + tabulate(self.table, tablefmt=fmt, **self.fmt) + '\n'
+
+        return '\n' + tabulate(self.table, headers=self.header,
+                               tablefmt=fmt, **self.fmt) + '\n'
+
+
     def _repr_html_(self):
-        """Return html representation for jupyter notebooks and
-        sphinx-gallery."""
+        """Return html representation for jupyter notebooks and sphinx-gallery."""
         if pg.isNotebook():
             from tabulate import tabulate
             #math works here
@@ -1156,8 +1180,7 @@ class Table(object):
 
 
     def _repr_rst_(self):
-        """Return restructured text representation for sphinx-gallery.
-        """
+        """Return restructured text representation for sphinx-gallery."""
         from textwrap import indent
 
         SG_RST_TABLE = """

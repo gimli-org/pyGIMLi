@@ -473,6 +473,7 @@ def createMeshFromSurface(mesh, norm=None):
 
     return ret
 
+
 def extrudeMesh(mesh, a, **kwargs):
     r"""Extrude mesh to a higher dimension.
 
@@ -550,8 +551,7 @@ def extrudeMesh(mesh, a, **kwargs):
 
 
 def convert(mesh, verbose=False):
-    """ Convert mesh from foreign formats.
-    """
+    """Convert mesh from foreign formats."""
     if str(type(mesh)) == "<class 'meshio._mesh.Mesh'>":
         return convertMeshioMesh(mesh, verbose=verbose)
     elif "subsurface" in str(type(mesh)):
@@ -561,7 +561,7 @@ def convert(mesh, verbose=False):
 
 
 def convertMeshioMesh(mesh, verbose=False):
-    """ Convert mesh from meshio object.
+    """Convert mesh from meshio object.
 
     See https://pypi.org/project/meshio/1.8.9/
 

@@ -1,6 +1,6 @@
 /******************************************************************************
- *   Copyright (C) 2006-2024 by the GIMLi development team                    *
- *   Carsten Rücker carsten@resistivity.net                                   *
+ *   Copyright (C) 2006-2026 by the GIMLi development team                    *
+ *   Carsten Rücker carsten@pygimli.org                                       *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
  *   you may not use this file except in compliance with the License.         *
@@ -107,7 +107,6 @@ DLLEXPORT stdVectorRVector trace(const stdVectorMatrixVector & a);
 
 DLLEXPORT RVector absR3(const R3Vector & vPos);
 
-
 //DLLEXPORT std::Vector< RVector > fabs(const std::vector < R3Vector > & v);
 
 DLLEXPORT void swapXY(R3Vector & rv);
@@ -129,6 +128,10 @@ DLLEXPORT R3Vector stdVectorR3VectorToR3Vector(const std::vector < RVector3 > & 
 
 /*! Temporary transformation vor R3Vector until std::vector < RVector3 > will be removed. */
 DLLEXPORT std::vector < RVector3 > R3VectorTostdVectorR3Vector(const R3Vector & rv);
+
+/*! Convert a vector of Node pointers to an R3Vector of positions */
+DLLEXPORT void toR3Vector(const std::vector< GIMLI::Node * > & nodes,
+                          R3Vector & vec);
 
 //! 3 dimensional vector
 /*! 3 dimensional vector */

@@ -71,6 +71,13 @@ else()
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Building python wheel package for ${TARGET_NAME}"
     )
+
+    # target that runs after the package build to locate the actual wheel file
+    add_custom_target(whl${TARGET_NAME}FindWheel DEPENDS whl${TARGET_NAME}PackageBuild "${PY_WHEELFILE}")
+
+    # Note: the located wheel filename (basename) is written into ${WHEEL_FINDER_OUT}.
+    # Other custom targets can read that file at build-time if needed (e.g. via a custom command that parses it).
+
     ### REPAIR the wheel
     if (OS_VAR STREQUAL "almalinux")
         add_custom_target(whl${TARGET_NAME}PackageRepair DEPENDS whl${TARGET_NAME}PackageBuild
@@ -88,7 +95,7 @@ else()
         add_custom_target(whl${TARGET_NAME} DEPENDS whl${TARGET_NAME}PackageRepair)
     elseif (OS_VAR STREQUAL "Darwin")
         add_custom_target(whl${TARGET_NAME}PackageRepair DEPENDS whl${TARGET_NAME}PackageBuild
-            COMMAND "delocate-wheel" -v ${WHEELHOUSE}/${PY_WHEELFILE}
+            COMMAND "delocate-wheel" repair ${WHEELHOUSE}/${PY_WHEELFILE}
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
             COMMENT "Repairing python wheel package at: ${CMAKE_BINARY_DIR}"
         )

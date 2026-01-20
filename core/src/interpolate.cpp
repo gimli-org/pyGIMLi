@@ -51,7 +51,7 @@ void interpolate(const Mesh & mesh, const RMatrix & vData,
     Cell * c = 0;
     for (uint i = 0; i < pos.size(); i ++) {
 //         __MS(pos[i])
-        c = mesh.findCell(pos[i], count, false);
+        c = mesh.findCell(pos[i], count, false, true);
 //         if (!c) {
 //             __MS(pos[i])
 // //             c = mesh.findCell(pos[i], count, true);

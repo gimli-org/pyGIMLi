@@ -1,6 +1,6 @@
 /******************************************************************************
- *   Copyright (C) 2006-2024 by the GIMLi development team                    *
- *   Carsten Rücker carsten@resistivity.net                                   *
+ *   Copyright (C) 2006-2026 by the GIMLi development team                    *
+ *   Carsten Rücker carsten@pygimli.org                                       *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
  *   you may not use this file except in compliance with the License.         *
@@ -20,6 +20,7 @@
 #include "matrix.h"
 #include "elementmatrixmap.h"
 #include "meshentities.h"
+#include "node.h"
 //#include "vectortemplates.h"
 
 namespace GIMLI{
@@ -350,6 +351,18 @@ std::vector < Pos > R3VectorTostdVectorR3Vector(const R3Vector & rv){
     for (Index i = 0; i < rv.size(); i ++) ret[i] = rv[i];
     return ret;
 }
+
+void toR3Vector(const std::vector< GIMLI::Node * > & nodes, R3Vector & vec){
+    vec.resize(nodes.size());
+    // std::transform(std::execution::par, // need C++17 and tests
+    //                nodes.begin(), nodes.end(),
+    //                vec.begin(),
+    //                [](const GIMLI::Node* node) { return node->pos(); });
+    // compare with serial for loop version
+    std::transform(nodes.begin(), nodes.end(), vec.begin(),
+                   [](const GIMLI::Node* n) { return n->pos(); });
+}
+
 
 RVector3 RVector3::cross(const Pos & p) const{
 //     r[0] = (a2 * b3 - a3 * b2);

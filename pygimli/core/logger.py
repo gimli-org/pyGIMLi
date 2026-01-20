@@ -250,10 +250,6 @@ def d(funct):
     return wrapper
 
 
-def verbose():
-    return __verbose_level__
-
-
 def setDebug(d):
     level = logging.INFO
     if d:
@@ -292,23 +288,28 @@ def debug(*args, withTrace=False):
     logger.debug(_msg(*args))
 
 
-def verbose(*args):   # isn't this a refinition of line 253?
+def verbose(*args):
     logger.verbose(_msg(*args))
 
 
 def critical(*args):
-    """ First or last argument can be an exception
-    """
+    """First or last argument can be an exception."""
     if len(args) > 1 and isinstance(args[0], type(Exception)):
         e = args[0](_msg(*args[1:]))
-        if len(args) > 1:
-            e.add_note(args[1])
+        try:
+            if len(args) > 1:
+                e.add_note(args[1])
+        except Exception:
+            pass
         raise e
 
     if len(args) > 0 and isinstance(args[-1], type(Exception)):
         e = args[-1](_msg(*args[:-1]))
-        if len(args) > 2:
-            e.add_note(args[0])
+        try:
+            if len(args) > 2:
+                e.add_note(args[0])
+        except Exception:
+            pass
         raise e
 
     logger.critical(whereAmI(nr=2) + "\n" + _msg(*args))
@@ -331,6 +332,7 @@ def deprecated(msg='', hint=''):
 
 def renameKwarg(old, new, kwargs, ver=''):
     """Keyword argument old is renamed into keyword argument new.
+
     Look in kwargs if the old name is used and change the key name.
     """
     if old in kwargs:
@@ -341,6 +343,7 @@ def renameKwarg(old, new, kwargs, ver=''):
 
 def renameArg(old, new, kwargs, default, ver=''):
     """Argument old is renamed into new.
+
     Look in kwargs if the old name is used and return these value or the default.
     """
     if old in kwargs:
@@ -352,6 +355,7 @@ def renameArg(old, new, kwargs, default, ver=''):
 
 
 def warnNonEmptyArgs(kwargs):
+    """Warn if kwargs is not empty."""
     if len(kwargs) > 0:
         logger.warning(whereAmI() +
                        "Unrecognized keyword arguments for method:" +

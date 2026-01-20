@@ -405,12 +405,18 @@ public:
 
     /*! Return ptr to the cell that match position pos, counter holds amount of touch tests.
         Searching is done first by nearest-neighbor-kd-tree search,
-        followed by slope-search if extensive is set. Return NULL if no cell can be found. */
-    Cell * findCell(const RVector3 & pos, size_t & counter, bool extensive) const ;
+        followed by slope-search if extensive is set. Return NULL if no cell can be found.
+        If nearest set to True. Return the nearest cell.*/
+    Cell * findCell(const RVector3 & pos, size_t & counter, bool extensive,
+                    bool nearest) const ;
 
     /*! Shortcut for \ref findCell(const RVector3 & pos, size_t & counter, bool extensive) */
     Cell * findCell(const RVector3 & pos, bool extensive=true) const {
-        size_t counter; return findCell(pos, counter, extensive); }
+        size_t counter; return findCell(pos, counter, extensive, false); }
+
+    /*! Return ptr to the cell that match position pos by
+    nearest-neighbor-kd-tree search.*/
+    Cell * findNearestCell(const RVector3 & pos) const;
 
     /*! Return the index to the node of this mesh with the smallest distance to pos. */
     Index findNearestNode(const RVector3 & pos);

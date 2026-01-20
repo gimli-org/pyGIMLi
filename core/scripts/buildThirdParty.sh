@@ -460,7 +460,6 @@ buildBOOST(){
         echo "copying sourcetree into build: $BOOST_BUILD"
         cp -r $BOOST_SRC $BOOST_BUILD
     fi
-    
     pushd $BOOST_BUILD
         echo "Try to build b2 for TOOLSET: $B2TOOLSET"
 

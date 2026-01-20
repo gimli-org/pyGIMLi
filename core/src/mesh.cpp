@@ -904,7 +904,7 @@ Cell * Mesh::findCellBySlopeSearch_(const RVector3 & pos, Cell * start,
 }
 
 Cell * Mesh::findCell(const RVector3 & pos, size_t & count,
-                      bool extensive) const {
+                      bool extensive, bool nearest) const {
     bool bruteForce = false;
     Cell * cell = NULL;
 
@@ -943,10 +943,21 @@ Cell * Mesh::findCell(const RVector3 & pos, size_t & count,
 
         if (!refNode->cellSet().empty()){
 
+            Cell * nearestCell = NULL;
+            double nearestDist = MAX_DOUBLE;
             for (auto *c: refNode->cellSet()){
                 //std::cout << c->id() << std::endl;
                 //** isInside useing shapefunctions only work for aligned dimensions
+                double dist = c->shape().center().distSquared(pos);
+                if (dist < nearestDist){
+                    nearestDist = dist;
+                    nearestCell = c;
+                }
+
                 if (c->shape().isInside(pos, false)) return c;
+            }
+            if (nearest == true){
+                return nearestCell;
             }
 
             //         exportVTK("slopesearch");
@@ -983,6 +994,16 @@ Cell * Mesh::findCell(const RVector3 & pos, size_t & count,
     }
     return cell;
 }
+
+Cell * Mesh::findNearestCell(const RVector3 & pos) const{
+    Index count = 0;
+    Cell *cell = Mesh::findCell(pos, count, false, false);
+    if (!cell) {
+        cell =  Mesh::findCell(pos, count, false, true);
+    }
+    return cell;
+}
+
 
 std::vector < Cell * > Mesh::findCellsAlongRay(const RVector3 & start,
                                                const RVector3 & dir,
@@ -2582,7 +2603,7 @@ void Mesh::interpolationMatrix(const PosVector & q, RSparseMapMatrix & I){
     RVector cI;
 
     for (Index i = 0; i < q.size(); i ++ ){
-        c = this->findCell(q[i], count, false);
+        c = this->findCell(q[i], count, false, false);
         if (c){
             cI.resize(c->nodeCount());
             c->N(c->shape().rst(q[i]), cI);

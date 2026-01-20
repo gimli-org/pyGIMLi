@@ -113,8 +113,7 @@ def show(obj=None, data=None, **kwargs):
         ### data need to be evaluated
         if hasattr(obj, 'eval'):
             if obj.mesh.dim() > 1:
-                return pg.show(obj.mesh, obj.eval(),
-                               **kwargs)
+                return pg.show(obj.mesh, obj.eval(), **kwargs)
             else:
                 return show1D(obj.mesh, obj, **kwargs)
 
@@ -155,8 +154,7 @@ def show(obj=None, data=None, **kwargs):
         _removeFigHeader(ax)
         return ax, None
 
-
-    # try to interprete obj as mesh or list of meshes
+    # try to interpret obj as mesh or list of meshes
     mesh = kwargs.pop('mesh', obj)
 
     fitView = kwargs.get('fitView', True)
@@ -290,24 +288,23 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
     -----------------
     xl: str ["$x$ in m"]
         Add label to the x axis. Default is '$x$ in m'
-
     yl: str [None]
         Add label to the y axis. Default is '$y$ in m' or 'Depth in m' with
         world boundary markers.
-
+    lw: float [0.3]
+        Linewidth for mesh drawing (no boundaries).
+    lwb: float [1.4]
+        Linewidth for boundary drawing.
     fitView: bool
         Fit the axes limits to the all content of the axes. Default True.
-
     boundaryProps: dict
         Arguments for plot boundary.
-
     hold: bool [pg.hold()]
         Holds back the opening of the Figure.
         If set to True [default] nothing happens until you either force another
         show with hold=False or block=True or call pg.wait() or pg.plt.show().
         If hold is set to False your script will open the figure and continue
         working. You can change global hold with pg.hold(bool).
-
     axisLabels: bool [True]
         Set x/yLabels for ax. X will be "$x$ in m" and "$y$ in m".
         Y ticks change to depth values for a mesh with world
@@ -372,7 +369,7 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
         ud = pg.unique(data)
         levs = kwargs['levels']
         if len(ud) == len(levs) and ud == levs:
-            kwargs["boundaryMarkers"] = kwargs.get("boundaryMarkers", False)
+            kwargs.setdefault("boundaryMarkers", False)
 
             uniquemarkers, uniqueidx = np.unique(np.array(data),
                                                  return_inverse=True)
@@ -380,14 +377,14 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
             markers = True
 
     if markers:
-        kwargs["boundaryMarkers"] = kwargs.get("boundaryMarkers", True)
+        kwargs.setdefault("boundaryMarkers", True)
 
         if mesh.cellCount() > 0:
             if uniquemarkers is None:
                 uniquemarkers, uniqueidx = np.unique(
                                                 np.array(mesh.cellMarkers()),
                                                 return_inverse=True)
-                label = "Cell markers"
+                label = "Cell markers" if label is None else label
 
             if cMap == 'viridis':
                 cMap = "Set3"
@@ -502,7 +499,7 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                 # kwargs as reference here to set defaults valid outside too
 
                 validData = True
-                if len(data) == 2:
+                if data.ndim == 2 and len(data) == 2:
                     return _drawField(ax, mesh, np.array(data).T, **kwargs)
 
                 if len(data) == mesh.cellCount():
@@ -579,23 +576,19 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
             gci.set_antialiased(True)
             gci.set_linewidth(0.3)
             gci.set_edgecolor(kwargs.pop('color', "0.1"))
-            #drawMesh(ax, mesh, lw=0.3, **kwargs)
-        #else:
 
         if mesh.dim() == 1:
             return show1D(mesh, None, showMesh=True, ax=ax)
 
-        drawMesh(ax, mesh, lw=0.3, **kwargs)
-        # pg.viewer.mpl.drawSelectedMeshBoundaries(ax,
-        #         mesh.boundaries(),
-        #         color=kwargs.pop('color', "0.1"),
-        #         linewidth=kwargs.pop('lw', 0.3))
+        kwargs.setdefault('lw', 0.3)
+        drawMesh(ax, mesh, **kwargs)
 
     if bool(showBoundary) is True:
         b = mesh.boundaries(mesh.boundaryMarkers() != 0)
+        kwargs.setdefault('lwb', 1.4)
         pg.viewer.mpl.drawSelectedMeshBoundaries(ax, b,
                                                  color=(0.0, 0.0, 0.0, 1.0),
-                                                 linewidth=1.4)
+                                                 linewidth=kwargs.get('lwb'))
 
     if kwargs.pop("boundaryMarkers", False):
         pg.viewer.mpl.drawBoundaryMarkers(ax, mesh,
@@ -750,11 +743,15 @@ def show1D(mesh, obj, **kwargs):
     kwargs.pop('fitView', None)
 
     ax = kwargs.pop('ax', None)
+
     newAxe = False
 
     if ax is None:
         newAxe = True
         ax = pg.show()[0]
+
+    if 'title' in kwargs:
+        ax.set_title(kwargs.pop('title'))
 
     if hasattr(obj, 'eval'):
         x = pg.sort(pg.x(mesh))

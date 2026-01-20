@@ -424,7 +424,7 @@ def timings(name='/'):
             for n, tc in tree[row[0]].childs.items():
                 try:
                     row[-1] -= tc.data
-                except:
+                except BaseException:
                     pass
 
             #row[-1] = f'{pf(row[-1])} {str(int(row[-1]/maxTime*100)).rjust(2)}'
