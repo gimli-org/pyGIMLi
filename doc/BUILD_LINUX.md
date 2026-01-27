@@ -29,11 +29,9 @@ The workflow have several targets which you might try:
 
 If something goes wrong you can try the manual compilation.
 
-
 ## Manual compiling with a virtual environment
 
-If you don't want to use the conda environment we encourage the use of a
-virtual python environment.
+If you don't want to use the conda environment we encourage the use of a virtual environment.
 Assuming you have a proper build toolchain and the required libraries (see Installation on Ubuntu below) installed.
 
 First we need to create a root directory for our installation,
@@ -107,6 +105,7 @@ Last try on Ubuntu 22.04.03 (23-11-14)
                  libomp-dev doxygen \
                  libcppunit-dev clang
 ```
+
 Rest see above.
 
 ## Useful cmake settings
@@ -119,16 +118,19 @@ CLEAN=1 cmake ../gimli
 ```
 
 Use an alternative C++ compiler:
+
 ```bash
 CC=clang CXX=clang++ cmake ../gimli
 ```
 
 Build the library with debug and profiling flags:
+
 ```bash
 cmake ../gimli -DCMAKE_BUILD_TYPE=Debug
 ```
 
 Build the library with GCC address sanitizer check:
+
 ```bash
 cmake ../gimli -DCMAKE_BUILD_TYPE=Debug -DASAN=1
 ```
@@ -136,6 +138,7 @@ cmake ../gimli -DCMAKE_BUILD_TYPE=Debug -DASAN=1
 ## Useful make commands
 
 Show more verbose build output:
+
 ```bash
 make VERBOSE=1
 ```

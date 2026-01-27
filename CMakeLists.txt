@@ -864,7 +864,6 @@ add_subdirectory(core/tests EXCLUDE_FROM_ALL)
 
 add_subdirectory(core/python EXCLUDE_FROM_ALL)
 add_subdirectory(core/pgcore)
-add_subdirectory(pygimli)
 
 add_custom_target(check)
 if (CPPUNIT_FOUND)

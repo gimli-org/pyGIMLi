@@ -11,7 +11,6 @@ from pygimli.viewer.mpl.colorbar import cmapFromName
 
 pv = pg.optImport('pyvista', requiredFor="properly visualize 3D data")
 
-
 def drawMesh(ax, mesh, notebook=False, **kwargs):
     """Draw a mesh into a given plotter.
 

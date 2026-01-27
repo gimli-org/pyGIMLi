@@ -3,12 +3,11 @@ import pygimli as pg
 
 
 class IPSeigelModelling(pg.frameworks.MeshModelling):
-    """DC/IP modelling class using an (FD-based) approach."""
+    """DC/IP modelling class using an FD-based approach."""
 
     def __init__(self, f, mesh, rho, verbose=False, response=None):
         """Init class with DC forward operator and resistivity vector."""
         super().__init__(mesh=mesh, verbose=verbose)
-        # self.setMesh(mesh)
         self.f = f
         self.rhoDC = rho  # DC resistivity
         self.rhoAC = rho * 1  # AC resistivity
@@ -97,11 +96,17 @@ class DCIPMModelling(pg.frameworks.MeshModelling):
         if self.fullJacobian:
             self.dmdrhoa = -1.0 / self.rhoaAC
 
-        return pg.abs(1.0 - self.rhoaAC / self.rhoaDC)
+        return 1.0 - self.rhoaAC / self.rhoaDC
+        # return pg.abs(1.0 - self.rhoaAC / self.rhoaDC)
 
-    # RhoAC = RhoDC * (1-m) => dRhoa / m = dRhoa/dRho * dRho/m = JDC * (-RhoDC)
     def createJacobian(self, model):
-        """Create jacobian matrix using unchanged DC jacobian and m model."""
+        """Create jacobian matrix using unchanged DC jacobian and m model.
+
+        From the approximation
+        RhoAC = RhoDC * (1-m)
+        it follows
+        dRhoaAC / dm = dRhoaAC/dRhoAC * dRhoAC/m = JDC * (-RhoDC)
+        """
         if self.fullJacobian:
             self.rhoAC = self.rhoDC * (1 - model)
             self.J.right = -self.rhoAC

@@ -91,7 +91,6 @@ def showMesh3DVistaProcess(mesh, data=None, **kwargs):
     # For sphinx builds and non-interactive agg backend
     if not notebook and not pg.viewer.mpl.isInteractive():
         notebook = False
-        kwargs["backend"] = None
 
     gui = kwargs.pop("gui", False)
 
@@ -99,8 +98,6 @@ def showMesh3DVistaProcess(mesh, data=None, **kwargs):
     if gui:
         pg.error("pyqt show gui currently not maintained")
         return None
-
-    backend = kwargs.pop("backend", "client")
 
     plotter = drawModel(kwargs.pop("ax", None), mesh,
                         data, notebook=notebook,
@@ -110,31 +107,19 @@ def showMesh3DVistaProcess(mesh, data=None, **kwargs):
     if kwargs.get("aa", False):
         plotter.enable_anti_aliasing()
 
-    if not hasattr(plotter, '__show'):
+    if notebook and trame and not pyvista.BUILDING_GALLERY:
         # monkeypatch show of this plotter instance so we can use multiple
-        # backends and only use plotter.show(), allows skip show (for testing)
-        # whoever this needs.
+        # backends and only plotter.show() .. whoever this needs.
         if not hasattr(plotter, "__show"):
             pyvista.set_new_attribute(plotter, "__show", plotter.show)
         plotter.show = lambda *args, **kwargs: plotter.__show(
-            *args, jupyter_backend=backend, **kwargs
-        )
-    elif pg.viewer.mpl.isInteractive():
+            *args, jupyter_backend="trame", **kwargs)
+
+    elif pyvista.BUILDING_GALLERY:
         if not hasattr(plotter, "__show"):
             pyvista.set_new_attribute(plotter, "__show", plotter.show)
-        plotter.show = (
-            lambda *args, **kwargs: plotter.__show(*args, **kwargs)
-            if pg.viewer.mpl.isInteractive() or pyvista.BUILDING_GALLERY
-            else False
-        )
-    else:
-        ## on default skip showing if forced, e.g., by test with show=False
-        if not hasattr(plotter, "__show"):
-            pyvista.set_new_attribute(plotter, "__show", plotter.show)
-        plotter.show = (
-            lambda *args, **kwargs: plotter.__show(*args, **kwargs)
-            if pg.rc['pyvista.backend'] is not None else False
-        )
+        plotter.show = lambda *args, **kwargs: plotter.__show(
+            *args, jupyter_backend="html", **kwargs)
 
     if hold is False:
         plotter.show()

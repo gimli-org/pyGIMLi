@@ -27,7 +27,6 @@ CLASSIFIERS = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
     "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering",
 ]
 
 setup(
@@ -48,7 +47,7 @@ setup(
     },
     license="Apache 2.0",
     keywords=["inversion", "modelling", "geophysics"],
-    install_requires=['numpy<2.3,>=1.23.5',
+    install_requires=['numpy>=2',
                       ],
     distclass=BinaryDistribution,
     classifiers=CLASSIFIERS,

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Model viewer functions."""
 import numpy as np
 
@@ -8,6 +7,18 @@ from pygimli.utils import rndig
 from .colorbar import setMappableData
 from .utils import updateAxes as updateAxes_
 
+
+def showModel1D(*args, **kwargs):
+    """Show 1D model."""
+    if "ax" in kwargs:
+        ax = kwargs.pop("ax")
+    else:
+        import matplotlib.pyplot as plt
+        _, ax = plt.subplots()
+
+    drawModel1D(ax, *args, **kwargs)
+    ax.invert_yaxis()
+    return ax, _
 
 def drawModel1D(ax, thickness=None, values=None, model=None, depths=None,
                 plot='plot',
@@ -77,16 +88,13 @@ def drawModel1D(ax, thickness=None, values=None, model=None, depths=None,
         values = model[nLayers:]
 
     if thickness is None and depths is None:
-        raise Exception("Either thickness or depths must be given.")
+        raise AttributeError("Either thickness or depths must be given.")
 
     nLayers = len(values)
     px = np.zeros(nLayers * 2)
     pz = np.zeros(nLayers * 2)
 
-    if thickness is not None:
-        z1 = np.cumsum(thickness) + z0
-    else:
-        z1 = depths
+    z1 = np.cumsum(thickness) + z0 if thickness is not None else depths
 
     for i in range(nLayers):
         px[2 * i] = values[i]
@@ -117,6 +125,9 @@ def drawModel1D(ax, thickness=None, values=None, model=None, depths=None,
         ax.set_ylim(pz[-1], pz[0])
 
     ax.grid(True)
+
+
+showModel1D.__doc__ += drawModel1D.__doc__
 
 
 def draw1DColumn(ax, x, val, thk, width=30, ztopo=0, cMin=1, cMax=1000,
@@ -243,6 +254,7 @@ def showStitchedModels(models, ax=None, x=None, cMin=None, cMax=None, thk=None,
         vector of elevation for shifting
     thk : iterable
         vector of layer thicknesses for all models
+
     Returns
     -------
     ax : matplotlib axes [None - create new]
@@ -347,8 +359,7 @@ def draw1dmodel(x, thk=None, xlab=None, zlab="z in m", islog=True, z0=0):
 
 def show1dmodel(x, thk=None, xlab=None, zlab="z in m", islog=True, z0=0,
                 **kwargs):
-    """Show 1d block model defined by value and thickness vectors.
-    """
+    """Show 1d block model defined by value and thickness vectors."""
     pg.error("rename after naming convention, don't use plt")
     pg.critical("STYLE_WARNING!!!!!!! don't use this call. "
           "WHO use this anymore??.")

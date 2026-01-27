@@ -5,20 +5,24 @@
 # leave any virtual environment
 deactivate 2>/dev/null || true
 
-function BLUE(){
-    echo -e '\033[0;34;49m'
+function green(){
+    # green message
+    echo -e '\033[0;32m'$1'\033[0m'
 }
-function GREEN(){
-    echo -e '\033[0;32m'
+
+function blue(){
+    # blue message
+    echo -e '\033[0;34;49m'$1'\033[0m'
 }
-function YELLOW(){
-    echo -e '\033[0;33;49m'
+
+function yellow(){
+    # yellow message
+    echo -e '\033[0;33;49m'$1'\033[0m'
 }
-function RED(){
-    echo -e '\033[0;31;49m'
-}
-function NCOL(){
-    echo -e '\033[0m'
+
+function red(){
+    # red message
+    echo -e '\033[0;31;49m'$1'\033[0m'
 }
 
 if [[ $- == *i* ]]; then
@@ -36,19 +40,16 @@ else
 fi
 
 if [ ! -z "$VIRTUAL_ENV" ]; then
-    RED
-    echo "active virtual environment $VIRTUAL_ENV : leave first"
-    echo "call deactivate"
-    NCOL
+    red "Active virtual environment $VIRTUAL_ENV - leave first"
+    red "Please call 'deactivate'"
     return
 fi
 
 function use_venv(){
     local venv_path=$1
     if [ -d $venv_path ]; then
-        GREEN
-        echo "Activating virtual environment $venv_path"
-        NCOL
+        green "Activating virtual environment $venv_path"
+
         if [ $OS == "Windows" ] || [ $OS == "Windows_NT" ]; then
             # windows
             source $venv_path/Scripts/activate
@@ -57,9 +58,7 @@ function use_venv(){
             source $venv_path/bin/activate
         fi
     else
-        GREEN
-        echo "Virtual environment $venv_path does not exist. Creating it."
-        NCOL
+        green "Virtual environment $venv_path does not exist. Creating it."
         new_venv $venv_path
     fi
 }
@@ -67,9 +66,7 @@ function use_venv(){
 
 function new_venv(){
     local venv_path=$1
-    GREEN
-    echo "Creating fresh virtual environment $venv_path"
-    NCOL
+    green "Creating fresh virtual environment $venv_path"
     $BASEPYTHON --version
     deactivate 2>/dev/null || true
 
@@ -85,15 +82,11 @@ function new_venv(){
 
 function testReport(){
     if [ -n "$VIRTUAL_ENV" ]; then
-        GREEN
-        echo "Testing build in active virtual environment: $VIRTUAL_ENV"
-        echo "Python: $(python -V 2>&1) ($(python -c 'import sys; print(sys.executable)'))"
-        NCOL
+        green "Testing build in active virtual environment: $VIRTUAL_ENV"
+        green "Python: $(python -V 2>&1) ($(python -c 'import sys; print(sys.executable)'))"
     else
-        YELLOW
-        echo "No active virtual environment."
-        echo "Python: $(python -V 2>&1) ($(python -c 'import sys; print(sys.executable)'))"
-        NCOL
+        yellow "No active virtual environment."
+        yellow "Python: $(python -V 2>&1) ($(python -c 'import sys; print(sys.executable)'))"
     fi
 
     python -c 'import pygimli; print(pygimli.version())'
@@ -102,9 +95,7 @@ function testReport(){
 
 
 function clean(){
-    GREEN
-    echo "*** Cleaning ...                 ***"
-    NCOL
+    green "*** clean  (Remove old build artifacts) ***"
 
     pushd $PROJECT_ROOT
         echo "clear pygimli cache"
@@ -129,18 +120,37 @@ function clean(){
 
 
 function build_pre(){
-    GREEN
-    echo "*** build_pre (Prepare building environment) ***"
-    NCOL
-
+    green "*** build_pre (Prepare building environment) ***"
     ## clean previous build, dist, and doc artifacts
     clean
 
     pushd $PROJECT_ROOT
         new_venv $VENV_BUILD
 
-        echo "uv pip install -e $PROJECT_SRC/[build]"
-        uv pip install -e $PROJECT_SRC/[build]
+        # this prevents pgcore being in dependencies since it can't be resolved
+        # for new platforms or new python versions. Maybe add manual installation
+        # of build prerequisites here if necessary.
+
+        echo "Check if pgcore can be installed from PyPI"
+        if uv pip install pgcore --dry-run 2>/dev/null; then
+            green "pgcore is available on PyPI"
+            echo "uv pip install -e $PROJECT_SRC/[build]"
+            uv pip install -e $PROJECT_SRC/[build]
+        else
+            yellow "pgcore is not available for the $PYVERSION platform ${OS} on PyPI."
+            yellow "Installing build dependencies manually"
+
+            uv pip install "setuptools>=75.8.2"
+            uv pip install "numpy>=2.1.3"
+            uv pip install "pygccxml"
+            uv pip install "pyplusplus"
+            uv pip install build twine wheel
+            uv pip install "auditwheel; sys_platform == 'linux'"
+            uv pip install "delvewheel; sys_platform == 'win32'"
+            uv pip install "delocate; sys_platform == 'darwin'"
+            uv pip install "scooby"
+        fi
+
         rm -rf $BUILD_DIR
         mkdir -p $BUILD_DIR
     popd
@@ -148,14 +158,10 @@ function build_pre(){
 
 
 function build(){
-    GREEN
-    echo "*** build (Building now ...) ***"
-    NCOL
+    green "*** build (Building now ...) ***"
 
     if [ ! -d $BUILD_DIR ]; then
-        YELLOW
-        echo "BUILD_DIR: $BUILD_DIR not found. Preparing now (build_pre)."
-        NCOL
+        yellow "BUILD_DIR: $BUILD_DIR not found. Preparing now (build_pre)."
         build_pre
     fi
 
@@ -171,6 +177,7 @@ function build(){
 
                 ### MacOS configuration
                 echo "MacOS build with custom openblas and umfpack/cholmod paths. Expecting \$CMAKE_PREFIX to be set."
+                CMAKE_PREFIX=/Users/fwagner/miniforge3
                 cmake \
                     -DNOREADPROC=1 \
                     -DBLAS_openblas_LIBRARY=$CMAKE_PREFIX/lib/libopenblas.dylib \
@@ -195,156 +202,169 @@ function build(){
 
 
 function build_whls(){
-    GREEN
-    echo "*** build_wheels (Building wheels now ...) ***"
-    NCOL
+    green "*** build_wheels (Building wheels now ...) ***"
 
     if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
         LIBGIMLI=$(ls $BUILD_DIR/bin/libgimli.dll | head -n 1)
         echo "Checking for libgimli in $BUILD_DIR/bin: $LIBGIMLI"
+
     elif [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
         LIBGIMLI=$(ls $BUILD_DIR/lib/libgimli.dylib | head -n 1)
         echo "Checking for libgimli in $BUILD_DIR/lib: $LIBGIMLI"
+
     else
         LIBGIMLI=$(ls $BUILD_DIR/lib/libgimli.so | head -n 1)
         echo "Checking for libgimli in $BUILD_DIR/lib: $LIBGIMLI"
+
     fi
 
     if [ -z $LIBGIMLI ]; then
-        YELLOW
-        echo "libgimli not found in $BUILD_DIR/lib. Building now (build)."
-        NCOL
+        yellow "libgimli not found in $BUILD_DIR/lib. Building now (build)."
         build
     else
-        GREEN
-        echo "libgimli found: $LIBGIMLI."
-        NCOL
+        green "libgimli found: $LIBGIMLI."
     fi
 
     pushd $PROJECT_ROOT
         use_venv $VENV_BUILD
 
+        WHEELHOUSE=$BUILD_DIR/wheelhouse
+        mkdir -p $WHEELHOUSE
+        mkdir -p $BUILD_DIR/dist/
+
+        # ### create pygimli wheel
+        pushd $PROJECT_SRC
+            rm -rf build/ dist/ *.egg-info/
+            python -m build --wheel --no-isolation --outdir $BUILD_DIR/dist/
+        popd
+
         pushd $BUILD_DIR
 
-        # create pgcore wheel
+            # create pgcore wheel
             make whlpgcoreCopyLibs
 
             pushd $BUILD_DIR/core/pgcore
-                WHEELHOUSE=$BUILD_DIR/wheelhouse
-                mkdir -p $WHEELHOUSE
-                mkdir -p $BUILD_DIR/dist/
 
                 python -m pip wheel --wheel-dir=$WHEELHOUSE .
 
-                WHLFILE=$(ls $WHEELHOUSE/pgcore*.whl | head -n 1)
+                WHLFILE=$(ls -t $WHEELHOUSE/pgcore*.whl | head -n 1)
 
-                if [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
-                    BLUE
-                    echo "Repairing pgcore whl for MacOS ($WHLFILE)"
-                    NCOL
-                    delocate-wheel -v $WHLFILE
-
-                elif [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
-                    BLUE
-                    echo "Repairing pgcore whl for Windows ($WHLFILE)"
-                    NCOL
-                    delvewheel repair $WHLFILE --add-path $BUILD_DIR/bin/
+                if [ ! -z "$AUDITWHEEL_POLICY" ] && [ ! -z "$AUDITWHEEL_PLAT" ] ; then
+                    blue "Repairing pgcore whl for $AUDITWHEEL_POLICY ($WHLFILE)"
+                    auditwheel repair $WHLFILE -w $BUILD_DIR/dist/
 
                 else
-                    BLUE
-                    echo "Repairing pgcore whl for Linux ($WHLFILE)"
-                    NCOL
-                    echo "Build pgcore whl for Linux"
+                    if [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
+                        blue "Repairing pgcore whl for $OS ($WHLFILE)"
+                        delocate-wheel -v $WHLFILE
+                        green "Copying pgcore whl ($WHLFILE) to build dist $BUILD_DIR/dist/"
+                        cp $WHLFILE $BUILD_DIR/dist/
+
+                    elif [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
+                        blue "Repairing pgcore whl for $OS ($WHLFILE)"
+                        delvewheel repair $WHLFILE --add-path $BUILD_DIR/bin/ -w $BUILD_DIR/dist/
+
+                    else
+                        yellow "Unknown OS ($OS) for repairing pgcore whl."
+                        green "Copying pgcore whl ($WHLFILE) to build dist $BUILD_DIR/dist/"
+                        cp $WHLFILE $BUILD_DIR/dist/
+                    fi
                 fi
             popd
-
-            GREEN
-            echo "Copying pgcore whl ($WHLFILE) to build dist $BUILD_DIR/dist/"
-            cp $WHLFILE $BUILD_DIR/dist/
-            NCOL
-        popd
-
-        ### create pygimli wheel
-        pushd $PROJECT_SRC
-            python -m build --wheel --no-isolation --outdir $BUILD_DIR/dist/
         popd
     popd
 }
 
 
+function install_WHL_E(){
+    opt=$1
+    green "*** install pygimli $opt from whl files (editable) ***"
+
+    pushd $PROJECT_ROOT
+        uv pip install $PROJECT_DIST/pgcore*.whl
+        uv pip install --editable $PROJECT_SRC$opt
+    popd
+    testReport
+}
+
+
+function install_WHL(){
+    opt=$1
+    green "*** install pygimli $opt from whl files (non editable) ***"
+
+    pushd $PROJECT_ROOT
+        uv pip uninstall pygimli pgcore
+        uv pip install --force-reinstall $PROJECT_DIST/pgcore*.whl
+        WHLFILE=$(ls -t $PROJECT_DIST/pygimli*.whl | head -n 1)
+        uv pip install "$WHLFILE$opt"
+    popd
+    testReport
+}
+
+
 function build_post(){
-    GREEN
-    echo "*** build_post (Testing build) ***"
-    NCOL
+    green "*** build_post (Testing build) ***"
 
     PGCORE_WHL=$(ls $BUILD_DIR/dist/pgcore*.whl | head -n 1)
     PG_WHL=$(ls $BUILD_DIR/dist/pygimli*.whl | head -n 1)
 
     if [ -z $PGCORE_WHL ] || [ -z $PG_WHL ]; then
-        YELLOW
-        echo "pgcore or pygimli whl's not found in $BUILD_DIR/dist. Building now (build_whls)"
-        NCOL
+        yellow "pgcore or pygimli whl's not found in $BUILD_DIR/dist. Building now (build_whls)"
         build_whls
     else
-        GREEN
-        echo "Whl's found in build dist:"
-        echo -e "\t pgcore: $PGCORE_WHL"
-        echo -e "\t pygimli: $PG_WHL"
-        NCOL
+        green "Whl's found in build dist:"
+        green "\t pgcore: $PGCORE_WHL"
+        green "\t pygimli: $PG_WHL"
     fi
 
     pushd $PROJECT_ROOT
-        use_venv $VENV_BUILD
-
-        # special case for windows .. pgcore install to ensuse mingw runtime libs are found
-        if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
-            # windows MSYS2
-            uv pip install $BUILD_DIR/dist/pgcore*.whl
-        fi
-
-        testReport
-
         mkdir -p $PROJECT_DIST
 
-        GREEN
-        echo "Copying built whl files to project dist: $PROJECT_DIST"
-        NCOL
+        green "Copying built whl files to project dist: $PROJECT_DIST"
+
         cp $BUILD_DIR/dist/pgcore*.whl $PROJECT_DIST/
         cp $BUILD_DIR/dist/pygimli*.whl $PROJECT_DIST/
+
+        if [ -d $PROJECT_ROOT/dist-manylinux ]; then
+            blue "Copying built whl files to manylinux dist: $PROJECT_ROOT/dist-manylinux"
+            cp $BUILD_DIR/dist/pgcore*.whl $PROJECT_ROOT/dist-manylinux/
+        fi
+
+        # test editable whl install
+        use_venv $VENV_BUILD
+        install_WHL_E [build]
+
+        # test whl install
+        use_venv $VENV_BUILD'_WHL'
+        install_WHL
+        deactivate
+        rm -rf $VENV_BUILD'_WHL'
+
     popd
 }
 
 
-function test_pre(){
-    GREEN
-    echo "*** test_pre (Prepare testing environment) ***"
-    NCOL
-
+function need_build_post(){
     if [ ! -f $PROJECT_DIST/pgcore*.whl ]; then
-        YELLOW
-        echo "pgcore wheel not found in project dist. Building first. (build_post)"
-        NCOL
+        yellow "pgcore wheel not found in project dist. Building first. (build_post)"
         build_post
     fi
+}
+
+
+function test_pre(){
+    green "*** test_pre (Prepare testing environment) ***"
+    need_build_post
 
     pushd $PROJECT_ROOT
         new_venv $VENV_TEST
-        # not needed to install pgcore in editable after build for linux
-
-        # special case for windows .. pgcore install to ensuse mingw runtime libs are found
-        if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
-            # windows MSYS2
-            uv pip install $PROJECT_DIST/pgcore*.whl
-        fi
-        uv pip install -e $PROJECT_SRC/[test]
+        install_WHL_E [test]
     popd
 }
 
 
 function test(){
-    GREEN
-    echo "*** test (Testing now ...) ***"
-    NCOL
+    green "*** test (Testing now ...) ***"
 
     pushd $PROJECT_ROOT
         if [ ! -d $VENV_TEST ]; then
@@ -360,44 +380,24 @@ function test(){
 
 
 function doc_pre(){
-    GREEN
-    echo "*** doc_pre (Preparing documentation ...) ***"
-    NCOL
-
-    if [ ! -f $PROJECT_DIST/pgcore*.whl ]; then
-        YELLOW
-        echo "pgcore wheel not found in project dist. Building first. (build_post)"
-        NCOL
-        build_post
-    fi
+    green "*** doc_pre (Preparing documentation ...) ***"
+    need_build_post
 
     pushd $PROJECT_ROOT
         new_venv $VENV_DOC
-
-        # TODO find a way to install the whl file with optional deps
-        uv pip install $PROJECT_SRC/[doc]
-        uv pip uninstall pygimli ## remove rudimentary pygimli in doc venv
-        uv pip install --force-reinstall $PROJECT_DIST/pgcore*.whl
-        uv pip install $PROJECT_DIST/pygimli*.whl
-
-        testReport
+        install_WHL_E [doc]
     popd
 }
 
+
 function doc(){
-    GREEN
-    echo "*** doc (Creating documentation) ***"
-    NCOL
+    green "*** doc (Creating documentation) ***"
 
     use_venv $VENV_DOC
     if python -c 'import sphinx' &>/dev/null; then
-        GREEN
-        echo "sphinx is installed"
-        NCOL
+        green "sphinx is installed"
     else
-        YELLOW
-        echo "sphinx is NOT installed (calling doc_pre)"
-        NCOL
+        yellow "sphinx is NOT installed (calling doc_pre)"
         doc_pre
     fi
 
@@ -408,38 +408,49 @@ function doc(){
             #touch CMakeCache.txt # to renew search for sphinx
             cmake $PROJECT_SRC
 
-            python -c 'import pygimli as pg; pg.version()'
+            if [ ! -z "$SKIP_GALLERY" ]; then
+                NG='-NG'
+            fi
 
             #make clean-gallery # should not be necessary
             if [ -x "$(command -v xvfb-run)" ]; then
                 # xvfb is necessary for headless display of pyvista plots
                 echo "xvfb-run available: using it to build docs"
-                xvfb-run make doc
+                xvfb-run make doc$NG
             else
                 echo "xvfb-run not available: building docs without it"
-                make doc
+                make doc$NG
             fi
         popd
     popd
 }
 
+
 function doc_post(){
-    GREEN
-    echo "*** doc_post (Deploying html) ***"
-    NCOL
+    green "*** doc_post (Deploying html) ***"
 
     if [ ! -f $BUILD_DIR/doc/_build/html/index.html ]; then
-        YELLOW
-        echo "Documentation html not found in dist. Building first. (doc)"
-        NCOL
+        yellow "Documentation html not found in dist. Building first. (doc)"
         doc
     fi
 
-    pushd $BUILD_DIR/doc/_build
-        cp -r html $PROJECT_DIST/html
-        tar -czvf $PROJECT_DIST/html.tgz html
-    popd
+    use_venv $VENV_DOC
+    VERSION=$(python -c 'import pygimli; print(pygimli.__version__.split("(")[0].strip())')
+    green "Deploying documentation for pygimli version: $VERSION"
 
+    if [ "$RUNNER_NAME" == "pgserver" ]; then
+        # Should only run on pgserver
+        green "On pgserver - deploying documentation to /var/www/html"
+        rsync -avP --delete $BUILD_DIR/doc/_build/html/ /var/www/html
+    else
+        yellow "Not on pgserver - skipping documentation deployment"
+    fi
+
+    mkdir -p $ARCHIVE_DIR
+    pushd $BUILD_DIR/doc/_build
+        tar -czf $ARCHIVE_DIR/html-$VERSION.tgz html
+    popd
+    green "Archived documentation to $ARCHIVE_DIR/html-$VERSION.tgz"
     #rsync -aP $DISTPATH/html user@pygimli.org:DEV_HTML_PATH --delete
 
     # SNAP_PATH=`date +"%Y%m%d"`
@@ -452,69 +463,95 @@ function doc_post(){
     # python -m pip install --force ~/snapshots/latest/pygimli*
 }
 
-function install(){
-    GREEN
-    echo "*** Install (Creating editable installation in build venv) ***"
-    NCOL
 
-    if [ ! -f $PROJECT_DIST/pgcore*.whl ]; then
-        YELLOW
-        echo "pgcore wheel not found in project dist. Building first.(build_post)"
-        NCOL
-        build_post
-    fi
+function install(){
+    green "*** Install (Creating editable installation in build venv) ***"
+    need_build_post
 
     pushd $PROJECT_ROOT
         use_venv $VENV_PYGIMLI
-
-        if [ "$OS" == "Windows" ] || [ "$OS" == "Windows_NT" ]; then
-            # windows MSYS2
-            uv pip install $PROJECT_DIST/pgcore*.whl
-        fi
-        uv pip install -e $PROJECT_SRC/[opt]
-
+        install_WHL_E [opt]
         testReport
     popd
 
-    GREEN
-    echo "Editable installation created in venv: $VENV_PYGIMLI"
-    echo ""
-    echo "To use it, call: "
-    echo ""
-    echo "source $VENV_PYGIMLI/bin/activate #(linux/macos)"
-    echo "source $VENV_PYGIMLI/Scripts/activate #(windows)"
-    NCOL
+    green "Editable installation created in venv: $VENV_PYGIMLI"
+    green ""
+    green "To use it, call: "
+    green ""
+    green "source $VENV_PYGIMLI/bin/activate #(linux/macos)"
+    green "source $VENV_PYGIMLI/Scripts/activate #(windows)"
 }
+
+
+function twine(){
+    WHL_FILE=$1
+    green "*** twine upload whl file: $WHL_FILE ***"
+    python -m twine upload --repository pypi $WHL_FILE
+}
+
+
+function deploy(){
+    target_whl=$1
+    if [ -z $target_whl ]; then
+        red "give target_whl=\"pygimli\" or \"pgcore\" as argument"
+        return
+    fi
+    green "*** Deploy $target_whl file ***"
+    need_build_post
+    use_venv $VENV_BUILD
+
+    TARGET_WHL=$(ls -t $PROJECT_DIST/$target_whl*.whl | head -n 1)
+
+    if [ -z $TARGET_WHL ]; then
+        red "Target whl file $target_whl not found in $PROJECT_DIST"
+        return
+    else
+        blue "FOUND: $TARGET_WHL"
+    fi
+    echo "Do you wish to deploy ? (can't be undone)"
+    select yn in "Yes" "No"; do
+        case $yn in
+            Yes ) twine $TARGET_WHL; break;;
+            No ) return;;
+        esac
+    done
+    return
+}
+
 
 function help(){
     echo ""
     echo "run: ${BASH_SOURCE[0]} TARGET"
     echo ""
     echo "TARGETS:"
-    echo "    help       show this help"
-    echo "    clean      remove build artifacts for PYVERSION"
-    echo "    build_pre  prepare build environment venv"
-    echo "    build      [build_pre] build project"
-    echo "    build_whls [build] build whl files for pgcore and pygimli"
-    echo "    build_post [build] test build"
-    echo "    test_pre   [build] prepare test environment"
-    echo "    test       [test_pre] run tests"
-    echo "    doc_pre    [build] prepare documentation environment"
-    echo "    doc        [doc_pre] build documentation"
-    echo "    doc_post   [doc] deploy documentation"
-    echo "    install    [build] Create default editable installation in venv"
-    echo "    all        [clean build test doc]"
+    echo "    help           show this help"
+    echo "    clean          remove build artifacts for PYVERSION"
+    echo "    build_pre      prepare build environment venv"
+    echo "    build          [build_pre] build project"
+    echo "    build_whls     [build] build whl files for pgcore and pygimli"
+    echo "    build_post     [build] test build"
+    echo "    test_pre       [build] prepare test environment"
+    echo "    test           [test_pre] run tests"
+    echo "    doc_pre        [build] prepare documentation environment"
+    echo "    doc            [doc_pre] build documentation"
+    echo "    doc_post       [doc] deploy documentation"
+    echo "    install        [build] Create default editable installation in venv"
+    echo "    deploy         [build_post] deploy wheel files"
+    echo "    all            [clean build test doc]"
     echo ""
     echo "ENVIRONMENT variables:"
     echo "    BASEPYTHON   base python interpreter. Default system python3."
     echo "    PYVERSION    python version (e.g. 3.11, 3.14t) if no BASEPYTHON is given"
     echo "    SOURCE_DIR   source directory (default: top-level directory of the project)"
+    echo "    SKIP_GALLERY Skip building the gallery in the documentation"
     echo ""
     echo "Examples:"
     echo "    bash ${BASH_SOURCE[0]} clean build test doc"
     echo "    PYVERSION=3.12 bash ${BASH_SOURCE[0]} all"
     echo ""
 }
+
+
 function all(){
     clean
     build_post
@@ -525,24 +562,24 @@ function all(){
 JOB_NUM=0
 
 if [ ! -z $GITHUB_ACTIONS ]; then
-    GREEN
-    echo "GITHUB action runner on WORKSPACE=$WORKSPACE at $RUNNER_NAME"
-    echo "RUNNER_ARCH=$RUNNER_ARCH"
-    echo "RUNNER_TEMP=$RUNNER_TEMP"
-    echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
-    echo "GITHUB_JOB=$GITHUB_JOB"
-    echo "GITHUB_REPOSITORY=$GITHUB_REPOSITORY"
-    echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-    NCOL
+    green "GITHUB action runner on WORKSPACE=$WORKSPACE at $RUNNER_NAME"
+    green "RUNNER_ARCH=$RUNNER_ARCH"
+    green "RUNNER_TEMP=$RUNNER_TEMP"
+    green "GITHUB_REF_NAME=$GITHUB_REF_NAME"
+    green "GITHUB_JOB=$GITHUB_JOB"
+    green "GITHUB_REPOSITORY=$GITHUB_REPOSITORY"
+    green "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
 
     WORKSPACE=$GITHUB_WORKSPACE
     JOB_NUM=$GITHUB_RUN_NUMBER
     OS=$RUNNER_OS
     SYSTEM=$(uname -s)
+
 elif [ -z $WORKSPACE ]; then
     WORKSPACE=$(realpath $(pwd))
     if [ -z $OS ]; then
         uname_s=$(uname -s 2>/dev/null || echo)
+        blue "Determining OS from uname: $uname_s"
         case "$uname_s" in
             MINGW*|MSYS*|CYGWIN*|Windows_NT)
                 OS=Windows
@@ -556,13 +593,9 @@ elif [ -z $WORKSPACE ]; then
         esac
     fi
     SYSTEM=$(uname -s)
-    GREEN
-    echo "Local Build (no Jenkins) on WORKSPACE=$WORKSPACE"
-    NCOL
+    green "Local Build (no Jenkins) on WORKSPACE=$WORKSPACE"
 else
-    GREEN
-    echo "Unknown CI Build on WORKSPACE=$WORKSPACE"
-    NCOL
+    green "Unknown CI Build on WORKSPACE=$WORKSPACE"
     WORKSPACE=$(realpath $(pwd))
 fi
 
@@ -577,9 +610,7 @@ if [ -z $SOURCE_DIR ]; then
     done
     if [ "$CAND" = "/" ]; then
         # fallback: use the immediate directory name of the script
-        RED
-        echo "Could not find project root marker (.git or pyproject.toml). Using script directory name as SOURCE_DIR."
-        NCOL
+        red "Could not find project root marker (.git or pyproject.toml). Using script directory name as SOURCE_DIR."
     else
         SOURCE_DIR=$(basename "$CAND")
     fi
@@ -599,10 +630,8 @@ function abspath() {
 
     # Fallback to python if realpath not present or failed
     if [ -z "$abs" ]; then
-        RED
-        echo "Could not determine absolute path for $p"
+        red "Could not determine absolute path for $p"
         return
-        NCOL
     fi
 
     # Normalize empty result
@@ -627,10 +656,8 @@ if [ -z $BASEPYTHON ]; then
     if [ -z $PYVERSION ]; then
 
         if [ ! -x "$(command -v python3)" ]; then
-            RED
-            echo "python3 not found in PATH. Please install python3 or set BASEPYTHON to a valid python interpreter."
-            echo "e.g., BASEPYTHON=../../miniconda3/python bash ${BASH_SOURCE[0]}"
-            NCOL
+            red "python3 not found in PATH. Please install python3 or set BASEPYTHON to a valid python interpreter."
+            red "e.g., BASEPYTHON=../../miniconda3/python bash ${BASH_SOURCE[0]}"
             return
         else
             echo "Using system python3 as BASEPYTHON"
@@ -661,6 +688,7 @@ VENV_TEST=$(realpath $WORKSPACE/venv-test-py$PYVERSION)
 VENV_DOC=$(realpath $WORKSPACE/venv-doc-py$PYVERSION)
 VENV_PYGIMLI=$(realpath $WORKSPACE/venv-pygimli-py$PYVERSION)
 PROJECT_DIST=$(realpath $WORKSPACE/dist-py$PYVERSION)
+ARCHIVE_DIR=$(realpath $WORKSPACE/archive)
 
 echo "JOB_NUM=$JOB_NUM"
 echo "WORKSPACE=$WORKSPACE"
@@ -707,6 +735,8 @@ do
         doc_post;;
     install)
         install;;
+    deploy)
+        deploy $2;;
     all)
         all;;
     help)

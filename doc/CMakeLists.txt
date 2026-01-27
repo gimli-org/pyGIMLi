@@ -98,6 +98,17 @@ add_custom_target(sphinxhtml ALL
         sphinxapi
 )
 
+add_custom_target(sphinxhtml-NG ALL
+     WORKING_DIRECTORY
+        ${SPHINX_BUILD_DIR}/doc
+     COMMAND
+        sphinx-build -M html ./ "${SPHINX_BUILD_DIR}" -D plot_gallery=0 --jobs=auto
+     COMMENT
+         "Building HTML documentation with sphinx"
+     DEPENDS
+        sphinxapi
+)
+
 add_custom_target(clean-gallery ALL
      WORKING_DIRECTORY
         ${SPHINX_BUILD_DIR}/doc
@@ -148,14 +159,20 @@ add_custom_target(clean-gallery ALL
 #         sphinxpdf
 # )
 
-add_custom_target(html
-    DEPENDS
-        sphinxhtml
-)
+add_custom_target(html DEPENDS sphinxhtml)
+# no gallery version (faster to test)
+add_custom_target(html-NG DEPENDS sphinxhtml-NG)
 
 add_custom_target(doc
     COMMENT
     "Building HTML and API documentation"
     DEPENDS
         sphinxhtml
+)
+
+add_custom_target(doc-NG
+    COMMENT
+    "Building HTML and API documentation (without gallery)"
+    DEPENDS
+        sphinxhtml-NG
 )

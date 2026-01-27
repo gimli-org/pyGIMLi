@@ -10,6 +10,7 @@ Gauss-Newton based frameworks for constrained, joint and fully-coupled
 inversions with flexible regularization.
 
 ## Main capabilities
+
 What is pyGIMLi suited for?
 
 - analyze, visualize and invert geophysical data in a reproducible manner
@@ -23,6 +24,7 @@ What is pyGIMLi **NOT** suited for?
 - for people that expect a ready-made GUI for interpreting their data
 
 (inversion)=
+
 ### Inversion
 
 One main task of pyGIMli is to carry out inversion, i.e. error-weighted
@@ -35,6 +37,7 @@ Please see {ref}`tut:inversion` for examples and more
 details.
 
 (modelling)=
+
 ### Modelling
 
 pyGIMLi comes with various geophysical forward operators, which can directly be
@@ -54,8 +57,8 @@ Please see {ref}`tut:modelling` for examples and more details.
 
 ## License
 
-pyGIMLi is distributed under the terms of the **Apache 2.0** license. Details on
-the license agreement can be found [here](#license).
+pyGIMLi is distributed under the terms of the **Apache 2.0** license.
+For details, see the [license agreement](#license).
 
 ## Credits
 

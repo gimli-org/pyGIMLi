@@ -6,11 +6,15 @@ kernelspec:
 
 # Data
 
-## What is a pyGIMLi DataContainer?
+## The `DataContainer` class
 
-Data are often organized in a data container storing the individual data values as well as any description how they were obtained, e.g. the geometry of source and receivers. DataContainer is essentially a class that stores all of this information. It is different for every method and can be then filtered accordingly. It stores two primary things: sensor information and data measurements.
+Data are often organized in a data container storing the data values in named vectors as well as the geometry of source and receivers.
+Like a dictionary, the names of the contained arrays are arbitrary and depend on the available information and method.
+Additionally to the data vectors, it stores sensor geometry and can story additional geometric data like topography.
 
-A data container holds vectors like in a dictionary, however, all of them need to have the same length defined by the .size() method. Let's first go over how you can create a DataContainer from scratch. Assume we want to create and store Vertical Electrical Sounding (VES) data.
+Similar to a pandas dataframe, all vectors are guaranteed to be of the same size determined by the size() method, and can be filtered.
+By default, they are (float) vectors but can also be indices into the sensor geometry to indicate the sensor number.
+Let's first create a DataContainer from scratch, assume we want to create and store Vertical Electrical Sounding (VES) data.
 
 ```{code-cell} ipython3
 :tags: [hide-cell]
@@ -21,23 +25,17 @@ import pygimli as pg
 from pygimli.physics import VESManager
 ```
 
-We define logarithmically equidistant AB/2 spacings. Which is the midpoint of current electrode spacing for each measurement.
+We define logarithmically equidistant AB/2 spacings.
 
 ```{code-cell} ipython3
 ab2 = np.logspace(0, 3, 11)
 print(ab2)
 ```
 
-We create an empty data container. In this case not using any method yet.
+We create an empty data container and feed some data into it just like in a dictionary or dataframe.
 
 ```{code-cell} ipython3
 ves_data = pg.DataContainer()
-print(ves_data)
-```
-
-We feed it into the data container just like in a dictionary.
-
-```{code-cell} ipython3
 ves_data["ab2"] = ab2
 ves_data["mn2"] = ab2 / 3
 print(ves_data)
@@ -49,19 +47,19 @@ One can also use `.showInfos()` to see the content of the data container with mo
 ves_data.showInfos()
 ```
 
-As you can see from the print out there is no sensor information. In the next subsection we will explain how to add sensor information to a data container.
+As you can see, out there is no sensor information. In the next subsection we will explain how to add sensor information to a data container.
 
 +++
 
 :::{admonition} Note
 :class: tip
 
-Data containers can also be initialized from different method managers. These have the custom names for sensors and data types of each method. For example {py:class}`pygimli.physics.ert.DataContainer` already has ['a', 'b', 'm', 'n'] entries. One can also add alias translators like C1, C2, P1, P2, so that dataERT[“P1”] will return dataERT[“m”]
+DataContainers can also be defined for specific methods with predefined names for sensors and necessary data names. For example {py:class}`pygimli.physics.ert.DataContainer` already has `'a', 'b', 'm', 'n'` index entries. One can also add alias translators like `'C1', 'C2', 'P1', 'P2'`, so that dataERT['P1'] will return dataERT['m'] etc.
 :::
 
-## Creating Sensors in DataContainer
+## Creating Sensors
 
-Assume we have data associate with a transmitter, receivers and a property U. The transmitter (Tx) and receiver (Rx) positions are stored separately and we refer them with an Index (integer). Therefore we define these fields index.
+Assume we have data associated with a transmitter, some receivers and some properties. The transmitter (Tx) and receiver (Rx) positions are stored separately and we refer them with an Index (integer). Therefore we define these fields as index fields.
 
 ```{code-cell} ipython3
 data = pg.DataContainer()
@@ -69,7 +67,7 @@ data.registerSensorIndex("Tx")
 data.registerSensorIndex("Rx")
 ```
 
-Then we create a list of 10 sensors with a 2m spacing. We can create sensors at any moment as long as it is not in the same position of an existing sensor.
+Then we create a list of ten sensors with a 2m spacing. We can create sensors at any moment as long as it is not in the same position of an existing sensor.
 
 ```{code-cell} ipython3
 for x in np.arange(10):
@@ -81,9 +79,37 @@ print(data)
 We want to use all of them (and two more!) as receivers and a constant transmitter of number 2.
 
 ```{code-cell} ipython3
-data["Rx"] = np.arange(12)
+data["Rx"] = np.arange(12) # defines size
 # data["Tx"] = np.arange(9) # does not work as size matters!
 data["Tx"] = pg.Vector(data.size(), 2)
+print(data)
+```
+
+Obviously there are two invalid receiver indices (10 and 11) as we only created sensors up to index 9. We can check the validity of the data container and remove invalid entries.
+
+```{code-cell} ipython3
+data["valid"] = 1  # set all values
+data.checkDataValidity()
+data.removeInvalid()
+print(data)
+```
+
+We can filter the data by logical operations
+
+```{code-cell} ipython3
+data.remove(data["Rx"] == data["Tx"])
+print(data)
+```
+
+To store some data like the Tx-Rx distance, we can either compute and store a whole vector or do it step by step using the features of the position vectors.
+
+```{code-cell} ipython3
+sx = pg.x(data)
+data["distx"] = np.abs(sx[data["Tx"]]-sx[data["Rx"]])
+data["dist"] = 0.0  # all zero
+for i in range(data.size()):
+    data["dist"][i] = data.sensor(data["Tx"][i]).distance(
+        data.sensor(data["Rx"][i]))
 print(data)
 ```
 
@@ -97,12 +123,14 @@ If the sensor positions are given by another file (for example a GPS file), you 
 
 ## File export
 
-This data container can also be saved on local disk using the method `.save()` usually in a .dat format. It can then be read using `open('filename').read()`. This is also a useful way to see the data file in Python.
+This data container can also be saved to disk using the method `.save()` usually in a .dat format.
 
 ```{code-cell} ipython3
 data.save("data.data")
 print(open("data.data").read())
 ```
+
+With the second argument, e.g., `"Tx Rx dist"` one can define which fields are saved.
 
 ## File format import
 
@@ -181,7 +209,7 @@ Below there is a table with the most useful methods, for a full list of methods 
 You can visualize the data in many ways depending on the physics manager. To simply view the data as a matrix you can use `pg.viewer.mpl.showDataContainerAsMatrix`. This visualizes a matrix of receivers and transmitters pairs with the associated data to plot : 'dist'.
 
 ```{code-cell} ipython3
-pg.viewer.mpl.showDataContainerAsMatrix(data, "Rx", "Tx", 'dist')
+ax, cb = pg.viewer.mpl.showDataContainerAsMatrix(data, "Rx", "Tx", 'dist')
 ```
 
 There are various formal methods for plotting different data containers, depending on the approach used. As discussed in [Fundamentals](fundamentals.md), the primary focus here is on displaying the data container itself. Most method managers provide a .show() function specific to their method, but you can always use the main function {py:func}`pg.show`. This function automatically detects the data type and plots it accordingly. For further details on data visualization, please refer to [Data visualization](visualization.md).

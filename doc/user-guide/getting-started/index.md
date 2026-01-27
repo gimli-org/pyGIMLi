@@ -13,7 +13,7 @@ How to install `pyGIMLi` on your platform.
 :link: basics
 :link-type: ref
 
-Read about the basics of using the `pyGIMLi` package.
+The basics of using `pyGIMLi`.
 :::
 :::{grid-item-card} First modelling
 :link: first-modelling

@@ -95,6 +95,7 @@ def registerShowPendingFigsAtExit():
             """Call on script end to ensure to open all remaining mpl figures."""
             #pg._g('waitonexit')
             # only call it if mpl has been used
+
             if 'matplotlib.pyplot' in sys.modules:
                 import matplotlib.pyplot as plt
 
@@ -102,12 +103,17 @@ def registerShowPendingFigsAtExit():
                 #backend = plt.get_backend()
                 #print('backend', backend)
 
-                if 'inline' not in backend:
-                    if 'qt' in backend or 'Qt' in backend or 'Wx' in backend or 'Tk' in backend or 'GTK' in backend:
-                        if len(plt.get_fignums()) > 0:
-                            pg.info(f'Showing pending widgets ({backend}) on exit. '
-                                        'Close all figures or Ctrl-C to quit the programm')
-                            pg.wait()
+                if 'inline' not in backend \
+                    and ('qt' in backend.lower()
+                          or 'wx' in backend.lower()
+                          or 'tk' in backend.lower()
+                          or 'gtk' in backend.lower()):
+
+                    if len(plt.get_fignums()) > 0:
+                        pg.info(f'Showing pending widgets ({backend}) on exit. '
+                                 'Close all figures or Ctrl-C to quit the ' \
+                                 'program')
+                        pg.wait()
 
     __registeredShowPendingFigsAtExit__ = True
 

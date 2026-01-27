@@ -142,11 +142,9 @@ kw = dict(
 vals = np.array([30, 50, 300, 100, 200])
 # We assume a 5% relative accuracy of the values
 relError = 0.05  # noqa: N816
-# set up data and model transformation log-scaled
-tLog = pg.trans.TransLog()  # noqa: N816
+# set up data and log-scaled data transformation
 inv = pg.Inversion(fop=fop)
-inv.transData = tLog
-inv.transModel = tLog
+inv.transData = 'log'  # model already is
 inv.startModel = 30  # for all
 
 # Initially, we use the first-order constraints (default)
@@ -165,14 +163,14 @@ ax[0, 1].set_title("2nd order")
 np.testing.assert_array_less(inv.chi2(), 1.2)
 
 # Now we set the geostatistic isotropic operator with 5m correlation length
-res = inv.run(vals, relativeError=relError, lam=15, C=C)
+res = inv.run(vals, relativeError=relError, lam=15, correlationLengths=5)
 print(('Cg-5/5m: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
 pg.show(mesh, res, ax=ax[1, 0], **kw)
 ax[1, 0].set_title("I=5")
 np.testing.assert_array_less(inv.chi2(), 1.2)
 
 # and finally we use the dipping constraint matrix
-res = inv.run(vals, relativeError=relError, lam=15, C=Cdip)
+res = inv.run(vals, relativeError=relError, lam=15, correlationLengths=[9, 2], dip=-25)
 print(('Cg-9/2m: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
 pg.show(mesh, res, ax=ax[1, 1], **kw)
 ax[1, 1].set_title("I=[9/2], dip=25")
