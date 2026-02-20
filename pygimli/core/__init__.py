@@ -8,7 +8,7 @@ import numpy as np
 from .core import pgcore
 from .core import *
 
-from .logger import error, critical
+from .logger import error, critical, _r, _g, _r
 from .base import (isInt, isScalar, isArray, isPos,
                    isPosList)
 
@@ -143,7 +143,9 @@ pgcore.CVector.__lt__ = _lowerThan_
 
 __pgcore_RVector___gt__ = pgcore.RVector.__gt__
 def _greaterThan_(self, v2):
-    """ Overwrite BVector = v1 > v2 since there is a wrong default conversion
+    """Overwrite BVector = v1 > v2.
+
+    Since there is a wrong default conversion
     from v2 of type int -> v2 (RVector(v2))
     boost binding generation
     """
@@ -903,9 +905,7 @@ for _OP in __BINOP__:
 
 
 def __stdVectorRVector__array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-    """
-    For numpy operators
-    """
+    """For numpy operators."""
     ###  more advanced behaviour possible ... instead of __array_ufunc__ = None
     ### https://docs.scipy.org/doc/numpy-1.13.0/neps/ufunc-overrides.html
     if ufunc == np.power:
@@ -923,21 +923,53 @@ def __stdVectorRVector__array_ufunc__(self, ufunc, method, *inputs, **kwargs):
             return inputs[1] * inputs[0]
 
     ## default apply numpy function
-    ret = pgcore.stdVectorRVector()
-    for i, ai in enumerate(self):
-        ret.append(ufunc(ai))
-    return ret
+    try:
+        if ufunc == np.add:
+            if isinstance(inputs[0], pgcore.stdVectorRVector) \
+                and isinstance(inputs[1], pgcore.stdVectorRVector):
+                ## should not be here
+                pg.warning('This should not be here, but we need to fix this for now')
+                return inputs[0] + inputs[1]
 
+        ret = pgcore.stdVectorRVector()
+        for i, ai in enumerate(self):
+            if isinstance(inputs[0], pgcore.stdVectorRVector):
+                ret.append(ufunc(ai, inputs[1][i]))
+            else:
+                ret.append(ufunc(inputs[1][i], ai))
+        return ret
+    except Exception as exc:
+        print(exc)
+        _r('self:', self)
+        _r('self:', id(self))
+        _r('self:', type(self))
+        _r('ufunc:', ufunc)
+        _r('method:', method)
+        _r('inputs:', len(inputs))
+        for i, ii in enumerate(inputs):
+            _r(f'\t input {i}:', type(ii))
+            _r(f'\t input {i}:', id(ii))
+            _r(f'\t input {i}:', ii)
 
-    pg._r(self)
-    pg._y(f'ufunc: {ufunc}')
-    pg._y(f'method: {method}')
-    pg._y(f'inputs: {inputs}')
-    pg._y(f'kwargs: {kwargs}')
-    pg.critical('implementme')
+        _r('kwargs', kwargs)
+        import traceback
+        osmg = traceback.format_exc() + " " + str(exc)
+        osmg += f"self: {self} \n"
+        osmg += f"self: {type(self)} \n"
+        osmg += f"self id: {id(self)} \n"
+        osmg += f"ufunc: {ufunc} \n"
+        osmg += f"method: {method} \n"
+        osmg += f"inputs: {inputs} \n"
+        osmg += f"kwargs: {kwargs} \n"
+        for i, ii in enumerate(inputs):
+            osmg += f'\t input {i}: {type(ii)}\n'
+            osmg += f'\t input {i}: {id(ii)}\n'
+            osmg += f'\t input {i}: {ii}\n'
+
+        critical('implementme.\n', osmg)
 
 pgcore.stdVectorRVector.__array_ufunc__ = __stdVectorRVector__array_ufunc__
-#pgcore.stdVectorRVector.__array_ufunc__ = None
+
 
 ##################################
 # stdVectorR3Vector operators

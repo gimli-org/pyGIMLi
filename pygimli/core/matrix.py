@@ -47,19 +47,24 @@ __Matrices = [pgcore.MatrixBase,
 def __Matrix_array_ufunc__(self, ufunc, method, *inputs, **kwargs):
     """Handle ufunc to communicate with numpy."""
     if ufunc == np.multiply:
+        ## for self * np.float
+        if len(inputs) == 2 and id(self) == id(inputs[0]):
+            return self.__mul__(float(inputs[1]))
+
         ## for np.float * self
-        if id(self) == id(inputs[0]) and len(inputs) == 2:
-            return self.__mul__(inputs[1])
+        if len(inputs) == 2 and id(self) == id(inputs[1]):
+            return self.__mul__(float(inputs[0]))
 
     if ufunc == np.matmul:
         ## for np.mat * self
-        if id(self) == id(inputs[0]) and len(inputs) == 2:
+        if len(inputs) == 2 and id(self) == id(inputs[0]):
             return self.__mul__(inputs[1])
         # if isinstance(inputs[0], np.ndarray):
         #     return pg.core.mult(self, np.squeeze(inputs[0]))
 
     pg._r('self:', self)
     pg._r('self:', id(self))
+    pg._r('self:', type(self))
     pg._r('ufunc:', ufunc)
     pg._r('method:', method)
     pg._r('inputs:', len(inputs))
@@ -172,6 +177,7 @@ def __ElementMatrix_str(self):
                 print(self.row_RM(i))
                 print(self.mulR)
                 pg.critical('invalid element multR.')
+
         elif pg.isArray(self.mulR, self.mat().cols()):
             for v in self.row_RM(i)*self.mulR:
                 s += pg.pf(v).rjust(9)
@@ -307,6 +313,39 @@ def __CopyRDenseMatrixTranspose__(self):
 pgcore.RDenseMatrix.T = property(__CopyRDenseMatrixTranspose__)
 
 
+class __TransMatrixView:
+    """Transpose view of a matrix."""
+
+    def __init__(self, mat):
+        """Initialize the transpose view."""
+        self._mat = mat
+
+    def rows(self):
+        """Return number of rows."""
+        return self._mat.cols()
+
+    def cols(self):
+        """Return number of columns."""
+        return self._mat.rows()
+
+    def __getitem__(self, key):
+        """Get item at position key."""
+        i, j = key
+        return self._mat[j, i]
+
+    def __mul__(self, other):
+        """Multiply the transpose view with another matrix or vector."""
+        if hasattr(other, 'values'):
+            other = other.values
+        if isinstance(other, np.ndarray):
+            other = np.squeeze(other)
+
+        return self._mat.transMult(other)
+
+pgcore.RSparseMatrix.T = property(lambda self: __TransMatrixView(self))
+pgcore.RSparseMapMatrix.T = property(lambda self: __TransMatrixView(self))
+
+
 ## Overload some operators
 
 __RSparseMapMatrix_Mul__orig = pgcore.RSparseMapMatrix.__mul__
@@ -315,6 +354,15 @@ def __RSparseMapMatrix_Mul__(self, b):
     if isinstance(b, (int, np.float64)):
         ## or this will be wrongly parsed into mul(self, RVector(b))
         return __RSparseMapMatrix_Mul__orig(self, float(b))
+    if hasattr(b, 'values'):
+        if len(b.values) != self.cols():
+            if not hasattr(b, 'space'):
+                raise ValueError('invalid multiplication size', len(b.values), self.cols())
+            v = np.zeros(self.cols())
+            v[b.space.dofs] = np.squeeze(b.values)
+        else:
+            v = np.squeeze(b.values)
+        return __RSparseMapMatrix_Mul__orig(self, v)
     return __RSparseMapMatrix_Mul__orig(self, b)
 pgcore.RSparseMapMatrix.__mul__ = __RSparseMapMatrix_Mul__
 
@@ -810,8 +858,7 @@ def sparseMatrix2Array(matrix, indices=True, getInCRS=True):
 
 
 def sparseMatrix2Dense(matrix):
-    """Convert sparse matrix to dense ndarray"""
-
+    """Convert sparse matrix to dense ndarray."""
     rr, cc, vals = sparseMatrix2Array(matrix, indices=True, getInCRS=False)
     mat = np.zeros((matrix.rows(), matrix.cols()))
 

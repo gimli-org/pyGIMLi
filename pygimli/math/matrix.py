@@ -838,27 +838,20 @@ class FOPJacobian(MatrixBase):
     """Return Jacobian operator for pyGIMLi(emg3d)."""
 
     def __init__(self, fop):
-        """Initiate a new Jacobian instance."""
         # define self.data and self.parameterCount()
-        super().__init__(len(self.data), self.parameterCount())
+        super().__init__(len(self.fop.data), self.fop.parameterCount())
         self.fop = fop
 
-    # don't try to overwrite rows/cols .. use self.resize() or the constructor
-    # def cols(self):
-    #     """Return number of column, i.e., the model vector size."""
-    #     return self.parameterCount()
-
-    # def rows(self):
-    #     """Return number of rows, i.e., the data vector size."""
-    #     return len(self.data)
 
     def mult(self, x):
         """Multiply the Jacobian with a vector, Jx."""
         return self.Sx(x)
 
+
     def transMult(self, y):
         """Multiply  Jacobian transposed with a vector, Jᵀy."""
         return self.STy(y)
+
 
     def save(self, *args):
         """There is no save for this pseudo-Jacobian."""

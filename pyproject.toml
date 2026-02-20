@@ -45,7 +45,7 @@ classifiers = [
 dependencies = [
     "setuptools>=75.8.2",
     "scooby",
-    "pgcore",
+    "pgcore>=2.0b2",
 ]
 
 [project.optional-dependencies]
