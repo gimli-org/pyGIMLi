@@ -851,11 +851,11 @@ class FOPJacobian(MatrixBase):
 
     def cols(self):
         """Return number of column, i.e., the model vector size."""
-        return self.parameterCount()
+        return self.fop.parameterCount()
 
     def rows(self):
         """Return number of rows, i.e., the data vector size."""
-        return len(self.data)
+        return len(self.fop.data)
 
     def mult(self, x):
         """Multiply the Jacobian with a vector, Jx."""
