@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Imports and extensions of the C++ bindings.
-"""
+#!/usr/bin/env python3
+"""Imports and extensions of the C++ bindings."""
 import sys
 import numpy as np
 
@@ -24,7 +22,7 @@ pgcore.load = None
 
 
 def __RVector_str(self, valsOnly=False):
-    """String representation of RVector."""
+    """Return string representation of RVector."""
     s = str()
 
     if not valsOnly:
@@ -46,13 +44,13 @@ def __RVector_str(self, valsOnly=False):
 
 
 def __Pos_str(self):
-    """String representation of Pos."""
+    """Return string representation of Pos."""
     return ("Pos: (" + str(self.x()) + ", " + str(self.y()) + ", " + str(
         self.z()) + ")")
 
 
 def __R3Vector_str(self):
-    """String representation of R3Vector."""
+    """Return string representation of R3Vector."""
     if self.size() < 20:
         return str(self.array())
 
@@ -60,12 +58,12 @@ def __R3Vector_str(self):
 
 
 def __Line_str(self):
-    """String representation of Line."""
+    """Return string representation of Line."""
     return "Line: " + str(self.p0()) + "  " + str(self.p1())
 
 
 def __BoundingBox_str(self):
-    """String representation of BoundingBox."""
+    """Return string representation of BoundingBox."""
     s = ''
     s += f"BoundingBox [{self.min()}, {self.max()}]"
     return s
@@ -976,7 +974,7 @@ pgcore.stdVectorRVector.__array_ufunc__ = __stdVectorRVector__array_ufunc__
 ##################################
 
 def __stdVectorR3Vector_BINARY_OP__(self, b, OP):
-
+    """Binary operator for stdVectorR3Vector."""
     ret = pgcore.stdVectorR3Vector()
 
     if isScalar(b):
@@ -993,20 +991,36 @@ def __stdVectorR3Vector_BINARY_OP__(self, b, OP):
 
     return ret
 
-def __stdVectorR3Vector_ABS__(self):
-    ret = pgcore.stdVectorRVector()
-    for i, ai in enumerate(self):
-        ret.append(abs(ai))
-    return ret
-
-pgcore.stdVectorR3Vector.__abs__ = __stdVectorR3Vector_ABS__
-
 
 for _OP in __BINOP__:
     def _closure(OP):
         return lambda a, b: __stdVectorR3Vector_BINARY_OP__(a, b, OP)
     setattr(pgcore.stdVectorR3Vector, _OP, _closure(_OP))
 
+
+def __stdVectorR3Vector_ABS__(self):
+    """Unary absolute value operator."""
+    ret = pgcore.stdVectorRVector()
+    for i, ai in enumerate(self):
+        ret.append(abs(ai))
+    return ret
+pgcore.stdVectorR3Vector.__abs__ = __stdVectorR3Vector_ABS__
+
+
+def __stdVectorR3Vector_NEG__(self):
+    """Unary minus operator."""
+    ret = pgcore.stdVectorR3Vector()
+    for i, ai in enumerate(self):
+        ret.append(-ai)
+    return ret
+pgcore.stdVectorR3Vector.__neg__ = __stdVectorR3Vector_NEG__
+
+
+
+
+##################################
+# stdVectorRMatrix operators
+##################################
 
 def __stdVectorRMatrix_BINARY_OP__(self, b, OP):
 
@@ -1196,7 +1210,7 @@ def abs(v):
 
     try:
         return __PY_ABS__(v)
-    except:
+    except BaseException:
         return pgcore.fabs(v)
 
 
@@ -1450,12 +1464,12 @@ ModellingBase = ModellingBaseMT__
 
 def __getCoords(coord, dim, ent):
     """Syntactic sugar to find all x-coordinates of a given entity."""
-
     if isScalar(ent):
         return ent
     if isPos(ent):
         return ent[dim]
-    if isinstance(ent, np.ndarray) and (ent.shape[1] >= dim and ent.shape[1] <= 3):
+    if isinstance(ent, np.ndarray) \
+        and (ent.shape[1] >= dim and ent.shape[1] <= 3):
         return ent[:, dim]
     if isinstance(ent, (pgcore.R3Vector)):
         return getattr(pgcore, coord)(ent)
