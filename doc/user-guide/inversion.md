@@ -196,7 +196,7 @@ newresponse = fop(newmodel)
 print(inv.chi2(newresponse))
 ```
 
-which fits a parabola through the old point ($\tau$=0), the full step ($\tau$=1) and a test ($\tau$=0.3) and optain an optimum line search parameter of about 0.6-0.65.
+which fits a parabola through the old point ($\tau$=0), the full step ($\tau$=1) and a test ($\tau$=0.3) and obtain an optimum line search parameter of about 0.6-0.65.
 As method, we can also use `'exact'` (forward calculations) or `'inter'` (interpolation), yielding almost the same results.
 The latter is the simplest one and the former takes the most effort.
 In total, the chi-square misfit, computed by $\Phi_d/N$, decreases slowly.

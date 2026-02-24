@@ -153,7 +153,7 @@ class GToolBar(QWidget):
         # button for global limits
         self.btn_global_limits = GButton(
             text="Global Limits",
-            tooltip="Check if gobal limits should be tried",
+            tooltip="Check if global limits should be tried",
             checkable=True)
         # checkbox for thresholding parameter distribution
         lyt_thresh = QHBoxLayout()

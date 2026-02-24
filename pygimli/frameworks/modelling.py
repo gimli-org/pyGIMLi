@@ -313,7 +313,7 @@ class Modelling(pg.core.ModellingBase):
                                                 'zWeight': 1.0,
                                                 'cType': None,  # RM defaults
                                                 'limits': [0, 0],
-                                                'trans': 'Log',  # RM defauts
+                                                'trans': 'Log',  # RM defaults
                                                 'background': None,
                                                 'single': None,
                                                 'fix': None,
@@ -350,7 +350,7 @@ class Modelling(pg.core.ModellingBase):
         if self._regionsNeedUpdate is False:
             return
 
-        # call super class her because self.regionManager() calls allways
+        # call super class her because self.regionManager() calls always
         #  __applyRegionProperies itself
         rMgr = super().regionManager()
         for rID, vals in self._regionProperties.items():
@@ -998,7 +998,7 @@ class LCModelling(Modelling):
             self._fops1D[i].createJacobian(mods[i])
 
     def createParametrization(self, nSoundings, nLayers=4, nPar=1):
-        """Create LCI mesh and suitable constraints informations.
+        """Create LCI mesh and suitable constraints information.
 
         Parameters
         ----------
@@ -1130,7 +1130,7 @@ class ParameterModelling(Modelling):
     def _initFunction(self, funct):
         """Init any function and interpret possible args and kwargs."""
         self.function = funct
-        # the first varname is suposed to be f or freqs
+        # the first varname is supposed to be f or freqs
         self.dataSpaceName = funct.__code__.co_varnames[0]
         pg.debug('data space:', self.dataSpaceName)
 

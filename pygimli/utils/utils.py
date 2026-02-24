@@ -152,9 +152,9 @@ def trimDocString(docstring):
     Examples
     --------
     >>> from pygimli.utils import trimDocString
-    >>> docstring = '    This is a string with indention and whitespace.   '
+    >>> docstring = '    This is a string with indentation and whitespace.   '
     >>> trimDocString(docstring).replace('with', 'without')
-    'This is a string without indention and whitespace.'
+    'This is a string without indentation and whitespace.'
     """
     if not docstring:
         return ''

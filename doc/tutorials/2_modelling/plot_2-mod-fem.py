@@ -172,7 +172,7 @@ boundaries = pg.solver.parseArgToBoundaries({'1,2,3,4': 0.0}, domain)
 
 ###############################################################################
 # `parseArgToBoundaries` is a helper function to collect a list of
-# tupels (Boundary element, value), which can be used to apply the Dirichlet
+# tuples (Boundary element, value), which can be used to apply the Dirichlet
 # conditions.
 #
 pg.solver.assembleDirichletBC(A, boundaries, b)

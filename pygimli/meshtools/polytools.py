@@ -202,7 +202,7 @@ def createRectangle(start=None, end=None, pos=None, size=None, **kwargs):
                 m2.transform(rot)
                 m2.translate(off)
 
-                # Increase bb if zero width or lenght
+                # Increase bb if zero width or length
                 bb = m2.bb()
                 if (bb[1]-bb[0])[0] < 1e-12:
                     bb[1][0] += 0.5
@@ -1700,7 +1700,7 @@ def exportTetgenPoly(poly, filename, float_format='.12e', **kwargs):
     if filename[-5:] != '.poly':
         filename = filename + '.poly'
     polytxt = ''
-    sep = '\t'  # standard tab seperated file
+    sep = '\t'  # standard tab separated file
     linesep = '\n'  # os.linesep does not work in mingwshell, testit!!
     assert poly.dim() == 3, 'Exit, only for 3D meshes.'
     boundary_marker = 1
@@ -2066,9 +2066,9 @@ def createFacet(mesh, boundaryMarker=None):
 
 def createCube(size=None, pos=None, start=None, end=None,
                rot=None, boundaryMarker=0, **kwargs):
-    """Create cube PLC as geometrie definition.
+    """Create cube PLC as geometry definition.
 
-    Create cube PLC as geometrie definition.
+    Create cube PLC as geometry definition.
     You can either give size and center position or start and end position.
 
     Parameters
@@ -2153,9 +2153,9 @@ def createCube(size=None, pos=None, start=None, end=None,
 def createSphere(size=None, pos=None, nSegments=20, nRings=10,
                  rot=None, boundaryMarker=0, var='uvsphere',
                  triFaces=True, **kwargs):
-    """Create sphere PLC as geometrie definition.
+    """Create sphere PLC as geometry definition.
 
-    Create sphere PLC as geometrie definition.
+    Create sphere PLC as geometry definition.
     You can either give size and center position.
 
     Arguments

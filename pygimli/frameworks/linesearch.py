@@ -25,10 +25,10 @@ def lineSearchArmijo(inv, dM, tau=100, c=1e-4, tauFactor=0.8):
     """
     v = -dM / np.linalg.norm(dM)
     Elim = inv.phi() + sum(v*dM) * c * tau
-    while Enew > Elim:
+    while New > Elim:
         newModel = inv.modelTrans.update(inv.model, v*tau)
         newResponse = inv.fop.response(newModel)
-        Enew = inv.phi(newModel, newResponse)
+        New = inv.phi(newModel, newResponse)
         tau *= tauFactor
 
     return tau/tauFactor, newResponse
@@ -116,11 +116,11 @@ def lineSearchInterOld(inv, dM, nTau=100, maxTau=1.0):
     tM = inv.modelTrans
     model = inv.model
     response = inv.response
-    modelLS = tM.update(model, dM * maxTau)
-    responseLS = inv.fop.response(modelLS)
+    models = tM.update(model, dM * maxTau)
+    responseLS = inv.fop.response(models)
     taus = np.arange(1, nTau+1) / nTau * maxTau
     phi = np.ones_like(taus) * inv.phi()
-    phi[-1] = inv.phi(modelLS, responseLS)
+    phi[-1] = inv.phi(models, responseLS)
     t0 = tD.fwd(response)
     t1 = tD.fwd(responseLS)
     for i, tau in enumerate(taus):

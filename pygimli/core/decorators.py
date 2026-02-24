@@ -60,7 +60,7 @@ def singleton(cls):
     return wrapper
 
 
-# Lazy evalation of expensive modules (eg. mpl.pylab)
+# Lazy evaluation of expensive modules (eg. mpl.pylab)
 # found: https://stackoverflow.com/questions/880530/can-modules-have-properties-the-same-way-that-objects-can
 class AttrGetter:
     def __new__(cls, gt):

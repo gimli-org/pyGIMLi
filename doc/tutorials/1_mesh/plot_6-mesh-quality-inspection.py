@@ -18,14 +18,14 @@ Quality of unstructured meshes
     Some common 2D quality measures are
     implemented in :mod:`pygimli.meshtools` and will be used in this tutorial.
     In 3D, we recommend to export the mesh in VTK format and inspect mesh
-    quality with ParaView (Filters -> Alphapetical -> Mesh quality).
+    quality with ParaView (Filters -> Alphabetical -> Mesh quality).
 
 **Solution:**
 
     Meshes can be improved by adjusting cell sizes (`area` keyword) and the
     minimum allowed angle (`quality` keyword). :term:`Gmsh` and other more
     advanced meshing tools also provide powerful mesh optimization algorithms.
-    However, the numerical accurary may be improved at the expense of increased
+    However, the numerical accuracy may be improved at the expense of increased
     cell counts and thus longer computation times.
 """
 
@@ -63,7 +63,7 @@ def showQuality(mesh, qualities):
     axes[1].set_ylabel("Frequency")
     axes[1].set_xlim(0, 1)
 
-    # Figure resizing according to mesh dimesions
+    # Figure resizing according to mesh dimensions
     x = mesh.xmax() - mesh.xmin()
     y = mesh.ymax() - mesh.ymin()
     width, height = fig.get_size_inches()
@@ -120,4 +120,4 @@ plt.show()
 # **References:**
 #
 # .. [#f1] Field, D. A. (2000), Qualitative measures for initial meshes. Int. J.
-#    Numer. Meth. Engng., 47: 887–906.
+#    Number. Meth. Engng., 47: 887–906.

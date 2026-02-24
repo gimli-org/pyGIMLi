@@ -52,19 +52,19 @@ git clone https://github.com/YOUR_USERNAME/pyGIMLi
 
 ### 2. Prepare your environment
 
-To install the neccesary Python requirements on your computer, we recommend the conda package manager in a lightweight installation such as Miniforge.
+To install the necessary Python requirements on your computer, we recommend the conda package manager in a lightweight installation such as Miniforge.
 The cloned and forked repository contains an *environment.yml* file with the specification for all package requirements to build and test pyGIMLi.
 This file should exist in the directory where you have cloned the repository. In order to create a separate environment where you will work,
 run the following command in the same directory of the repository in your terminal:
 
 ```bash
 conda env create # Creates the environment (only once)
-conda activate pgdev # Activates it (everytime you want to work in it)
+conda activate pgdev # Activates it (every time you want to work in it)
 conda develop . # Installs your git-version of pygimli (only once)
 python -c "import pygimli; pygimli.test()" # Make sure that everything works (also after adding new code)
 ```
 
-You will need to do the last step (`conda activate pgdev`) everytime you start a terminal (or put it in your `.bashrc` startup file).
+You will need to do the last step (`conda activate pgdev`) every time you start a terminal (or put it in your `.bashrc` startup file).
 The prompt `(pgdev)` should appear before your terminal location.
 
 ### 3. Create a feature branch

@@ -87,7 +87,7 @@ def show(obj=None, data=None, **kwargs):
 
     # registerShowPendingFigsAtExit()
 
-    # try to check if obj containes a mesh
+    # try to check if obj contains a mesh
     if hasattr(obj, 'mesh'):
         return pg.show(obj.mesh, obj, **kwargs)
 
@@ -116,7 +116,7 @@ def show(obj=None, data=None, **kwargs):
     except ImportError:
         pass
 
-    # try to interprete obj as mesh or list of meshes
+    # try to interpret obj as mesh or list of meshes
     mesh = kwargs.pop('mesh', obj)
 
     fitView = kwargs.get('fitView', True)
@@ -170,7 +170,7 @@ def show(obj=None, data=None, **kwargs):
         drawSelectedMeshBoundaries(ax, [obj], **kwargs)
         return ax, None
 
-    pg.error("Can't interprete obj: {0} to show.".format(obj))
+    pg.error("Can't interpret obj: {0} to show.".format(obj))
     return None, None
 
 

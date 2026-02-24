@@ -96,7 +96,7 @@ extensions = [
     # "sphinxcontrib.spelling"
     #'sphinx.ext.pngmath',   # for breath
     #'sphinx.ext.todo',      # for breath
-    #'breathe',              # doxgen to sphinx api docu
+    #'breathe',              # doxygen to sphinx api docu
 ]
 
 # # pkg_resources is deprecated!

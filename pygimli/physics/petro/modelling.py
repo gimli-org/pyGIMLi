@@ -40,7 +40,7 @@ class PetroModelling(pg.Modelling):
             self.fop.setMesh(mesh)
             self.fop.createRefinedForwardMesh(refine=False)
 
-        # self.setMesh(f.mesh(), ignoreRegionManager=True) # not really nessary
+        # self.setMesh(f.mesh(), ignoreRegionManager=True) # not really necessary
         self.setRegionManager(self.fop.regionManagerRef())
 
         self.nModel = self.regionManager().parameterCount()

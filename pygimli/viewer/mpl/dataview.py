@@ -47,21 +47,21 @@ def generateMatrix(xvec, yvec, vals, **kwargs):
         ymap = {yy: ii for ii, yy in enumerate(yu)}
 
     A = np.zeros((len(ymap), len(xmap)))
-    inot = []
+    into = []
     nshow = min([len(xvec), len(yvec), len(vals)])
 
     for i in range(nshow):
         xi, yi = xvec[i], yvec[i]
         if A[ymap[yi], xmap[xi]]:
-            inot.append(i)
+            into.append(i)
         A[ymap[yi], xmap[xi]] = vals[i]
 
-    if len(inot) > 0:
+    if len(into) > 0:
         if verbose:
-            pg.info(len(inot), "data of", nshow, "not shown")
-        if len(inot) < 30:
+            pg.info(len(into), "data of", nshow, "not shown")
+        if len(into) < 30:
             if verbose:
-                pg.info(inot)
+                pg.info(into)
 
     return A, xmap, ymap
 

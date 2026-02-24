@@ -2,7 +2,7 @@
 # Building on Windows
 
 
-**This is heavily outdated, new version comming soon.**
+**This is heavily outdated, new version coming soon.**
 
 You need a Python installation with the modules numpy and matplotlib. There are
 minimalistic installers and pre-packaged distributions. We recommend `Anaconda
@@ -55,7 +55,7 @@ the console or any IDE like Spyder (coming along with WinPython).
 
 If something goes wrong, please take a look on the error message.
 
-You can alse try the following instructions for manual installation.
+You can also try the following instructions for manual installation.
 
 
 ## Manual installation

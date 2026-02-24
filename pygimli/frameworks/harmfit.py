@@ -147,7 +147,7 @@ def harmfitCore(y, x=None, error=None, nc=42, resample=None, lam=0.1,
     x : 1d-array(len(y)) - data abscissa data. default: [0 .. len(y))
     error : 1d-array(len(y)) error of y. default (absolute error = 0.01)
     nc : int - Number of harmonic coefficients
-    resample : 1d-array - resample y to x using fitting coeffients
+    resample : 1d-array - resample y to x using fitting coefficients
     window : int - just fit data inside window bounds
     Returns
     -------
@@ -219,7 +219,7 @@ def harmfit(y, x=None, error=None, nc=42, resample=None,  # lam=0.1,
     nc : int
         Number of harmonic coefficients
     resample : 1d-array
-        resample y to x using fitting coeffients
+        resample y to x using fitting coefficients
     window : int
         just fit data inside window bounds
 

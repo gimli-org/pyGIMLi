@@ -163,7 +163,7 @@ def modelResolutionRadius(inv, nr=None, RM=None):
         return cs/rm
 
 def computeR(J, C, alpha=0.5):
-    r"""Return diagional of model resolution matrix.
+    r"""Return diagonal of model resolution matrix.
 
     Calculates the formal model resolution matrix deterministically following:
 
@@ -176,7 +176,7 @@ def computeR(J, C, alpha=0.5):
     .. note::
 
         The current implementation assumes that :math:`\mathbf{D}` is the
-        identitiy matrix, i.e. equal data weights.
+        identity matrix, i.e. equal data weights.
 
     Parameters
     ----------
@@ -296,7 +296,7 @@ def modelCovariance(inv):
 #         q += v * v
 #         d_k = t / q
 #
-#         # evalute difference norm to check convergence
+#         # evaluate difference norm to check convergence
 #         norm = np.linalg.norm(d - d_k)
 #         d = d_k
 #         k +=1
@@ -317,7 +317,7 @@ def modelCovariance(inv):
 #     return R
 #
 # def compare_res(J, C, alpha=0.5):
-#     """ Compare determinstic to stochastic resolution diagonal estimate """
+#     """ Compare deterministic to stochastic resolution diagonal estimate """
 #
 #     R_det = compute_res(J, C, alpha)
 #     R_est = diagestrand(J.shape[1])

@@ -5,7 +5,7 @@ Tools to assess the quality of unstructured meshes.
 
 Quality measures are based on the following review article:
 
-Field, D. A. (2000), Qualitative measures for initial meshes. Int. J. Numer.
+Field, D. A. (2000), Qualitative measures for initial meshes. Int. J. Number.
 Meth. Engng., 47: 887–906.
 """
 

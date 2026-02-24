@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import pygimli as pg
 
 ###############################################################################
-# We start by generating a matplotlib path respresenting the :math:`\Omega`
+# We start by generating a matplotlib path representing the :math:`\Omega`
 # character.
 
 logo_path = mpl.textpath.TextPath((0, 0), r'$\Omega$', size=5)
@@ -34,7 +34,7 @@ for i in range(poly.nodeCount() - 1):
 edge = poly.createEdge(poly.node(poly.nodeCount() - 1), poly.node(0))
 
 ###############################################################################
-# We create mesh from the polygone and set the x values as the
+# We create mesh from the polygon and set the x values as the
 # data for a color transition.
 
 mesh = pg.meshtools.createMesh(poly, area=5)

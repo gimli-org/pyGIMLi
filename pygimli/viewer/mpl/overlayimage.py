@@ -399,7 +399,7 @@ def underlayBKGMap(ax, mode='MAP', utmzone=32, epsg=0, imsize=2500, uuid='',
     epsg : int
         EPSG code for coordinate system
     uuid : str
-        user ID for payed services
+        user ID for paid services
     usetls : bool [False]
         use TLS socket layer
     origin : (float, float)
