@@ -70,11 +70,11 @@ from .dataview import (drawSensorAsMarker,  # dups to meshview??
                        drawDataMatrix,
                        generateMatrix,
                        showDataContainerAsMatrix,
-                       patchMatrix, # deprectated (Naming)
-                       patchValMap, # deprectated (Naming)
+                       patchMatrix, # deprecated (Naming)
+                       patchValMap, # deprecated (Naming)
                        plotDataContainerAsMatrix, # need renaming
-                       plotMatrix, # deprectated (Naming)
-                       plotVecMatrix,# deprectated (Naming)
+                       plotMatrix, # deprecated (Naming)
+                       plotVecMatrix,# deprecated (Naming)
                        )
 
 # which of these do we actually need?

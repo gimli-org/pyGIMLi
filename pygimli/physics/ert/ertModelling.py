@@ -81,7 +81,7 @@ class ERTModelling(ERTModellingBase):
     The sign is flipped back to physical correct assumption before we call
     the response function.
     The Jacobian is calculated with negative imaginary parts and will
-    be a conjugated complex block matrix for further calulations.
+    be a conjugated complex block matrix for further calculations.
     """
 
     def __init__(self, sr=True, verbose=False):

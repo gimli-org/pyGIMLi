@@ -157,7 +157,7 @@ class VESManager(MethodManager1d):
     def exportData(self, fileName, data=None, error=None):
         """Export data into simple ascii matrix.
 
-        Usefull?
+        Useful?
         """
         mn2 = np.abs((self.fop.am - self.fop.an) / 2.)
         ab2 = (self.fop.am + self.fop.bm) / 2.

@@ -1,4 +1,4 @@
-"""Some special and usefull matrices."""
+"""Some special and useful matrices."""
 
 import numpy as np
 
@@ -370,7 +370,7 @@ class Add2Matrix(MatrixBase):
 
 
 class Mult2Matrix(MatrixBase):
-    """Matrix by multipication of two matrices implicitly.
+    """Matrix by multiplication of two matrices implicitly.
 
     The matrix holds two matrices and distributes multiplication in 2 parts
 

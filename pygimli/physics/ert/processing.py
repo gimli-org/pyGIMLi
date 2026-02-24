@@ -71,14 +71,14 @@ def generateDataFromUniqueIndex(ind, data=None, nI=None):
     scheme["valid"] = 1
     return scheme
 
-def reciprocalIndices(data, onlyOnce=False, unify=True):
+def reciprocalIndices(data, only once=False, unify=True):
     """Return indices for reciprocal data.
 
     Parameters
     ----------
     data : DataContainerERT
         data containing reciprocal data
-    onlyOnce : bool [False]
+    only once : bool [False]
         return every pair only once
 
     Returns
@@ -97,7 +97,7 @@ def reciprocalIndices(data, onlyOnce=False, unify=True):
 
     iF = np.array(iF, dtype=int)
     iB = np.array(iB, dtype=int)
-    if onlyOnce:
+    if only once:
         return iF[iF < iB], iB[iF < iB]
     else:
         return iF, iB

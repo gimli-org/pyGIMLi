@@ -46,7 +46,7 @@ def _boundaryToCellDistancesBound(b):
 def cellDataToBoundaryGrad(mesh, v, vGrad):
     """TODO Documentme."""
     if len(v) != mesh.cellCount() or len(vGrad) != mesh.cellCount():
-        raise BaseException("len(v) dismatch mesh.cellCount()")
+        raise BaseException("len(v) mismatch mesh.cellCount()")
 
     gB = mesh.cellDataToBoundaryGradient(v, vGrad)
     return np.vstack([pg.x(gB), pg.y(gB), pg.z(gB)]).T
@@ -162,7 +162,7 @@ def cellDataToCellGrad2(mesh, v):
     """TODO Documentme."""
     if len(v) != mesh.cellCount():
         print(len(v), mesh.cellCount())
-        raise BaseException("len(v) dismatch mesh.cellCount()")
+        raise BaseException("len(v) mismatch mesh.cellCount()")
 
     vN = pg.meshtools.cellDataToNodeData(mesh, v)
     gC = np.zeros((mesh.cellCount(), 3))
@@ -179,7 +179,7 @@ def cellDataToCellGrad(mesh, v, CtB):
     """TODO Documentme."""
     if len(v) != mesh.cellCount():
         print(len(v), mesh.cellCount())
-        raise BaseException("len of v missmatch mesh.cellCount()")
+        raise BaseException("len of v mismatch mesh.cellCount()")
     div = mesh.boundaryDataToCellGradient(CtB * v)
     return np.vstack([pg.x(div), pg.y(div), pg.z(div)]).T
 
@@ -310,7 +310,7 @@ def diffusionConvectionKernel(mesh, a=None, b=0.0,
     Particle concentration u inside a velocity field.
 
     Peclet Number - ratio between convection/diffusion = F/D
-        F = velocity flow trough volume boundary,
+        F = velocity flow through volume boundary,
         D = diffusion coefficient
 
     Parameters
@@ -366,7 +366,7 @@ def diffusionConvectionKernel(mesh, a=None, b=0.0,
         AScheme = lambda peclet_: (peclet_) / (np.exp(abs(peclet_)) - 1.0) \
             if peclet_ != 0.0 else 1
     else:
-        raise BaseException("Scheme unknwon:" + scheme)
+        raise BaseException("Scheme unknown:" + scheme)
 
     useHalfBoundaries = False
 
@@ -685,7 +685,7 @@ def solveFiniteVolume(mesh, a=1.0, b=0.0, f=0.0, fn=0.0, vel=None, u0=0.0,
         if sparse and not hasattr(workspace, 'solver'):
             Sm = pg.matrix.SparseMatrix(workspace.S)
             # hold Sm until we have reference counting,
-            # loosing Sm here will kill LinSolver later
+            # losing Sm here will kill LinSolver later
             workspace.Sm = Sm
             workspace.solver = pg.core.LinSolver(Sm, verbose=verbose)
 

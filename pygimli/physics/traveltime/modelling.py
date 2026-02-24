@@ -39,7 +39,7 @@ class TravelTimeDijkstraModelling(MeshModelling):
     def createRefinedFwdMesh(self, mesh):
         """Refine the current mesh for higher accuracy.
 
-        This is called automatic when accesing self.mesh() so it ensures any
+        This is called automatic when accessing self.mesh() so it ensures any
         effect of changing region properties (background, single).
         """
         pg.info(f"Creating refined mesh (secnodes: {self._refineSecNodes}) to "
@@ -50,11 +50,11 @@ class TravelTimeDijkstraModelling(MeshModelling):
         return m
 
     def setMeshPost(self, mesh):
-        """Set mesh after forward operator has been initalized."""
+        """Set mesh after forward operator has been initialized."""
         self._core.setMesh(mesh, ignoreRegionManager=True)
 
     def setDataPost(self, data):
-        """Set data after forward operator has been initalized."""
+        """Set data after forward operator has been initialized."""
         self._core.setData(data)
 
     def createGraph(self, slowness):

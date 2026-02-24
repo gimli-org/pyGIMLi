@@ -116,7 +116,7 @@ def drawFirstPicks(ax, data, tt=None, plotva=False, **kwargs):
     return ax
 
 
-# better be renamed to showData and optionaly show first pick curves
+# better be renamed to showData and optionally show first pick curves
 def showVA(data, usePos=True, ax=None, **kwargs):
     """Show apparent velocity as image plot.
 

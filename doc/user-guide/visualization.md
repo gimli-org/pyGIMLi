@@ -84,7 +84,7 @@ mpl.drawModel(ax, mesh, data)
 plt.show()
 ```
 
-Simliarly, for scalar field values, the function `pygimli.viewer.mpl.drawField()` is utilized:
+Similarly, for scalar field values, the function `pygimli.viewer.mpl.drawField()` is utilized:
 
 ```{code-cell}
 nx = pg.x(mesh.positions())

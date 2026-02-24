@@ -1,7 +1,7 @@
 (build_lin)=
 # Building on Linux
 
-## Using interal workflow
+## Using internal workflow
 
 We provide a workflow script for our CI pipeline/action runner which may be use
 also local for all platforms.
@@ -15,7 +15,7 @@ Prepare workspace:
     git checkout dev
 ```
 
-Runing workflow:
+Running workflow:
 
 ```bash
     bash gimli/.workflow.sh install
@@ -49,7 +49,7 @@ e.g., ``$HOME/src/gimli`` and get the source code:
     python -m venv venv-build --prompt=gimli-build
     # activate the venv
     source venv-build/bin/activate
-    # update pip is allways a good idea
+    # update pip is always a good idea
     python -m pip install -U pip
     # install gimli as editable with its dependencies into to venv
     pip install -e ./gimli/[build]

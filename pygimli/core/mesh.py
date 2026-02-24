@@ -662,7 +662,7 @@ def __Mesh__align__(self, pnts):
 
     if A is None:
         print(pnts)
-        critical("Can't, interprete ptns.")
+        critical("Can't, interpret ptns.")
 
     tn = [n.pos()[0] for n in self.nodes()]
     zn = [n.pos()[1] for n in self.nodes()]

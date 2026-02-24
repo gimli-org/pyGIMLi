@@ -1007,7 +1007,7 @@ def drawField(ax, mesh, data=None, levels=None, nLevs=5,
                         levs = np.linspace(min(levels), max(levels), nCols+1)
 
                 gci = ax.tricontourf(x, y, triangles, z,
-                                     # antialiased=True, # not allways nice
+                                     # antialiased=True, # not always nice
                                      levels=levs, **kwargs)
 
             if contourLines is True:

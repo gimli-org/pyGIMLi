@@ -142,7 +142,7 @@ def __BlockMatrix_addMatrix_happy_GC__(self, M, row=None, col=None,
 
     TODO
     ----
-        * Add numpy matrices or convertable
+        * Add numpy matrices or convertible
         * Transpose is only for 1d arrays. Needed for matrices?
 
     Parameters

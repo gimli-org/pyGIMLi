@@ -20,7 +20,7 @@ def fit(funct, data, err=None, **kwargs):
     Parameters
     ----------
     funct: callable
-        Function with the first argmument as data space, e.g., x, t, f, Nr. ..
+        Function with the first argument as data space, e.g., x, t, f, Nr. ..
         Any following arguments are the parameters to be fit.
         Except if a verbose flag if used.
     data: iterable (float)
@@ -192,7 +192,7 @@ class MethodManager:
 
         Called once in the constructor to force the manager to create the
         necessary forward operator member. Can be recalled if you need to
-        changed the mangers own forward operator object. If you want an own
+        changed the managers own forward operator object. If you want an own
         instance of a valid FOP call createForwardOperator.
         """
         fop = self._fop if self._fop is not None else self.createForwardOperator(**kwargs)
@@ -626,7 +626,7 @@ class ParameterInversionManager(MethodManager):
     """Framework to invert unconstrained parameters."""
 
     def __init__(self, funct=None, fop=None, **kwargs):
-        """Inizialize instance."""
+        """Initialize instance."""
         if fop is not None:
             if not isinstance(fop, pg.frameworks.ParameterModelling):
                 pg.critical("We need a fop if type ",

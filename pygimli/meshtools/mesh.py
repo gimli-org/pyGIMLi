@@ -543,7 +543,7 @@ def convertMeshioMesh(mesh, verbose=False):
 
     TODO
         * test for 3D mesh
-        * test and improve if neeeded
+        * test and improve if needed
     """
     if verbose is True:
         pg.info("Converting meshio mesh.")
@@ -1080,7 +1080,7 @@ def readTetgen(fName, comment='#', verbose=False, defaultCellMarker=0,
                 cell_marker_n = defaultCellMarker
             mesh.createCell([int(ind) for ind in cell_n[1:5]],
                             marker=cell_marker_n)
-            # in order to import quadratic meshes directly, i ned the sorting
+            # in order to import quadratic meshes directly, i need the sorting
             # of the node indices
 #           mesh.createCell([int(ind) for ind in cell_n[1:nodes_per_cell + 1]],
 #                           marker=cell_marker_n)

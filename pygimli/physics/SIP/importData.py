@@ -360,7 +360,7 @@ def readSIP256file(resfile, verbose=False):
         elif line.find('Freq') >= 0:
             pass
         elif len(sline) > 1 and rdno > 0:  # some data present
-            # search for two numbers (with .) without a space inbetween
+            # search for two numbers (with .) without a space in between
             # variant 1: do it for every part
             for i, ss in enumerate(sline):
                 if re.search(r'\.20[01][0-9]', ss) is None:  # no date

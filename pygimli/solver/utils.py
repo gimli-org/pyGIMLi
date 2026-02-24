@@ -9,7 +9,7 @@ import pygimli as pg
 def createAnisotropyMatrix(lon, trans, theta):
     """Create anisotropy matrix with desired properties.
 
-    Anistropy tensor from longitudinal value lon,
+    Anisotropy tensor from longitudinal value lon,
     transverse value trans and the angle theta of the symmetry axis relative to the vertical after  cite:WieseGreZho2015
     https://www.researchgate.net/publication/249866312_Explicit_expressions_for_the_Frechet_derivatives_in_3D_anisotropic_resistivity_inversion
 
@@ -58,7 +58,7 @@ def createConstitutiveMatrix(lam=None, mu=None, E=None, nu=None, dim=2,
         * dim == 1
         * Tests
         * Examples
-        * comparision Voigts/Kelvin notation
+        * comparison Voigts/Kelvin notation
 
     Parameters
     ----------

@@ -23,7 +23,7 @@ rc = {
 
 
 def getCPUCount():
-    """Return number of processors on multiple platoforms."""
+    """Return number of processors on multiple platforms."""
     # Windows
     if os.name == 'nt':
         return int(os.getenv('NUMBER_OF_PROCESSORS'))

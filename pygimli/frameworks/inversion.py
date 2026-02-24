@@ -157,7 +157,7 @@ class InversionBase:
     @property
     def dataVals(self):
         """Data vector (deprecated)."""
-        # why deprecated? whats the alternative?
+        # why deprecated? what's the alternative?
         if self._dataVals is None:
             pg.critical("No data. Inversion framework needs data values to run")
 
@@ -170,7 +170,7 @@ class InversionBase:
 
         Values == 0.0 will be set to tolerance
         """
-        # also deprecated? whats the alternative?
+        # also deprecated? what's the alternative?
         if d is None:
             pg.critical("Data values can't be set to None")
         self._dataVals = d
@@ -179,7 +179,7 @@ class InversionBase:
     @property
     def errorVals(self):
         """Errors vector (deprecated)."""
-        # why deprecated? whats the alternative?
+        # why deprecated? what's the alternative?
         return self._errorVals
 
 
@@ -189,7 +189,7 @@ class InversionBase:
 
         Values == 0.0 will be set to tolerance.
         """
-        # also deprecated? whats the alternative?
+        # also deprecated? what's the alternative?
         self._errorVals = d
 
         if self._errorVals is None:
@@ -882,7 +882,7 @@ class ClassicInversion:
     model : array
         Holds the last active model
     maxIter : int [20]
-        Maximal interation number.
+        Maximal iteration number.
     stopAtChi1 : bool [True]
         Stop iteration when chi² is one. If set to False the iteration stops
         after maxIter or convergence reached (self.inv.deltaPhiAbortPercent())
@@ -1385,7 +1385,7 @@ class ClassicInversion:
             marker, strength)
 
     def setConstraintWeights(self, cWeight):
-        """Set weighting factors for the invidual rows of the C matrix."""
+        """Set weighting factors for the individual rows of the C matrix."""
         self.inv.setCWeight(cWeight)
 
     def run(self, dataVals, errorVals=None, **kwargs):

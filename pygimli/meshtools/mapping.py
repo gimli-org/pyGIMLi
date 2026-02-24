@@ -274,7 +274,7 @@ def interpolateAlongCurve(curve, t, **kwargs):
 
         periodic : bool [False]
             Curve is periodic.
-            Usefull for closed parametric spline interpolation.
+            Useful for closed parametric spline interpolation.
 
     Returns
     -------

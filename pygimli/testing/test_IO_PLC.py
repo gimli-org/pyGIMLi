@@ -14,7 +14,7 @@ class TestPLCIO(unittest.TestCase):
     def test_io_triangle(self):
         """
         """
-        # create tempfile in most secure manner, only accesible by this process
+        # create tempfile in most secure manner, only accessible by this process
         # id no execution allowed at all, will be deleted as soon as this
         # process stops
         try:

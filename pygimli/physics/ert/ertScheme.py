@@ -344,7 +344,7 @@ class DataSchemePolePole(DataSchemeBase):
         ert.createData(elecs, schemeName='pp', **kwargs) instead.
         """
         nElectrodes = self.nElectrodes_
-        # reserve a couple more than nesseccary ###
+        # reserve a couple more than necessary ###
         self.data_.resize((nElectrodes) * (nElectrodes))
 
         count = 0
@@ -478,7 +478,7 @@ class DataSchemePoleDipole(DataSchemeBase):
         nElectrodes = self.nElectrodes_
 
         # self.createElectrodes(nElectrodes, electrodeSpacing)
-        # reserve a couple more than nesseccary !!!
+        # reserve a couple more than necessary !!!
         self.data_.resize((nElectrodes) * (nElectrodes))
 
         count = 0
@@ -517,7 +517,7 @@ class DataSchemeHalfWenner(DataSchemeBase):
         """
         nElectrodes = self.nElectrodes_
 
-        # reserve a couple more than nesseccary !!!
+        # reserve a couple more than necessary !!!
         self.data_.resize((nElectrodes) * (nElectrodes))
 
         # print("create", self.maxSeparation)
@@ -576,7 +576,7 @@ class DataSchemeWennerAlpha(DataSchemeBase):
         if self.maxSeparation < maxSep:
             maxSep = self.maxSeparation
 
-        # reserve a couple more than nesseccary !!!
+        # reserve a couple more than necessary !!!
         self.data_.resize(nElectrodes * nElectrodes)
 
         count = 0
@@ -613,7 +613,7 @@ class DataSchemeWennerBeta(DataSchemeBase):
         if self.maxSeparation < maxSep:
             maxSep = self.maxSeparation
 
-        # reserve a couple more than nesseccary ###
+        # reserve a couple more than necessary ###
         self.data_.resize((nElectrodes * nElectrodes))
 
         count = 0

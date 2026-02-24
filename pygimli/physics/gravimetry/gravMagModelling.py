@@ -35,7 +35,7 @@ adot = lambda M__, x__: np.asarray([(a__.dot(M__)) for a__ in x__])
 
 
 def BZPoly(pnts, poly, mag, openPoly=False):
-    """Vertical magnetic gradient for polygone.
+    """Vertical magnetic gradient for polygon.
 
     Parameters
     ----------
@@ -150,7 +150,7 @@ def gradUSphere(r, rad, rho, pos=(0., 0., 0.)):
     [gx, gy, gz] : [float*3]
         gravitational acceleration (note that gz points negative)
     """
-    # gesucht eigentlich g_z aber nach unten als -z
+    # gesucht eigentlich g_z aber nach unten also -z
     return [1., 1., -1.] * (
         gradR(r - pos) * - G * deltaMSph(rad, rho) * 1. / (rabs(r - pos)**2)).T
 # def gSphere(...)

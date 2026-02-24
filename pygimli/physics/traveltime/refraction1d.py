@@ -21,7 +21,7 @@ def simulateNlayerRefraction(offsets, thk, vel, muteDirect=False):
     vel : iterable
         Velocities for the layers
     muteDirect : bool [False]
-        Direct first arivals will be muted.
+        Direct first arrivals will be muted.
 
     Returns
     -------
@@ -99,7 +99,7 @@ class RefractionNLayerFix1stLayer(pg.core.ModellingBase):
         d0 : float
             Depth of first layer in meter.
         muteDirect : bool [False]
-            Mute the direct arrivels fron the first layer.
+            Mute the direct arrivals from the first layer.
         """
         super().__init__(verbose=verbose)
         self.nlay = nlay

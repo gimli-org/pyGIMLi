@@ -4,7 +4,7 @@ r"""
 Semianalytical Gravimetry and Geomagnetics in 2D
 ------------------------------------------------
 
-Simple gravimetric and magnetostatic field caluculation using integration
+Simple gravimetric and magnetostatic field calculation using integration
 approach after :cite:`WonBev1987`.
 
 """
