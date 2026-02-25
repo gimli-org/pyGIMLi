@@ -19,7 +19,6 @@ from os.path import join
 
 sys.path.insert(0, os.path.abspath("."))
 
-import pkg_resources
 import sphinx
 
 import pygimli as pg
