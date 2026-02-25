@@ -65,7 +65,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = . "${PROJECT_SOURCE_DIR}/doc/doxygen/" "${PROJECT_SOURCE_DIR}/core/src"
+INPUT                  = . "${PROJECT_SOURCE_DIR}/doc/doxgen/" "${PROJECT_SOURCE_DIR}/core/src"
 FILE_PATTERNS          = *.h *.cpp *.hpp *.dox
 RECURSIVE              = YES
 EXCLUDE                =
