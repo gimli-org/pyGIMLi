@@ -1,7 +1,7 @@
 (build_lin)=
 # Building on Linux
 
-## Using interal workflow
+## Using internal workflow
 
 We provide a workflow script for our CI pipeline/action runner which may be use
 also local for all platforms.
