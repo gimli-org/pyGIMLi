@@ -13,12 +13,13 @@ from .tools import depthWeighting
 class MagManager(MeshMethodManager):
     """Magnetics Manager."""
 
-    def __init__(self, data=None, **kwargs):
+    def __init__(self, data=None, delimiter=None, **kwargs):
         """Create Magnetics Manager instance."""
         self.DATA = kwargs.pop("DATA", None)
         self.x = kwargs.pop("x", None)
         self.y = kwargs.pop("y", np.zeros_like(self.x))
         self.z = kwargs.pop("z", np.zeros_like(self.x))
+        self.utmzone = kwargs.pop("utmzone", 33)
         self.igrf = kwargs.pop("igrf", None)
         self.mesh_ = kwargs.pop("mesh", None)
         self.cmp = kwargs.pop("cmp", None)
@@ -31,17 +32,19 @@ class MagManager(MeshMethodManager):
             self.dem = DEM(self.dem)
 
         if isinstance(data, str):
-            self.DATA = np.genfromtxt(data, names=True)
-            self.x = self.DATA["x"]
-            self.y = self.DATA["y"]
-            self.z = self.DATA["z"]
+            self.DATA = np.genfromtxt(data, names=True, delimiter=delimiter)
+            nam = self.DATA.dtype.names
+            self.x = self.DATA["x"] if "x" in nam else np.zeros(len(self.DATA))
+            self.y = self.DATA["y"] if "y" in nam else np.ones_like(self.x)
+            self.z = self.DATA["z"] if "z" in nam else np.ones_like(self.x)
+
             if self.cmp is None:
                 self.cmp = [t for t in self.DATA.dtype.names
                             if t.startswith("B") or t.startswith("T")]
             if self.igrf is None:
                 import utm
                 lat, lon = utm.to_latlon(np.mean(self.x),
-                                         np.mean(self.y), 33, 'U')
+                                         np.mean(self.y), self.utmzone, 'U')
                 pg.info(f"Center of data: {lat}, {lon}")
                 self.igrf = [lat, lon]
 
@@ -420,7 +423,6 @@ class MagManager(MeshMethodManager):
         else:
             self.inv.setRegularization(cType=C)
 
-        z0 = kwargs.pop("z0", 25)  # Oldenburg&Li(1996)
         dw = kwargs.pop("depthWeighting", True)
         if np.any(dw):
             pg.info("Using depth")
