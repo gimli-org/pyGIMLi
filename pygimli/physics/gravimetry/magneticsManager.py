@@ -424,6 +424,12 @@ class MagManager(MeshMethodManager):
             self.inv.setRegularization(cType=C)
 
         dw = kwargs.pop("depthWeighting", True)
+        if isinstance(dw, (float, int)): # take it as z0
+            z0 = dw * 1.0
+            dw = True
+        else:
+            z0 = kwargs.pop("z0", 25)  # Oldenburg&Li(1996)
+
         if np.any(dw):
             pg.info("Using depth")
             if dw is True:
