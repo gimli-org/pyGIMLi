@@ -326,6 +326,7 @@ class MagManager(MeshMethodManager):
         geo = mt.createCube(start=[min(self.x)-bnd, min(self.x)-bnd, -depth],
                             end=[max(self.x)+bnd, max(self.y)+bnd, 0])
         if addPoints is True:
+            # get z values from DEM if available
             for xi, yi in zip(self.x, self.y, strict=False):
                 geo.createNode([xi, yi, 0])
         if addPLC:
@@ -399,6 +400,7 @@ class MagManager(MeshMethodManager):
         if noisify:
             dataVec += np.random.randn(len(dataVec)) * noise_level
 
+        dataVec[dataVec == 0] = noise_level * 0.1
         # self.inv_ = pg.Inversion(fop=self.fwd, verbose=True)
         self.inv.setForwardOperator(self.fwd)
         kwargs.setdefault("startModel", 0.001)
@@ -439,9 +441,9 @@ class MagManager(MeshMethodManager):
             cw = self.fwd.regionManager().constraintWeights()
             if len(cw) > 0 and len(dw) == len(cw):
                 # dw *= cw
-                print(min(dw), max(dw))
+                pg.info(min(dw), max(dw))
             else:
-                print("lengths not matching!")
+                pg.info("lengths not matching!")
 
             dw *= kwargs.pop("mul", 1)
             self.inv.setConstraintWeights(dw)
@@ -468,6 +470,7 @@ class MagManager(MeshMethodManager):
             pg.utils.createPath(folder)
 
         self.inv.response.save(folder+"/response.dat")
+        self.exportLocations(folder+"/points.vtk")
         np.savetxt(folder+"/data.dat", self.inv.dataVals)
         np.savetxt(folder+"/error.dat", self.inv.errorVals)
         self.mesh_["sus"] = self.inv.model
@@ -533,6 +536,14 @@ class MagManager(MeshMethodManager):
             ax[i, 2].scatter(self.x, self.y, c=misf[i], **mkw)
 
         return fig
+
+
+    def exportLocations(self, filename="points.vtk"):
+        """Export data locations to a VTK file."""
+        pm = pg.Mesh(dim=3, isGeometry=True)
+        pm.createNodes(np.column_stack([self.x, self.y, self.z]));
+        pm.exportVTK(filename)
+
 
     def show3DModel(self, label:str=None, trsh:float=0.025,
                     synth:pg.Mesh=None, invert:bool=False,
