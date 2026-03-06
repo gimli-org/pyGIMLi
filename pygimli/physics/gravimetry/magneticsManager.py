@@ -515,18 +515,18 @@ class MagManager(MeshMethodManager):
         """
         nc = len(self.cmp)
         fig, ax = pg.plt.subplots(ncols=3, nrows=nc, figsize=(12, 3*nc),
-                                sharex=True, sharey=True, squeeze=False)
+                                  sharex=True, sharey=True, squeeze=False)
         vals = np.reshape(self.inv.dataVals, [nc, -1])
         resp = np.reshape(self.inv.response, [nc, -1])
         errs = np.reshape(self.inv.errorVals, [nc, -1])  # relative!
         misf = (vals - resp) / np.abs(errs *  vals)
+        mmis = kwargs.pop('maxMisfit', 3)
+        mm = kwargs.pop('maxField', np.max(np.abs(vals)))
         fkw = kwargs.copy()
         fkw.setdefault('cmap', "bwr")
-        mm = fkw.pop('maxField', np.max(np.abs(vals)))
         fkw.setdefault('vmin', -mm)
         fkw.setdefault('vmax', mm)
         mkw = kwargs.copy()
-        mmis = fkw.pop('maxMisfit', 3)
         mkw.setdefault('cmap', "bwr")
         mkw.setdefault('vmin', -mmis)
         mkw.setdefault('vmax', mmis)
@@ -534,6 +534,9 @@ class MagManager(MeshMethodManager):
             ax[i, 0].scatter(self.x, self.y, c=vals[i], **fkw)
             ax[i, 1].scatter(self.x, self.y, c=resp[i], **fkw)
             ax[i, 2].scatter(self.x, self.y, c=misf[i], **mkw)
+            for j in range(3):
+                ax[i, j].grid()
+                ax[i, j].set_aspect(1)
 
         return fig
 
