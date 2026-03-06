@@ -79,6 +79,13 @@ public:
         return (invTrans(trans(a) + b));
     }
 
+    /*! Error of f(a) calculated by a and an absolute error \f$ da/a: df = | da * df/da | \f$ \n
+    intrinsic function that could be overloaded */
+    Vec errorAbs(const Vec & a, const Vec & da) const {
+        if (da == Vec(a.size(), 0.0)) return Vec(a.size(), 1.0);
+        return abs(Vec(da * deriv(a)));
+    }
+
     /*! Error of f(a) calculated by a and relative error \f$ da/a: df = | da * df/da | \f$ \n
     intrinsic function that could be overloaded */
     Vec error(const Vec & a, const Vec & daBya) const {
