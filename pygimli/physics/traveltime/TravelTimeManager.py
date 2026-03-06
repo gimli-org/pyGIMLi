@@ -280,6 +280,14 @@ class TravelTimeManager(MeshMethodManager):
             super().showFit(axs=axs, **kwargs)
 
 
+    def showMisfit(self):
+        """Show data misfit (traveltime) color-coded."""
+        misfit = self.inv.dataVals - self.inv.response
+        pg.viewer.mpl.showDataContainerAsMatrix(
+            self.data, "s", "g", misfit,
+            cMin=-1e-3, cMax=1e-3, cMap="bwr");
+
+
     def getRayPaths(self, model=None):
         """Compute ray paths.
 
