@@ -699,14 +699,14 @@ class InversionBase:
         tData = self.dataTrans.deriv(self.response)
         tModel = 1 / self.modelTrans.deriv(self.model)
         if error_weighted:
-            tData /= self.dataTrans.error(self.response, self.errorVals)
+            tData *= self.dataTrans.error(self.response, self.errorVals)
         if numpy_matrix:
             return np.reshape(tData, [-1, 1]) * \
                 pg.utils.gmat2numpy(self.fop.jacobian()) * \
                 np.reshape(tModel, [1, -1])
         else:
             return pg.matrix.MultLeftRightMatrix(self.fop.jacobian(),
-                                                tData, tModel)
+                                                 tData, tModel)
 
 
     def residual(self):
@@ -714,6 +714,7 @@ class InversionBase:
         return (self.dataTrans.fwd(self.dataVals) -
                 self.dataTrans.fwd(self.response)) / \
             self.dataTrans.error(self.response, self.errorVals)
+
 
     def dataGradientFormal(self):  # formal but restricted to existent J
         """Return data gradient from Jacobian and residual, i.e. J^T * dData."""
@@ -723,12 +724,12 @@ class InversionBase:
 
     def dataGradient(self, error_weighted=True):  # also works for fop.STy
         """Return data gradient from jacobian and residual, i.e. J^T * dData."""
-        tData = self.dataTrans.deriv(self.response)
+        tData = self.dataTrans.deriv(self.response) # dd/dr
         if error_weighted:
-            tData /= self.dataTrans.error(self.response, self.errorVals)
+            tData *= self.dataTrans.error(self.response, self.errorVals)
 
         return self.fop.STy(-self.residual()*tData) / \
-            self.modelTrans.deriv(self.model)
+            self.modelTrans.deriv(self.model) * 2
 
 
     def modelGradient(self):
@@ -739,7 +740,7 @@ class InversionBase:
         else:
             C = pg.matrix.MultLeftMatrix(self.fop.constraints(), self.cWeight)
 
-        return C.transMult(C.mult(self.modelTrans(self.model)))
+        return C.transMult(C.mult(self.modelTrans(self.model))) * 2
 
 
     def gradient(self):
@@ -821,8 +822,8 @@ class DescentInversion(InversionBase):  # noqa: D101
         super().__init__(**kwargs)
 
 
-    def modelUpdate(self):
-        """Return negative gradient of objective function as search direction."""
+    def triggerJacobian(self):
+        """."""
         if self.fop.STy.__doc__ is pg.Modelling.STy.__doc__:  # original
             if len(self.model) != self.fop.jacobian().cols():
                 self._jacobianOutdated = True
@@ -830,7 +831,12 @@ class DescentInversion(InversionBase):  # noqa: D101
             if self._jacobianOutdated:
                 self.fop.createJacobian(self.model)
 
-        return -self.gradient()
+
+    def modelUpdate(self):
+        """Return negative gradient of objective function as search direction."""
+        self.triggerJacobian()
+        grad = -self.gradient()
+        return grad / np.linalg.norm(grad)
 
 
 class NLCGInversion(InversionBase):
