@@ -71,6 +71,7 @@ def generateDataFromUniqueIndex(ind, data=None, nI=None):
     scheme["valid"] = 1
     return scheme
 
+
 def reciprocalIndices(data, onlyOnce=False, unify=True):
     """Return indices for reciprocal data.
 

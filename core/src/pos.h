@@ -62,12 +62,24 @@ DLLEXPORT void deVectorizeRVectorToPosVectorList(std::vector < RVector > & ret,
                                             int marker,
                                             const ElementMatrixMap & eMap);
 
+/*! Dot product of two PosVector. r[i] = <a[i], b[i]> */
 DLLEXPORT void dot(const PosVector & a,
                    const PosVector & b,
                    RVector & r);
 
+/*! Dot product of PosVector and Pos. r[i] = <a[i], b> */
+DLLEXPORT void dot(const PosVector & a,
+                   const Pos & b,
+                   RVector & r);
+
+/*! Dot product of two PosVector lists. r[i] = dot(a[i], b[i]) */
 DLLEXPORT void dot(const std::vector < PosVector > & a,
                    const std::vector < PosVector > & b,
+                   std::vector < RVector > & r);
+
+/*! Dot product of PosVector lists and PosVector. r[i] = dot(a[i], b) */
+DLLEXPORT void dot(const std::vector < PosVector > & a,
+                   const PosVector & b,
                    std::vector < RVector > & r);
 
 /*! Frobenius inner product*/

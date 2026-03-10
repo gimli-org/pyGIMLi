@@ -123,9 +123,7 @@ void deVectorizeRVectorToPosVectorList(std::vector < RVector > & ret,
     }
 }
 
-void dot(const PosVector & a,
-         const PosVector & b,
-         RVector & r){
+void dot(const PosVector & a, const PosVector & b, RVector & r){
 
     ASSERT_EQUAL_SIZES(a, b)
     r.resize(a.size());
@@ -133,6 +131,15 @@ void dot(const PosVector & a,
         r[i] = a[i].dot(b[i]);
     }
 }
+
+void dot(const PosVector & a, const Pos & b, RVector & r){
+
+    r.resize(a.size());
+    for (Index i = 0; i < a.size(); i ++ ){
+        r[i] = a[i].dot(b);
+    }
+}
+
 
 void dot(const std::vector < PosVector > & a,
          const std::vector < PosVector > & b,
@@ -144,6 +151,18 @@ void dot(const std::vector < PosVector > & a,
         dot(a[i], b[i], r[i]);
     }
 }
+
+void dot(const std::vector < PosVector > & a,
+         const PosVector & b,
+         std::vector < RVector > & r){
+
+    ASSERT_EQUAL_SIZES(a, b)
+    r.resize(a.size());
+    for (Index i = 0; i < a.size(); i ++ ){
+        dot(a[i], b[i], r[i]);
+    }
+}
+
 
 void dot(const stdVectorRMatrix & a,
          const stdVectorRMatrix & b,

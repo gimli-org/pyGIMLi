@@ -3,10 +3,13 @@
 import sys
 import numpy as np
 
+__PY_ABS__ = abs
+__PY_SUM__ = sum
+
 from .core import pgcore
 from .core import *
 
-from .logger import error, critical, _r, _g, _r
+from .logger import error, critical, _r, _g, _y, _b
 from .base import (isInt, isScalar, isArray, isPos,
                    isPosList)
 
@@ -984,6 +987,13 @@ def __stdVectorR3Vector_BINARY_OP__(self, b, OP):
 
     elif len(self) == len(b):
         for i, ai in enumerate(self):
+            # if OP == '__mul__' and len(b[i] > 1):
+            #     # _b(b[i], type(b[i]))
+            #     # _g(__PY_SUM__(b[i]))
+            #     # _y('mul', ai, __PY_SUM__(b[i]))
+            #     #ret.append(ai * sum(b[i]))
+            #     ret.append(getattr(ai, OP)(__PY_SUM__(b[i])))
+            # else:
             ret.append(getattr(ai, OP)(b[i]))
     else:
         pg.critical(f'Cannot {OP} stdVectorR3Vector with different lengths:'

@@ -905,7 +905,7 @@ def removeEntries(A, rows=None, cols=None):
 
 
 def reduceEntries(A, idx):
-    """Remove all values of A in row[idx] and col[idx] and add 1 to diag """
+    """Remove all values of A in row[idx] and col[idx] and add 1 to diag."""
     import pygimli as pg
     debug = False
     if debug:
