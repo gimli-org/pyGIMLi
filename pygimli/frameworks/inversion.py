@@ -836,19 +836,27 @@ class DescentInversion(InversionBase):  # noqa: D101
         """Return negative gradient of objective function as search direction."""
         self.triggerJacobian()
         grad = -self.gradient()
-        return grad / np.linalg.norm(grad)
+        return grad  # / np.linalg.norm(grad)
 
 
-class NLCGInversion(InversionBase):
+class NLCGInversion(DescentInversion):
     """Non-linear conjugate-gradient minimization."""
 
     def __init__(self, **kwargs):
         """Initialize."""
         super().__init__(**kwargs)
+        self.dm = np.array([0])
+        self.delta = 1
 
     def modelUpdate(self):
         """Initialize."""
-        return None
+        self.dm /= self.olddelta
+        self.currgradient = -self.gradient()
+        self.delta = sum(self.currgradient**2)
+        self.dm *= self.delta
+        self.dm += self.currgradient
+
+        return self.dm
 
 
 class LBFGSInversion(InversionBase):
@@ -1731,7 +1739,7 @@ class ClassicInversion:
                 np.reshape(tModel, [1, -1])
         else:
             return pg.matrix.MultLeftRightMatrix(self.fop.jacobian(),
-                                                tData, tModel)
+                                                 tData, tModel)
 
     def residual(self):
         """Residual vector (data-reponse)/error using data transform."""
