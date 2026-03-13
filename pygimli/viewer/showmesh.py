@@ -102,7 +102,7 @@ def show(obj=None, data=None, **kwargs):
             if data is None and obj.haveData("t"):
                 data = "t"
 
-            return showDataContainerAsMatrix(obj, "s", "g", data)
+            return showDataContainerAsMatrix(obj, "s", "g", data, **kwargs)
 
     # try to interpret obj as matrices
     if isinstance(obj, pg.core.MatrixBase) or (isinstance(obj, np.ndarray) and
