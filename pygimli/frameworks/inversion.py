@@ -699,7 +699,7 @@ class InversionBase:
         tData = self.dataTrans.deriv(self.response)
         tModel = 1 / self.modelTrans.deriv(self.model)
         if error_weighted:
-            tData *= self.dataTrans.error(self.response, self.errorVals)
+            tData /= self.dataTrans.error(self.response, self.errorVals)
         if numpy_matrix:
             return np.reshape(tData, [-1, 1]) * \
                 pg.utils.gmat2numpy(self.fop.jacobian()) * \
@@ -726,7 +726,7 @@ class InversionBase:
         """Return data gradient from jacobian and residual, i.e. J^T * dData."""
         tData = self.dataTrans.deriv(self.response) # dd/dr
         if error_weighted:
-            tData *= self.dataTrans.error(self.response, self.errorVals)
+            tData /= self.dataTrans.error(self.response, self.errorVals)
 
         return self.fop.STy(-self.residual()*tData) / \
             self.modelTrans.deriv(self.model) * 2
