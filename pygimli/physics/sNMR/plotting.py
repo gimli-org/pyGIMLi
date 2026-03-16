@@ -40,12 +40,12 @@ from pygimli.viewer.mpl import drawModel1D
 #     ax.grid(True)
 
 
-def showErrorBars(ax, thk, val, thkL, thkU, valL, value, *args, **kwargs):
+def showErrorBars(ax, thk, val, thkL, thkU, valL, valU, *args, **kwargs):
     """Plot wc and t2 models with error bars."""
     zb = np.cumsum(thk)
     zm = np.hstack((zb - thk / 2, zb[-1] * 1.2))  # zb[-1]+thk[-1]/2))
     valm = (val[:-1] + val[1:]) / 2
-    xerr = [val - valL, value - val]
+    xerr = [val - valL, valU - val]
     yerr = [thk - thkL, thkU - thk]
     ax.errorbar(val, zm, fmt='.', xerr=xerr, ecolor='r', **kwargs)
     ax.errorbar(valm, zb, fmt='.', yerr=yerr, ecolor='g', **kwargs)

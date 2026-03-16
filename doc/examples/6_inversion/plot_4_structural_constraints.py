@@ -91,7 +91,7 @@ ax, cb = mgr.showResult(cMin=50, cMax=1500)
 # Constraining 3-D electrical resistance tomography with GPR data for improved
 # aquifer characterization. Journal of Applied Geophysics 78, 68-76,
 # doi:10.1016/j.jappgeo.2011.04.008.
-# Wunderlich, T., Fischer, P., Wilken, D., Handler, H., Erkul, E., Mecking, R.,
+# Wunderlich, T., Fischer, P., Wilken, D., Hadler, H., Erkul, E., Mecking, R.,
 # Günther, T., Heinzelmann, M., Vött, A. & Rabbel, W. (2018): Constraining
 # Electric Resistivity Tomography by Direct Push Electric Conductivity
 # logs and vibracores: An exemplary study of the Fiume Morto silted riverbed
