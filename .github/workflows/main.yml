@@ -16,10 +16,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  if: "!contains(github.event.head_commit.message, '[noci]')"
   get-runner:
     name: Choose runner
-    if: ${{ always() }}
+    if: "!contains(github.event.head_commit.message, '[noci]')"
     runs-on: self-hosted
     outputs:
      RUNNER: ${{ runner.name }}
