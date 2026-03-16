@@ -292,8 +292,7 @@ html_sidebars = {
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 html_additional_pages = {"index": "index.html",
-                         "community/publications": "publications.html",
-                         "community/other_software": "other_software.html"}
+                         "community/publications": "publications.html"}
 
 # If false, no module index is generated.
 html_domain_indices = True
@@ -671,10 +670,6 @@ bibtex_reference_style = "author_year"
 from bib2html import write_html
 publications = write_html()
 
-# Create software list from BibTeX
-from bib2html import write_software_html
-other_software = write_software_html()
-
 
 ###############################################################################
 # -- Options for mathjax
@@ -791,7 +786,6 @@ from paper_carousel import showcase
 random.shuffle(showcase)  # mix it up
 html_context = {
     "showcase": showcase,
-    "other_software": other_software,
     "publications": publications,
     "default_mode": "light",
 }

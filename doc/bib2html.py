@@ -39,25 +39,3 @@ def write_html(bibfile="gimliuses.bib"):
         entry["doi"] = string
 
     return json.dumps(db, sort_keys=True, indent=4)
-
-
-def write_software_html(bibfile="gimlisoftware.bib"):
-    """Parse software BibTeX file and return JSON for DataTables."""
-    db = parse_bib(bibfile)
-    for entry in db:
-        # Clean up author field
-        entry["author"] = entry["author"].replace(" and ", ", ")
-        entry["author"] = entry["author"].replace("~", " ")
-        
-        # Process DOI field
-        if not "doi" in entry:
-            entry["doi"] = ""
-        else:
-            doi = entry["doi"]
-            link = "https://doi.org/%s" % doi
-            entry["doi"] = (
-                "<a target='_blank' href=%s data-toggle='tooltip' title='Go to %s'><i class='ai ai-doi ai-2x'></i></a>"
-                % (link, link)
-            )
-
-    return json.dumps(db, sort_keys=True, indent=4)
