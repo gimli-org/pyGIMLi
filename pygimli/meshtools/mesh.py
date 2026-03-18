@@ -1530,8 +1530,34 @@ def readHDF5Mesh(fileName, group='mesh', indices='cell_indices',
 
 
 def readFenicsHDF5Mesh(fileName, verbose=True, **kwargs):
-    """ Reads :term:`FEniCS` mesh from file format .h5 and returns a
+    """Read :term:`FEniCS` mesh from file format .h5 and return a
     :gimliapi:`GIMLI::Mesh`.
+
+    Parameters
+    ----------
+    fileName : str
+        Path to the HDF5 file.
+    verbose : bool [True]
+        Print information during import.
+
+    Keyword Arguments
+    -----------------
+    group : str ['mesh']
+        HDF5 group name containing the mesh data.
+    indices : str ['cell_indices']
+        Dataset name for cell indices inside the group.
+    pos : str ['coordinates']
+        Dataset name for node coordinates inside the group.
+    cells : str ['topology']
+        Dataset name for cell topology inside the group.
+    marker : str ['values']
+        Dataset name for cell markers inside the group.
+    marker_default : int [0]
+        Default marker value assigned to cells without an explicit marker.
+
+    Returns
+    -------
+    mesh : :gimliapi:`GIMLI::Mesh`
     """
     kwargs.setdefault('group', 'mesh')
     kwargs.setdefault('indices', 'cell_indices')
