@@ -10,7 +10,7 @@
 How to install `pyGIMLi` on your platform.
 :::
 :::{grid-item-card} First steps
-:link: basics
+:link: first-steps
 :link-type: ref
 
 The basics of using `pyGIMLi`.

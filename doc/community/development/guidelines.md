@@ -148,8 +148,6 @@ git tag -a -m "First official release" "v1.0.x" # tags last commit as v1.0.x
 git push --tags # pushes tags to GitHub
 ```
 
-(sec-testing)=
-
 To see the commits since the last tag/release, you can use:
 
 ```bash
@@ -164,6 +162,7 @@ git log v1.5.3...v1.5.4 --oneline
 
 Alternatively, this information can also be obtained [via GitHub](http://github.com/gimli-org/gimli/compare/v1.4.0...v1.4.1).
 
+(sec-testing)=
 ## Testing
 
 Run specific API examples from shell:

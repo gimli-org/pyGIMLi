@@ -185,6 +185,7 @@ Below there is a table with the most useful methods, for a full list of methods 
 
 :::: {admonition} Table of useful methods for DataContainer
 :class: tip
+
 :::{table}
 :widths: auto
 :align: center

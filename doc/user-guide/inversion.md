@@ -365,6 +365,6 @@ Examples that are already implemented in pyGIMLi are for example:
 - **Block joint inversion** of several 1D data using common layers, e.g., MRS+VES {cite}`GuentherMue2012HESS`
 - **Sequential (constrained) inversion** successive independent inversion of data sets, e.g., classic time-lapse inversion {cite}`BechtoldVanWei2012VZJ`
 - **Simultaneous constrained inversion** of data sets of data neighbored in space LCI, e.g., {cite}`CostabelGueDluMue2016GEO`, time (full time-lapse) or frequency {cite}`GuentherMar2016JAG`
-- **Structurally coupled cooperative inversion** of disparate data based on structural similarity (e.g., {cite}`RonczkaHelGueWisDah2017NSG`
+- **Structurally coupled cooperative inversion** of disparate data based on structural similarity (e.g., {cite}`RonczkaHelGueWisDah2017`
 - **Structure-based inversion** using layered 2D models {cite}`AttwaAkcBasGue2014JAG`
 

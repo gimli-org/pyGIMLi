@@ -3,7 +3,7 @@
 ```{include} ../../AUTHORS.md
 ```
 
-The core developers have also written the main [pyGIMLi publication](#citation).
+The core developers have also written the main [pyGIMLi publication](citation.md).
 
 ## Contributors
   <a href="https://github.com/gimli-org/gimli/graphs/contributors" >

@@ -4,12 +4,11 @@ kernelspec:
   name: python3
 ---
 
-+++ {"raw_mimetype": ""}
-
 # Meshes
 
-This part of the user guide covers mesh-related topics, starting with a [general introduction](#basics-of-the-mesh-class) to the mesh class. Moreover, this section introduces general operations to [create](#mesh-creation) or [import](#mesh-import) meshes. Moreover, the general aspects of [visualization](#mesh-visualization) are covered within this section.
+This part of the user guide covers mesh-related topics, starting with a [general introduction](#mesh-class) to the mesh class. Moreover, this section introduces general operations to [create](#mesh-creation) or [import](#mesh-import) meshes. The general aspects of visualization are covered in the [visualization section](visualization.md).
 
+(mesh-class)=
 ## Basics of the mesh class
 
 We start off by looking at the general anatomy of a pyGIMLi mesh. It is represented by a collection of nodes, cells and boundaries, i.e., geometrical entities:
@@ -163,6 +162,7 @@ pg.show(m, ax=ax2)
 fig.tight_layout()
 ```
 
+(mesh-creation)=
 ## Mesh creation
 
 ### Creating a regular mesh / grid in 2D
@@ -189,7 +189,7 @@ pg.show(m_reg)
 :class: tip
 
 :::{table}
-:widths: 200px
+:widths: auto
 :align: center
 
 | Function              | Usage |
@@ -230,8 +230,9 @@ We are using the mt.createWorld() function to create a world based on the gíven
 
 :::: {admonition} PLC creation in pyGIMLi
 :class: tip
+
 :::{table} **General commands for geometry creations**
-:widths: 200px
+:widths: auto
 :align: center
 
 | Function              | Usage |
@@ -347,6 +348,7 @@ As you can see, the boundaries around the rectangle were all changed to 5, as de
 
 To see applications where the indices of the PLC / mesh boundary are utilized, please refer to the [modelling section](modelling.md) of the user guide.
 
+(mesh-import)=
 ## Mesh import
 
 ### Import options for meshes in pyGIMLi
@@ -355,8 +357,9 @@ A broad variety of functions to import and convert different mesh types into a G
 
 :::: {admonition} PLC creation in pyGIMLi
 :class: tip
+
 :::{table}
-:widths: 200px
+:widths: auto
 :align: center
 
 | Function              | Usage |
@@ -376,17 +379,17 @@ A broad variety of functions to import and convert different mesh types into a G
 
 ### Example: mesh generation using Gmsh
 
-When the scientific task requires a complex finite-element discretization (i.e. incorporation of structural information, usage of a complete electrode model (CEM), etc.), external meshing tools with visualization capabilities may be the option of choice for some users. In general, the bindings provided by pygimli allow to interface any external mesh generation software. For examples on how to use external meshing software, refer to the [examples section](../examples/1_meshing/) on the pyGIMLi website.
+When the scientific task requires a complex finite-element discretization (i.e. incorporation of structural information, usage of a complete electrode model (CEM), etc.), external meshing tools with visualization capabilities may be the option of choice for some users. In general, the bindings provided by pygimli allow to interface any external mesh generation software. For examples on how to use external meshing software, refer to the [examples section](../_examples_auto/1_meshing/index.rst) on the pyGIMLi website.
 
 ## Mesh modification
 
 pyGIMLi provides a variety of operators to modify your mesh. The following table gives an overview of the most important functions:
 
-:::{admonition} Mesh modifications
+:::: {admonition} Mesh modifications
 :class: tip
 
 :::{table}
-:widths: 200px
+:widths: auto
 :align: center
 
 | Function              | Usage |
@@ -398,6 +401,7 @@ pyGIMLi provides a variety of operators to modify your mesh. The following table
 | `mesh.rotate()`    |   Rotate a provided mesh  |
 
 :::
+::::
 
 ### Merging meshes
 
@@ -465,8 +469,9 @@ Suppose we want to continue working on our GIMLi mesh object in a different mesh
 
 :::: {admonition} Mesh export functions
 :class: tip
+
 :::{table}
-:widths: 200px
+:widths: auto
 :align: center
 
 | Function              | Usage |

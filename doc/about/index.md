@@ -58,7 +58,7 @@ Please see {ref}`tut:modelling` for examples and more details.
 ## License
 
 pyGIMLi is distributed under the terms of the **Apache 2.0** license.
-For details, see the [license agreement](#license).
+For details, see the [license agreement](license.md).
 
 ## Credits
 
@@ -78,4 +78,5 @@ We use or link some third-party software (beside the usual tool stack: cmake, gc
 authors
 citation
 license
+../references
 :::

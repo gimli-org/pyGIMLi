@@ -5,4 +5,5 @@
 contribute
 publications
 development/index
+../compilation
 :::

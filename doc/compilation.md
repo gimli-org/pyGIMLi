@@ -1,5 +1,13 @@
 # Building from source
 
+:::{toctree}
+:hidden:
+
+BUILD_WIN
+BUILD_MAC
+BUILD_LINUX
+:::
+
 Choose your operating system for more information, including alternative installation or compilation methods:
 
 ## Windows

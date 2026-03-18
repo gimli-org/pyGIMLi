@@ -3,7 +3,7 @@
 # References
 
 ```{eval-rst}
-.. bibliography:: references.bib
+.. bibliography:: references.bib gimliuses.bib about/libgimli.bib
     :style: alpha
-    :all:
+    :cited:
 ```
