@@ -9,22 +9,22 @@ also local for all platforms.
 Prepare workspace:
 
 ```bash
-    mkdir -p gimli
-    git clone https://github.com/gimli-org/gimli.git
-    # optionally change to the development branch
-    git checkout dev
+mkdir -p gimli
+git clone https://github.com/gimli-org/gimli.git
+# optionally change to the development branch
+git checkout dev
 ```
 
 Running workflow:
 
 ```bash
-    bash gimli/.workflow.sh install
+bash gimli/.workflow.sh install
 ```
 
 The workflow have several targets which you might try:
 
 ```bash
-    bash gimli/.workflow.sh help
+bash gimli/.workflow.sh help
 ```
 
 If something goes wrong you can try the manual compilation.
@@ -38,34 +38,33 @@ First we need to create a root directory for our installation,
 e.g., ``$HOME/src/gimli`` and get the source code:
 
 ```bash
-    mkdir -p gimli
-    cd gimli
-    git clone https://github.com/gimli-org/gimli.git
-    # optionally change to the development branch
-    git checkout dev
-    # create a virtual environment for pyGIMLi, this can be at any place with any name
-    # if you want easy VScode support consider gimli/.venv
-    deactivate # in case there is another venv active
-    python -m venv venv-build --prompt=gimli-build
-    # activate the venv
-    source venv-build/bin/activate
-    # update pip is always a good idea
-    python -m pip install -U pip
-    # install gimli as editable with its dependencies into to venv
-    pip install -e ./gimli/[build]
+mkdir -p gimli
+cd gimli
+git clone https://github.com/gimli-org/gimli.git
+# optionally change to the development branch
+git checkout dev
+# create a virtual environment for pyGIMLi, this can be at any place with any name
+# if you want easy VScode support consider gimli/.venv
+deactivate # in case there is another venv active
+python -m venv venv-build --prompt=gimli-build
+# activate the venv
+source venv-build/bin/activate
+# update pip is always a good idea
+python -m pip install -U pip
+# install gimli as editable with its dependencies into to venv
+pip install -e ./gimli/[build]
 ```
 
 We need to compile the C++ part of pyGIMLi, which is currently done with cmake and not with the pip internal build system.
 We recommend an out of source build:
 
 ```bash
-
-    mkdir -p build
-    cd build
-    cmake ../gimli
-    make -j 4 gimli
-    make pygimli J=4
-    cd ..
+mkdir -p build
+cd build
+cmake ../gimli
+make -j 4 gimli
+make pygimli J=4
+cd ..
 ```
 
 There is no more need to change the `PATH` or `LD_LIBRARY_PATH`.
@@ -76,8 +75,8 @@ source tree which is already editable known to the venv,
 so you can test the pygimli build with:
 
 ```bash
-    python -c 'import pygimli as pg; pg.version()'
-    python -c 'import pygimli as pg; print(pg.Report())'
+python -c 'import pygimli as pg; pg.version()'
+python -c 'import pygimli as pg; print(pg.Report())'
 ```
 
 Note, if you test like this, ensure there is no actual path with a name
@@ -90,7 +89,7 @@ but just pulling the latest changes from git.
 If you end the terminal session you can reactivate the venv with:
 
 ```bash
-    source venv-build/bin/activate
+source venv-build/bin/activate
 ```
 
 ## Example Installation on Ubuntu
@@ -98,12 +97,12 @@ If you end the terminal session you can reactivate the venv with:
 Last try on Ubuntu 22.04.03 (23-11-14)
 
 ```bash
-    sudo apt-get install build-essential g++ subversion git cmake \
-                 python3-dev python3-matplotlib python3-numpy python3-pyqt5 \
-                 python3-scipy libboost-all-dev libedit-dev \
-                 libsuitesparse-dev libopenblas-openmp-dev libumfpack5 \
-                 libomp-dev doxygen \
-                 libcppunit-dev clang
+sudo apt-get install build-essential g++ subversion git cmake \
+            python3-dev python3-matplotlib python3-numpy python3-pyqt5 \
+            python3-scipy libboost-all-dev libedit-dev \
+            libsuitesparse-dev libopenblas-openmp-dev libumfpack5 \
+            libomp-dev doxygen \
+            libcppunit-dev clang
 ```
 
 Rest see above.

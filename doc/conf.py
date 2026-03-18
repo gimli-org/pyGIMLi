@@ -20,6 +20,7 @@ from os.path import join
 sys.path.insert(0, os.path.abspath("."))
 
 import sphinx
+from sphinx.application import Sphinx
 
 import pygimli as pg
 
@@ -391,10 +392,10 @@ try:
     # class matplotlib_svg_scraper(object):
     #     def __repr__(self):
     #         return self.__class__.__name__
-
+    #
     #     def __call__(self, *args, **kwargs):
     #         return matplotlib_scraper(*args, format='svg', **kwargs)
-
+    #
     # sphinx_gallery_conf['image_scrapers']=(matplotlib_svg_scraper(),)
     sphinx_gallery_conf["image_scrapers"]=("matplotlib",)
 
@@ -662,6 +663,7 @@ doxylink = {
 ################################################################################
 
 bibtex_bibfiles = ["gimliuses.bib",
+                   "gimlisoftware.bib",
                    "about/libgimli.bib",
                    "references.bib"]
 bibtex_reference_style = "author_year"
@@ -788,3 +790,9 @@ html_context = {
     "publications": publications,
     "default_mode": "light",
 }
+
+def setup(app: Sphinx):
+    """Add functions to the Sphinx setup."""
+    from myst_parser._docs import MystExampleDirective, MystLexer
+    app.add_directive("myst-example", MystExampleDirective)
+    app.add_lexer("myst", MystLexer)

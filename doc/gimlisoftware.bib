@@ -1,0 +1,57 @@
+% Encoding: UTF-8
+
+@article{pyrefra,
+title = {PyRefra: Refraction seismic data treatment and inversion},
+journal = {Computers & Geosciences},
+volume = {185},
+pages = {105556},
+year = {2024},
+issn = {0098-3004},
+doi = {https://doi.org/10.1016/j.cageo.2024.105556},
+author = {Hermann Zeyen and Emmanuel Léger},
+keywords = {Refraction seismics, Near-surface, Data processing, Open-source software, Python},
+abstract = {Open-source software in the geophysical community has been increasingly taking importance since more than a decade. Following this spirit, this study presents an open-source Python software for display, processing, picking of near-surface refraction seismic data and tomographic modeling using some of the main packages already developed for geosciences. The PyRefra package allows the display of different types of gathers, application of different filters and offers manual and several types of automatic picking. We integrated the pyGIMLi manager for tomographic inversion of travel-times. This study describes the code core structure and presents a full field data example in the aim of describing the whole set of tools available in the PyRefra package.}
+}
+
+@article{formikoj,
+title = {formikoj: A flexible library for data management and processing in geophysics—Application for seismic refraction data},
+journal = {Computers & Geosciences},
+volume = {176},
+pages = {105339},
+year = {2023},
+issn = {0098-3004},
+doi = {https://doi.org/10.1016/j.cageo.2023.105339},
+url = {https://www.sciencedirect.com/science/article/pii/S0098300423000432},
+author = {Matthias Steiner and Adrián {Flores Orozco}},
+keywords = {Geophysical data processing, Seismic refraction, First break picking, Seismic waveform modeling, Cross-platform application, Geophysical python library, Flexible open-source library, Wave based methods},
+abstract = {We introduce the open-source library formikoj, which provides a flexible framework for managing and processing geophysical data collected in environmental and engineering investigations. To account for the substantial changes regarding the market shares of operating systems within the last two decades, the library is specifically implemented and tested for cross-platform usage. We illustrate the applicability of the formikoj library for the forward modeling of seismic refraction waveform data with the SeismicWaveformModeler based on a custom subsurface model and survey geometry. We use these synthetic seismic data set to demonstrate the fundamental seismic refraction processing capabilities of the SeismicRefractionManager; thus, illustrating the ability to combine modeling and processing tasks in a single workflow. Based on real 3D field measurements we present the available range of possibilities provided by the formikoj library for the processing of seismic refraction survey data. In particular, we explore different visualization techniques of the seismic traveltime readings to enhance their consistency prior to the inversion with the third-party library pyGIMLi. The low-level access provided by the formikoj library aims at enabling users to implement novel modeling, visualization and processing tools specifically designed for their objectives as well as other geophysical methods.}
+}
+
+@article{refrapy,
+title = {Refrapy: A Python program for seismic refraction data analysis},
+journal = {Computers & Geosciences},
+volume = {159},
+pages = {105020},
+year = {2022},
+issn = {0098-3004},
+doi = {https://doi.org/10.1016/j.cageo.2021.105020},
+url = {https://www.sciencedirect.com/science/article/pii/S0098300421003022},
+author = {Victor José Cavalcanti Bezerra Guedes and Susanne Taina Ramalho Maciel and Marcelo Peres Rocha},
+keywords = {Python, Open-source, Seismic refraction, Time-terms inversion, Tomographic inversion},
+abstract = {The development and use of open-source software in geophysics over the last decade have grown considerably. However, there are few open-software alternatives for seismic methods and even fewer regarding seismic refraction data processing and inversion. We present Refrapy, an open-source package for seismic refraction data analysis written in Python, using some of the main libraries for scientific computing and geosciences. Divided into two main programs (Refrapick and Refrainv), it is possible to perform basic waveform processing, picking of first breaks, and inversion through time-terms analysis or traveltimes tomography, all with GUIs interaction. To evaluate and validate the products obtained using Refrapy, we analyzed sets of synthetic data and real field data. The calculated models recovered the geometry and velocities values of the actual synthetic models satisfactorily. The joint interpretation of the results obtained with both available inversion techniques permitted a more detailed interpretation. As for the analysis of real data, the results presented a compatible response compared to the model obtained by a well-established commercial software, satisfactorily representing the geological context interpreted initially. The software presented in this work is expected to contribute to the activities of researchers, practitioners, and students regarding the analysis of seismic refraction data as a free, open, and user-friendly alternative.}
+}
+@article{mg1d,
+title = {MC_RB_EM_1D: Estimation of electrical conductivity models using multi-coil rigid-boom electromagnetic induction measurements},
+journal = {Computers & Geosciences},
+volume = {193},
+pages = {105732},
+year = {2024},
+issn = {0098-3004},
+doi = {https://doi.org/10.1016/j.cageo.2024.105732},
+url = {https://www.sciencedirect.com/science/article/pii/S0098300424002152},
+author = {Maria {Carrizo Mascarell} and Dieter Werthmüller and Evert Slob},
+keywords = {Frequency domain electromagnetics, Inversion, Electromagnetic induction},
+abstract = {Electromagnetic induction measurements from multi-coil configuration instruments are used to obtain information about the electrical conductivity distribution in the subsurface. The resulting inverse problem might not have a unique and stable solution. In that case, a local inversion method can be trapped in a local minimum and lead to an incorrect solution. In this study, we evaluate the well-posedness of the inverse problem for two and three-layered electrical conductivity models. We show that for a two-layered model, uniqueness is ensured only when both in-phase and quadrature data are available from the measurements. Results from a Gauss–Newton inversion and a lookup table demonstrate that the solution space is convex. Furthermore, we demonstrate that for even a simple three-layered model, the data contained in such measurements are insufficient to reach a correct or stable solution. For models with more than 2 layers, independent prior information is necessary to solve the inverse problem. The insights from the numerical examples are applied in a field case.}
+}
+
+
