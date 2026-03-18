@@ -76,6 +76,22 @@ def getProjection(name, ref=None, **kwargs):
         return pyproj.Proj(init="epsg:3068")
 
 def _getXMLData(ele, name, default):
+    """Extract a named text value from an XML DOM element.
+
+    Parameters
+    ----------
+    ele : xml.dom.Element
+        DOM element to search within.
+    name : str
+        Tag name whose text content is sought.
+    default :
+        Value to return when the tag is absent.
+
+    Returns
+    -------
+    str or type(default)
+        Text content of the first matching child element, or *default*.
+    """
     ret = default
     if ele.getElementsByTagName(name):
         ret = ele.getElementsByTagName(name)[0].childNodes[0].data

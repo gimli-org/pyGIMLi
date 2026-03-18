@@ -85,6 +85,16 @@ class ERTModelling(ERTModellingBase):
     """
 
     def __init__(self, sr=True, verbose=False):
+        """Initialise the ERT forward operator.
+
+        Parameters
+        ----------
+        sr : bool
+            If True (default), use the singularity-removal scheme
+            (:class:`~pygimli.core.DCSRMultiElectrodeModelling`).
+        verbose : bool
+            Enable verbose output from the core solver.
+        """
         super().__init__()
 
         # don't use DC*fop or its regionmanager directly
@@ -240,6 +250,13 @@ class ERTModellingReference(ERTModellingBase):
     """Reference implementation for 2.5D Electrical Resistivity Tomography."""
 
     def __init__(self, **kwargs):
+        """Initialise the reference ERT forward operator.
+
+        Parameters
+        ----------
+        **kwargs :
+            Forwarded to :class:`ERTModellingBase`.
+        """
         super().__init__()
 
         self.subPotentials = None

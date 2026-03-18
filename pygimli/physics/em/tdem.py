@@ -514,6 +514,16 @@ class TDEMSmoothModelling(MeshModelling):
     """Occam-style (smooth) inversion."""
 
     def __init__(self, thk, **kwargs):
+        """Initialise the smooth TDEM forward operator.
+
+        Parameters
+        ----------
+        thk : array-like
+            Fixed layer thicknesses [m].  The number of layers equals
+            ``len(thk) + 1``.
+        **kwargs :
+            Forwarded to :class:`VMDTimeDomainModelling`.
+        """
         super().__init__()
         self.thk_ = thk
         self.nlay_ = len(thk)+1

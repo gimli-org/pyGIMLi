@@ -161,6 +161,7 @@ class JointPetroInversion(MethodManager):  # bad name: no inversion framework!
         return inv
 
     def model(self):
+        """Return the current joint inversion model."""
         return self.mod
 
     def setData(self, data):
