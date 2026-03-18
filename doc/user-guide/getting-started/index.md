@@ -1,3 +1,4 @@
+(getting-started)=
 # Getting started
 
 ::::{grid} 3
