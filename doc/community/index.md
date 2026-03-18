@@ -4,5 +4,6 @@
 
 contribute
 publications
+other_software
 development/index
 :::

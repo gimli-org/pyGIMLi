@@ -390,10 +390,10 @@ try:
     # class matplotlib_svg_scraper(object):
     #     def __repr__(self):
     #         return self.__class__.__name__
-
+    #
     #     def __call__(self, *args, **kwargs):
     #         return matplotlib_scraper(*args, format='svg', **kwargs)
-
+    #
     # sphinx_gallery_conf['image_scrapers']=(matplotlib_svg_scraper(),)
     sphinx_gallery_conf["image_scrapers"]=("matplotlib",)
 
@@ -661,6 +661,7 @@ doxylink = {
 ################################################################################
 
 bibtex_bibfiles = ["gimliuses.bib",
+                   "gimlisoftware.bib",
                    "about/libgimli.bib",
                    "references.bib"]
 bibtex_reference_style = "author_year"
