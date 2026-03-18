@@ -20,6 +20,7 @@ from os.path import join
 sys.path.insert(0, os.path.abspath("."))
 
 import sphinx
+from sphinx.application import Sphinx
 
 import pygimli as pg
 
@@ -789,3 +790,9 @@ html_context = {
     "publications": publications,
     "default_mode": "light",
 }
+
+def setup(app: Sphinx):
+    """Add functions to the Sphinx setup."""
+    from myst_parser._docs import MystExampleDirective, MystLexer
+    app.add_directive("myst-example", MystExampleDirective)
+    app.add_lexer("myst", MystLexer)

@@ -91,7 +91,7 @@ add_custom_target(sphinxhtml ALL
      WORKING_DIRECTORY
         ${SPHINX_BUILD_DIR}/doc
      COMMAND
-        sphinx-build -M html ./ "${SPHINX_BUILD_DIR}" --jobs=auto
+        sphinx-build -M html ./ "${SPHINX_BUILD_DIR}" --jobs=auto -b dirhtml
      COMMENT
          "Building HTML documentation with sphinx"
      DEPENDS
@@ -102,7 +102,7 @@ add_custom_target(sphinxhtml-NG ALL
      WORKING_DIRECTORY
         ${SPHINX_BUILD_DIR}/doc
      COMMAND
-        sphinx-build -M html ./ "${SPHINX_BUILD_DIR}" -D plot_gallery=0 --jobs=auto
+        sphinx-build -M html ./ "${SPHINX_BUILD_DIR}" -D plot_gallery=0 --jobs=auto -b dirhtml
      COMMENT
          "Building HTML documentation with sphinx"
      DEPENDS

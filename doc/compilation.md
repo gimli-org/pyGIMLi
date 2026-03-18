@@ -1,23 +1,38 @@
 # Building from source
 
+:::{note}
+Building from source is **not necessary for most users or developers**. If you are only contributing Python code, a standard [installation](installation) is sufficient. Building from source is only required if you want to modify or contribute to the C++ core of pyGIMLi (`pgcore`).
+:::
+
 :::{toctree}
 :hidden:
 
 BUILD_WIN
 BUILD_MAC
 BUILD_LINUX
+community/development/dependencies
 :::
 
-Choose your operating system for more information, including alternative installation or compilation methods:
+:::::{tab-set}
 
-## Windows
+::::{tab-item} Windows
+:::{include} BUILD_WIN.md
+:::
+::::
 
-[See Windows build instructions](BUILD_WIN.md)
+::::{tab-item} Mac
+:::{include} BUILD_MAC.md
+:::
+::::
 
-## Mac
+::::{tab-item} Linux
+:::{include} BUILD_LINUX.md
+:::
+::::
 
-[See Mac build instructions](BUILD_MAC.md)
+::::{tab-item} Dependencies
+:::{include} community/development/dependencies.md
+:::
+::::
 
-## Linux
-
-[See Linux build instructions](BUILD_LINUX.md)
+:::::
