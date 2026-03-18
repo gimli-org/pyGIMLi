@@ -428,12 +428,12 @@ def cache(func):
 
         Arguments
         ---------
-        *args: any
+        \*args: any
             The positional arguments of the function.
 
         Keyword Args
         ------------
-        **kwargs: any
+        kwargs: any
             The keyword arguments of the function.
         """
         nc = kwargs.pop('skipCache', False)
