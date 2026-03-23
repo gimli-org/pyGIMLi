@@ -93,6 +93,7 @@ extensions = [
     'sphinxcontrib.programoutput',
     "bibtexparser",
     "sphinx_design",
+    "sphinx_copybutton",
     # "sphinx_tippy"
     # "sphinxcontrib.spelling"
     #'sphinx.ext.pngmath',   # for breath
