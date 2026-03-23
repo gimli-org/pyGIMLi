@@ -282,7 +282,20 @@ class DebyeModelling(pg.core.ModellingBase):
     """Forward operator for Debye decomposition."""
 
     def __init__(self, fvec, tvec=None, zero=False, verbose=False):
+        """Initialise the Debye decomposition forward operator.
 
+        Parameters
+        ----------
+        fvec : array-like
+            Measurement frequencies [Hz].
+        tvec : array-like, optional
+            Relaxation times [s].  Defaults to five logarithmically-spaced
+            values from 1e-4 to 1.
+        zero : bool
+            If True, constrain the first and last relaxation times to zero.
+        verbose : bool
+            Enable verbose output.
+        """
         if tvec is None:
             tvec = np.logspace(-4, 0, 5)
 
@@ -364,6 +377,19 @@ class DoubleColeColeModelling(pg.core.ModellingBase):
     """Modelling using two Cole-Cole terms."""
 
     def __init__(self, mesh, fvec, si=1.0, verbose=False):
+        """Initialise the double Cole-Cole forward operator.
+
+        Parameters
+        ----------
+        mesh : pg.Mesh
+            1-D parameter mesh.
+        fvec : array-like
+            Measurement frequencies [Hz].
+        si : float
+            Surface impedance scaling factor (default 1.0).
+        verbose : bool
+            Enable verbose output.
+        """
         pg.core.ModellingBase.__init__(self, mesh, verbose)
         self.f_ = fvec
         self.si_ = si

@@ -863,6 +863,13 @@ class LBFGSInversion(InversionBase):
     """Limited-memory BFGS (L-BFGS) minimization."""
 
     def __init__(self, **kwargs):
+        """Initialise the L-BFGS inversion.
+
+        Parameters
+        ----------
+        **kwargs :
+            Forwarded to :class:`InversionBase`.
+        """
         super().__init__(**kwargs)
 
     def modelUpdate(self):
@@ -903,6 +910,17 @@ class ClassicInversion:
     """
 
     def __init__(self, fop=None, inv=None, **kwargs):
+        """Initialise the classic inversion framework.
+
+        Parameters
+        ----------
+        fop : forward operator, optional
+            Forward operator to use.
+        inv : inversion object, optional
+            Pre-built C++ inversion object; constructed automatically if None.
+        **kwargs :
+            Recognised keys: ``verbose`` (bool), ``debug`` (bool).
+        """
         self._debug = kwargs.pop('debug', False)
         self._verbose = kwargs.pop('verbose', False)
 
@@ -1772,6 +1790,15 @@ class MarquardtInversion(Inversion):
     """Marquardt scheme, i.e. local damping with decreasing strength."""
 
     def __init__(self, fop=None, **kwargs):
+        """Initialise the Marquardt inversion.
+
+        Parameters
+        ----------
+        fop : forward operator, optional
+            Forward operator to use.
+        **kwargs :
+            Forwarded to :class:`Inversion`.
+        """
         super().__init__(fop, **kwargs)
         self.stopAtChi1 = False
         self.inv.setLocalRegularization(True)
@@ -1817,6 +1844,15 @@ class Block1DInversion(MarquardtInversion):
     """
 
     def __init__(self, fop=None, **kwargs):
+        """Initialise the 1-D block model inversion.
+
+        Parameters
+        ----------
+        fop : pg.frameworks.Block1DModelling, optional
+            Forward operator.  Must be an instance of Block1DModelling.
+        **kwargs :
+            Forwarded to :class:`MarquardtInversion`.
+        """
         # pg.warn("move this to the manager")
         super().__init__(fop=fop, **kwargs)
 
@@ -2006,7 +2042,15 @@ class LCInversion(Inversion):
     """Quasi-2D Laterally constrained inversion (LCI) framework."""
 
     def __init__(self, fop=None, **kwargs):
+        """Initialise the laterally constrained inversion.
 
+        Parameters
+        ----------
+        fop : forward operator, optional
+            Wrapped automatically in :class:`~pygimli.frameworks.LCModelling`.
+        **kwargs :
+            Forwarded to :class:`Inversion` and :class:`LCModelling`.
+        """
         if fop is not None:
             f = pg.frameworks.LCModelling(fop, **kwargs)
 

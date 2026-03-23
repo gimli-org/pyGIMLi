@@ -610,9 +610,12 @@ def showBoundaryNorm(mesh, normMap=None, **kwargs):
     normMap : list
         list of [boundary marker, [norm]] pairs. e.g. [[1, [0.0,1.0]], ... ]
 
-    **kwargs :
-        Will be forwarded to the draw functions and matplotlib methods,
-        respectively.
+    Keyword Arguments
+    -----------------
+    ax : matplotlib.axes [None]
+        Axes object to draw into. Creates a new one if not given.
+    color : str ['Black']
+        Color of the normal arrows and lines.
 
     Returns
     -------

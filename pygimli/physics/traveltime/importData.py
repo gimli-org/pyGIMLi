@@ -182,6 +182,18 @@ class ReadAHL:
     """
 
     def __init__(self, filename, maxsensorid, delimiter='|'):
+        """Initialise the AHL reader.
+
+        Parameters
+        ----------
+        filename : str
+            Path to the AHL file.
+        maxsensorid : int
+            Sensor IDs equal to or above this value are treated as shot
+            positions rather than receivers.
+        delimiter : str
+            Character used to locate the header line (default ``'|'``).
+        """
         self.header = None
         self.delimiter = delimiter
         self.filename = filename

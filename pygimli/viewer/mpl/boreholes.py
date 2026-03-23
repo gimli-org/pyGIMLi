@@ -35,6 +35,13 @@ class BoreHole(object):
         1.6 10.0 shale
     """
     def __init__(self, fname):
+        """Load a single borehole from *fname*.
+
+        Parameters
+        ----------
+        fname : str
+            Path to a borehole data file.
+        """
         self._fname = fname
         self._load()
 

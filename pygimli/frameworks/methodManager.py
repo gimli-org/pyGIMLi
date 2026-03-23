@@ -293,7 +293,27 @@ class MethodManager:
         return np.ones(len(data)) * errLevel
 
     def simulate(self, model, **kwargs):
-        """Run a simulation aka the forward task."""
+        """Run a simulation aka the forward task.
+
+        Parameters
+        ----------
+        model : iterable
+            Model parameter values to use for the forward computation.
+
+        Keyword Arguments
+        -----------------
+        noiseLevel : float [0.0]
+            Add relative Gaussian noise with this level (e.g., 0.03 for 3%).
+            No noise is added if 0.
+        seed : int [None]
+            Seed for the random number generator used when adding noise.
+
+        Returns
+        -------
+        ra : pg.Vector
+            Forward response. If ``noiseLevel > 0``, returns ``(ra, err)``
+            where ``err`` is the absolute error vector.
+        """
         ra = self.fop.response(par=model)
 
         noiseLevel = kwargs.pop('noiseLevel', 0.0)
@@ -513,7 +533,20 @@ class MethodManager:
         return self.showModel(model, ax=ax, **kwargs)
 
     def showFit(self, ax=None, **kwargs):
-        """Show the last inversion data and response."""
+        """Show the last inversion data and response.
+
+        Parameters
+        ----------
+        ax : mpl axes [None]
+            Axes object to draw into. Creates a new one if not given.
+
+        Keyword Arguments
+        -----------------
+        hideFittingAnnotation : bool [False]
+            Do not show the rrms and chi² text annotation.
+        hideLegend : bool [False]
+            Do not show the legend.
+        """
         ax, cBar = self.showData(data=self.inv.dataVals,
                                  error=self.inv.errorVals,
                                  label='Data',
@@ -545,6 +578,8 @@ class MethodManager:
             If not None save figure.
         axs: [mpl.Axes]
             Give 3 axes and its plotted into them instead of creating 3 new.
+        figsize: tuple [(11, 6)]
+            Figure size passed to ``plt.figure()``.
 
         """
         saveFig = kwargs.pop('saveFig', None)

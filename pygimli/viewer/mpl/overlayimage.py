@@ -90,9 +90,30 @@ class MapTilesCacheSingleton(object):
         return MapTilesCacheSingleton.__instance
 
     def add(self, key, tile):
+        """Store a map tile in the cache.
+
+        Parameters
+        ----------
+        key : hashable
+            Cache key (typically derived from tile coordinates and zoom level).
+        tile : object
+            Tile data to store.
+        """
         self._tilesCache[key] = tile
 
     def get(self, key):
+        """Retrieve a map tile from the cache.
+
+        Parameters
+        ----------
+        key : hashable
+            Cache key used when the tile was stored.
+
+        Returns
+        -------
+        object or None
+            The cached tile, or ``None`` if not present.
+        """
         if key in self._tilesCache:
             return self._tilesCache[key]
         return None

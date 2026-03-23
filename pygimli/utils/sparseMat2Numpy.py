@@ -81,9 +81,35 @@ def toSparseMapMatrix(A):
     return toSparseMapMatrix(csr_matrix(A))
 
 def toCSR(A):
+    """Convert a pygimli sparse matrix to a scipy CSR matrix.
+
+    Convenience alias for :func:`sparseMatrix2csr`.
+
+    Parameters
+    ----------
+    A : pg.matrix.SparseMapMatrix or pg.matrix.SparseMatrix
+        Input sparse matrix.
+
+    Returns
+    -------
+    scipy.sparse.csr_matrix
+    """
     return sparseMatrix2csr(A)
 
 def toCOO(A):
+    """Convert a pygimli sparse matrix to a scipy COO matrix.
+
+    Convenience alias for :func:`sparseMatrix2coo`.
+
+    Parameters
+    ----------
+    A : pg.matrix.SparseMapMatrix or pg.matrix.SparseMatrix
+        Input sparse matrix.
+
+    Returns
+    -------
+    scipy.sparse.coo_matrix
+    """
     return sparseMatrix2coo(A)
 
 def sparseMatrix2csr(A):
