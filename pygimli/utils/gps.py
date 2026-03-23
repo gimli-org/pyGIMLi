@@ -76,6 +76,22 @@ def getProjection(name, ref=None, **kwargs):
         return pyproj.Proj(init="epsg:3068")
 
 def _getXMLData(ele, name, default):
+    """Extract a named text value from an XML DOM element.
+
+    Parameters
+    ----------
+    ele : xml.dom.Element
+        DOM element to search within.
+    name : str
+        Tag name whose text content is sought.
+    default :
+        Value to return when the tag is absent.
+
+    Returns
+    -------
+    str or type(default)
+        Text content of the first matching child element, or *default*.
+    """
     ret = default
     if ele.getElementsByTagName(name):
         ret = ele.getElementsByTagName(name)[0].childNodes[0].data
@@ -286,3 +302,40 @@ def readGeoRefTIF(file_name):
             [tify - im.shape[0] * dx, tify]]
 
     return im, bbox, projection
+
+def readCoordsFromKML(xmlfile, zone=32, ellps="WGS84"):
+    """Read coordinates from KML file and return UTM coordinates.
+
+    Parameters
+    ----------
+    xmlfile : str
+        XML or KML file
+    zone : int [32]
+        UTM zone
+
+    Returns
+    -------
+    pos : np.array (Nx3)
+        matrix of x, y, z positions
+    """
+    import utm
+    import xml.etree.ElementTree as ET
+
+    tree = ET.parse(xmlfile)
+    root = tree.getroot()
+    X, Y, Z = [], [], []
+    for line in root.iter("*"):
+        if line.tag.find("coordinates") >= 0:
+            try:
+                lin = line.text.replace("\n", "").replace("\t", "")
+            except AttributeError:
+                lin = root[0][4][2][1].text.replace("\n", "").replace("\t", "")
+            for col in lin.split(" "):
+                if col.find(",") > 0:
+                    vals = np.array(col.split(","), dtype=float)
+                    if len(vals) > 2:
+                        X.append(vals[0])
+                        Y.append(vals[1])
+                        Z.append(vals[2])
+
+    return np.vstack((*utm.from_latlon(X, Y), Z))

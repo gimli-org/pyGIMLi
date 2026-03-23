@@ -1,6 +1,22 @@
-# -*- coding: utf-8 -*-
-"""Refraction seismics or first arrival traveltime calculations."""
+#!/usr/bin/env python
+"""
+First-arrival traveltime
 
+e.g. refraction or crosshole seismics and GPR
+
+Classes:
+
+* TravelTimeManager
+* RefractionNLayer
+* DataContainer[TT]
+
+Main entry functions:
+
+* load - load or import from various formats
+* createRAData - create refraction data scheme
+* simulate - synthetic model computation
+* show - show first arrivals as curves or image
+"""
 
 from pygimli.core import Dijkstra
 from .importData import load
@@ -20,9 +36,14 @@ __all__ = [
     'drawTravelTimeData',
     'drawVA',
     'showVA',
+    'simulate',
+    'show',
+    'load',
+    'Dijkstra',
     'drawFirstPicks',
     'createRAData',
     'createGradientModel2D',
+    'createCrossholeData',
     'RefractionNLayer',
     'RefractionNLayerFix1stLayer',
     'shotReceiverDistances',

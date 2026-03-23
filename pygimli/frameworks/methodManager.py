@@ -1,20 +1,15 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """Method Manager.
 
-Provide the end user interface for method (geophysical) dependent
+Provide the end user interface with (geophysical) method-dependent
 modelling and inversion as well as data and model visualization.
 """
 
 import numpy as np
 import pygimli as pg
 
-from pygimli.utils import prettyFloat as pf
-
 
 def fit(funct, data, err=None, **kwargs):
-    """Generic function fitter.
+    """Fit generic function.
 
     Fit data to a given function.
 
@@ -25,7 +20,7 @@ def fit(funct, data, err=None, **kwargs):
     Parameters
     ----------
     funct: callable
-        Function with the first argmument as data space, e.g., x, t, f, Nr. ..
+        Function with the first argument as data space, e.g., x, t, f, Nr. ..
         Any following arguments are the parameters to be fit.
         Except if a verbose flag if used.
     data: iterable (float)
@@ -75,7 +70,7 @@ def fit(funct, data, err=None, **kwargs):
 
 # Discuss .. rename to Framework or InversionFramework since he only manages
 # the union of Inversion/Modelling and RegionManager(later)
-class MethodManager(object):
+class MethodManager:
     """General manager to maintenance a measurement method.
 
     Method Manager are the interface to end-user interaction and can be seen as
@@ -197,13 +192,10 @@ class MethodManager(object):
 
         Called once in the constructor to force the manager to create the
         necessary forward operator member. Can be recalled if you need to
-        changed the mangers own forward operator object. If you want an own
+        changed the managers own forward operator object. If you want an own
         instance of a valid FOP call createForwardOperator.
         """
-        if self._fop is not None:
-            fop = self._fop
-        else:
-            fop = self.createForwardOperator(**kwargs)
+        fop = self._fop if self._fop is not None else self.createForwardOperator(**kwargs)
 
         if fop is None:
             pg.critical("It seems that createForwardOperator method "
@@ -301,19 +293,44 @@ class MethodManager(object):
         return np.ones(len(data)) * errLevel
 
     def simulate(self, model, **kwargs):
-        """Run a simulation aka the forward task."""
+        """Run a simulation aka the forward task.
+
+        Parameters
+        ----------
+        model : iterable
+            Model parameter values to use for the forward computation.
+
+        Keyword Arguments
+        -----------------
+        noiseLevel : float [0.0]
+            Add relative Gaussian noise with this level (e.g., 0.03 for 3%).
+            No noise is added if 0.
+        seed : int [None]
+            Seed for the random number generator used when adding noise.
+
+        Returns
+        -------
+        ra : pg.Vector
+            Forward response. If ``noiseLevel > 0``, returns ``(ra, err)``
+            where ``err`` is the absolute error vector.
+        """
         ra = self.fop.response(par=model)
 
         noiseLevel = kwargs.pop('noiseLevel', 0.0)
         if noiseLevel > 0:
             err = self.estimateError(ra, errLevel=noiseLevel)
-            ra *= 1. + pg.randn(ra.size(), seed=kwargs.pop('seed', None)) * err
+            try:
+                ra *= 1. + pg.randn(ra.size(), seed=kwargs.pop('seed', None)) * err
+            except Exception as e:
+                print("Error occurred while adding noise:", e)
+
             return ra, err
 
         return ra
 
     @property
     def data(self):
+        """Return data vector."""
         return self._data
 
     @data.setter
@@ -387,31 +404,32 @@ class MethodManager(object):
 
         return vals
 
+
     def preRun(self, *args, **kwargs):
         """Fcn to be called just before the inversion run starts."""
-        pass
+
 
     def postRun(self, *args, **kwargs):
         """Fcn to be called just after the inversion run."""
-        pass
+
 
     def invert(self, data=None, err=None, **kwargs):
         """Invert the data.
 
-        Invert the data by calling self.inv.run() with mandatory data and
+        Invert the data by calling `self.inv.run()` with mandatory data and
         error values.
 
         TODO
-            *need dataVals mandatory? what about already loaded data
+        ----
+            * need data mandatory? what about already loaded data
 
-        Parameters
-        ----------
-        dataVals: iterable
+        Arguments
+        ---------
+        data: iterable
             Data values to be inverted.
-
-        errVals: iterable | float
+        err: iterable | float
             Error value for the given data.
-            If errVals is float we assume this means to be a global relative
+            If err is float we assume this means to be a global relative
             error and force self.estimateError to be called.
         """
         if data is not None:
@@ -428,6 +446,7 @@ class MethodManager(object):
         self.postRun(**kwargs)
 
         return self.fw.model
+
 
     def showModel(self, model, ax=None, **kwargs):
         """Show a model.
@@ -454,6 +473,7 @@ class MethodManager(object):
 
         ax, cBar = self.fop.drawModel(ax, model, **kwargs)
         return ax, cBar
+
 
     def showData(self, data=None, ax=None, **kwargs):
         """Show the data.
@@ -487,6 +507,7 @@ class MethodManager(object):
 
         return ax, None
 
+
     def showResult(self, model=None, ax=None, **kwargs):
         """Show the last inversion result.
 
@@ -512,7 +533,20 @@ class MethodManager(object):
         return self.showModel(model, ax=ax, **kwargs)
 
     def showFit(self, ax=None, **kwargs):
-        """Show the last inversion data and response."""
+        """Show the last inversion data and response.
+
+        Parameters
+        ----------
+        ax : mpl axes [None]
+            Axes object to draw into. Creates a new one if not given.
+
+        Keyword Arguments
+        -----------------
+        hideFittingAnnotation : bool [False]
+            Do not show the rrms and chi² text annotation.
+        hideLegend : bool [False]
+            Do not show the legend.
+        """
         ax, cBar = self.showData(data=self.inv.dataVals,
                                  error=self.inv.errorVals,
                                  label='Data',
@@ -522,8 +556,8 @@ class MethodManager(object):
                                  ax=ax, **kwargs)
 
         if not kwargs.pop('hideFittingAnnotation', False):
-            fittext = r"rrms: {0}, $\chi^2$: {1}".format(
-                pf(self.fw.inv.relrms()), pf(self.fw.inv.chi2()))
+            fittext = rf"rrms: {self.fw.inv.relrms():.2f}," + \
+                rf" $\chi^2$: {self.fw.inv.chi2():.2f}"
             ax.text(0.99, 0.005, fittext,
                     transform=ax.transAxes,
                     horizontalalignment='right',
@@ -544,6 +578,8 @@ class MethodManager(object):
             If not None save figure.
         axs: [mpl.Axes]
             Give 3 axes and its plotted into them instead of creating 3 new.
+        figsize: tuple [(11, 6)]
+            Figure size passed to ``plt.figure()``.
 
         """
         saveFig = kwargs.pop('saveFig', None)
@@ -625,7 +661,7 @@ class ParameterInversionManager(MethodManager):
     """Framework to invert unconstrained parameters."""
 
     def __init__(self, funct=None, fop=None, **kwargs):
-        """Inizialize instance."""
+        """Initialize instance."""
         if fop is not None:
             if not isinstance(fop, pg.frameworks.ParameterModelling):
                 pg.critical("We need a fop if type ",
@@ -636,7 +672,7 @@ class ParameterInversionManager(MethodManager):
             pg.critical("you should either give a valid fop or a function so "
                         "I can create the fop for you")
 
-        super(ParameterInversionManager, self).__init__(fop, **kwargs)
+        super().__init__(fop, **kwargs)
 
     def createInversionFramework(self, **kwargs):
         """Create a Marquardt-type inversion framework instance."""
@@ -672,7 +708,7 @@ class ParameterInversionManager(MethodManager):
         else:
             kwargs['startModel'] = startModel
 
-        return super(ParameterInversionManager, self).invert(data=data,
+        return super().invert(data=data,
                                                              err=err,
                                                              **kwargs)
 
@@ -682,7 +718,7 @@ class MethodManager1d(MethodManager):
 
     def __init__(self, fop=None, **kwargs):
         """Initialize with fop."""
-        super(MethodManager1d, self).__init__(fop, **kwargs)
+        super().__init__(fop, **kwargs)
 
     def createInversionFramework(self, **kwargs):
         """Create inversion with block discretization."""
@@ -690,7 +726,7 @@ class MethodManager1d(MethodManager):
 
     def invert(self, data=None, err=None, **kwargs):
         """Run inversion."""
-        return super(MethodManager1d, self).invert(data=data, err=err,
+        return super().invert(data=data, err=err,
                                                    **kwargs)
 
 
@@ -863,8 +899,8 @@ class MeshMethodManager(MethodManager):
         kwargs.setdefault("cMin", min(self.inv.dataVals))
         kwargs.setdefault("cMax", max(self.inv.dataVals))
         self.showData(data=self.inv.dataVals,
-                              orientation=orientation,
-                              ax=axs[0], **kwargs)
+                      orientation=orientation,
+                      ax=axs[0], **kwargs)
         axs[0].text(0.0, 1.03, "Data",
                     transform=axs[0].transAxes,
                     horizontalalignment='left',
@@ -887,9 +923,8 @@ class MeshMethodManager(MethodManager):
                     horizontalalignment='left',
                     verticalalignment='center')
 
-        fittext = r"rrms: {0}%, $\chi^2$: {1}".format(
-            pg.pf(pg.utils.rrms(data, resp)*100),
-            pg.pf(self.fw.chi2History[-1]))
+        fittext = rf"rrms: {pg.utils.rrms(data, resp)*100:.2f}%, " + \
+            rf"$\chi^2$: {self.fw.chi2History[-1]:.2f}"
         axs[1].text(1.0, 1.03, fittext,
                     transform=axs[1].transAxes,
                     horizontalalignment='right',
@@ -903,7 +938,8 @@ class MeshMethodManager(MethodManager):
                                            1.0 / self.inv.response,
                                            1.0 / self.inv.model)
         nCells = self.fop.paraDomain.cellCount()
-        return np.log10(covTrans[:nCells] / self.fop.paraDomain.cellSizes())
+        return covTrans[:nCells] / self.fop.paraDomain.cellSizes()
+        # return np.log10(covTrans[:nCells] / self.fop.paraDomain.cellSizes())
 
     def standardizedCoverage(self, threshold=0.01):
         """Standardized coverage vector (0|1) using thresholding."""
@@ -927,9 +963,8 @@ class PetroInversionManager(MeshMethodManager):
                 self.checkData = mgr.checkData
                 self.checkError = mgr.checkError
 
-            if fop is not None:
-                if not isinstance(fop, pg.frameworks.PetroModelling):
-                    petrofop = pg.frameworks.PetroModelling(fop, petro)
+            if fop is not None and not isinstance(fop, pg.frameworks.PetroModelling):
+                petrofop = pg.frameworks.PetroModelling(fop, petro)
 
         if petrofop is None:
             print(mgr)
@@ -952,7 +987,7 @@ class JointPetroInversionManager(MeshMethodManager):
         self.mgrs = mgrs
 
         self.fops = [pg.frameworks.PetroModelling(m.fop, p)
-                     for p, m in zip(petros, mgrs)]
+                     for p, m in zip(petros, mgrs, strict=False)]
 
         super().__init__(fop=pg.frameworks.JointModelling(self.fops))
 

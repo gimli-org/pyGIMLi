@@ -1,3 +1,4 @@
+"""Least-Squares solvers for linear equation systems A^T A x = A^T b."""
 from math import sqrt
 import numpy as np
 from numpy.linalg import norm
@@ -11,7 +12,7 @@ def lsqr(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
     After Page and Saunders (1982)
 
     Parameters
-    ==========
+    ----------
     A : pg.MatrixBase or derived class
         matrix (typically Jacobian and constraint matrix)
     b : pg.Vector
@@ -28,7 +29,7 @@ def lsqr(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
         print out convergence every 10th iteration
 
     Returns
-    =======
+    -------
     x : pg.Vector
         solution x for A^T A x = A^T b
     """
@@ -96,7 +97,7 @@ def rrlsqr(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
     After Page and Saunders (1982)
 
     Parameters
-    ==========
+    ----------
     A : pg.MatrixBase or derived class
         matrix (typically Jacobian and constraint matrix)
     b : pg.Vector
@@ -113,7 +114,7 @@ def rrlsqr(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
         print out convergence every 10th iteration
 
     Returns
-    =======
+    -------
     x : pg.Vector
         solution x for A^T A x = A^T b
     """
@@ -129,7 +130,7 @@ def rrlsqr(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
     v = A.transMult(u)
     alfa = norm(v)
     v /= alfa
-    Arnorm0 = alfa * 1.0
+    # Arnorm0 = alfa * 1.0
     # Arnorm = Arnorm0 * 1.0
     w = v.copy()
     phiU = beta
@@ -184,7 +185,7 @@ def cgls(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
     After Page and Saunders (1982)
 
     Parameters
-    ==========
+    ----------
     A : pg.MatrixBase or derived class
         matrix (typically Jacobian and constraint matrix)
     b : pg.Vector
@@ -201,7 +202,7 @@ def cgls(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
         print out convergence every 10th iteration
 
     Returns
-    =======
+    -------
     x : pg.Vector
         solution x for A^T A x = A^T b
     """
@@ -247,7 +248,7 @@ def rrls(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
     After Page and Saunders (1982)
 
     Parameters
-    ==========
+    ----------
     A : pg.MatrixBase or derived class
         matrix (typically Jacobian and constraint matrix)
     b : pg.Vector
@@ -264,7 +265,7 @@ def rrls(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
         print out convergence every 10th iteration
 
     Returns
-    =======
+    -------
     x : pg.Vector
         solution x for A^T A x = A^T b
     """

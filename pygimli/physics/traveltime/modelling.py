@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""Modelling classes for managing first arrival travel-time problems"""
+"""Modelling classes for managing first arrival travel-time problems."""
 
 import numpy as np
 import pygimli as pg
@@ -15,6 +13,16 @@ class TravelTimeDijkstraModelling(MeshModelling):
     """Forward modelling class for traveltime using Dijktras method."""
 
     def __init__(self, **kwargs):
+        """Initialise the Dijkstra travel-time forward operator.
+
+        Parameters
+        ----------
+        secNodes : int
+            Number of secondary nodes added to each mesh cell edge for
+            accurate ray-path computation (default 3).
+        **kwargs :
+            Forwarded to :class:`~pygimli.frameworks.MeshModelling`.
+        """
         secNodes = kwargs.pop("secNodes", 3)
         super().__init__(**kwargs)
 
@@ -41,22 +49,22 @@ class TravelTimeDijkstraModelling(MeshModelling):
     def createRefinedFwdMesh(self, mesh):
         """Refine the current mesh for higher accuracy.
 
-        This is called automatic when accesing self.mesh() so it ensures any
+        This is called automatic when accessing self.mesh() so it ensures any
         effect of changing region properties (background, single).
         """
-        pg.info("Creating refined mesh (secnodes: {0}) to "
-                "solve forward task.".format(self._refineSecNodes))
+        pg.info(f"Creating refined mesh (secnodes: {self._refineSecNodes}) to "
+                "solve forward task.")
         self.meshNoSec = pg.Mesh(mesh)
         m = mesh.createMeshWithSecondaryNodes(self._refineSecNodes)
         pg.verbose(m)
         return m
 
     def setMeshPost(self, mesh):
-        """Set mesh after forward operator has been initalized."""
+        """Set mesh after forward operator has been initialized."""
         self._core.setMesh(mesh, ignoreRegionManager=True)
 
     def setDataPost(self, data):
-        """Set data after forward operator has been initalized."""
+        """Set data after forward operator has been initialized."""
         self._core.setData(data)
 
     def createGraph(self, slowness):
@@ -69,8 +77,7 @@ class TravelTimeDijkstraModelling(MeshModelling):
 
         if self._useGradient is not None:
             [vTop, vBot] = self._useGradient  # something strange here!!!
-            pg.info('Create gradient starting model. {0}: {1}'.format(vTop,
-                                                                      vBot))
+            pg.info(f'Create gradient starting model. {vTop}: {vBot}')
             sm = createGradientModel2D(self.data,
                                        self.paraDomain,
                                        vTop, vBot)
@@ -131,9 +138,8 @@ class TravelTimeDijkstraModelling(MeshModelling):
             pg.physics.traveltime.drawFirstPicks(ax, data, **kwargs)
             return ax
         else:
-            kwargs.setdefault('label', pg.unit('va'))
-            kwargs.setdefault('cMap', pg.utils.cMap('va'))
-            gci = drawVA(ax, data, usePos=False, **kwargs)
+            kwargs.setdefault('usePos', False)
+            gci = drawVA(ax, data, **kwargs)
             cBar = createColorBar(gci, **kwargs)
 
             return gci, cBar
@@ -143,6 +149,15 @@ class FatrayDijkstraModellingInterpolate(TravelTimeDijkstraModelling):
     """Shortest-path (Dijkstra) based travel time with fat ray jacobian."""
 
     def __init__(self, frequency=100., **kwargs):
+        """Initialise the fat-ray Dijkstra forward operator.
+
+        Parameters
+        ----------
+        frequency : float
+            Source frequency [Hz] controlling the width of the Fresnel zone.
+        **kwargs :
+            Forwarded to :class:`TravelTimeDijkstraModelling`.
+        """
         super().__init__(**kwargs)
         self.frequency = frequency
         self.iMat = pg.matrix.SparseMapMatrix()
@@ -197,6 +212,15 @@ class FatrayDijkstraModellingMidpoint(TravelTimeDijkstraModelling):
     """Shortest-path (Dijkstra) based travel time with fat ray jacobian."""
 
     def __init__(self, frequency=100., verbose=False):
+        """Initialise the midpoint fat-ray Dijkstra forward operator.
+
+        Parameters
+        ----------
+        frequency : float
+            Source frequency [Hz] controlling the width of the Fresnel zone.
+        verbose : bool
+            Enable verbose output.
+        """
         super().__init__(verbose)
         self.frequency = frequency
         self.mids = None

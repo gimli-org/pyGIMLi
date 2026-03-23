@@ -20,7 +20,7 @@ standard deviations of each bin over its mean value using an error model
 
     \delta R=a+b*|R|
 
-consisting of a percentage error a and a resistance error b (in Ohm).
+consisting of a percentage error b and a resistance error a (in Ohm).
 The relative error can be computed by
 
 .. math::
@@ -100,7 +100,7 @@ dR = abs(R[iF] - R[iB])
 fig, ax = plt.subplots()
 ax.loglog(Rmean, dR, '.', markersize=2)
 ax.set_xlabel(r'R ($\Omega$)')
-ax.set_ylabel('dR ($\Omega$)')
+ax.set_ylabel(r'dR ($\Omega$)')
 ax.grid()
 
 ###############################################################################

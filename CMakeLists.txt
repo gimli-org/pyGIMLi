@@ -665,21 +665,28 @@ find_package(Doxygen)
 find_package(Sphinx 3.1)
 
 if (SPHINX_FOUND AND NOT SKIP_SPHINX)
-    add_subdirectory(doc EXCLUDE_FROM_ALL)
-    message(STATUS "Search recursive for related doc files from here: " ${CMAKE_SOURCE_DIR})
+message(STATUS "Search recursive for related doc files from here: " ${CMAKE_SOURCE_DIR})
 
-    set (RECDOCTYPES "*.rst" "*.md" "*.png" "*.svg" "*.bib" "paper/*.py")
+set (RECDOCTYPES "*.rst" "*.md" "*.png" "*.svg" "*.bib" "paper/*.py")
 
-    foreach (DTYPE ${RECDOCTYPES})
-        file(GLOB_RECURSE DFILES
-                LIST_DIRECTORIES false
-                RELATIVE "${CMAKE_SOURCE_DIR}"
-            "./doc/${DTYPE}")
+foreach (DTYPE ${RECDOCTYPES})
+
+    file(GLOB_RECURSE DFILES LIST_DIRECTORIES false
+             RELATIVE "${CMAKE_SOURCE_DIR}" "./doc/${DTYPE}")
         message(STATUS "Append DOC files: (${DTYPE}) " ${DFILES})
-        list(APPEND DOCFILES ${DFILES})
+        list(APPEND RDOCFILES ${DFILES})
     endforeach()
 
-    set(RSTFILES ${DOCFILES} CACHE INTERNAL "RST source file that we need to copy")
+    foreach(DF "./AUTHORS.md"
+               "./CITATION.md"
+               "./INSTALLATION.md"
+               "./LICENSE.md"
+               )
+        message(STATUS "Append DOC files: " ${DF})
+        list(APPEND RDOCFILES ${DF})
+    endforeach()
+
+    set(DOCFILES ${RDOCFILES} CACHE INTERNAL "RST source file that we need to copy")
 
     execute_process(COMMAND ${SPHINX_EXECUTABLE} --version
                     OUTPUT_VARIABLE SPHINX_VERSION
@@ -689,7 +696,7 @@ if (SPHINX_FOUND AND NOT SKIP_SPHINX)
        COMMAND
        ${CMAKE_MAKE_PROGRAM} clean -f ${CMAKE_CURRENT_BINARY_DIR}/doc/
     )
-
+    add_subdirectory(doc EXCLUDE_FROM_ALL)
 endif()
 
 message(STATUS "**********************************************************************")
@@ -840,7 +847,6 @@ add_subdirectory(core/tests EXCLUDE_FROM_ALL)
 
 add_subdirectory(core/python EXCLUDE_FROM_ALL)
 add_subdirectory(core/pgcore)
-add_subdirectory(pygimli)
 
 add_custom_target(check)
 if (CPPUNIT_FOUND)

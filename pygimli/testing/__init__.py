@@ -1,6 +1,5 @@
-# coding=utf-8
-"""
-Testing utilities
+#!/usr/bin/env python3
+"""Testing utilities.
 
 In Python you can call `pygimli.test()` to run all docstring
 examples.
@@ -10,7 +9,6 @@ Writing tests for pyGIMLi
 
 Please check: https://docs.pytest.org/en/latest/
 """
-
 import sys
 from os.path import join, realpath
 
@@ -47,7 +45,8 @@ def devTests():
 
 
 def test(target=None, show=False, onlydoctests=False, coverage=False,
-         htmlreport=False, abort=False, verbose=True, devTests=False, exitonerror=False):
+         htmlreport=False, abort=False, verbose=True, devTests=False,
+         exitonerror=False):
     """Run docstring examples and additional tests.
 
     Examples
@@ -62,8 +61,6 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
     >>> pg.test(boxprint, verbose=False) # doctest: +SKIP
     >>> # Use some logical expressions
     >>> pg.test("draw and not drawMesh") # doctest: +SKIP
-    >>> # Exit the program on test failure (useful for automatic testing)
-    >>> pg.test(exitonerror=True) # doctest: +SKIP
 
     Parameters
     ----------
@@ -122,7 +119,11 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
     old_backend = plt.get_backend()
     old_backend_pv = pg.rc["pyvista.backend"]
 
+
     if not show:
+        import pyvista
+        pyvista.OFF_SCREEN=True
+
         plt.switch_backend("Agg")
         pg.rc["pyvista.backend"] = None
     else:

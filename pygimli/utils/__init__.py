@@ -30,7 +30,7 @@ from .sparseMat2Numpy import (convertCRSIndex2Map, sparseMatrix2Array,
                               )
 
 from .units import (unit, cmap)
-from .units import cmap as cMap # for compatibilty (will be removed)
+from .units import cmap as cMap # for compatibility (will be removed)
 
 from .utils import (ProgressBar, boxprint, cumDist, cut, diff, dist,
                     filterIndex, filterLinesByCommentStr, findNearest,
@@ -41,6 +41,6 @@ from .utils import (ProgressBar, boxprint, cumDist, cut, diff, dist,
 
 from .streams import streamline, streamlineDir
 from .dem import DEM
-
+from .positioning import (distToLine, pointInsidePolygon, detectLines)
 
 __all__ = [name for name in dir() if '_' not in name]

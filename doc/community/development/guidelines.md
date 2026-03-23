@@ -7,7 +7,7 @@
 :::{note}
 These steps are only relevant if you have write privileges to the main
 GitHub repository. The general contribution guidelines can be found in
-\_sec:contributing:.
+{ref}`sec-contributing`.
 :::
 
 1. Clone the GIMLi repository:
@@ -99,7 +99,7 @@ into the dev branch and delete the branch.
 | dev         | Main development branch | This is where new versions are developed and pull requests are merged to.                                                                                                                                                             | Build and test, on success generate <http://dev.pygimli.org> and merge to master                                                                   | Test pull requests, build nightly conda packages for test channel                                                            | Run pg.test() and make doc before pushing. Tag related issues in commit message.                                      |
 | release     | Latest release          | This is where releases are "staged". This usually means creating a git tag and manually merging dev into release. Hot fixes and website typos can be directly committed here.                                                         | Start in empty workspace, build, test and create documentation after each push. On success, merge into master and update <http://www.pygimli.org>. | Test "backward compatibility" (e.g., run example scripts from last release with this version). Test on Mac and Windows, too. | Make sure the tag is annotated and the version string is following the principles described below.                    |
 | master      | Latest tested dev       | Make sure that if people checkout the repository, they always have a working version.                                                                                                                                                 | (represented by <http://dev.pygimli.org>)                                                                                                          | Build pgcore (if necessary) and pygimli conda packages for release.                                                          | Never push anything to master!                                                                                        |
-| -           | Feature branches        | Larger endeavors and major restructuring should happen in dedicated feature branches (or forks), which are eventually merged to dev. This can also be useful if you want to give write access to others to jointly work on a feature. | Automatic testing can be requested (<mailto:florian@pygimli.org>).                                                                                 |                                                                                                                              | Start feature branch from dev. Inform other developers about your develpment (to avoid conflicts and redundant work). |
+| -           | Feature branches        | Larger endeavors and major restructuring should happen in dedicated feature branches (or forks), which are eventually merged to dev. This can also be useful if you want to give write access to others to jointly work on a feature. | Automatic testing can be requested (<mailto:florian@pygimli.org>).                                                                                 |                                                                                                                              | Start feature branch from dev. Inform other developers about your development (to avoid conflicts and redundant work). |
 
 ## Commit messages
 
@@ -148,22 +148,21 @@ git tag -a -m "First official release" "v1.0.x" # tags last commit as v1.0.x
 git push --tags # pushes tags to GitHub
 ```
 
-(sec-testing)=
-
 To see the commits since the last tag/release, you can use:
 
 ```bash
-git log v1.3.0...HEAD --oneline
+git log v1.5.0...HEAD --oneline
 ```
 
 Or to see commits between specific versions:
 
 ```bash
-git log v1.2.5...v1.2.6 --oneline
+git log v1.5.3...v1.5.4 --oneline
 ```
 
 Alternatively, this information can also be obtained [via GitHub](http://github.com/gimli-org/gimli/compare/v1.4.0...v1.4.1).
 
+(sec-testing)=
 ## Testing
 
 Run specific API examples from shell:
@@ -172,13 +171,13 @@ Run specific API examples from shell:
 python -c "import pygimli as pg; pg.test(pg.meshtools.createCircle, show=True)"
 ```
 
-Run a specific test from shell.
+Run a specific test from shell:
 
 ```bash
 python -c "import pygimli; from pygimli.physics.petro.resistivity import *; test_Archie()"
 ```
 
-Run all tests
+Run all tests:
 
 ```bash
 python -c "import pygimli; pygimli.test(show=True)"
@@ -200,13 +199,6 @@ Read API documentation from shell:
 
 ```bash
 python -c "import pygimli as pg; help(pg.test)"
-```
-
-More information on pyGIMLi's native testing function:
-
-```{eval-rst}
-.. autofunction:: pygimli.test
-
 ```
 
 ### Adding an example to the paper carousel
@@ -231,13 +223,12 @@ dict(img="jordi2018.jpg",
 
 ## Coding Guidelines
 
-- Generally we try to use PEP 8 <https://www.python.org/dev/peps/pep-0008/>?
+- Generally, we use PEP 8 <https://www.python.org/dev/peps/pep-0008/>?
 - All names should be literally and in CamelShape style.
-- Classes starts with Upper-case Letters.
-- Members and Methods always starts with Lower-case Letters.
+- Classes starts with upper-case letters, members and methods start with lower-case letters.
 - All class members (self.member) need to be initialized in the init.
-- (ugly²) Do not use multi initialize in one line, e.g., a, b, c = 0, 0, 0
-- check for data types with 'if isinstance(var, type):' instead 'if type(var) == type:'
+- (ugly²) Do not use multi initialize in one line, e.g., `a, b, c = 0, 0, 0`
+- check for data types with `if isinstance(var, type):` instead `if type(var) == type:`
 
 (sec-coding-guidelines-1)=
 
@@ -250,55 +241,48 @@ We use: (exceptions in .landscape.yml and .pylintrc)
 - pylint
 - pyflakes
 
-We encurage to add 2 BLANKLINE between classes and methods and never use 2 BLANKLINES in the code itself.
+Add two blank lines between classes and methods but never use two blank lines otherwise.
 
-
-### Behaviour by name for global functions:
+### Behavior by name for global functions
 
 ```python
 createFOO(...)
-    """ Always needs to return an instance of FOO.
-    ""
+    """Return an instance of FOO."""
 ```
 
 ```python
 showFOO(Bar, ...)
-    """ Always open a window or optionally use a given Axes to show Bar as Foo."""
+    """Open a window or optionally use a given xxes to show Bar as Foo."""
     return ax, cbar
 ```
 
 ```python
 drawFOO(ax, Bar...)
-    """ Always needs an Axes ax to draw Bar as Foo.
-    """
+    """Always needs an axes object ax first argument to draw Bar as Foo."""
     return graphics_object
 ```
 
 ```python
 readFOO(fileName, *args):
-    """ Read object from disc.
-    """
+    """Read object from disc."""
     return obj
 ```
 
 ```python
 importFOO(fileName, obj, *args):
-    """ Import object from disc into an existing object.
-    """
+    """Import object from disc into an existing object."""
     return obj
 ```
 
 ```python
 exportFOO(obj, fileName):
-    """ Export object to disc in foreign (FOOs) format.
-    """
+    """Export object to disc in foreign (FOOs) format."""
     return true
 ```
 
 ```python
 convertFOO(fooObj):
-    """ Convert Foo obj into gimli Obj.
-    """
+    """Convert Foo obj into pyGIMLi Obj."""
     return gimliObj
 ```
 
@@ -309,7 +293,7 @@ Use the following documentation syntax or see:
 
 ```python
 def foo(arg1:type, arg2:type=Default, *args, **kwargs) -> ReturnType:
-""" Short description, i.e., one line to explain what foo does. [DOT_AT_END]
+"""Short description, i.e., one line to explain what foo does. [PERIOD_AT_END]
   [ONE BLANKLINE]
   Explain a little more verbose was foo does. Use references :cite:`Archie1942`
   Use links to pygimli api :gimliapi:`GIMLI::Mesh`, `:py:mod:pygimli.manager`
@@ -353,16 +337,14 @@ def foo(arg1:type, arg2:type=Default, *args, **kwargs) -> ReturnType:
   >>> ...
   expected output  # for doctest to pass
 
-
   See Also
   --------
       average: Weighted average,
-      e.g., Link to tutorials :ref:`tut:Modelling_BC` assuming there
-      has been set an appropriate label in the tutorial.
+      e.g., Link to tutorials :ref:`tut:Modelling_BC` assuming
+      an appropriate label in the tutorial.
 
   References
   ----------
-  If not in global bib file.
+  If not already in the global bib file.
   """
 ```
-

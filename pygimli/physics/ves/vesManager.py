@@ -1,6 +1,6 @@
+#!/usr/bin/env python
 """Vertical electrical sounding (VES) manager class."""
 import numpy as np
-
 import pygimli as pg
 from pygimli.frameworks import MethodManager1d
 from .vesModelling import VESModelling, VESCModelling
@@ -14,11 +14,12 @@ class VESManager(MethodManager1d):
     >>> import numpy as np
     >>> import pygimli as pg
     >>> from pygimli.physics import VESManager
+    >>>
     >>> ab2 = np.logspace(np.log10(1.5), np.log10(100), 32)
     >>> mn2 = 1.0
     >>> # 3 layer with 100, 500 and 20 Ohmm
     >>> # and layer thickness of 4, 6, 10 m
-    >>> # over a Halfspace of 800 Ohmm
+    >>> # over a half-space of 800 Ohmm
     >>> synthModel = pg.cat([4., 6., 10.], [100., 5., 20., 800.])
     >>> ves = VESManager()
     >>> ra, err = ves.simulate(synthModel, ab2=ab2, mn2=mn2, noiseLevel=0.01)
@@ -31,15 +32,12 @@ class VESManager(MethodManager1d):
     def __init__(self, **kwargs):
         """Initialize instance.
 
-        Parameters
-        ----------
-        complex : bool
-            Accept complex resistivities.
+        Keyword Arguments
+        -----------------
+        **kwargs:
+            complex: bool
+                Accept complex resistivities.
 
-        Attributes
-        ----------
-        complex : bool
-            Accept complex resistivities.
         """
         self._complex = kwargs.pop('complex', False)
 
@@ -50,6 +48,8 @@ class VESManager(MethodManager1d):
         self.dataTrans = None
         self.rhoaTrans = pg.trans.TransLog()
         self.phiaTrans = pg.trans.TransLin()
+        if "ab2" in kwargs or "data" in kwargs or "dataContainer" in kwargs:
+            self.fop.setDataSpace(**kwargs)
 
     @property
     def complex(self):
@@ -157,7 +157,7 @@ class VESManager(MethodManager1d):
     def exportData(self, fileName, data=None, error=None):
         """Export data into simple ascii matrix.
 
-        Usefull?
+        Useful?
         """
         mn2 = np.abs((self.fop.am - self.fop.an) / 2.)
         ab2 = (self.fop.am + self.fop.bm) / 2.
@@ -201,7 +201,6 @@ def VESManagerApp():
                lam=options.lam,
                )
     mgr.showResultAndFit()
-    pg.wait()
 
 
 if __name__ == '__main__':

@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 """Pygimli base functions.
 
-Some needs to be sorted. Need to fit nameing conventions!
+Some needs to be sorted. Need to fit naming conventions!
 """
 import os.path
 import time
@@ -43,7 +42,7 @@ def chi2(a, b, err, trans=None):
     return pg.math.dot(d, d) / len(d)
 
 
-# fc_cleaning compatibilty to bert
+# fc_cleaning compatibility to bert
 rmswitherr = rmsWithErr
 
 
@@ -169,7 +168,7 @@ def createPath(pathList):
     pathList: str | list(str)
         Create Path with option subpaths
     """
-    if hasattr(pathList, '__iter__'):
+    if hasattr(pathList, '__iter__') and not isinstance(pathList, str):
         path = os.path.join('', *pathList)
     else:
         path = os.path.join('', pathList)

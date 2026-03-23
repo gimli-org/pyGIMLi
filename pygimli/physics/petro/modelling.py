@@ -40,7 +40,7 @@ class PetroModelling(pg.Modelling):
             self.fop.setMesh(mesh)
             self.fop.createRefinedForwardMesh(refine=False)
 
-        # self.setMesh(f.mesh(), ignoreRegionManager=True) # not really nessary
+        # self.setMesh(f.mesh(), ignoreRegionManager=True) # not really necessary
         self.setRegionManager(self.fop.regionManagerRef())
 
         self.nModel = self.regionManager().parameterCount()
@@ -161,6 +161,7 @@ class JointPetroInversion(MethodManager):  # bad name: no inversion framework!
         return inv
 
     def model(self):
+        """Return the current joint inversion model."""
         return self.mod
 
     def setData(self, data):

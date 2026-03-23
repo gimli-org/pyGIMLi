@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-# encoding: utf-8
 r"""
 Geostatistical regularization
 =============================
 
 In this example we illustrate the use of geostatistical constraints on
-irregular meshes as presented by :cite:`jordi2018geostatistical`, compared to
+irregular meshes as presented by :cite:`Jordi2018`, compared to
 classical smoothness operators of first or second kind.
 
 The elements of the covariance matrix :math:`\textbf{C}_{\text{M}}` are defined
@@ -19,10 +18,10 @@ by the distances H between the model cells i and j into the three directions
                 \left(\frac{\textbf{H}^z_{ij}}{I_{z}}\right)^{2}}\right)}.
 
 It defines the correlation between model cells as a function of correlation
-lenghts (ranges) :math:`I_x`, :math:`I_y`, and :math:`I_z`. Of course, the
+lengths (ranges) :math:`I_x`, :math:`I_y`, and :math:`I_z`. Of course, the
 orientation of the coordinate axes is arbitrary and can be chosen by rotation.
 Let us illustrate this by a simple mesh:
-"""
+"""  # noqa: D205, D400
 
 # %%
 # Computing covariance and constraint matrices
@@ -39,7 +38,7 @@ from pygimli.frameworks import PriorModelling
 
 # We create a rectangular domain and mesh it with small triangles
 rect = mt.createRectangle(start=[0, -10], end=[10, 0])
-mesh = mt.createMesh(rect, quality=34.5, area=0.1)
+mesh = mt.createMesh(rect, quality=34.3, area=0.2)
 
 # We compute such a covariance matrix by calling
 CM = pg.utils.covarianceMatrix(mesh, I=5)  # I taken for both x and y
@@ -93,9 +92,9 @@ cor = C * vec
 
 # %%
 # and plot it using a linear or logarithmic scale
-kwLin = dict(cMin=-1, cMax=1, cMap="bwr")
+kwLin = dict(cMin=-1, cMax=1, cMap="bwr")  # noqa: N816
 ax, cb = pg.show(mesh, cor, **kwLin)
-kwLog = dict(cMin=1e-3, cMax=1, cMap="magma_r", logScale=True)
+kwLog = dict(cMin=1e-3, cMax=1, cMap="magma_r", logScale=True)  # noqa: N816
 ax, cb = pg.show(mesh, pg.abs(cor), **kwLog)
 
 # %%
@@ -142,12 +141,10 @@ kw = dict(
 # We want to use a homogenenous starting model
 vals = np.array([30, 50, 300, 100, 200])
 # We assume a 5% relative accuracy of the values
-relError = 0.05
-# set up data and model transformation log-scaled
-tLog = pg.trans.TransLog()
+relError = 0.05  # noqa: N816
+# set up data and log-scaled data transformation
 inv = pg.Inversion(fop=fop)
-inv.transData = tLog
-inv.transModel = tLog
+inv.transData = 'log'  # model already is
 inv.startModel = 30  # for all
 
 # Initially, we use the first-order constraints (default)
@@ -166,14 +163,14 @@ ax[0, 1].set_title("2nd order")
 np.testing.assert_array_less(inv.chi2(), 1.2)
 
 # Now we set the geostatistic isotropic operator with 5m correlation length
-res = inv.run(vals, relativeError=relError, lam=15, C=C)
+res = inv.run(vals, relativeError=relError, lam=15, correlationLengths=5)
 print(('Cg-5/5m: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
 pg.show(mesh, res, ax=ax[1, 0], **kw)
 ax[1, 0].set_title("I=5")
 np.testing.assert_array_less(inv.chi2(), 1.2)
 
 # and finally we use the dipping constraint matrix
-res = inv.run(vals, relativeError=relError, lam=15, C=Cdip)
+res = inv.run(vals, relativeError=relError, lam=15, correlationLengths=[9, 2], dip=-25)
 print(('Cg-9/2m: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
 pg.show(mesh, res, ax=ax[1, 1], **kw)
 ax[1, 1].set_title("I=[9/2], dip=25")

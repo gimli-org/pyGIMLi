@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """General grid generation and maintenance."""
 
 import numpy as np
-
 import pygimli as pg
 
 
@@ -12,7 +11,7 @@ def createGrid(x=None, y=None, z=None, **kwargs):
     Generate simple grid with defined node positions for each dimension.
     The resulting grid depends on the amount of given coordinate arguments
     and consists out of edges (1D - x), quads (2D- x and y), or
-    hexahedrons(3D- x, y, and z). For grids with world boundary markers 
+    hexahedrons(3D- x, y, and z). For grids with world boundary markers
     (-1 surface and -2 subsurface) the y or z array need to be in increasing
     order.
 
@@ -74,11 +73,11 @@ def createGrid(x=None, y=None, z=None, **kwargs):
 
 
 def createGridPieShaped(x, degree=10.0, h=2, marker=0):
-    """Create a 2D pie shaped grid (segment from annulus or cirlce).
+    """Create a 2D pie shaped grid (segment from annulus or circle).
 
-    TODO:
+    TODO
     ----
-    * degree: > 90 .. 360
+        * degree: > 90 .. 360
 
     Arguments
     ---------
@@ -207,7 +206,7 @@ def appendTriangleBoundary(mesh, xbound=10, ybound=10, marker=1,
     the subsurface.
 
     Note, this all will only work stable if the mesh generator (triangle)
-    preserve all input boundaries. However this will lead to bad quality meshes 
+    preserve all input boundaries. However this will lead to bad quality meshes
     for the boundary region so its a good idea to play with the addNodes keyword
     argument to manually refine the newly created outer boundaries.
 
@@ -243,7 +242,7 @@ def appendTriangleBoundary(mesh, xbound=10, ybound=10, marker=1,
     Returns
     -------
     :gimliapi:`GIMLI::Mesh`
-        A new 2D mesh containing the original mesh and a boundary arround.
+        A new 2D mesh containing the original mesh and a boundary around.
 
     See Also
     --------
@@ -367,7 +366,7 @@ def appendTriangleBoundary(mesh, xbound=10, ybound=10, marker=1,
 
     # pg.show(mesh2, boundaryMarkers=True, showNodes=True)
 
-    # start extracting all cells with marker from mesh2 and all orginal cells
+    # start extracting all cells with marker from mesh2 and all original cells
     mesh3 = pg.Mesh(2)
 
     for c in mesh2.cells():
@@ -421,10 +420,10 @@ def appendBoundaryGrid(grid, xbound=None, ybound=None, zbound=None,
         2D or 3D Mesh that must contain structured quads or hex cells
     xbound: iterable of type float [None]
         Needed for 2D or 3D grid prolongation and will be added on the left
-        side in opposit order and on the right side in normal order.
+        side in opposite order and on the right side in normal order.
     ybound: iterable of type float [None]
         Needed for 2D or 3D grid prolongation and will be added (2D bottom,
-        3D front) in opposit order and (2D top, 3D back) in normal order.
+        3D front) in opposite order and (2D top, 3D back) in normal order.
     zbound: iterable of type float [None]
         Needed for 3D grid prolongation and will be added the bottom side in
         opposite order on the top side in normal order.
@@ -514,7 +513,7 @@ def appendTetrahedronBoundary(mesh, xbound=10, ybound=10, zbound=10,
     ----
     This method will only work stable if the mesh generator (Tetgen) preserves
     all input boundaries. This will lead to bad quality meshes for the boundary
-    region so its a good idea to play with the addNodes keword argument to
+    region so its a good idea to play with the addNodes keyword argument to
     manually refine the newly created outer boundaries.
 
     If the input mesh consists of hexahedrons a small inconsistency will arise
@@ -540,7 +539,7 @@ def appendTetrahedronBoundary(mesh, xbound=10, ybound=10, zbound=10,
         Horizontal prolongation distance in meter at x-direction.
         Need to be >= 0.
     ybound: float [10]
-        Horizonal prolongation distance in meter at y-direction.
+        Horizontal prolongation distance in meter at y-direction.
         Need to be greater 0.
     zbound: float [10]
         Vertical prolongation distance in meter at z-direction (>0).
@@ -557,7 +556,7 @@ def appendTetrahedronBoundary(mesh, xbound=10, ybound=10, zbound=10,
     Returns
     -------
     :gimliapi:`GIMLI::Mesh`
-        A new 3D mesh containing the original mesh and a boundary arround.
+        A new 3D mesh containing the original mesh and a boundary around.
 
     See Also
     --------

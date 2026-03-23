@@ -1,5 +1,6 @@
 """Import routines several ERT file formats."""
 import re
+from pathlib import Path
 import numpy as np
 import pygimli as pg
 
@@ -17,6 +18,11 @@ def load(fileName, verbose=False, **kwargs):
     Parameters
     ----------
     fileName: str
+        file name
+    verbose : bool
+        print some stuff or not
+    ensureKRhoa : bool
+        make sure data container has geometric factors and apparent resistivity
 
     Returns
     -------
@@ -97,7 +103,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
         return s.split('\r\n')[0]
     # def getNonEmptyRow(...)
 
-    with open(filename, 'r') as fi:
+    with Path(filename).open('r') as fi:
         content = fi.readlines()
 
     it = iter(content)
@@ -134,7 +140,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
     data.resize(nData)
 
     if typ == 9 or typ == 10:
-        raise Exception("Don't know how to read:" + str(typ))
+        raise NotImplementedError("Don't know how to read:" + str(typ))
 
     row = getNonEmptyRow(it, comment=';')
     if typ in [11, 12, 13]:  # mixed array
@@ -148,14 +154,20 @@ def importRes2dInv(filename, verbose=False, return_header=False):
         if row.startswith("Error"):
             hasErr = True
             row = getNonEmptyRow(it, comment=';')
-            header['ipErrType'] = getNonEmptyRow(it, comment=';')
+            if row.startswith("Type"):
+                row = getNonEmptyRow(it, comment=';')
+
+            header['ipErrType'] = int(row)
+            row = getNonEmptyRow(it, comment=';')
 
         for i in range(nData):
-            row = getNonEmptyRow(it, comment=';')
-            vals = row.replace(',', ' ').split()
+            if i > 0:
+                row = getNonEmptyRow(it, comment=';')
 
+            vals = row.replace(',', ' ').split()
+            nEls = int(float(vals[0]))
             # row starts with 4
-            if int(vals[0]) == 4:
+            if nEls == 4:
                 eaID = data.createSensor(pg.Pos(float(vals[1]),
                                                 float(vals[2])))
                 ebID = data.createSensor(pg.Pos(float(vals[3]),
@@ -164,7 +176,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                                                 float(vals[6])))
                 enID = data.createSensor(pg.Pos(float(vals[7]),
                                                 float(vals[8])))
-            elif int(vals[0]) == 3:
+            elif nEls == 3:
                 eaID = data.createSensor(pg.Pos(float(vals[1]),
                                                 float(vals[2])))
                 ebID = -1
@@ -172,7 +184,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                                                 float(vals[4])))
                 enID = data.createSensor(pg.Pos(float(vals[5]),
                                                 float(vals[6])))
-            elif int(vals[0]) == 2:
+            elif nEls == 2:
                 eaID = data.createSensor(pg.Pos(float(vals[1]),
                                                 float(vals[2])))
                 ebID = -1
@@ -180,20 +192,21 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                                                 float(vals[4])))
                 enID = -1
             else:
-                raise Exception('dont know how to handle row', vals[0])
-            res[i] = float(vals[int(vals[0])*2+1])
+                raise ValueError('dont know how to handle first entry', vals[0])
+
+            res[i] = float(vals[nEls*2+1])
             if hasIP:
-                # ip[i] = float(vals[int(vals[0])*2+2])
-                ipCol = int(vals[0])*2+2
+                # ip[i] = float(vals[nEls*2+2])
+                ipCol = nEls*2+2
                 ip[i] = float(vals[ipCol])
                 if 'ipNumGates' in header:
                     specIP.append(vals[ipCol:])
             if hasErr:
-                ipCol = int(vals[0])*2+3
+                ipCol = nEls*2+3
                 err[i] = float(vals[ipCol])
                 if hasIP:
-                    ipErrCol = int(vals[0])*2+4
-                    iperr[i] = float(vals[ipCol])
+                    ipErrCol = nEls*2+4
+                    iperr[i] = float(vals[ipErrCol])
 
             data.createFourPointData(i, eaID, ebID, emID, enID)
 
@@ -210,7 +223,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
                 A[A < -1000] = -999
                 for i in range(header['ipNumGates']):
                     data.set('ip'+str(i+1), A[:, i])
-        
+
         if hasErr:
             data["err"] = err
             if hasIP:
@@ -276,28 +289,16 @@ def importRes2dInv(filename, verbose=False, return_header=False):
             NN = MM + EL
             BB = NN + SP * EL
         else:
-            raise Exception('Datatype ' + str(typ) + ' not yet suppoted')
+            raise NotImplementedError('Datatype ' + str(typ) + ' not yet supported')
 
         for i in range(len(AA)):
-            if AA is not None:
-                eaID = data.createSensor(pg.Pos(AA[i], 0.0))
-            else:
-                eaID = -1
+            eaID = data.createSensor(pg.Pos(AA[i], 0.0)) if AA is not None else -1
 
-            if BB is not None:
-                ebID = data.createSensor(pg.Pos(BB[i], 0.0))
-            else:
-                ebID = -1
+            ebID = data.createSensor(pg.Pos(BB[i], 0.0)) if BB is not None else -1
 
-            if MM is not None:
-                emID = data.createSensor(pg.Pos(MM[i], 0.0))
-            else:
-                emID = -1
+            emID = data.createSensor(pg.Pos(MM[i], 0.0)) if MM is not None else -1
 
-            if NN is not None:
-                enID = data.createSensor(pg.Pos(NN[i], 0.0))
-            else:
-                enID = -1
+            enID = data.createSensor(pg.Pos(NN[i], 0.0)) if NN is not None else -1
 
             data.createFourPointData(i, eaID, ebID, emID, enID)
 
@@ -315,7 +316,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
             header["foundTopo"] = 1
             ntopo = int(getNonEmptyRow(it, comment=';'))
             ap = data.additionalPoints()
-            for i in range(ntopo):
+            for _ in range(ntopo):
                 strs = getNonEmptyRow(it, comment=';').replace(',', ' ').split()
                 ap.push_back(pg.Pos([float(s) for s in strs]))
 
@@ -349,7 +350,7 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
     """
     data = pg.DataContainerERT()
     header = {}
-    with open(filename, 'r', encoding='iso-8859-15') as fi:
+    with Path(filename).open('r', encoding='iso-8859-15') as fi:
         content = fi.readlines()
         if content[0].startswith('Injection'):  # Resecs lead-in
             for n in range(20):
@@ -390,7 +391,7 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
         for i, line in enumerate(content):
             if "/" in line:
                 content[i] = line.replace(' / non conventional', '')
-        
+
         d = readAsDictionary(content, sep='\t')
         if len(d) < 2:
             d = readAsDictionary(content)
@@ -416,9 +417,8 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
         else:
             pg.debug("no electrode positions found!")
             pg.debug("Keys are:", d.keys())
-            raise Exception("No electrode positions found!")
+            raise RuntimeError("No electrode positions found!")
         for i in range(nData):
-            # print(i, d['A(x)'][i])
             if abmn[0]+'(z)' in d:
                 eID = [data.createSensor([d[se+'(x)'][i], d[se+'(y)'][i],
                                           d[se+'(z)'][i]]) for se in abmn]
@@ -459,7 +459,7 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
         abmn = ['a', 'b', 'm', 'n']
         if 'Cycles' in d:
             d['stacks'] = d['Cycles']
-        for key in d.keys():
+        for key in d:
             vals = np.asarray(d[key])
             if key.startswith('IP sum window'):  # there is a trailing number
                 key = 'IP sum window'  # apparently not working
@@ -490,7 +490,7 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
 # def importAsciiColumns(...)
 
 
-def readAsDictionary(content, token=None, sep=None):  # obsolote due to numpy?
+def readAsDictionary(content, token=None, sep=None):  # obsolete due to numpy?
     """Read list of strings from a file as column separated dictionary.
 
         e.g.
@@ -521,7 +521,7 @@ def readAsDictionary(content, token=None, sep=None):  # obsolote due to numpy?
         header = content[0].splitlines()[0].split(sep)
         token = []
 
-        for i, tok in enumerate(header):
+        for tok in header:
             tok = tok.lstrip()
             token.append(tok)
 

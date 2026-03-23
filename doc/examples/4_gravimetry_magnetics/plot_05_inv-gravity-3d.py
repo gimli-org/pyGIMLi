@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 3D gravity modelling and inversion
 ==================================
@@ -11,7 +10,7 @@ Holstein et al. (2007).
 In the following, we will build the model, create synthetic data, and do
 inversion using a depth-weighting function as outlined in the paper.
 
-"""
+"""  # noqa: D205, D400
 # %%%
 import numpy as np
 import matplotlib.pyplot as plt
@@ -76,7 +75,7 @@ data = fop.response(grid["synth"])
 noise_level = 1
 data += np.random.randn(len(data)) * noise_level
 plt.contourf(yy, xx, np.reshape(data, xx.shape))
-plt.colorbar();
+plt.colorbar()
 
 # %%%
 # Depth weighting
@@ -120,7 +119,7 @@ grid["inv"] = invmodel
 
 misfit = np.reshape(data-inv.response, xx.shape) / noise_level
 plt.pcolor(yy, xx, misfit, cmap="bwr", vmin=-3, vmax=3)
-plt.colorbar();
+plt.colorbar()
 
 # %%%
 # Visualization
@@ -158,7 +157,8 @@ ax[0].set_ylim(ax[0].get_ylim()[::-1])
 # %%%
 # References
 # ----------
-# -  Li, Y. & Oldenburg, D. (1998): 3-D inversion of gravity data. Geophysics 63(1), 109-119.
+# -  Li, Y. & Oldenburg, D. (1998): 3-D inversion of gravity data.
+#    Geophysics 63(1), 109-119.
 # -  Holstein, H., Sherratt, E.M., Reid, A.B.  (2007): Gravimagnetic field
 #    tensor gradiometry formulas for uniform polyhedra, SEG Ext. Abstr.
 #

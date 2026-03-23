@@ -46,7 +46,7 @@ it any name. Note that this environment has to be created only once.
 Open a terminal (Linux & Mac) or the Anaconda Prompt (Windows) and type:
 
 ```bash
-conda create -n pg -c gimli -c conda-forge "pygimli>=1.5.0"
+conda create -n pg -c gimli -c conda-forge "pygimli>=1.6.0"
 ```
 
 If you want to use pyGIMLi from the command line, you have to activate the

@@ -163,9 +163,10 @@ def testColRange():
 
 
 def testCBarLevels():
-    """
-    Expectations
-    ------------
+    """Test colorbar levels with pygimli.show.
+
+    Expectations:
+
     axs[0, 0]: show regions with plc
         Show needs to deliver the regions with Set3 colormap. Each tick on the
         colobar should be in the middle of the related color section.
@@ -232,12 +233,13 @@ def testColorBarFalse():
 
 
 def testShowPV():
-    """
-        import pygimli as pg
-        from pygimli.testing.test_show import testShowPV
-        import pyvista as pv
-        print(pv.__version__)
-        testShowPV()
+    """Test pyvista backend for pygimli.show.
+
+    import pygimli as pg
+    from pygimli.testing.test_show import testShowPV
+    import pyvista as pv
+    print(pv.__version__)
+    testShowPV()
     """
     m1 = mt.createCube()
     m1.setBoundaryMarkers(range(m1.boundaryCount()))
@@ -285,27 +287,6 @@ def testShowPV():
                                  source_center=[-.5, -0., -0.])
     pg.viewer.pv.drawSlice(ax, m1, data=u, label='x', normal=[0, 1, 0])
     ax.show()
-
-
-def testPVBackends():
-    """
-        import pygimli as pg
-        from pygimli.testing.test_show import testPVBackends
-        import pyvista as pv
-        testPVBackends()
-    """
-    m1 = mt.createCube()
-
-    # pg.rc['view3D'] = 'fallback'
-    # pg.show(m1)
-
-    pg.rc['view3D'] = 'pyvista'
-    print('Default')
-    pg.show(m1)
-    print('Trame-client')
-    pg.show(m1, backend='client')
-    # print('ipyvtklink')
-    # pg.show(m1, backend='ipyvtklink')
 
 
 def testCoverage():

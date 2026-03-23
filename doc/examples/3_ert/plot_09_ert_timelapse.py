@@ -97,7 +97,7 @@ ax[2, 0].set_aspect(3)
 # %%%
 # We initialize the `TimelapseERT` class by passing the list of data (A).
 # Other ways are passing (B) a single data file that either holds all timesteps
-# or is accompagnied by another file with the apparent resistivites (optionally
+# or is accompanied by another file with the apparent resistivites (optionally
 # errors) as matrix, or (C) a file name with a * in it that points to a number
 # of data (e.g. `bla*.dat`) to be read sequentially.
 #

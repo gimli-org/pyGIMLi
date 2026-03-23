@@ -27,4 +27,6 @@ from .resolution import resolutionMatrix
 
 from .harmfit import HarmFunctor, harmfit, harmfitNative
 
+from .scci import SCCI
+
 __all__ = ['HarmFunctor', 'harmfitNative', 'harmfit']

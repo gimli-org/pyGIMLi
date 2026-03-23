@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 Region-wise regularization
 ==========================
@@ -25,7 +24,8 @@ import pygimli.meshtools as mt
 
 # %%%
 # The data was measured across a shallow lake with the most electrodes being on
-# the bottom of a lake. We used cables with 2m spaced takeouts.
+# the bottom of a lake.
+# We used cables with 2m spaced takeouts.
 #
 
 data = pg.getExampleData("ert/lake.ohm")
@@ -41,8 +41,9 @@ plt.grid()
 
 # %%%
 # On both sides, two electrodes are on shore, but the others are on the bottom
-# of a shallow lake with a maximum depth of 2.5m. We first compute a geometric factor using
-# the analytical formula, thereby treating the electrodes as subsurface electrodes.
+# of a shallow lake with a maximum depth of 2.5m.
+# We first compute a geometric factor using the analytical formula,
+# thereby treating the electrodes as subsurface electrodes.
 #
 
 data["k"] = ert.createGeometricFactors(data, numerical=False, dim=2)
@@ -51,11 +52,12 @@ ax, cb = data.show()
 
 # %%%
 # We combined Wenner-Schlumberger (top) and Wenner-beta (bottom) data. The
-# lowest resistivities correspond with the water resistivity of 22.5
-# :math:`\Omega`m.
+# lowest resistivities correspond with the water resistivity of
+# 22.5 :math:`\Omega` m.
 #
 # The contained errors are measured standard devitations and should not be used
-# for inversion. Instead, we estimate new errors using 2% and 100microVolts.
+# for inversion.
+# Instead, we estimate new errors using 2% and 100 µV.
 #
 
 data["err"] = ert.estimateError(data, relativeError=0.02, absoluteUError=1e-4)
@@ -140,7 +142,7 @@ ax, cb = mgr.showResult(**kw)
 # Note. The manager class performs a model value permutation to fit
 # the parametric mesh cell. So if you want to relate model values to the input
 # mesh, you need to use the unpermutated model values directly from the
-# inversion framework instance: `mgr.fw.model``
+# inversion framework instance: ``mgr.fw.model``
 #
 
 water = mesh.createSubMesh(mesh.cells(mesh.cellMarkers() == 3))
@@ -149,9 +151,9 @@ ax, cb = pg.show(water, resWater)
 
 
 # %%%
-# Apparently, all values are below the expected 22.5 :math:`\Omega`m
+# Apparently, all values are below the expected 22.5 :math:`\Omega` m
 # and some are implausibly low. Therefore we should try to limit them.
-# Moreover, the subsurface structures do not look very “layered”, which is
+# Moreover, the subsurface structures do not look very "layered", which is
 # why we make the smoothness anisotropic.
 #
 
@@ -186,7 +188,7 @@ ax, cb = mgr.showResult(**kw)
 # %%%
 # Apparently, this makes it harder to fit the data accurately. So maybe an
 # increased clay content can be responsible for resistivity below
-# 20\ :math:`\Omega`m in the mud.
+# 20\ :math:`\Omega` m in the mud.
 #
 
 # %%%
@@ -214,7 +216,7 @@ ax, cb = mgr.showResult(**kw)
 
 # %%%
 # We see that the lake does not appear anymore as it is not a part of the
-# inversion mesh ``mgr.paraDomain`` anymore.
+# inversion mesh `mgr.paraDomain` anymore.
 #
 
 # %%%

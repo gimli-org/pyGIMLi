@@ -1,4 +1,4 @@
-import pygimli as pg
+"""BFGS ( Broyden–Fletcher–Goldfarb–Shanno) Matrix implementation."""
 import pygimli.core as pgcore
 
 
@@ -13,9 +13,11 @@ class BFGSMatrix(pgcore.MatrixBase):
         self.rho = 1 / 1
 
     def rows(self):
+        """Return number of rows."""
         return self.Hk.rows()
 
     def cols(self):
+        """Return number of columns."""
         return self.Hk.cols()
 
     def mult(self, x):

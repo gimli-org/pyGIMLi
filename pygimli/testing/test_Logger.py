@@ -74,7 +74,7 @@ pg.log(pg.core.Error, "core log ")
 try:
     pg.log(pg.core.Critical, "core log ")
 except BaseException as e:
-    print("cought core exception:", e)
+    print("caught core exception:", e)
 # pg.exception("Exception")
 
 

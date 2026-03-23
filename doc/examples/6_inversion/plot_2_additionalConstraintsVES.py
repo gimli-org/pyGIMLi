@@ -60,7 +60,7 @@ model1 = inv.run(rhoa, errPerc/100, lam=lam, startModel=startModel)
 # To formulate the constraints, we need to set up a matrix for the left side
 # and a vector for the right side of the equation. The layer thicknesses are
 # the first values in the model vector, and setting 1 implements d1+d2+d3:
-#      d1 d2 d3 r1 r2 r3 r4
+# Par  d1 d2 d3 r1 r2 r3 r4
 # G = [1  1  1  0  0  0  0]
 # c = [z2]
 # The constraints G * m = c are set by setParameterConstraints with a
@@ -91,7 +91,7 @@ ax.legend()
 # References
 # ----------
 # Wagner, F.M., Mollaret, C., Günther, T., Kemna, A., Hauck, A. (2019):
-#     Quantitative imaging of water, ice, and air in permafrost systems through
-#     petrophysical joint inversion of seismic refraction and electrical
-#     resistivity data. Geophys. J. Int. 219, 1866-1875.
-#     doi:10.1093/gji/ggz402.
+# Quantitative imaging of water, ice, and air in permafrost systems through
+# petrophysical joint inversion of seismic refraction and electrical
+# resistivity data. Geophys. J. Int. 219, 1866-1875.
+# doi:10.1093/gji/ggz402.

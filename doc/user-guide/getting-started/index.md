@@ -1,3 +1,4 @@
+(getting-started)=
 # Getting started
 
 ::::{grid} 3
@@ -10,10 +11,10 @@
 How to install `pyGIMLi` on your platform.
 :::
 :::{grid-item-card} First steps
-:link: basics
+:link: first-steps
 :link-type: ref
 
-Read about the basics of using the `pyGIMLi` package.
+The basics of using `pyGIMLi`.
 :::
 :::{grid-item-card} First modelling
 :link: first-modelling

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Tools for traveltime/refraction tomography."""
 
 import numpy as np
@@ -28,7 +27,7 @@ def createCrossholeData(sensors=None, x=None, z=None):
     from itertools import product
     if sensors is None:
         if x is None or z is None:
-            raise Exception("Both x and z must be given")
+            raise ValueError("Both x and z must be given")
 
         sensors = np.array([(xi, zi) for zi in z for xi in x])
 

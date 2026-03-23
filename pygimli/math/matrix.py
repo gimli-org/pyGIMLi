@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Some special and usefull matrices."""
+"""Some special and useful matrices."""
 
 import numpy as np
 
 import pygimli as pg
 import pygimli.core as pgcore
-
 
 from pygimli.core import (CMatrix, CSparseMapMatrix, CSparseMatrix,
                           RSparseMapMatrix, RSparseMatrix, ElementMatrix,
@@ -22,6 +20,17 @@ class ScaledMatrix(MatrixBase):
     """Super-simple matrix with scaling factor B=A*s."""
 
     def __init__(self, A, scale=1.0, verbose=False):
+        """Initialise scaled matrix B = A * scale.
+
+        Parameters
+        ----------
+        A : MatrixBase
+            Underlying matrix.
+        scale : float
+            Scalar multiplier applied to every matrix-vector product.
+        verbose : bool
+            Enable verbose output.
+        """
         super().__init__(verbose)
         self._A = A
         self._scale = scale
@@ -39,7 +48,7 @@ class ScaledMatrix(MatrixBase):
         return self._A.mult(x) * self._scale
 
     def transMult(self, x):
-        """Multiplication from right-hand-side (A*x)"""
+        """Multiplication from right-hand-side (A*x)."""
         return self._A.transMult(x) * self._scale
 
 
@@ -47,6 +56,15 @@ class TransposedMatrix(MatrixBase):
     """Wrapper for transposed matrix (of any kind)."""
 
     def __init__(self, A, verbose=False):
+        """Initialise a transposed view of *A*.
+
+        Parameters
+        ----------
+        A : MatrixBase
+            Underlying matrix to transpose.
+        verbose : bool
+            Enable verbose output.
+        """
         super().__init__(verbose)
         self._A = A
 
@@ -63,7 +81,7 @@ class TransposedMatrix(MatrixBase):
         return self._A.transMult(x)
 
     def transMult(self, x):
-        """Multiplication from right-hand-side (A*x)"""
+        """Multiplication from right-hand-side (A*x)."""
         return self._A.mult(x)
 
 
@@ -71,6 +89,15 @@ class SquaredMatrix(MatrixBase):
     """Wrapper for squared (least-squares) matrix A^T*A (of any kind)."""
 
     def __init__(self, A, verbose=False):
+        """Initialise the A^T*A matrix product.
+
+        Parameters
+        ----------
+        A : MatrixBase
+            Underlying matrix.
+        verbose : bool
+            Enable verbose output.
+        """
         super().__init__(verbose)
         self._A = A
 
@@ -95,6 +122,15 @@ class SquaredTransposeMatrix(MatrixBase):
     """Wrapper for squared (least-squares) matrix A*A^T (of any kind)."""
 
     def __init__(self, A, verbose=False):
+        """Initialise the A*A^T matrix product.
+
+        Parameters
+        ----------
+        A : MatrixBase
+            Underlying matrix.
+        verbose : bool
+            Enable verbose output.
+        """
         super().__init__(verbose)
         self._A = A
 
@@ -116,13 +152,22 @@ class SquaredTransposeMatrix(MatrixBase):
 
 
 class RealNumpyMatrix(MatrixBase):
-    """
-    Matrix Wrapper for for ndarrays, providing syntax for pygimli c++ core
-    algorithms. Holds reference to a real matrix, providing the correct
+    """Matrix Wrapper for for ndarrays, providing syntax for pygimli c++ core.
+
+    Holds reference to a real matrix, providing the correct
     multiplication algorithms for the pygimli inversion process.
     """
 
     def __init__(self, mat, copy=False):
+        """Initialise the real numpy matrix wrapper.
+
+        Parameters
+        ----------
+        mat : str or numpy.ndarray
+            Either a file path (loaded with ``np.load``) or a 2-D array.
+        copy : bool
+            If True, store a deep copy of *mat*.
+        """
         super().__init__()
 
         self.ndim = 2
@@ -137,34 +182,37 @@ class RealNumpyMatrix(MatrixBase):
                 self.M = mat
 
     def __repr__(self):
+        """Return string representation of the matrix."""
         return self.M.__repr__()
 
     def rows(self):
+        """Return number of rows."""
         return np.shape(self.M)[0]
 
     def cols(self):
+        """Return number of columns."""
         return np.shape(self.M)[1]
 
     def save(self, name):
+        """Save the content of this matrix."""
         np.save(name, self.M)
 
     def mult(self, vector):
+        """Multiplication from right-hand side."""
         return self.M.dot(vector)
 
     def transMult(self, vector):
+        """Multiplication from left-hand side."""
         return np.dot(vector, self.M)
 
 
 def ComplexNumpyMatrix(mat, copy=False):
-    """Wrapper for a complex-valued numpy matrix stacked vertically."""
+    """Return numpy matrix with real and imaginary parts stacked vertically."""
     return RealNumpyMatrix(np.row_stack([mat.real, mat.imag]), copy=copy)
 
 
 def NumpyMatrix(mat, copy=False):
-    """
-    Matrix Wrapper for for ndarrays, providing syntax for pygimli c++ core
-    algorithms (rows, cols, mult, transMult, save(numpy)).
-    """
+    """Return numpy-based pyGIMLi matrix (real or complex)."""
     if isinstance(mat, str):
         mat = np.load(mat)
 
@@ -178,16 +226,27 @@ class MultMatrix(MatrixBase):
     """Base Matrix class for all matrix types holding a matrix."""
 
     def __init__(self, A, verbose=False):
+        """Initialise with an underlying matrix.
+
+        Parameters
+        ----------
+        A : MatrixBase
+            Underlying matrix stored internally.
+        verbose : bool
+            Enable verbose output.
+        """
         self._A = A
         self.ndim = self._A.ndim
-        super(MultMatrix, self).__init__(verbose)
+        super().__init__(verbose)
 
     @property
     def A(self):
+        """Return the underlying matrix."""
         return self._A
 
     @A.setter
     def A(self, A):
+        """Set the underlying matrix."""
         self._A = A
 
     def rows(self):
@@ -199,7 +258,7 @@ class MultMatrix(MatrixBase):
         return self.A.cols()  # this should be _A
 
     def save(self, filename):
-        """So it can be used in inversion with dosave flag"""
+        """Save it to be used in inversion with dosave flag."""
         pass
 
 
@@ -207,19 +266,21 @@ class MultLeftMatrix(MultMatrix):
     """Matrix consisting of actual RMatrix and lef-side vector."""
 
     def __init__(self, A, left, verbose=False):
-        """Constructor saving matrix and vector."""
+        """Initialize by saving matrix and vector."""
         if A.rows() != len(left):
-            raise Exception("Matrix columns do not fit vector length!")
-        super(MultLeftMatrix, self).__init__(A, verbose)
+            raise ValueError("Matrix columns do not fit vector length!")
+        super().__init__(A, verbose)
 
         self._l = left
 
     @property
     def l(self):  # better use left and right instead (pylint E743)?
+        """Return the left-side scaling vector."""
         return self._l
 
     @l.setter
     def r(self, l):
+        """Set the left-side scaling vector."""
         self._l = l
 
     def mult(self, x):
@@ -227,7 +288,7 @@ class MultLeftMatrix(MultMatrix):
         return self.A.mult(x) * self.l
 
     def transMult(self, x):
-        """Multiplication from right-hand-side (dot product A.T * x)"""
+        """Multiplication from right-hand-side (dot product A.T * x)."""
         return self.A.transMult(x * self.l)
 
 
@@ -238,7 +299,18 @@ class MultRightMatrix(MultMatrix):
     """Some Matrix, multiplied with a right hand side vector r."""
 
     def __init__(self, A, r=None, verbose=False):
-        super(MultRightMatrix, self).__init__(A, verbose)
+        """Initialise M = A * diag(r).
+
+        Parameters
+        ----------
+        A : MatrixBase
+            Underlying matrix.
+        r : pg.Vector or None
+            Right-side scaling vector; defaults to ones.
+        verbose : bool
+            Enable verbose output.
+        """
+        super().__init__(A, verbose)
 
         if r is None:
             self._r = pgcore.RVector(self.cols(), 1.0)
@@ -247,16 +319,18 @@ class MultRightMatrix(MultMatrix):
 
     @property
     def r(self):
+        """Return the right-side scaling vector."""
         return self._r
 
     @r.setter
     def r(self, r):
+        """Set the right-side scaling vector."""
         self._r = r
 
     def mult(self, x):
-        """Return M*x = A*(r*x)"""
-        if hasattr(x, '__len__') and hasattr(self.r, '__len__'):
-            if len(x) != len(self.r):
+        """Return M*x = A*(r*x)."""
+        if hasattr(x, '__len__') and hasattr(self.r, '__len__') and \
+            len(x) != len(self.r):
                 # assuming A was complex
                 # warn('need to double x')
                 # print('mult:', self.A.rows(), " x " , self.A.cols(),
@@ -267,7 +341,7 @@ class MultRightMatrix(MultMatrix):
         return self.A.mult(x * self.r)
 
     def transMult(self, x):
-        """Return M.T*x=(A.T*x)*r"""
+        """Return M.T*x=(A.T*x)*r."""
         # print('transmult', self.A.rows(), " x " , self.A.cols(), x, self.r, )
         return self.A.transMult(x) * self.r
 
@@ -289,30 +363,34 @@ class MultLeftRightMatrix(MultMatrix):
             left and right side vectors to weight individual rows & columns
         """
         if A.cols() != len(right):
-                raise Exception("Matrix columns don't fit right vector length!",
+                raise IndexError("Matrix columns don't fit right vector length!",
                                 A.cols(), len(right))
         if A.rows() != len(left):
-            raise Exception("Matrix rows don't fit left vector length!",
+            raise IndexError("Matrix rows don't fit left vector length!",
                             A.rows(), len(left))
 
-        super(MultLeftRightMatrix, self).__init__(A, verbose)
+        super().__init__(A, verbose)
         self._r = right
         self._l = left
 
     @property
     def l(self):
+        """Return the left-side scaling vector."""
         return self._l
 
     @l.setter
     def l(self, l):
+        """Set the left-side scaling vector."""
         self._l = l
 
     @property
     def r(self):
+        """Return the right-side scaling vector."""
         return self._r
 
     @r.setter
     def r(self, r):
+        """Set the right-side scaling vector."""
         self._r = r
 
     def mult(self, x):
@@ -330,11 +408,11 @@ LRMultRMatrix = MultLeftRightMatrix  # alias for backward compatibility
 class Add2Matrix(MatrixBase):
     """Matrix by addition of two matrices implicitly.
 
-        The matrix holds two matrices and distributes multiplication in 2 parts
+    The matrix holds two matrices and distributes multiplication in 2 parts
 
-        M = A + B
-        M * x = A * x + B * x
-        M.T * y = B^T * y + A.T^*y
+    M = A + B
+    M * x = A * x + B * x
+    M.T * y = B^T * y + A.T^*y
     """
 
     def __init__(self, A, B):
@@ -352,26 +430,26 @@ class Add2Matrix(MatrixBase):
         assert A.cols() == B.cols()
 
     def mult(self, x):
-        """Return M*x = A*(r*x)"""
+        """Return M*x = A*(r*x)."""
         return self.A.mult(x) + self.B.mult(x)
 
     def transMult(self, x):
-        """Return M.T*x=(A.T*x)*r"""
+        """Return M.T*x=(A.T*x)*r."""
         return self.A.transMult(x) + self.B.transMult(x)
 
     def cols(self):
-        """Number of columns."""
+        """Return number of columns."""
         return self.A.cols()
 
     def rows(self):
-        """Number of rows."""
+        """Return number of rows."""
         return self.A.rows()
 
 
 class Mult2Matrix(MatrixBase):
-    """Matrix by multipication of two matrices implicitly.
+    """Matrix by multiplication of two matrices implicitly.
 
-        The matrix holds two matrices and distributes multiplication in 2 parts
+    The matrix holds two matrices and distributes multiplication in 2 parts
 
         M = A * B
         M * x = A * (B*x)
@@ -392,19 +470,19 @@ class Mult2Matrix(MatrixBase):
         assert A.cols() == B.rows()
 
     def mult(self, x):
-        """Return M*x = A*(B*x)"""
+        """Return M*x = A*(B*x)."""
         return self.A.mult(self.B.mult(x))
 
     def transMult(self, x):
-        """Return M.T*x=(A.T*x)*B"""
+        """Return M.T*x=(A.T*x)*B."""
         return self.B.transMult(self.A.transMult(x))
 
     def cols(self):
-        """Number of columns."""
+        """Return number of columns."""
         return self.B.cols()
 
     def rows(self):
-        """Number of rows."""
+        """Return number of rows."""
         return self.A.rows()
 
 
@@ -412,7 +490,7 @@ class DiagonalMatrix(MatrixBase):
     """Square matrix with a vector on the main diagonal."""
 
     def __init__(self, d):
-        """Initialize matrix
+        """Initialize matrix.
 
         Parameters
         ----------
@@ -423,19 +501,19 @@ class DiagonalMatrix(MatrixBase):
         self.d = d
 
     def mult(self, x):
-        """Return M*x = d*x (element-wise)"""
+        """Return M*x = d*x (element-wise)."""
         return x * self.d
 
     def transMult(self, x):
-        """Return M.T*x = M*x"""
+        """Return M.T*x = M*x."""
         return x * self.d
 
     def cols(self):
-        """Number of columns (length of diagonal)."""
+        """Return number of columns (length of diagonal)."""
         return len(self.d)
 
     def rows(self):
-        """Number of rows (length of diagonal)."""
+        """Return number of rows (length of diagonal)."""
         return len(self.d)
 
 
@@ -449,7 +527,7 @@ class Cm05Matrix(MatrixBase):
     """Matrix implicitly representing the inverse square-root."""
 
     def __init__(self, A, trsh=1e-4, verbose=False):
-        """Constructor saving matrix and vector.
+        """Initialize by storing matrix and vector.
 
         Parameters
         ----------
@@ -467,7 +545,7 @@ class Cm05Matrix(MatrixBase):
             from packaging import version
 
             if A.shape[0] != A.shape[1]:  # rows/cols for pgcore matrix
-                raise Exception("Matrix must by square (and symmetric)!")
+                raise ValueError("Matrix must by square (and symmetric)!")
 
             if verbose:
                 pg.tic(key='init cm05')
@@ -497,13 +575,15 @@ class Cm05Matrix(MatrixBase):
     def save(self, fileName):
         """Save the content of this matrix.
 
-        Used for caching until pickling is possible for this class"""
+        Used for caching until pickling is possible for this class
+        """
         np.save(fileName, dict(ew=self.ew, EV=self.EV), allow_pickle=True)
 
     def load(self, fileName):
         """Load the content of this matrix.
 
-        Used for caching until pickling is possible for this class"""
+        Used for caching until pickling is possible for this class
+        """
         d = np.load(fileName + '.npy', allow_pickle=True).tolist()
         self.ew = d['ew']
         self.EV = d['EV']
@@ -528,9 +608,9 @@ class Cm05Matrix(MatrixBase):
 class RepeatVMatrix(BlockMatrix):
     """Matrix repeating a base matrix N times vertically. Only A is stored.
 
-        M = | A |
-            | A |
-            | A |
+    M = | A |
+        | A |
+        | A |
     """
 
     def __init__(self, A, num):
@@ -557,7 +637,7 @@ class RepeatVMatrix(BlockMatrix):
 class RepeatHMatrix(BlockMatrix):
     """Matrix repeating a base matrix N times horizontally. Only A is stored.
 
-        M = [ A A A ]
+    M = [ A A A ]
     """
 
     def __init__(self, A, num):
@@ -584,9 +664,9 @@ class RepeatHMatrix(BlockMatrix):
 class RepeatDMatrix(BlockMatrix):
     """Matrix repeating a base matrix N times diagonally. Only A is stored.
 
-        M = | A     |
-            |   A   |
-            |     A |
+    M = | A     |
+        |   A   |
+        |     A |
     """
 
     def __init__(self, A, num):
@@ -615,11 +695,11 @@ class RepeatDMatrix(BlockMatrix):
 class FrameConstraintMatrix(RepeatDMatrix):
     """Matrix constraining meshes inside and between frames of same mesh.
 
-        M = |  A        |
-            |     A     |
-            |        A  |
-            | -I +I     |
-            |    -I +I  |
+    M = |  A        |
+        |     A     |
+        |        A  |
+        | -I +I     |
+        |    -I +I  |
     """
 
     def __init__(self, A, num, scale=1.0):
@@ -664,6 +744,17 @@ class NDMatrix(pgcore.BlockMatrix):
     """Diagonal block (block-Jacobi) matrix ."""
 
     def __init__(self, num, nrows, ncols):
+        """Initialise a block-diagonal matrix of identical sub-block dimensions.
+
+        Parameters
+        ----------
+        num : int
+            Number of diagonal blocks.
+        nrows : int
+            Number of rows per block.
+        ncols : int
+            Number of columns per block.
+        """
         super().__init__()
         self.Ji = []
         for i in range(num):
@@ -686,7 +777,7 @@ class KroneckerMatrix(MatrixBase):
     """
 
     def __init__(self, outer, inner, verbose=False):
-        """Init"""
+        """Initialize with outer and inner matrix."""
         super().__init__(verbose)
         self._I = inner
         self._O = outer
@@ -715,7 +806,7 @@ class KroneckerMatrix(MatrixBase):
         return yy.ravel()
 
     def transMult(self, x):
-        """Multiplication from right-hand-side (A*x)"""
+        """Multiplication from right-hand-side (A*x)."""
         xx = np.reshape(x, [self.no, self.ni])
         yy = np.zeros([self.mo, self.mi])
         for i, xi in enumerate(xx):
@@ -726,7 +817,7 @@ class KroneckerMatrix(MatrixBase):
         return yy.ravel()
 
 class GeostatisticConstraintsMatrix(MatrixBase):
-    """Geostatistic constraints matrix
+    """Geostatistic constraints matrix.
 
     Uses geostatistical operators described by Jordi et al. (2018),
     however corrects for the remaining non-smooth (damping) part by
@@ -776,12 +867,13 @@ class GeostatisticConstraintsMatrix(MatrixBase):
             self.Cm05 = createCm05(CM)
 
     def __repr__(self):
+        """Return string representation of the matrix."""
         return "Geostatistical constraints matrix of size " + \
-            "{:d}x{:d} using {:d} eigenvalues".format(
-                self.rows(), self.cols(), len(self.Cm05.ew))
+            f"{self.rows():d}x{self.cols():d} using {len(self.Cm05.ew):d} eigenvalues"
 
     @property
     def spur(self):
+        """Return spur vector correcting for reference model effect."""
         if self._spur is None:
             if self.withRef is True:
                 self._spur = np.zeros(self.rows())
@@ -791,6 +883,7 @@ class GeostatisticConstraintsMatrix(MatrixBase):
 
     @property
     def nModel(self):
+        """Return number of model parameters (size of Cm05)."""
         return self.Cm05.EV.shape[0] if hasattr(self.Cm05, "EV") else 0
 
     def save(self, fileName):
@@ -815,21 +908,57 @@ class GeostatisticConstraintsMatrix(MatrixBase):
         self.Cm05 = Cm05Matrix(d['Cm05'])
 
     def mult(self, x):
+        """Multiplication from right-hand side (A.T*x)."""
         return self.Cm05.mult(x) - self.spur * x
 
     def transMult(self, x):
+        """Multiplication from left-hand side (A*x)."""
         return self.Cm05.transMult(x) - self.spur * x
 
     def cols(self):
+        """Return number of columns (number of model parameters)."""
         return self.nModel
 
     def rows(self):
+        """Return number of rows (number of constraints)."""
         return self.nModel
 
     def clear(self):
+        """Clear cached matrices."""
         self.Cm05 = None
         self._spur = None
 
+
+class FOPJacobian(MatrixBase):
+    """Return Jacobian operator for pyGIMLi(emg3d)."""
+
+    def __init__(self, fop):
+        """Initiate a new Jacobian instance."""
+        super().__init__()
+        self.fop = fop
+
+    def cols(self):
+        """Return number of column, i.e., the model vector size."""
+        return self.fop.parameterCount()
+
+    def rows(self):
+        """Return number of rows, i.e., the data vector size."""
+        return len(self.fop.data)
+
+    def mult(self, x):
+        """Multiply the Jacobian with a vector, Jx."""
+        return self.Sx(x)
+
+    def transMult(self, y):
+        """Multiply  Jacobian transposed with a vector, Jᵀy."""
+        return self.STy(y)
+
+    def save(self, *args):
+        """There is no save for this pseudo-Jacobian."""
+        raise NotImplementedError("Cannot save FOPJacobian.")
+
+
+# Matrix generators
 
 def hstack(mats):
     """Syntactic sugar function to horizontally stacked matrix.
@@ -943,6 +1072,7 @@ def matrixRow(A, n):
     one[n] = 1.0
     return A.transMult(one)
 
+
 def matrixColumn(A, n):
     """Return matrix column of arbitrary matrix."""
     assert n < A.cols(), "number exceeds number of columns in matrix"
@@ -950,17 +1080,65 @@ def matrixColumn(A, n):
     one[n] = 1.0
     return A.mult(one)
 
-def complexMatrix(R, I, scaleR=1.0, scaleI=1.0):
-    """Create a complex-valued matrix from two real-valued ones."""
-    assert R.cols() == I.cols(), "Number of columns need to match"
-    assert R.rows() == I.rows(), "Number of columns need to match"
-    if isinstance(R, SparseMapMatrix) and isinstance(I, SparseMapMatrix):
-        assert R.vecColPtr() == I.vecColPtr(), "sparsity structure differs"
-        assert R.vecRowIdx() == I.vecRowIdx(), "sparsity structure differs"
-        C = pg.core.CSparseMatrix(R.vecColPtr(), R.vecRowIdx(), 
-                          pg.core.toComplex(R.vecVals()*scaleR, 
-                                            I.vecVals()*scaleI))
 
+def complexMatrix(Re, Im, scaleR=1.0, scaleI=1.0):
+    """Create a complex-valued matrix from two real-valued ones."""
+    assert Re.cols() == Im.cols(), "Number of columns need to match"
+    assert Re.rows() == Im.rows(), "Number of columns need to match"
+    if isinstance(Re, SparseMapMatrix) and isinstance(Im, SparseMapMatrix):
+        assert Re.vecColPtr() == Im.vecColPtr(), "sparsity structure differs"
+        assert Re.vecRowIdx() == Im.vecRowIdx(), "sparsity structure differs"
+        return pg.core.CSparseMatrix(Re.vecColPtr(), Re.vecRowIdx(),
+                                     pg.core.toComplex(Re.vecVals()*scaleR,
+                                     Im.vecVals()*scaleI))
+    else:
+        raise NotImplementedError("Only SparseMapMatrix supported so far.")
+
+
+def complex2RealMatrix(Re, Im, scale=1, symm=False):
+    """Return real-valued matrix representing complex matrix.
+
+    C = |   R -sI |
+        | +sI   R |
+
+    with s being a scaling factor (e.g. frequency)
+
+    so that C * [xR; xI] = [R*xR - I*xI; I*xR + R*xI] represents
+    multiplication with complex matrix (R + iI) * (xR + i xI).
+
+    Parameters
+    ----------
+    Re : pg.MatrixBase
+        real part of complex matrix
+    Im : pg.MatrixBase
+        imaginary part of complex matrix
+    scale : float
+        scaling factor for imaginary part
+    symm : bool [False]
+        whether to force a symmetric matrix
+
+    C = |   R -sI |
+        | -sI  -R |
+
+    Returns
+    -------
+    B : pg.BlockMatrix
+        real-valued block matrix representing complex matrix
+    """
+    B = pg.BlockMatrix()
+    B.ReID = B.addMatrix(Re)
+    B.ImID = B.addMatrix(Im)
+    B.addMatrixEntry(B.ReID, 0, 0)
+    B.addMatrixEntry(B.ImID, 0, Re.rows(), scale=-scale)
+    if symm:
+        B.addMatrixEntry(B.ReID, Re.rows(), Re.rows(), scale=-1)
+        B.addMatrixEntry(B.ImID, Re.rows(), 0, scale=-scale)
+    else:
+        B.addMatrixEntry(B.ReID, Re.rows(), Re.rows())
+        B.addMatrixEntry(B.ImID, Re.rows(), 0, scale=scale)
+
+    B.recalcMatrixSize()
+    return B
 
 
 if __name__ == "__main__":

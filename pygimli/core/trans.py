@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Some specialization to the trans functions."""
 
 from .core import pgcore
@@ -16,17 +15,17 @@ def __TransCumulative_addForGC_MP__(self, T, *args):
         self.__trans__ = []
     self.__trans__.append(T)
 
-    if len(args) == 1:
-        # be sure avoid auto conversion from int to IndexArray
-        if isinstance(args[0], int):
-            return __TransCumulative_addForGC__(self, T, size=args[0])
+    # be sure avoid auto conversion from int to IndexArray
+    if len(args) == 1 and isinstance(args[0], int):
+        return __TransCumulative_addForGC__(self, T, size=args[0])
+
     return __TransCumulative_addForGC__(self, T, *args)
 
 
 pgcore.RTransCumulative.add = __TransCumulative_addForGC_MP__
 
 def __RTransCumulative_str(self):
-    """String representation."""
+    """Return string representation."""
     out = "Cumulative Data transformation:"
     for i in range(self.size()):
         itr = self.at(i).__repr__()
@@ -47,7 +46,7 @@ def __RTransLog_str(self):
 pgcore.RTransLog.__repr__ = __RTransLog_str
 
 def __RTransLogLU_str(self):
-    """String representation."""
+    """Return string representation."""
     out = "Logarithmic LU transform"
     out += f", lower bound {self.lowerBound()}"
     out += f", upper bound {self.upperBound()}"
@@ -56,7 +55,7 @@ def __RTransLogLU_str(self):
 pgcore.RTransLogLU.__repr__ = __RTransLogLU_str
 
 def __RTransCotLU_str(self):
-    """String representation."""
+    """Return string representation."""
     out = "Cotangens LU transform"
     # bounds not available (change in C++)
     # out += f", lower bound {self.lowerBound()}"
@@ -66,7 +65,7 @@ def __RTransCotLU_str(self):
 pgcore.RTransCotLU.__repr__ = __RTransCotLU_str
 
 def __RTrans_str(self):
-    """String representation."""
+    """Return string representation."""
     return "Identity transform"
 
 pgcore.RTrans.__repr__ = __RTrans_str
@@ -87,12 +86,12 @@ class TransSymLog(pgcore.RTrans):
     """Transformation using a bilogarithmic scaling."""
 
     def __init__(self, tol=1e-12):
-        """Forward transformation."""
+        """Initialize with given tolerance."""
         super().__init__()
         self.tol = tol
 
     def __repr__(self):
-        """String representation."""
+        """Return string representation."""
         return f"Symlog transformation with threshold {self.tol}"
 
     def trans(self, x):
@@ -104,8 +103,32 @@ class TransSymLog(pgcore.RTrans):
         return (pgcore.exp(np.abs(y)) - 1.) * self.tol * np.sign(y)
 
     def deriv(self, x):
-        """Derivative of the transformation."""
+        """Return derivative of the transformation."""
         return 1. / (np.abs(x) / self.tol + 1) / self.tol
+
+
+class TransArsinh(pgcore.RTrans):
+    """Transformation using the arsinh function."""
+
+    def __init__(self):
+        """Initialize."""
+        super().__init__()
+
+    def __repr__(self):
+        """Return string representation."""
+        return "Arsinh function transformation."
+
+    def trans(self, x):
+        """Forward transformation."""
+        return pgcore.log(x + pgcore.sqrt(x**2 + 1))
+
+    def invTrans(self, y):
+        """Inverse transformation."""
+        return (pgcore.exp(y) - pgcore.exp(-y)) / 2.
+
+    def deriv(self, x):
+        """Return derivative of the transformation."""
+        return 1. / (pgcore.sqrt(x**2 + 1))
 
 
 def str2Trans(tr:str):
@@ -119,6 +142,7 @@ def str2Trans(tr:str):
     logL-U : log with lower and upper bound
     cotL-U : cotangent with lower and upper bound
     symlogT : symlog with T as lin-threshold
+    srsinh : arsinh transformation
     """
     low = tr.lower()
     if low.startswith("lin"):
@@ -136,7 +160,8 @@ def str2Trans(tr:str):
         return TransCotLU(float(sp[0]), float(sp[1]))
     elif low.startswith("symlog"):
         return TransSymLog(float(low[6:]))
+    elif low.startswith("arsinh"):
+        return TransArsinh()
     else:  # check for LU values, e.g. "Log1-1000" or "Cot0-1"
         raise KeyError("Transformation string unknown!")
-
 

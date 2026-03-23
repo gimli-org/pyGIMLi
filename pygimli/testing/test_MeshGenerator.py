@@ -300,6 +300,55 @@ class TestMeshGenerator(unittest.TestCase):
         np.testing.assert_array_equal(mesh2.cellCount(), mesh.cellCount())
 
 
+    def test_Refine(self):
+        """Test surface mesh refinement."""
+        p = pg.meshtools.createCube()
+        # test quad refine
+        m = p.createH2()
+        self.assertEqual(m.cellCount(), 0)
+        self.assertEqual(m.nodeCount(), 26)
+        self.assertEqual(m.boundaryCount(), 24)
+
+        mesh = pg.meshtools.createMesh(m, quality=34, area=1)
+
+        # test tri refine
+        p = pg.Mesh(3, isGeometry=True)
+        # Create a simple tetrahedron geometry
+        p.createNode([0, 0, 0])
+        p.createNode([1, 0, 0])
+        p.createNode([0, 1, 0])
+        p.createNode([0, 0, 1])
+        p.createBoundary([0, 1, 2])
+        p.createBoundary([0, 1, 3])
+        p.createBoundary([0, 2, 3])
+        p.createBoundary([1, 2, 3])
+        m = p.createH2()
+        #print(m)
+        self.assertEqual(m.nodeCount(), 10)
+        self.assertEqual(m.cellCount(), 0)
+        self.assertEqual(m.boundaryCount(), 16)
+        mesh = pg.meshtools.createMesh(m, quality=34, area=1)
+        #self.assertEqual(m.cellCount(), 0)
+        #self.assertEqual(mesh.nodeCount(), 27)
+        #self.assertEqual(m.boundaryCount(), 24)
+
+        #pg.show(m, showMesh=True, markers=True)
+
+
+    def test_Sphere(self):
+        """Test sphere generation."""
+        s1 = pg.meshtools.createSphere(var='uvsphere', pos=[0,0,0])
+        s2 = pg.meshtools.createSphere(var='qsphere', pos=[1,0,0],
+                                       refine=3, triFaces=False)
+        s3 = pg.meshtools.createSphere(var='qsphere', pos=[2,0,0],
+                                       refine=3, triFaces=True)
+        s4 = pg.meshtools.createSphere(var='icosphere', pos=[3,0,0],
+                                       refine=2)
+
+        pg.show([s1, s2, s3, s4], showMesh=True, markers=True)
+
+
+
 if __name__ == '__main__':
     # pg.setDeepDebug(1)
 

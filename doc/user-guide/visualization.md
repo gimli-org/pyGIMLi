@@ -50,7 +50,6 @@ For plotting in 2D, the method `pygimli.viewer.showMesh()` is called, which crea
 
 ```
 
-
 ### Plotting meshes and models
 
 As described in the [Fundamentals](fundamentals.md) section, `pygimli.viewer.show()` and `pygimli.viewer.showMesh()` utilize a variety of drawing functions, depending on the input data provided. In the following, we will take a look at how to manually access the necessary drawing functions to plot an empty mesh, as well as cell-based and node-based data.
@@ -85,7 +84,7 @@ mpl.drawModel(ax, mesh, data)
 plt.show()
 ```
 
-Simliarly, for scalar field values, the function `pygimli.viewer.mpl.drawField()` is utilized:
+Similarly, for scalar field values, the function `pygimli.viewer.mpl.drawField()` is utilized:
 
 ```{code-cell}
 nx = pg.x(mesh.positions())
@@ -114,9 +113,7 @@ sensors = np.random.rand(5, 2)
 fig, ax = pg.plt.subplots()
 mpl.drawSensors(ax, sensors, diam=0.02, coords=[0, 1])
 ax.set_aspect('equal')
-pg.wait()
 ```
-
 
 ## Plotting in 3D
 
@@ -125,7 +122,8 @@ The following examples demonstrate how to plot 3D meshes, cell data, and streaml
 
 ### Plotting meshes and models in 3D
 
-Plotting meshes using pyVista is straightforward with pyGIMLi. The `pygimli.viwer.pv.drawMesh()` function is called to visualize 3D meshes and models, leveraging pyVista's powerful rendering capabilities.
+Plotting meshes using pyVista is straightforward with pyGIMLi. The `pygimli.viewer.pv.drawMesh()` function is called to visualize 3D meshes and models, leveraging pyVista's powerful rendering capabilities.
+
 
 ```{code-cell}
 from pygimli.viewer import pv
@@ -144,11 +142,10 @@ mx = pg.x(mesh.cellCenter())
 my = pg.y(mesh.cellCenter())
 mz = pg.z(mesh.cellCenter())
 
-data = mx 
+data = mx
 
 pg.show(mesh, data, label="Cell position x (m)")
 ```
-
 
 As for the 2D section, pyVista also allows to plot streams by taking vector field of gradient data per cell. The according function is utilized in the example below:
 
@@ -167,7 +164,7 @@ pv.drawSlice(ax, mesh, normal=[0,1,0], data=data, label="Cell position x")
 ax.show()
 ```
 
-If you want to take a look at more practical applications and examples that fully use the plotting capabilities of pyGIMLi, please refer to the [examples section](../examples/).
+If you want to take a look at more practical applications and examples that fully use the plotting capabilities of pyGIMLi, please refer to the [examples section](../_examples_auto/index.rst).
 
 ## External plotting
 

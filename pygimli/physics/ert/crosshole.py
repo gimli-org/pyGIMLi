@@ -47,14 +47,15 @@ class CrossholeERT(TimelapseERT):
         """Return string representation of the class."""
         mys = 'Crosshole '
         if self.bhmap is not None:
-            mys += '({:d} boreholes) '.format(len(np.unique(self.bhmap)))
+            mys += f'({len(np.unique(self.bhmap)):d} boreholes) '
         return mys + super().__repr__()
 
     def determineBHmap(self):  # XH-specific
         """Auto-determine borehole map from xy positions."""
-        xy = pg.x(self.data)*999+pg.y(self.data)*999  # maybe needs a data.sortX() first
+        xy = pg.x(self.data)*999+pg.y(self.data)*999  # maybe needs sortX()
         d0 = np.diff(np.hstack([0, np.nonzero(np.diff(xy))[0]+1, len(xy)]))
-        self.bhmap = np.concatenate([np.ones(dd, dtype=int)*i for i, dd in enumerate(d0)])
+        self.bhmap = np.concatenate([np.ones(dd, dtype=int)*i
+                                     for i, dd in enumerate(d0)])
 
     def load(self, filename, **kwargs):
         """Load or import data."""  # TL-ERT
@@ -173,7 +174,7 @@ class CrossholeERT(TimelapseERT):
         ztop = np.minimum(0, zmax+ibound)
         if threeD:
             world = mt.createWorld(start=[xmin-obound, ymin-obound, zmin-obound],
-                                end=[xmax+obound, ymax+obound, 0], marker=1)
+                                   end=[xmax+obound, ymax+obound, 0], marker=1)
             box = mt.createCube(start=[xmin-ibound, ymin-ibound, zmin-ibound],
                                 end=[xmax+ibound, ymax+ibound, ztop],
                                 marker=2, area=area)

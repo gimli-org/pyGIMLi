@@ -1,8 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-Module containing submodules for various geophysical methods.
-"""
+"""Module containing submodules for various geophysical methods."""
 
 from .constants import Constants
 from .complexSpectrum import ComplexSpectrum

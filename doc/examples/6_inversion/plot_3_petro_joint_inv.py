@@ -8,7 +8,7 @@ Joint inversion of different geophysical techniques helps to improve both
 resolution and interpretability of the resulting images. Different data sets
 can be directly coupled, if there is a link between the target parameters.
 In this example, ERT and traveltime data are inverted for water saturation
-using petrophysical relations to resistivity and velocity. For details see 
+using petrophysical relations to resistivity and velocity. For details see
 section 3.3 of the pyGIMLi paper (https://cg17.pygimli.org).
 """
 
@@ -68,14 +68,14 @@ ax, _ = pg.show(mMesh, saturation, **satKW,
              showMesh=True, label=r'Saturation (${\tt petro}$)')
 
 ###############################################################################
-# We apply the petrophysical relation to the  saturation and display it with a 
-# predefined set of parameters to make all plots look the same, for both 
+# We apply the petrophysical relation to the  saturation and display it with a
+# predefined set of parameters to make all plots look the same, for both
 # resistivity and velocity.
 
 ertTrans = ArchieTrans(rFluid=20, phi=0.3)
 res = ertTrans(saturation)
 
-resKW = dict(logScale=True, cMin=250, cMax=2500, 
+resKW = dict(logScale=True, cMin=250, cMax=2500,
              label=pg.unit('res'), cMap=pg.cmap('res'))
 
 ax, _ = pg.show(mMesh, res, showMesh=True, **resKW)
@@ -150,8 +150,8 @@ ax, _ = pg.show(pMesh, satTT, **satKW, label=r'Saturation (${\tt satTT}$)')
 pg.viewer.mpl.drawPLC(ax, poly, fillRegion=False)
 
 ###############################################################################
-# Petrophysical joint inversion
-# -----------------------------
+# Petrophysical joint inversion (TT-ERT)
+# --------------------------------------
 
 pg.info("Petrophysical Joint-Inversion TT-ERT")
 JointPetro = JointPetroInversionManager(petros=[ertTrans, ttTrans],

@@ -1,6 +1,18 @@
 # Paper examples on start page. Images have to be in _static/usecases.
 # Order does not matter, will be shuffled on doc build.
 showcase = [
+    dict(img="schiffler2025.png",
+         link="http://dx.doi.org/10.1186/s40623-025-02324-4",
+         title="3D inversion of airborne natural-source QAMT data",
+         subtitle="Schiffler et al. (2025), Earth, Planets and Space"),
+    dict(img="rochlitz2025.png",
+         link="http://dx.doi.org/10.1190/geo2024-0448.1",
+         title="SAEM resolution analysis",
+         subtitle="Rochlitz et al. (2025), Geophysics"),
+    dict(img="skibbe2024.jpg",
+         link="http://dx.doi.org/10.1016/j.jhydrol.2024.131905",
+         title="Multi-scale salinity mapping",
+         subtitle="Skibbe et al. (2024), Journal of Hydrology"),
     dict(img="uecker2022.png",
          link="https://doi.org/10.3389/frwa.2023.1057725",
          title="Mapping bedrock topography",
@@ -90,7 +102,7 @@ showcase = [
          subtitle="Jordi et al. (2018), Geophysical Journal International",
          link="https://doi.org/10.1093/gji/ggy055"),
     dict(img="ronczka2017.png",
-         title="Coupling underwater electrial resistivity and seismic refraction tomography",
+         title="Coupling underwater electrical resistivity and seismic refraction tomography",
          subtitle="Ronczka et al. (2017), Solid Earth",
          link="https://doi.org/10.5194/se-8-671-2017"),
     dict(img="loewer2017.png",

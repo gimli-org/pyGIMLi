@@ -1,6 +1,0 @@
-[pybtex.style.labels]
-alpha = plugins:Alpha
-
-[pybtex.style.formatting]
-mystyle = plugins:MyStyle
-

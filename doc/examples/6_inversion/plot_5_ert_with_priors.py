@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 Incorporating prior data into ERT inversion
 ===========================================
+
 Prior data can often help to overcome ambiguity in the inversion process.
 Here we demonstrate the use of direct push (DP) data in an ERT inversion of
 data collected at the surface.
@@ -39,7 +39,7 @@ ax.grid(True)
 # We mainly see four layers: 1. a conductive (clayey) overburden of about
 # 17m thickness, 2. a medium resistivity interbedding of silt and sand,
 # about 7m thick 3. again clay with 8m thickness 4. the resistive bedrock
-# with a few hundred :math:`\Omega`m
+# with a few hundred :math:`\Omega` m
 #
 
 # %%%
@@ -66,7 +66,7 @@ data.estimateError(relativeError=0.025, absoluteUError=100e-6)
 # the vertical smoothness to account for the layered model.
 #
 mgr = ert.ERTManager(data, verbose=True)
-mgr.invert(paraDepth=70, quality=34.2, paraMaxCellSize=1000, zWeight=0.15, lam=30)
+mgr.invert(paraDepth=70, quality=34, paraMaxCellSize=3000, zWeight=0.15, lam=30)
 
 # %%%
 # For reasons of comparability, we define a unique colormap and store all
@@ -206,9 +206,9 @@ print(respDP)
 
 fopJoint.createJacobian(model)  # works
 J = fopJoint.jacobian()
-print(type(J))  # wrong type
+print(J)  # wrong type
 ax, cb = pg.show(J)
-print(J.mat(0))
+print(J.mat(0), J.mat(1))  # ERT and DP part
 ax, cb = pg.show(J.mat(1), markersize=4)
 
 # %%%
@@ -278,3 +278,5 @@ ax.legend()
 #    -  geostatistical regularization can extrapolate point data
 #    -  incorporation of prior data with geostatistic regularization is best
 #
+
+pg.info("Example finished. You can now close the window.")

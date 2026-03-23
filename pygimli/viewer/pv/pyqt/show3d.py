@@ -1,4 +1,7 @@
+#/usr/bin/env python3
 """
+Not maintained anymore. Volunteers welcome to take over.
+
 BUGS:
 + varying the limits (eg exclude a marker) only has effect on the scalar_bar (color_bar), but not on the display of the vtk
 + there is no good coming back from volumetric slicing atm
@@ -14,16 +17,21 @@ import pygimli.viewer.pv
 #from .draw import drawMesh
 #from .utils import pgMesh2pvMesh
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QIcon
-from PyQt5.QtWidgets import (
-    QMainWindow, QFrame, QVBoxLayout, QComboBox, QPushButton,
-    QFileDialog, QSplitter, QLabel, QAction, QDialog, QStatusBar
-)
+# from PyQt5.QtCore import Qt
+# from PyQt5.QtGui import QFont, QIcon
+# from PyQt5.QtWidgets import (
+#     QMainWindow, QFrame, QVBoxLayout, QComboBox, QPushButton,
+#     QFileDialog, QSplitter, QLabel, QAction, QDialog, QStatusBar
+# )
 
-from gwidgets import (
-    GToolBar, GButton, GLineEdit, GComboBox, GSlider, GDoubleSpinBox, CMAPS
-)
+# from gwidgets import (
+#     GToolBar, GButton, GLineEdit, GComboBox, GSlider, GDoubleSpinBox, CMAPS
+# )
+QMainWindow = object
+QFrame = object
+QVBoxLayout = object
+QComboBox = object
+QPushButton = object
 
 pv = pg.optImport('pyvista', requiredFor="properly visualize 3D data")
 
@@ -39,7 +47,7 @@ class Show3D(QMainWindow):
 
         Note
         ----
-        Everything pyvista.Plotter would accept: 
+        Everything pyvista.Plotter would accept:
         https://docs.pyvista.org/api/plotting/plotting.html
         """
         super(Show3D, self).__init__(None)
@@ -80,6 +88,7 @@ class Show3D(QMainWindow):
         ghelp.addAction(self.acn_hkeys)
 
     def showHotKeys(self):
+        """Open a dialog showing the available keyboard shortcuts."""
         d = QDialog()
         textfield = QLabel(
         "q - Close pyGIMLi 3D Viewer\n"
@@ -104,6 +113,13 @@ class Show3D(QMainWindow):
         d.exec_()
 
     def setupWidget(self, **kwargs):
+        """Create and arrange the PyVista interactor and status bar.
+
+        Parameters
+        ----------
+        **kwargs :
+            Forwarded to :class:`pv.QtInteractor`.
+        """
         # create the frame
         self.frame = QFrame()
         # add the pv interactor object
@@ -442,6 +458,7 @@ class Show3D(QMainWindow):
         self.updateParameterView()
 
     def _enableSlicers(self):
+        """Enable or disable slice control widgets based on the active mode."""
         if self.toolbar.btn_slice_plane.isChecked():
             self.toolbar.slice_x.setEnabled(True)
             self.toolbar.slice_y.setEnabled(True)
@@ -453,6 +470,7 @@ class Show3D(QMainWindow):
         self.updateParameterView()
 
     def _allowSignals(self):
+        """Connect toolbar widget signals to their handler slots."""
         # connect signals
         self.toolbar.cbbx_params.currentTextChanged.connect(
             self.updateParameterView)
@@ -474,12 +492,14 @@ class Show3D(QMainWindow):
         self.toolbar.slice_z.sliderReleased.connect(self.updateParameterView)
 
     def _checkStatusPlaneSlice(self):
+        """Enforce mutual exclusivity between plane-slice and volume-slice modes."""
         if self.toolbar.btn_slice_plane.isChecked():
             self.toolbar.btn_slice_volume.setChecked(False)
         self.toolbar.chbx_threshold.setChecked(False)
         self._enableSlicers()
 
     def _checkStatusVolumeSlice(self):
+        """Enforce mutual exclusivity between volume-slice and plane-slice modes."""
         if self.toolbar.btn_slice_volume.isChecked():
             self.toolbar.btn_slice_plane.setChecked(False)
         self.toolbar.chbx_threshold.setChecked(False)

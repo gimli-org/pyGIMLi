@@ -33,7 +33,7 @@ def add_inner_title(ax, title, loc=2, color="k", **kwargs):
 
 
 def savefig(mesh, geom, data=None, label='', out=None, **kwargs):
-    """Little shortcut to plot mesh with asociated geometry."""
+    """Little shortcut to plot mesh with associated geometry."""
 
     pg.viewer.mpl.hold(1)
     ax = kwargs.pop('ax', None)

@@ -21,9 +21,23 @@ class CellBrowserCacheSingleton(object):
         return CellBrowserCacheSingleton.__instance
 
     def add(self, c):
+        """Add a CellBrowser instance to the cache.
+
+        Parameters
+        ----------
+        c : CellBrowser
+            Instance to register.
+        """
         self.cbCache_.append(c)
 
     def remove(self, c):
+        """Remove a CellBrowser instance from the cache.
+
+        Parameters
+        ----------
+        c : CellBrowser
+            Instance to deregister.
+        """
         self.cbCache_.remove(c)
 
 
@@ -410,19 +424,19 @@ def drawSelectedMeshBoundaries(ax, boundaries, color=None, linewidth=1.0,
 
     Parameters
     ----------
-    ax : matplotlib axes
+    ax: matplotlib axes
         axes to plot into
-    boundaries : :gimliapi:`GIMLI::Mesh` boundary vector
+    boundaries: :gimliapi:`GIMLI::Mesh` boundary vector
         collection of boundaries to plot
-    color : matplotlib color |str [None]
+    color: matplotlib color | str [None]
         matching color or string, else colors are according to markers
-    linewidth : float [1.0]
+    linewidth: float [1.0]
         line width
-    linestyles : linestyle for line collection, i.e. solid or dashed
+    linestyles: linestyle for line collection, i.e., solid or dashed
 
     Returns
     -------
-    lco : matplotlib line collection object
+    lco: matplotlib line collection object
     """
     import matplotlib as mpl
     drawAA = True
@@ -460,22 +474,24 @@ def drawSelectedMeshBoundariesShadow(ax, boundaries, first='x', second='y',
                                      color=(0.3, 0.3, 0.3, 1.0)):
     """Draw mesh boundaries as shadows into a given axes.
 
-    Parameters
+    Attributes
     ----------
-    ax : matplotlib axes
+    ax: matplotlib axes
         axes to plot into
-    boundaries : :gimliapi:`GIMLI::Mesh` boundary vector
+    boundaries: :gimliapi:`GIMLI::Mesh` boundary vector
         collection of boundaries to plot
-    first / second : str ['x' / 'y']
-        attribute names to retrieve from nodes
-    color : matplotlib color |str [None]
+    first: str [``x``|``y``]
+        Attribute names to retrieve from nodes.
+    second: str [``x``|``y``]
+        Attribute names to retrieve from nodes.
+    color: matplotlib color | str [None]
         matching color or string, else colors are according to markers
-    linewidth : float [1.0]
+    linewidth: float [1.0]
         line width
 
     Returns
     -------
-    lco : matplotlib line collection object
+    lco: matplotlib line collection object
     """
     import matplotlib as mpl
     polys = []
@@ -1005,7 +1021,7 @@ def drawField(ax, mesh, data=None, levels=None, nLevs=5,
                         levs = np.linspace(min(levels), max(levels), nCols+1)
 
                 gci = ax.tricontourf(x, y, triangles, z,
-                                     # antialiased=True, # not allways nice
+                                     # antialiased=True, # not always nice
                                      levels=levs, **kwargs)
 
             if contourLines is True:
@@ -1236,6 +1252,11 @@ def drawStreams(ax, mesh, data, startStream=3, coarseMesh=None, quiver=False,
     """
     viewMesh = None
     dataMesh = None
+
+    ## normalize data to [ux, uy].T shape = (n, 2)
+    data = np.array(data)
+    if data.shape[0] < 3:
+        data = data.T
 
     if quiver:
 
@@ -1496,7 +1517,7 @@ def drawParameterConstraints(ax, mesh, cMat, cWeights=None):
             ax.plot(start[i].x(), end[i].y(), '.', color=col, markersize=2)
         else:
             lines.append(list(zip([start[i].x(), end[i].x()],
-                                  [start[i].y(), end[i].y()])))
+                                  [start[i].y(), end[i].y()], strict=False)))
 
             linewidths.append(0.5)
         colors.append(col)
@@ -1507,3 +1528,114 @@ def drawParameterConstraints(ax, mesh, cMat, cWeights=None):
     ax.add_collection(lc)
 
     updateAxes_(ax)
+
+
+def drawCWeight(ax, mesh, cweight, lmin=0, lmax=0.8, cmin=0.1, cmax=1,
+                min_plot=0.02, color='black', cell_indices=None):
+    """Draw given cweights defined for given mesh on given ax.
+
+    Parameters
+    ----------
+    ax: plt.ax
+        Ax to plot constraint weights in.
+    mesh: pg.Mesh
+        Mesh object where the constraints are defined in.
+    cweight: np.ndarray
+        Constraint values to be plotted.
+    lmin: float [ 0 ]
+        Minimum linewidth for maximum cweight defined via **cmax**.
+        Note that by default high constraint values are plotted with thinner
+        lines.
+    lmin: float [ 0.8 ]
+        Maximum linewidth for minimum cweight defined via **cmin**.
+    cmin: float [ 0 ]
+        Minimum constraint weight to plot. All values smaller than cmin are
+        plotted with the same linewidth as cmin.
+    cmax: float [ 1 ]
+        Maximum constraint weight to plot. All values greater than cmax are
+        plotted with the same linewidth as cmax.
+    min_plot: float [ 0.02 ]
+        Minimum linewidth to plot to avoid large pdfs.
+    color: string [ 'black' ]
+        Color of lines.
+    f(cweight) -> linewidth:
+        (cmin, cmax) -> (lmax, lmin) if cmin < cweight < cmax
+    """
+    def lineWidthFromC(cw, cmin=0.1, cmax=1, lmin=0, lmax=0.8):
+        """Compute linewidth from given c value given cmin/cmax and lmin/lmax."""
+        linew = (1 - (cw - cmin) / (cmax - cmin))*(lmax - lmin) + lmin
+        linew = np.max([np.min([linew, lmax]), lmin])
+        return linew
+
+
+    from matplotlib.collections import LineCollection
+    mesh.createNeighbourInfos()
+
+    lines = []
+    linewidths = []
+
+    bi = 0
+    if cell_indices is None:
+        # case 1/2: no node indices means we try plotting in implicit order of
+        # boundaries in mesh
+        boundary_ids = np.arange(len(cweight))
+
+        bi = 0
+        for bound in mesh.boundaries():
+            if bound.rightCell() is not None:
+                pos0 = np.array(bound.node(0).pos())[:2].tolist()
+                pos1 = np.array(bound.node(1).pos())[:2].tolist()
+                linew = lineWidthFromC(cweight[bi], cmin=cmin, cmax=cmax,
+                                       lmin=lmin, lmax=lmax)
+
+                if linew >= min_plot:
+                    lines.append([pos0, pos1])
+                    linewidths.append(linew)
+
+                bi += 1
+
+    else:
+        # case 2/2: node indices are given, which means we plot each entry of
+        # cweight between the nodes with the ids given in node_indices.
+        assert len(cweight) == len(cell_indices[0])
+        assert len(cweight) == len(cell_indices[1])
+        cells = mesh.cells()
+        boundary_ids = []
+        for ci in range(len(cweight)):
+            cell0 = cells[cell_indices[0][ci]]
+            cell1 = cells[cell_indices[1][ci]]
+            try:
+                boundary_ids.append(
+                    np.intersect1d([cell0.boundary(0).id(),
+                                    cell0.boundary(1).id(),
+                                    cell0.boundary(2).id()],
+                                   [cell1.boundary(0).id(),
+                                    cell1.boundary(1).id(),
+                                    cell1.boundary(2).id()]
+                                   )[0])
+            except IndexError:
+                print([cell0.boundary(0).id(),
+                       cell0.boundary(1).id(),
+                       cell0.boundary(2).id()],
+                      [cell1.boundary(0).id(),
+                       cell1.boundary(1).id(),
+                       cell1.boundary(2).id()])
+
+        print(boundary_ids)
+
+        boundaries = mesh.boundaries()
+
+        for ci, bi in enumerate(boundary_ids):
+            bound = boundaries[bi]
+            if bound.rightCell() is not None:
+                pos0 = np.array(bound.node(0).pos())[:2].tolist()
+                pos1 = np.array(bound.node(1).pos())[:2].tolist()
+                linew = lineWidthFromC(cweight[ci], cmin=cmin, cmax=cmax,
+                                       lmin=lmin, lmax=lmax)
+                if linew >= min_plot:
+                    lines.append([pos0, pos1])
+                    linewidths.append(linew)
+
+    ax.add_collection(
+        LineCollection(lines, linewidths=linewidths,
+                       color=color))

@@ -87,7 +87,7 @@ def show(obj=None, data=None, **kwargs):
 
     # registerShowPendingFigsAtExit()
 
-    # try to check if obj containes a mesh
+    # try to check if obj contains a mesh
     if hasattr(obj, 'mesh'):
         return pg.show(obj.mesh, obj, **kwargs)
 
@@ -102,7 +102,7 @@ def show(obj=None, data=None, **kwargs):
             if data is None and obj.haveData("t"):
                 data = "t"
 
-            return showDataContainerAsMatrix(obj, "s", "g", data)
+            return showDataContainerAsMatrix(obj, "s", "g", data, **kwargs)
 
     # try to interpret obj as matrices
     if isinstance(obj, pg.core.MatrixBase) or (isinstance(obj, np.ndarray) and
@@ -116,13 +116,19 @@ def show(obj=None, data=None, **kwargs):
     except ImportError:
         pass
 
-    # try to interprete obj as mesh or list of meshes
+    # try to interpret obj as mesh or list of meshes
     mesh = kwargs.pop('mesh', obj)
 
     fitView = kwargs.get('fitView', True)
 
     if isinstance(mesh, list):
         ax = kwargs.pop('ax', None)
+        if isinstance(mesh[0], pg.Mesh) \
+            and mesh[0].dim() == 3 and mesh[0].isGeometry():
+            ## assume a list of 3d geometries
+            mesh = pg.meshtools.mergePLC(mesh)
+            return pg.show(mesh, **kwargs)
+
         ax, cBar = show(mesh[0], data, hold=True, ax=ax,
                         fitView=fitView, **kwargs)
 
@@ -164,7 +170,7 @@ def show(obj=None, data=None, **kwargs):
         drawSelectedMeshBoundaries(ax, [obj], **kwargs)
         return ax, None
 
-    pg.error("Can't interprete obj: {0} to show.".format(obj))
+    pg.error("Can't interpret obj: {0} to show.".format(obj))
     return None, None
 
 
@@ -333,7 +339,6 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
 
     if isinstance(data, str):
         if mesh.haveData(data):
-            print(factor)
             data = mesh[data] * factor
         else:
             raise IndexError("Mesh does not contain field ", data)
@@ -347,7 +352,12 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
         drawSensors(ax, data, **kwargs)
     elif isinstance(data, pg.PosVector) \
         or hasattr(data, 'ndim') and data.ndim == 2 \
-            and (data.shape[1] == 2 or data.shape[1] == 3):
+            and (data.shape[1] == 2 or data.shape[1] == 3) \
+        or isinstance(data, list) and len(data) == 2 \
+            and (hasattr(data[0], '__iter__')):
+        ## PosVector = [[x,y,z], ]
+        ## ndarray = [N, 2|3]
+        ## list = [[u,],[v,]] -> will be normalized in drawStreams
         drawStreams(ax, mesh, data, **kwargs)
     else:
         # check for map like data=[[marker, val], ....]
@@ -400,9 +410,12 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                 if showBoundary is None:
                     showBoundary = True
 
-            def _drawField(ax, mesh, data, kwargs):  # like view.mpl.drawField?
+            def _drawField(ax, mesh, data, **kwargs):  # like view.mpl.drawField?
                 # kwargs as reference here to set defaults valid outside too
                 validData = True
+                if len(data) == 2:
+                    return _drawField(ax, mesh, np.array(data).T, **kwargs)
+
                 if len(data) == mesh.cellCount():
                     kwargs['nCols'] = kwargs.pop('nCols', 256)
                     gci = drawModel(ax, mesh, data, **kwargs)
@@ -431,7 +444,7 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
 
                     if 'TriContourSet' in str(type(gci)):
                         ax.clear()
-                        gci, validData = _drawField(ax, mesh, data, kwargs)
+                        gci, validData = _drawField(ax, mesh, data, **kwargs)
                         updateAxes(ax, force=True)
                     else:
                         setMappableData(gci, data,
@@ -440,7 +453,7 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                         updateAxes(ax, force=True)
                         return ax, gci.colorbar
                 else:
-                    gci, validData = _drawField(ax, mesh, data, kwargs)
+                    gci, validData = _drawField(ax, mesh, data, **kwargs)
 
                 # Cache mesh and scalarmappable to make replaceData work
                 if not hasattr(mesh, 'gci'):
@@ -560,7 +573,6 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
             pass
 
     if axisLabels == True and mesh.dim() == 2:
-
         try:
             useDepth = min(mesh.boundaryMarkers()) < 0 and max(pg.y(mesh)) <= 0
             pg.viewer.mpl.adjustWorldAxes(ax, useDepth=useDepth, xl=xl, yl=yl)
@@ -598,9 +610,12 @@ def showBoundaryNorm(mesh, normMap=None, **kwargs):
     normMap : list
         list of [boundary marker, [norm]] pairs. e.g. [[1, [0.0,1.0]], ... ]
 
-    **kwargs :
-        Will be forwarded to the draw functions and matplotlib methods,
-        respectively.
+    Keyword Arguments
+    -----------------
+    ax : matplotlib.axes [None]
+        Axes object to draw into. Creates a new one if not given.
+    color : str ['Black']
+        Color of the normal arrows and lines.
 
     Returns
     -------

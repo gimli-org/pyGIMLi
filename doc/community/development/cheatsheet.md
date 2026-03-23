@@ -1,20 +1,16 @@
-# Cheatsheet
+---
+file_format: mystnb
+kernelspec:
+  name: python3
+---
 
-+++
-
-```{contents} Table of Content
-:depth: 3
-```
-
-+++
+# Documenting with Markdown
 
 ## Citations
 
-+++
-
+:::{myst-example}
 {cite}`Seigel1959` did something great
-
-+++
+:::
 
 ## Evaluate code
 
@@ -29,6 +25,7 @@ pg.show(mesh, data)
 
 ### Math
 
+:::{myst-example}
 Since Pythagoras, we know that $a^2 + b^2 = c^2$
 
 $$
@@ -37,18 +34,39 @@ $$
 $$ (mymath2)
 
 The equation {eq}"mymath2" is also a quadratic equation.
+:::
+
+
+## Custom latex macros
+
+Some custom latex macros inspired by [physics latex package](https://ctan.org/):
+
+| Macro       | Output         |
+|-------------|----------------|
+| `\order{h^{2}}` | $\order{h^{2}}$ |
+| `\vb{v}`        | $\vb{v}$        |
+| `\grad{u}`    | $\grad{u}$    |
+| `\div{\vb{v}}`  | $\div{\vb{v}}$  |
+| `\curl{\vb{v}}` | $\curl{\vb{v}}$ |
+| `\laplacian{u}` | $\laplacian{u}$   |
+| `\sin(x)`       | $\sin(x)$        |
+| `\dd x`         | $\dd x$         |
+
 
 Some **text-like stuff**!
 
+::::{myst-example}
 :::{admonition} Here's my title
 :class: tip
 
 Here's my admonition content.
 
 :::
+::::
 
 ### Tables
 
+::::{myst-example}
 :::{table} Table caption
 :widths: auto
 :align: center
@@ -57,13 +75,17 @@ Here's my admonition content.
 | --- | --- |
 | baz | bim |
 :::
+::::
 
 ### Typography
 
+:::{myst-example}
 **strong**, _emphasis_, `literal text`, \*escaped symbols\*
+:::
 
 ### Footnotes
 
+:::{myst-example}
 A longer footnote definition.[^mylongdef]
 
 [^mylongdef]: This is the _**footnote definition**_.
@@ -76,9 +98,11 @@ A longer footnote definition.[^mylongdef]
 that are not separated by a blank line
 
 This is not part of the footnote.
+:::
 
 ### Cards
 
+::::{myst-example}
 :::{card} Card Title
 Header
 ^^^
@@ -88,9 +112,11 @@ Card content
 
 Footer
 :::
+::::
 
 ### Tabs
 
+:::::{myst-example}
 ::::{tab-set}
 
 :::{tab-item} Label1
@@ -100,3 +126,5 @@ Content 1
 :::{tab-item} Label2
 Content 2
 :::
+::::
+:::::
