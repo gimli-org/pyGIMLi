@@ -16,11 +16,11 @@ Coding standards and contribution workflow for pyGIMLi.
 
 How to write and format documentation with Markdown and MyST.
 :::
-:::{grid-item-card} Dependencies
+:::{grid-item-card} Compiling from source
 :link: sec-install-pre
 :link-type: ref
 
-Tools and libraries required to build pyGIMLi from source.
+Tools and dependencies required to compile pyGIMLi from source.
 :::
 ::::
 
