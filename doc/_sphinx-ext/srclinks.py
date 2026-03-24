@@ -39,7 +39,7 @@ class Context(object):
     src_clonecmd_tmpl = '{src_type} clone'
 
     src_issue_regexes = [
-        "#[\d]+",  # TODO: {,10}
+        r"#[\d]+",  # TODO: {,10}
     ]
 
     def __init__(
@@ -256,8 +256,8 @@ class GitHubContext(Context):
     def match_issue_regex(textstr):
         raise NotImplementedError()
         issue_regexes = [
-            "#[\d]+",  # TODO: {,10}
-            "GH[\d]+",
+            r"#[\d]+",  # TODO: {,10}
+            r"GH[\d]+",
         ]
         for rgx in issue_regexes:
             yield re.match(rgx, textstr)

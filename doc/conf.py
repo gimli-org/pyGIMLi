@@ -91,7 +91,6 @@ extensions = [
     "sphinxcontrib.doxylink",
     'sphinxcontrib.bibtex',
     'sphinxcontrib.programoutput',
-    "bibtexparser",
     "sphinx_design",
     "sphinx_copybutton",
     # "sphinx_tippy"
@@ -653,10 +652,13 @@ def install_and_import(package, src):
 ################################################################################
 # -- Options for doxylink
 ################################################################################
-doxylink = {
-    "gimliapi": (join(DOXY_BUILD_DIR, "gimli.tag"),
-                 "https://www.pygimli.org/gimliapi")
-}
+_gimli_tag = join(DOXY_BUILD_DIR, "gimli.tag")
+if path.exists(_gimli_tag):
+    doxylink = {
+        "gimliapi": (_gimli_tag, "https://www.pygimli.org/gimliapi")
+    }
+else:
+    doxylink = {}
 
 
 ################################################################################

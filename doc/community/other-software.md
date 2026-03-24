@@ -8,7 +8,7 @@ An open-source Python toolkit for customizable 3D finite-element modeling of con
 
 > Rochlitz, R., Skibbe, N. & Günther, T. (2019). custEM: Customizable finite-element simulation of complex controlled-source electromagnetic data. *Geophysics*, 84(2), F17–F33. [DOI: 10.1190/geo2018-0208.1](https://doi.org/10.1190/geo2018-0208.1)
 
-## formikoj
+## formikoj <a href="https://github.com/geophilik/formikoj" title="GitHub Repository"><i class="fa-brands fa-github"></i></a>
 
 A flexible open-source library for managing and processing geophysical data in environmental and engineering investigations. Provides seismic waveform modeling and refraction processing capabilities, combining modeling and processing tasks in a single workflow with pyGIMLi integration for inversion.
 
