@@ -1,0 +1,3 @@
+#!/bin/bash
+# Configure PyVista for Jupyter
+python -c "import pyvista; pyvista.set_jupyter_backend('trame')"

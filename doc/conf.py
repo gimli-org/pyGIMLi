@@ -377,6 +377,8 @@ try:
         "remove_config_comments": True,
         # Only parse filenames starting with plot_
         "filename_pattern": "/plot_",
+        # Skip examples that require features not yet in released pygimli
+        "ignore_pattern": r"plot_7_scci\.py",
         "first_notebook_cell": ("# Checkout www.pygimli.org for more examples"),
         "reset_modules": (reset_mpl),
         # Avoid representation of mpl axis, LineCollections, etc.
@@ -386,6 +388,16 @@ try:
         "download_all_examples": False,
         "parallel": 1,
         # 'matplotlib_animations': (True, 'mp4'),
+        # Binder integration for interactive tutorials
+        'binder': {
+            'org': 'gimli-org',
+            'repo': 'gimli',
+            'branch': 'dev',
+            'binderhub_url': 'https://mybinder.org',
+            'dependencies': ['binder/requirements.txt', 'binder/apt.txt', 'binder/postBuild'],
+            'notebooks_dir': 'doc',
+            'use_jupyter_lab': True,
+        },
     }
 
     # from sphinx_mpatch.patch_sphinx_gallery import _matplotlib_scraper as matplotlib_scraper
@@ -771,7 +783,7 @@ myst_dmath_allow_labels = True
 # myst_heading_anchors = 2
 nb_execution_mode = "auto"
 nb_execution_timeout = 600
-nb_execution_excludepatterns = ["*.ipynb", "*Untitled*", "_examples_auto/**/*", "_tutorials_auto/**/*"]
+nb_execution_excludepatterns = ["*.ipynb", "*Untitled*", "_examples_auto/**/*", "_tutorials_auto/**/*", "user-guide/inversion.md"]
 nb_execution_raise_on_error = True # Important for GitHub Action
 nb_execution_show_tb = True
 
