@@ -390,7 +390,7 @@ try:
         # Binder integration for interactive tutorials
         # Notebooks are generated on-the-fly by jupytext in postBuild
         'binder': {
-            'org': 'gimli-org',
+            'org': 'andieie',
             'repo': 'gimli',
             'branch': 'dev',
             'binderhub_url': 'https://mybinder.org',
