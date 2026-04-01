@@ -383,19 +383,19 @@ try:
         "reset_modules": (reset_mpl),
         # Avoid representation of mpl axis, LineCollections, etc.
         "ignore_repr_types": r"matplotlib[text, axes, collections]",
-        "notebook_extensions": {},
         "show_signature": False,
         "download_all_examples": False,
         "parallel": 1,
         # 'matplotlib_animations': (True, 'mp4'),
         # Binder integration for interactive tutorials
+        # Notebooks are generated on-the-fly by jupytext in postBuild
         'binder': {
             'org': 'gimli-org',
             'repo': 'gimli',
             'branch': 'dev',
             'binderhub_url': 'https://mybinder.org',
             'dependencies': ['binder/requirements.txt', 'binder/apt.txt', 'binder/postBuild'],
-            'notebooks_dir': 'doc',
+            'notebooks_dir': 'binder/notebooks',
             'use_jupyter_lab': True,
         },
     }

@@ -98,6 +98,11 @@ footer.bd-footer {
     font-weight: 500;
 }
 
+/* Hide sphinx-gallery zip download button */
+.sphx-glr-download-zip {
+    display: none !important;
+}
+
 ul.search li a {
     font-weight: 500;
 }
