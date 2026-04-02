@@ -72,25 +72,38 @@ def p(*args, c='y'):
     print(_(*args, c=c))
 
 
-def _g(*args):
-    _d(*args, c='g')
+def _g(*args, **kwargs):
+    _d(*args, c='g', **kwargs)
 
 
-def _y(*args):
-    _d(*args, c='y')
+def _y(*args, **kwargs):
+    _d(*args, c='y', **kwargs)
 
 
-def _r(*args):
-    _d(*args, c='r')
+def _r(*args, **kwargs):
+    _d(*args, c='r', **kwargs)
 
 
-def _b(*args):
-    _d(*args, c='b')
+def _b(*args, **kwargs):
+    _d(*args, c='b', **kwargs)
 
 
-def _d(*args, c='y'):
-    """Simplistic colored debug msg"""
+def _d(*args, c='y', trace=False):
+    """Simplistic colored debug msg.
+
+    Arguments
+    ---------
+    c : str
+        color code, e.g. 'r' for red, 'g' for green, 'y' for yellow,
+        'b' for blue."
+    trace : bool, optional
+        If True, print the traceback of the last exception.
+    """
     print(_(whereAmI(), ':', *args, c=c))
+    if trace:
+        traceback.print_exc()
+        traceback.print_stack()
+
 
 
 class ColorFormatter(logging.Formatter):
@@ -282,6 +295,8 @@ def debug(*args, withTrace=False):
     """
     Parameters
     ----------
+    withTrace : bool, optional
+        If True, print the traceback of the last exception.
     """
     if withTrace:
         traceback.print_exc()
