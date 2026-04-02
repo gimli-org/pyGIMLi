@@ -1,3 +1,28 @@
 #!/bin/bash
-# Configure PyVista for Jupyter
+set -e
+
+# Configure PyVista for Jupyter with static backend (faster than trame for docs)
 python -c "import pyvista; pyvista.set_jupyter_backend('trame')"
+
+# Convert gallery .py scripts to notebooks using jupytext
+# Notebooks are placed in binder/notebooks/ (not committed to repo)
+cd "${REPO_DIR:-/home/jovyan}"
+NOTEBOOK_DIR="binder/notebooks"
+
+for pyfile in $(find doc/tutorials doc/examples -name "plot_*.py" 2>/dev/null); do
+    # Create output path preserving directory structure
+    # Map source dirs to Sphinx Gallery gallery_dirs names
+    relpath="${pyfile#doc/}"
+    relpath="${relpath/tutorials/_tutorials_auto}"
+    relpath="${relpath/examples/_examples_auto}"
+    notebook="${NOTEBOOK_DIR}/${relpath%.py}.ipynb"
+    outdir=$(dirname "$notebook")
+    
+    mkdir -p "$outdir"
+    
+    if [ ! -f "$notebook" ] || [ "$pyfile" -nt "$notebook" ]; then
+        jupytext --to notebook --output "$notebook" "$pyfile"
+    fi
+done
+
+echo "Notebooks available in ${NOTEBOOK_DIR}/"

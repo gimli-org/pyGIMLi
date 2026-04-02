@@ -4,8 +4,9 @@
 
 # Documentation
 _build/
-_tutorials_auto/
-_examples_auto/
+doc/_tutorials_auto/
+doc/_examples_auto/
+binder/notebooks/
 _generated/
 # sidebar gallery is created on the fly
 doc/_templates/gallery.html
