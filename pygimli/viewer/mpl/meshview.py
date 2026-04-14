@@ -629,13 +629,13 @@ def drawMeshBoundaries(ax, mesh, hideMesh=False, useColorMap=False,
     >>> drawMeshBoundaries(ax, mesh)
     """
     if not mesh:
-        raise Exception("drawMeshBoundaries(ax, mesh): invalid mesh")
+        raise TypeError("drawMeshBoundaries(ax, mesh): invalid mesh")
 
     if mesh.dimension() != 2:
-        raise Exception("No 2d mesh: dim = ", mesh.dimension())
+        raise ValueError("No 2d mesh: dim = ", mesh.dimension())
 
     if mesh.nodeCount() < 2:
-        raise Exception("drawMeshBoundaries(ax, mesh): to few nodes",
+        raise ValueError("drawMeshBoundaries(ax, mesh): too few nodes",
                         mesh.nodeCount())
 
     if fitView is True:

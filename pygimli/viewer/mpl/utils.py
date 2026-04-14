@@ -79,6 +79,7 @@ def registerShowPendingFigsAtExit():
     need it if matplotlib is used.
     """
     global __registeredShowPendingFigsAtExit__
+
     if not __registeredShowPendingFigsAtExit__:
         import atexit
 

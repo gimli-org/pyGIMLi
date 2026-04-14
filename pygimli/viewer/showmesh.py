@@ -743,6 +743,7 @@ def show1D(mesh, obj, **kwargs):
     kwargs.pop('fitView', None)
 
     ax = kwargs.pop('ax', None)
+    showMesh = kwargs.pop('showMesh', False)
 
     newAxe = False
 
@@ -771,6 +772,10 @@ def show1D(mesh, obj, **kwargs):
         x = pg.sort(pg.x(mesh))
         v = obj
 
+    elif pg.isArray(obj, mesh.cellCount()):
+        x = np.asarray([[c.node(0).x(), c.node(1).x()] for c in mesh.cells()]).flatten()
+        v = np.asarray([[obj[i], obj[i]] for i in range(mesh.cellCount())]).flatten()
+
     elif isinstance(obj, list):
         return show1D(mesh, np.array(obj), ax=ax, **kwargs)
 
@@ -779,12 +784,7 @@ def show1D(mesh, obj, **kwargs):
         return showAnimation(mesh, obj, ax=ax, **kwargs)
 
     elif obj is None:
-        showMesh = kwargs.pop('showMesh', False)
 
-        if showMesh:
-            pg.viewer.mpl.drawSelectedMeshBoundaries(ax, mesh.cells(),
-                                                     color='k', linewidth=0.3,
-                                                     linestyle="-", **kwargs)
 
         pg.viewer.mpl.drawPLC(ax, mesh, showNodes=True,
                               fillRegion=False,
@@ -798,6 +798,10 @@ def show1D(mesh, obj, **kwargs):
         #pg._r(obj.shape)
         pg.critical('implementme')
 
+    if showMesh:
+        pg.viewer.mpl.drawSelectedMeshBoundaries(ax, mesh.cells(),
+                                                 color='k', linewidth=0.3,
+                                                 linestyle="-", **kwargs)
     swapAxes = kwargs.pop('swapAxes', False)
     label = kwargs.pop('label', None)
 
