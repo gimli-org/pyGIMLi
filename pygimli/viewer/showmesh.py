@@ -756,7 +756,11 @@ def show1D(mesh, obj, **kwargs):
 
     if hasattr(obj, 'eval'):
         x = pg.sort(pg.x(mesh))
-        v = obj(x)
+        if mesh.nodeCount() < 4:
+            # fight ambiguous eval for tiny meshes
+            v = obj(mesh.positions())
+        else:
+            v = obj(x)
 
         if hasattr(v, 'ndim') and v.ndim == 2 and v.shape[0] == mesh.nodeCount():
         # Vector Field -- show x--component
