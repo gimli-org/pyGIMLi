@@ -14,7 +14,7 @@ This tutorial shows some basic aspects of handling a mesh.
 
 First, the library needs to be imported.
 To avoid name clashes with other libraries we suggest to `import pygimli` and
-alias it to the simple abbreviation `pg`: CR
+alias it to the simple abbreviation `pg`:
 
 ```{code-cell} ipython3
 import pygimli as pg
