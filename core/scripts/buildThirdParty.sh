@@ -32,11 +32,11 @@ CASTXML_BIN_WIN=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v
 
 if [[ $(uname -m) == 'arm64' ]]; then
     # ARM means new Apple M chips
-    CASTXML_BIN_MAC_NAME="castxml-macos-arm.tar.gz"
+    CASTXML_BIN_MAC_NAME="castxml-macos-15-arm64.tar.gz"
 else
-    CASTXML_BIN_MAC_NAME="castxml-macosx.tar.gz"
+    CASTXML_BIN_MAC_NAME="castxml-macos-15-intel-x86_64.tar.gz"
 fi
-CASTXML_BIN_MAC=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/$CASTXML_BIN_MAC_NAME
+CASTXML_BIN_MAC=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v2026.01.30/$CASTXML_BIN_MAC_NAME
 
 #.. needs testing
 # Check for updates https://github.com/CastXML/CastXMLSuperbuild/releases/tag/v0.6.5
