@@ -570,16 +570,27 @@ if (BLAS_FOUND)
     endif()
 
     if (OpenBLAS_INCLUDE_DIR)
-        set(OPENBLAS_CBLAS_FOUND TRUE)
+        # cblas.h alone is not enough: conda-forge ships a netlib-style cblas.h
+        # that lacks OpenBLAS extensions. Probe for the actual symbol.
+        include(CheckSymbolExists)
+        set(_old_includes ${CMAKE_REQUIRED_INCLUDES})
+        set(CMAKE_REQUIRED_INCLUDES ${OpenBLAS_INCLUDE_DIR})
+        check_symbol_exists(openblas_set_num_threads "cblas.h" _OPENBLAS_CBLAS_HAS_SYMBOL)
+        set(CMAKE_REQUIRED_INCLUDES ${_old_includes})
+        if (_OPENBLAS_CBLAS_HAS_SYMBOL)
+            set(OPENBLAS_CBLAS_FOUND 1)
+        else()
+            set(OPENBLAS_CBLAS_FOUND 0)
+        endif()
     else()
-        set(OPENBLAS_CBLAS_FOUND FALSE)
+        set(OPENBLAS_CBLAS_FOUND 0)
     endif()
 
     set(OPENBLAS_FOUND TRUE)
 
 else()
     set(OPENBLAS_FOUND FALSE)
-    set(OPENBLAS_CBLAS_FOUND FALSE)
+    set(OPENBLAS_CBLAS_FOUND 0)
 endif()
 
 #exit()

@@ -643,6 +643,24 @@ namespace pyplusplus{ namespace aliases{
 
 }} //pyplusplus::aliases
 
+#if !defined(PYGIMLI_CAST)
+// Newer libc++ eagerly instantiates std::less<inner_type> when boost.python.indexing's
+// vector_suite registers a sort method on std::vector<std::vector<Matrix<double>>>.
+// Matrix<double> has no operator<, so the lexicographical comparison fails to compile.
+// Disable comparison-based methods for the inner vector type.
+#include "indexing_suite/value_traits.hpp"
+namespace boost { namespace python { namespace indexing {
+template<>
+struct value_traits< std::vector< GIMLI::Matrix< double > > > {
+    static bool const equality_comparable = false;
+    static bool const less_than_comparable = false;
+
+    template< typename PythonClass, typename Policy >
+    static void visit_container_class(PythonClass &, Policy const &) { }
+};
+}}}
+#endif // !defined(PYGIMLI_CAST)
+
 #endif // else not PYTEST
 
 #endif // PYTHON_PYGIMLI__H
