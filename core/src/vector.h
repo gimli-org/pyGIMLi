@@ -746,6 +746,23 @@ public:
         return getVal(pair.first, pair.second);
     }
 
+    void clipMin(const ValueType & minVal){
+        for (Index i = 0; i < this->size(); i ++){
+            if (data_[i] < minVal) data_[i] = minVal;
+        }
+    }
+    void clipMax(const ValueType & maxVal){
+        for (Index i = 0; i < this->size(); i ++){
+            if (data_[i] > maxVal) data_[i] = maxVal;
+        }
+    }
+    void clip(const ValueType & minVal, const ValueType & maxVal){
+        for (Index i = 0; i < this->size(); i ++){
+            if (data_[i] < minVal) data_[i] = minVal;
+            else if (data_[i] > maxVal) data_[i] = maxVal;
+        }
+    }
+
 #ifdef PYGIMLI
 //    needed for: /usr/include/boost/python/def_visitor.hpp
     bool operator < (const Vector< ValueType > & v) const { return false; }

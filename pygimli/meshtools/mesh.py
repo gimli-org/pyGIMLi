@@ -1413,7 +1413,9 @@ def readGambitNeutral(fileName, verbose=False):
 
 
 def readMeshIO(fileName, verbose=False):
-    """Generic mesh read using meshio. (https://github.com/nschloe/meshio)
+    """Read a mesh using meshio.
+
+    Meshio: https://github.com/nschloe/meshio.
     """
     meshio = pg.optImport('meshio')
     _t = meshio.read(fileName)
@@ -1421,6 +1423,78 @@ def readMeshIO(fileName, verbose=False):
     if verbose is True:
         print(mesh)
     return mesh
+
+
+def readMesh(filename, verbose=False):
+    """Read mesh from foreign formats.
+
+    Try to auto-detect the file format and it read
+    it to a :gimliapi:`GIMLI::Mesh`.
+    """
+    if filename.endswith('.pvd'):
+        return readPVD(filename, verbose=verbose)
+    return readMeshIO(filename, verbose=verbose)
+
+
+def readPVD(filename, verbose=False):
+    """Read :term:`ParaView` PVD files.
+
+    Note. Only linear triangle meshes at the moment,
+    but we can easily extend this if needed. Just send us an example file.
+    Only point data is supported at the moment.
+
+    TODO:
+    ----
+        * 3D meshes
+        * other cell types
+        * cell data
+    """
+    import pyvista as pv
+    reader = pv.get_reader(filename)
+    #print(reader.time_values)
+
+    mesh = None
+    data = {}
+    times = []
+    #print(reader.time_values)
+
+    for i, t in enumerate(reader.time_values):
+        reader.set_active_time_point(i)
+
+        vtkmesh = reader.read()[0]
+        times.append(reader.active_time_value)
+
+        if mesh is None:
+            mesh = pg.Mesh(2)
+            mesh.createNodes(vtkmesh.points)
+
+            # print(vtkmesh.cells_dict)
+            # print(list(vtkmesh.cells_dict.items())[0][1])
+            for c in list(vtkmesh.cells_dict.items())[0][1]:
+                mesh.createCell(c)
+
+        # print(vtkmesh.point_data['Temperature'])
+        # print(vtkmesh.cell_data)
+        for dName in vtkmesh.point_data.keys():
+            da = vtkmesh.point_data[dName]
+
+            if len(da) == mesh.nodeCount():
+                data.setdefault(dName, []).append(da)
+            elif len(da) == mesh.cellCount():
+                data.setdefault(dName, []).append(da)
+            else:
+                pg.critical(f"Cannot assign data with length {len(da)} to mesh "
+                            f"with {mesh.nodeCount()} nodes and "
+                            f"{mesh.cellCount()} cells.")
+
+    for dName, dList in data.items():
+        data[dName] = np.asarray(dList)
+
+    times = np.asarray(times)
+    # print(mesh)
+    # print(data.keys())
+    # mesh.show(data['Temperature'][0], showMesh=True)
+    return mesh, data, times
 
 
 def convertHDF5Mesh(h5Mesh, group='mesh', indices='cell_indices',
