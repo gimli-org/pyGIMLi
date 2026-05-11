@@ -176,10 +176,10 @@ else()
     set(LIBGIMLI_VERSION_WHL "untagged")
 endif()
 
-set(PACKAGE_NAME  \"${PROJECT_NAME}\" )
-set(PACKAGE_VERSION  \"${LIBGIMLI_VERSION}\" )
-set(PACKAGE_BUGREPORT  \"carsten@pygimli.org\")
-set(PACKAGE_AUTHORS  \"carsten@pygimli.org thomas@pygimli.org florian@pygimli.org\")
+set(PACKAGE_NAME  "\"${PROJECT_NAME}\"" )
+set(PACKAGE_VERSION  "\"${LIBGIMLI_VERSION}\"" )
+set(PACKAGE_BUGREPORT  [["carsten@pygimli.org"]])
+set(PACKAGE_AUTHORS  [["carsten@pygimli.org thomas@pygimli.org florian@pygimli.org"]])
 
 ################################################################################
 # Check for libs and other packages we might use.
@@ -344,7 +344,7 @@ if (NOT Boost_INCLUDE_DIR OR NOT Boost_ROOT)
         else()
             message(STATUS " .. building local with Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}")
             find_boost_root_from_distname_file()
-            find_or_build_package_check(Boost boost Boost_INCLUDE_DIR False)
+            find_or_build_package_check(Boost boost Boost_INCLUDE_DIR False "" False)
             find_boost_root_from_distname_file()
         endif()
     endif(Boost_ROOT)
@@ -621,40 +621,8 @@ endif()
 
 #exit()
 
-if (NOT CASTER)
-    set(CASTER "castxml")
-
-    if (CMAKE_COMPILER_IS_GNUCC)
-        string(REGEX MATCHALL "[0-9]+" GCC_VERSION_COMPONENTS ${CMAKE_CXX_COMPILER_VERSION})
-        list(GET GCC_VERSION_COMPONENTS 0 GCC_MAJOR)
-        list(GET GCC_VERSION_COMPONENTS 1 GCC_MINOR)
-
-        if (${GCC_MAJOR} EQUAL 5)
-            message(STATUS "Found gcc version above 5: choosing castxml")
-            set(CASTER "castxml")
-        endif()
-
-    endif()
-endif()
-
 find_program(CLANG_EXECUTABLE clang)
-find_or_build_package(castxml castxml LOCAL)
-set(CASTER_EXECUTABLE ${CASTXML_EXECUTABLE})
-
-if (CASTER STREQUAL "gccxml")
-    find_or_build_package(gccxml gccxml LOCAL)
-    set(CASTER_EXECUTABLE ${GCCXML_EXECUTABLE})
-else()
-    if (NOT CASTER_EXECUTABLE)
-        find_program(CASTXML castxml)
-
-        if (NOT CASTXML OR CASTXML_LOCAL OR CASTXML_LOCALSRC)
-            set(CASTER_EXECUTABLE ${CASTXML_EXECUTABLE})
-        else()
-            set(CASTER_EXECUTABLE ${CASTXML})
-        endif()
-    endif()
-endif()
+find_or_build_package(castxml castxml LOCAL VERSION 0.6.5)
 
 if(CLANG_EXECUTABLE)
     message(STATUS "clang++ found : ${CLANG_EXECUTABLE}")
@@ -662,15 +630,8 @@ else()
     message(FATAL_ERROR "Can't found program: clang")
 endif()
 
-find_or_build_package(castxml castxmlbin LOCAL)
-set(CASTER_EXECUTABLE ${CASTXML_EXECUTABLE})
-
 find_or_build_package(pygccxml pygccxml LOCAL)
 find_or_build_package(pyplusplus pygccxml LOCAL)
-
-if (CASTER_EXECUTABLE)
-    set (CASTER_FOUND TRUE)
-endif()
 
 find_package(Doxygen)
 find_package(Sphinx 3.1)
@@ -728,7 +689,7 @@ message(STATUS "Python_INCLUDE_DIRS  : ${Python_INCLUDE_DIRS}")
 message(STATUS "Boost_INCLUDE_DIR    : ${Boost_INCLUDE_DIR}")
 message(STATUS "Boost_PYTHON_LIBRARY : ${Boost_PYTHON_LIBRARY}" )
 message(STATUS "Python_NumPy         : ${Python_NumPy_FOUND} ${Python_NumPy_INCLUDE_DIRS} ver: ${Python_NumPy_VERSION}")
-message(STATUS "CASTER_FOUND         : ${CASTER_FOUND} Caster: ${CASTER_EXECUTABLE}")
+message(STATUS "CASTXML_FOUND        : ${CASTXML_FOUND} castxml: ${CASTXML_EXECUTABLE} ver: ${CASTXML_VERSION}")
 message(STATUS "PYGCCXML_FOUND       : ${PYGCCXML_FOUND} PYGCCXML: ${PYGCCXML_PATH}" )
 message(STATUS "PYPLUSPLUS_FOUND     : ${PYPLUSPLUS_FOUND} PYPLUSPLUS_PATH: ${PYPLUSPLUS_PATH}" )
 message(STATUS "")
@@ -745,7 +706,7 @@ if (Python_EXECUTABLE
     AND (Python_Development.Module_FOUND OR Python_Development_FOUND)
     AND Boost_PYTHON_LIBRARY
     AND Python_NumPy_FOUND
-    AND CASTER_FOUND
+    AND CASTXML_FOUND
     AND PYGCCXML_FOUND
     AND PYPLUSPLUS_FOUND
 )

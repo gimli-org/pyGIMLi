@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
+"""This script generates the pygimli python bindings using py++ and pygccxml."""
 import os
 import shutil
 import sys
@@ -13,7 +12,7 @@ from optparse import OptionParser
 optionParser = OptionParser("usage: %prog [options]")
 optionParser.add_option("", "--extra-includes", dest="extraIncludes")
 optionParser.add_option("", "--extra-path", dest="extraPath")
-optionParser.add_option("", "--caster", dest="caster")
+optionParser.add_option("", "--castxml", dest="caster")
 optionParser.add_option("", "--clang", dest="clang", default="")
 
 (options, args) = optionParser.parse_args()

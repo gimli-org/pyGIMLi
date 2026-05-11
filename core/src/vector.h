@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2007-2024 by the GIMLi development team                    *
+ *   Copyright (C) 2007-2026 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -698,7 +698,9 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
     void resize(Index n, ValueType fill){
         if (n != size_){
             reserve(n);
-            for (Index i = size_; i < n; i ++) data_[i]=fill;
+            if (n > size_) {
+                for (Index i = size_; i < n; i ++) data_[i]=fill;
+            }
             size_ = n;
         }
     }

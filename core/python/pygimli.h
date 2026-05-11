@@ -28,11 +28,11 @@
 
 namespace GIMLI{
     inline void tmp(){
-         std::cout << "tmp"<< std::endl;  
+         std::cout << "tmp"<< std::endl;
     }
     // class TMP {
     //         public:
-    //         void a(){std::cout << "TMP"<< std::endl;}  
+    //         void a(){std::cout << "TMP"<< std::endl;}
     // };
 
     // extern template class Vector< double >;
@@ -72,11 +72,11 @@ namespace GIMLI{
 //     typedef GIMLI::Vector< double >                 RVector;
 //     // typedef GIMLI::Vector< bool >                 BVector;
 //     // typedef GIMLI::Vector< long >                 IVector;
-    
+
 //     typedef GIMLI::VectorIterator< double >          RVectorIter;// avoid doubs
 //     typedef GIMLI::VectorIterator< bool >            BVectorIter;// avoid doubs
 //     typedef GIMLI::VectorIterator< long >            IVectorIter;// avoid doubs
-    
+
 //     // typedef GIMLI::VectorIterator< Complex >              CVectorIter;
 //     // typedef GIMLI::BlockMatrix< double >                 RBlockMatrix;
 
@@ -220,7 +220,7 @@ DEFINE_PY_VEC_UNARY_OPERATOR__(tanh,  TANH)
 
 
     //** maybe better to move these instantiation into libgimli, but why should the lib have unused template symbols??
-    // explicit instantiaion leads to duplicate symbols for architecture arm64 
+    // explicit instantiaion leads to duplicate symbols for architecture arm64
     // if the symbols allready exists, extern to mark them
 
 #define DEFINE_COMPARE_OPERATOR__(OP) \
@@ -578,7 +578,7 @@ namespace pyplusplus{ namespace aliases{
     typedef std::vector< GIMLI::RVector3 >              stdVectorRVector3;
     typedef std::vector< GIMLI::R3Vector >              stdVectorR3Vector;
     typedef std::vector< GIMLI::RMatrix3 >              stdVectorMatrix3;
-    
+
     typedef std::vector< GIMLI::PolynomialElement<double> > stdVectorPolynomialElementR;
     typedef std::vector< GIMLI::PolynomialFunction< double > > stdVectorPolynomialFunctionR;
 
@@ -643,6 +643,7 @@ namespace pyplusplus{ namespace aliases{
 
 }} //pyplusplus::aliases
 
+#if defined ( __APPLE__ )
 #if !defined(PYGIMLI_CAST)
 // Newer libc++ eagerly instantiates std::less<inner_type> when boost.python.indexing's
 // vector_suite registers a sort method on std::vector<std::vector<Matrix<double>>>.
@@ -660,7 +661,7 @@ struct value_traits< std::vector< GIMLI::Matrix< double > > > {
 };
 }}}
 #endif // !defined(PYGIMLI_CAST)
-
+#endif // if defined ( __APPLE__ )
 #endif // else not PYTEST
 
 #endif // PYTHON_PYGIMLI__H
