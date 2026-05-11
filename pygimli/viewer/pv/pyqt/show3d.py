@@ -88,6 +88,7 @@ class Show3D(QMainWindow):
         ghelp.addAction(self.acn_hkeys)
 
     def showHotKeys(self):
+        """Open a dialog showing the available keyboard shortcuts."""
         d = QDialog()
         textfield = QLabel(
         "q - Close pyGIMLi 3D Viewer\n"
@@ -112,6 +113,13 @@ class Show3D(QMainWindow):
         d.exec_()
 
     def setupWidget(self, **kwargs):
+        """Create and arrange the PyVista interactor and status bar.
+
+        Parameters
+        ----------
+        **kwargs :
+            Forwarded to :class:`pv.QtInteractor`.
+        """
         # create the frame
         self.frame = QFrame()
         # add the pv interactor object
@@ -450,6 +458,7 @@ class Show3D(QMainWindow):
         self.updateParameterView()
 
     def _enableSlicers(self):
+        """Enable or disable slice control widgets based on the active mode."""
         if self.toolbar.btn_slice_plane.isChecked():
             self.toolbar.slice_x.setEnabled(True)
             self.toolbar.slice_y.setEnabled(True)
@@ -461,6 +470,7 @@ class Show3D(QMainWindow):
         self.updateParameterView()
 
     def _allowSignals(self):
+        """Connect toolbar widget signals to their handler slots."""
         # connect signals
         self.toolbar.cbbx_params.currentTextChanged.connect(
             self.updateParameterView)
@@ -482,12 +492,14 @@ class Show3D(QMainWindow):
         self.toolbar.slice_z.sliderReleased.connect(self.updateParameterView)
 
     def _checkStatusPlaneSlice(self):
+        """Enforce mutual exclusivity between plane-slice and volume-slice modes."""
         if self.toolbar.btn_slice_plane.isChecked():
             self.toolbar.btn_slice_volume.setChecked(False)
         self.toolbar.chbx_threshold.setChecked(False)
         self._enableSlicers()
 
     def _checkStatusVolumeSlice(self):
+        """Enforce mutual exclusivity between volume-slice and plane-slice modes."""
         if self.toolbar.btn_slice_volume.isChecked():
             self.toolbar.btn_slice_plane.setChecked(False)
         self.toolbar.chbx_threshold.setChecked(False)

@@ -25,10 +25,10 @@ def lineSearchArmijo(inv, dM, tau=100, c=1e-4, tauFactor=0.8):
     """
     v = -dM / np.linalg.norm(dM)
     Elim = inv.phi() + sum(v*dM) * c * tau
-    while Enew > Elim:
+    while eNew > Elim:
         newModel = inv.modelTrans.update(inv.model, v*tau)
         newResponse = inv.fop.response(newModel)
-        Enew = inv.phi(newModel, newResponse)
+        eNew = inv.phi(newModel, newResponse)
         tau *= tauFactor
 
     return tau/tauFactor, newResponse

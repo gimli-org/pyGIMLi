@@ -1,4 +1,5 @@
-"""Some special and usefull matrices."""
+#!/usr/bin/env python3
+"""Some special and useful matrices."""
 
 import numpy as np
 
@@ -52,6 +53,17 @@ class ScaledMatrix(MultMatrix):
     """Super-simple matrix with scaling factor B=A*s."""
 
     def __init__(self, A, scale=1.0, verbose=False):
+        """Initialise scaled matrix B = A * scale.
+
+        Parameters
+        ----------
+        A : MatrixBase
+            Underlying matrix.
+        scale : float
+            Scalar multiplier applied to every matrix-vector product.
+        verbose : bool
+            Enable verbose output.
+        """
         self._scale = scale
         super().__init__(A, verbose)
 
@@ -70,6 +82,15 @@ class TransposedMatrix(MatrixBase):
     """Wrapper for transposed matrix (of any kind)."""
 
     def __init__(self, A, verbose=False):
+        """Initialise a transposed view of *A*.
+
+        Parameters
+        ----------
+        A : MatrixBase
+            Underlying matrix to transpose.
+        verbose : bool
+            Enable verbose output.
+        """
         self._A = A
         super().__init__(self._A.cols(), self._A.rows(), verbose)
 
@@ -88,6 +109,15 @@ class SquaredMatrix(MatrixBase):
     """Wrapper for squared (least-squares) matrix A^T*A (of any kind)."""
 
     def __init__(self, A, verbose=False):
+        """Initialise the A^T*A matrix product.
+
+        Parameters
+        ----------
+        A : MatrixBase
+            Underlying matrix.
+        verbose : bool
+            Enable verbose output.
+        """
         self._A = A
         super().__init__(self._A.cols(), self._A.cols(), verbose)
 
@@ -106,6 +136,15 @@ class SquaredTransposeMatrix(MatrixBase):
     """Wrapper for squared (least-squares) matrix A*A^T (of any kind)."""
 
     def __init__(self, A, verbose=False):
+        """Initialise the A*A^T matrix product.
+
+        Parameters
+        ----------
+        A : MatrixBase
+            Underlying matrix.
+        verbose : bool
+            Enable verbose output.
+        """
         self._A = A
         super().__init__(self._A.rows(), self._A.rows(), verbose)
 
@@ -128,7 +167,15 @@ class RealNumpyMatrix(MatrixBase):
     """
 
     def __init__(self, mat, copy=False):
+        """Initialise the real numpy matrix wrapper.
 
+        Parameters
+        ----------
+        mat : str or numpy.ndarray
+            Either a file path (loaded with ``np.load``) or a 2-D array.
+        copy : bool
+            If True, store a deep copy of *mat*.
+        """
         self.ndim = 2
 
         # print('real Matrix')
@@ -192,10 +239,12 @@ class MultLeftMatrix(MultMatrix):
 
     @property
     def l(self):  # better use left and right instead (pylint E743)?
+        """Return the left-side scaling vector."""
         return self._l
 
     @l.setter
     def r(self, l):
+        """Set the left-side scaling vector."""
         self._l = l
 
     def mult(self, x):
@@ -214,6 +263,17 @@ class MultRightMatrix(MultMatrix):
     """Some Matrix, multiplied with a right hand side vector r."""
 
     def __init__(self, A, r=None, verbose=False):
+        """Initialise M = A * diag(r).
+
+        Parameters
+        ----------
+        A : MatrixBase
+            Underlying matrix.
+        r : pg.Vector or None
+            Right-side scaling vector; defaults to ones.
+        verbose : bool
+            Enable verbose output.
+        """
         super().__init__(A, verbose)
 
         if r is None:
@@ -223,10 +283,12 @@ class MultRightMatrix(MultMatrix):
 
     @property
     def r(self):
+        """Return the right-side scaling vector."""
         return self._r
 
     @r.setter
     def r(self, r):
+        """Set the right-side scaling vector."""
         self._r = r
 
     def mult(self, x):
@@ -278,13 +340,13 @@ class MultLeftRightMatrix(MultMatrix):
 
     @property
     def l(self):
-        """Return left side vector."""
+        """Return the left-side scaling vector."""
         return self._l
 
 
     @l.setter
     def l(self, l):
-        """Set left side vector."""
+        """Set left-side scaling vector."""
         if self.A.rows() != len(l):
             raise ValueError("Left side length does not fit Matrix rows",
                              self.A.rows(), len(l))
@@ -293,15 +355,15 @@ class MultLeftRightMatrix(MultMatrix):
 
     @property
     def r(self):
-        """Return right side vector."""
+        """Return the right-side scaling vector."""
         return self._r
 
 
     @r.setter
     def r(self, r):
-        """Set right side vector."""
+        """Set right-side scaling vector."""
         if self.A.cols() != len(r):
-            raise ValueError("Right side length does not fit Matrix cols",
+            raise ValueError("Right-side length does not fit Matrix cols",
                              self.A.cols(), len(r))
         self._r = r
 
@@ -356,7 +418,7 @@ class Add2Matrix(MatrixBase):
 
 
 class Mult2Matrix(MatrixBase):
-    """Matrix by multipication of two matrices implicitly.
+    """Matrix by multiplication of two matrices implicitly.
 
     The matrix holds two matrices and distributes multiplication in 2 parts
 
@@ -641,6 +703,17 @@ class NDMatrix(pgcore.BlockMatrix):
     """Diagonal block (block-Jacobi) matrix ."""
 
     def __init__(self, num, nrows, ncols):
+        """Initialise a block-diagonal matrix of identical sub-block dimensions.
+
+        Parameters
+        ----------
+        num : int
+            Number of diagonal blocks.
+        nrows : int
+            Number of rows per block.
+        ncols : int
+            Number of columns per block.
+        """
         super().__init__()
         self.Ji = []
         for i in range(num):
@@ -1069,6 +1142,7 @@ def concatenateAsCOO(A):
 
 
 if __name__ == "__main__":
+    ##C42_Q: is this supposed to be a test??
     Amat = pg.Matrix(3, 4)
     Bmat = TransposedMatrix(Amat)
     xvec = pg.Vector(3, 1.0)

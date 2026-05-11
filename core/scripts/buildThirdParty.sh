@@ -1,23 +1,9 @@
 #!/usr/bin/env bash
 
-#BOOST_VERSION_DEFAULT=1.68.0
-#BOOST_VERSION_DEFAULT=1.76.0
-#BOOST_VERSION_DEFAULT=1.83.0
 BOOST_VERSION_DEFAULT=1.86.0
-#since 63 libboost_numpy
-#since 64 python build broken
 
 BOOST_URL=http://sourceforge.net/projects/boost/files/boost/
 #https://archives.boost.io/release/1.86.0/source/boost_1_86_0.tar.gz
-
-LAPACK_VERSION=3.4.2
-LAPACK_URL=http://www.netlib.org/lapack/
-
-#SUITESPARSE_VERSION=5.2.0
-#SUITESPARSE_URL=http://faculty.cse.tamu.edu/davis/SuiteSparse/
-
-SUITESPARSE_URL=https://github.com/DrTimothyAldenDavis/SuiteSparse
-SUITESPARSE_REV=v5.8.1
 
 TRIANGLE_URL=http://www.netlib.org/voronoi/
 
@@ -26,21 +12,25 @@ CASTXML_URL=https://github.com/CastXML/CastXML.git
 #CASTXML_REV=9d7a46d639ce921b8ddd36ecaa23c567d003294a #last functional
 
 # Check for updates https://data.kitware.com/#search/results?query=castxml&mode=text
-CASTXML_BIN_LINUX=https://data.kitware.com/api/v1/item/63bed74d6d3fc641a02d7e98/download # 0.5.0
+#CASTXML_BIN_LINUX=https://data.kitware.com/api/v1/item/63bed74d6d3fc641a02d7e98/download # 0.5.0
 #CASTXML_BIN_WIN=https://data.kitware.com/api/v1/file/63bed83a6d3fc641a02d7ea3/download # 0.5.0
 CASTXML_BIN_WIN=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/castxml-windows.zip
 
 if [[ $(uname -m) == 'arm64' ]]; then
     # ARM means new Apple M chips
-    CASTXML_BIN_MAC_NAME="castxml-macos-arm.tar.gz"
+    CASTXML_BIN_MAC_NAME="castxml-macos-15-arm64.tar.gz"
 else
-    CASTXML_BIN_MAC_NAME="castxml-macosx.tar.gz"
+    CASTXML_BIN_MAC_NAME="castxml-macos-15-intel-x86_64.tar.gz"
 fi
-CASTXML_BIN_MAC=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/$CASTXML_BIN_MAC_NAME
+CASTXML_BIN_MAC=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v2026.01.30/$CASTXML_BIN_MAC_NAME
 
 #.. needs testing
 # Check for updates https://github.com/CastXML/CastXMLSuperbuild/releases/tag/v0.6.5
-#CASTXML_BIN_LINUX=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/
+CASTXML_BIN_LINUX=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/
+
+
+### START # not in use anymore due to system packages .. should be removed
+### not in use anymore due to system openblas .. should be removed
 
 PYGCCXML_URL=https://github.com/CastXML/pygccxml
 PYGCCXML_REV=v2.2.1
@@ -52,6 +42,8 @@ PYPLUSPLUS_URL=https://github.com/ompl/pyplusplus
 PYPLUSPLUS_REV=1.8.5
 
 CPPUNIT_URL=http://svn.code.sf.net/p/cppunit/code/trunk
+
+### END # not in use anymore due to system packages .. should be removed
 
 
 checkTOOLSET(){
@@ -222,7 +214,7 @@ function copySRC_From_EXT_PATH(){
     fi
 }
 
-getWITH_WGET(){
+function getWITH_WGET(){
     _URL_=$1
     _SRC_=$2
     _PAC_=$3
@@ -541,13 +533,17 @@ buildBOOST(){
     fi
 
 }
-prepCASTXMLBIN(){
+
+
+function prepCASTXMLBIN(){
     CASTXML_VER=castxml
     CASTXML_SRC=$SRC_DIR/$CASTXML_VER
     CASTXML_BUILD=$BUILD_DIR/$CASTXML_VER
     CASTXML_DIST=$DIST_DIR
 }
-buildCASTXMLBIN(){
+
+
+function buildCASTXMLBIN(){
     checkTOOLSET
     prepCASTXMLBIN
 
@@ -582,58 +578,35 @@ buildCASTXMLBIN(){
         rm -rf $CASTXML_DIST/share/castxml
     fi
 }
-prepCASTXML(){
+
+
+function prepCASTXML(){
     CASTXML_VER=castxmlSRC
     CASTXML_SRC=$SRC_DIR/$CASTXML_VER
     CASTXML_BUILD=$BUILD_DIR/$CASTXML_VER
     CASTXML_DIST=$DIST_DIR
 }
-buildCASTXML(){
-    echo "Better use castxmlbin"
-    return
-    checkTOOLSET
+
+
+function buildCASTXML(){
     prepCASTXML
-
-    getWITH_GIT $CASTXML_URL $CASTXML_SRC $CASTXML_REV
-
+    echo "Remove old castxml dist"
     if [ "$SYSTEM" == "WIN" ]; then
-
-        mkBuildDIR $CASTXML_BUILD
-        pushd $CASTXML_BUILD
-            if [ $ADDRESSMODEL == '32' ]; then
-                CC=/mingw32/bin/gcc CXX=/mingw32/bin/g++ cmake $CASTXML_SRC -G "$CMAKE_GENERATOR" \
-                    -DCMAKE_MAKE_PROGRAM=$CMAKE_MAKE \
-                    -DCMAKE_INSTALL_PREFIX=$CASTXML_DIST
-
-                sed -i -e 's/\/mingw32/C:\/msys32\/mingw32/g' src/CMakeFiles/castxml.dir/linklibs.rsp
-            else
-                                #CC=/mingw64/bin/gcc CXX=/mingw64/bin/g++ cmake $CASTXML_SRC -G "$CMAKE_GENERATOR" \
-                #    -DCMAKE_MAKE_PROGRAM=$CMAKE_MAKE \
-                #    -DCMAKE_INSTALL_PREFIX=$CASTXML_DIST
-                #sed -i -e 's/\/mingw64/C:\/msys64\/mingw64/g' src/CMakeFiles/castxml.dir/linklibs.rsp
-
-                sed -i 's/if(DEFINED LLVM_BUILD_BINARY_DIR)/if(DEFINED LLVM_BUILD_BINARY_DIR_)/' $CASTXML_SRC/CMakeLists.txt
-
-                #-DCLANG_RESOURCE_DIR=/mingw64/lib/clang/3.7.0/
-
-                cmake $CASTXML_SRC -G "$CMAKE_GENERATOR" \
-                    -DCMAKE_MAKE_PROGRAM=$CMAKE_MAKE \
-                    -DCMAKE_INSTALL_PREFIX=$CASTXML_DIST
-            fi
-
-            #make -j$PARALLEL_BUILD install
-            cmake --build . --config release --target install -- -j$PARALLEL_BUILD
-        popd
+        rm -f $SRC_DIR/castxml-windows.zip
     elif [ "$SYSTEM" == "MAC" ]; then
-        CC=/usr/bin/gcc CXX=/usr/bin/g++ cmakeBuild $CASTXML_SRC $CASTXML_BUILD $CASTXML_DIST \
-          "-DLLVM_DIR=/usr/local/Cellar/llvm/HEAD/share/llvm/cmake/"
+        rm -f $SRC_DIR/$CASTXML_BIN_MAC_NAME
     else
-        # getCLANG_NAME not longer used
-        #CC=$CLANG CXX=$CLANGPP cmakeBuild $CASTXML_SRC $CASTXML_BUILD $CASTXML_DIST
-        cmakeBuild $CASTXML_SRC $CASTXML_BUILD $CASTXML_DIST
-
+        rm -f $SRC_DIR/castxml-linux.tar.gz
     fi
+    echo "Remove old castxml src ($CASTXML_SRC) and dist ($CASTXML_DIST) folders"
+    rm -rf $CASTXML_SRC
+    rm -rf $CASTXML_DIST
+
+    echo "calling castxmlbin"
+    buildCASTXMLBIN
 }
+
+
 prepPYGCCXML(){
     PYGCCXML_VER=pygccxml
     PYGCCXML_SRC=$SRC_DIR/$PYGCCXML_VER
@@ -692,20 +665,6 @@ buildPYGCCXML(){
         #python setup.py install --prefix=$PYGCCXML_DIST_WIN
     popd
 }
-prepLAPACK(){
-    LAPACK_VER=lapack-$LAPACK_VERSION
-    LAPACK_SRC=$SRC_DIR/$LAPACK_VER
-    LAPACK_BUILD=$BUILD_DIR/$LAPACK_VER
-    LAPACK_DIST=$DIST_DIR
-}
-buildLAPACK(){
-    echo "############### LAPACK ##########################"
-    checkTOOLSET
-    prepLAPACK
-    getWITH_WGET $LAPACK_URL $LAPACK_SRC $LAPACK_VER.tgz
-    EXTRA="-DBUILD_SHARED_LIBS=ON"
-    cmakeBuild $LAPACK_SRC $LAPACK_BUILD $LAPACK_DIST $EXTRA
-}
 prepTRIANGLE(){
     TRIANGLE_VER=triangle
     TRIANGLE_SRC=$SRC_DIR/$TRIANGLE_VER
@@ -737,6 +696,8 @@ buildTRIANGLE(){
         else
             sed -i -e 's/CC = cc/CC = gcc/g' makefile;
         fi
+        # Add ANSI_DECLARATORS to avoid K&R-style definition mismatches with newer GCC (>=14)
+        sed -i -e 's/\(CSWITCHES\s*=.*\)/\1 -DANSI_DECLARATORS/' makefile;
 
         sed -i -e 's/VOID/int/g' triangle.h;
 
@@ -745,53 +706,6 @@ buildTRIANGLE(){
         ar cqs $TRIANGLE_DIST/libtriangle.a triangle.o
         mkdir -p $DIST_DIR/include
         cp triangle.h $DIST_DIR/include
-    popd
-}
-prepSUITESPARSE(){
-    SUITESPARSE_VER=SuiteSparse-$SUITESPARSE_VERSION
-    SUITESPARSE_SRC=$SRC_DIR/$SUITESPARSE_VER
-    SUITESPARSE_BUILD=$BUILD_DIR/$SUITESPARSE_VER
-    SUITESPARSE_DIST=$DIST_DIR
-}
-buildSUITESPARSE(){
-    checkTOOLSET
-    prepLAPACK
-    prepSUITESPARSE
-
-    getWITH_GIT $SUITESPARSE_URL $SUITESPARSE_SRC $SUITESPARSE_REV
-    #getWITH_WGET $SUITESPARSE_URL $SUITESPARSE_SRC $SUITESPARSE_VER.tar.gz
-    [ -d $SRC_DIR/SuiteSparse ] && mv $SRC_DIR/SuiteSparse $SUITESPARSE_SRC
-
-    mkBuildDIR $SUITESPARSE_BUILD $SUITESPARSE_SRC 1
-
-    pushd $SUITESPARSE_BUILD
-        if [ "$SYSTEM" == "WIN" ]; then
-            #patch -p1 < $BUILDSCRIPT_HOME/patches/SuiteSparse-4.4.1.patch
-            echo "LIB = -lm" >> SuiteSparse_config/SuiteSparse_config.mk
-            echo "CC = gcc" >> SuiteSparse_config/SuiteSparse_config.mk
-            echo "CFLAGS=-std=c90" >> SuiteSparse_config/SuiteSparse_config.mk
-            echo "BLAS = -L$TRIANGLE_DIST -lblas" >> SuiteSparse_config/SuiteSparse_config.mk
-        elif [ "$SYSTEM" == "MAC" ]; then
-            echo "LIB = -lm" >> SuiteSparse_config/SuiteSparse_config.mk
-            echo "CC = gcc -fPIC" >> SuiteSparse_config/SuiteSparse_config.mk
-        else
-            echo "CC = gcc " >> SuiteSparse_config/SuiteSparse_config.mk
-        fi
-
-        mkdir -p $SUITESPARSE_DIST/lib
-        mkdir -p $SUITESPARSE_DIST/include
-        echo "INSTALL_LIB = $SUITESPARSE_DIST/lib" >> SuiteSparse_config/SuiteSparse_config.mk;
-        echo "INSTALL_INCLUDE = $SUITESPARSE_DIST/include" >> SuiteSparse_config/SuiteSparse_config.mk;
-
-        MODULE='.'
-        if [ -n "$1" ]; then
-            MODULES=$1
-        fi
-        echo "Installing $MODULES"
-        pushd $MODULE
-                    CFLAGS='-std=c90' "$MAKE" -j$PARALLEL_BUILD library
-                "$MAKE" install
-        popd
     popd
 }
 prepCPPUNIT(){
@@ -819,15 +733,13 @@ buildCPPUNIT(){
 }
 slotAll(){
     buildBOOST
-    buildLAPACK
     buildTRIANGLE
-    buildSUITESPARSE
     buildCASTXML
     buildPYGCCXML
 }
 
 showHelp(){
-    echo "boost | lapack | triangle | suitesparse | castxml | castxmlbin | pygccxml | all"
+    echo "boost | triangle | castxml | castxmlbin | pygccxml | all"
 }
 
 # script starts here
@@ -856,6 +768,16 @@ echo "Installing at " $GIMLI_PREFIX
 
 CMAKE_BUILD_TYPE=Release
 
+# Pre-pass: extract flags before the main dispatch loop so they are set
+# regardless of argument order (e.g. --force appearing after the package name)
+for arg in $@
+do
+    case $arg in
+    --force|-f)
+        echo "*** FORCE rebuild requested: setting CLEAN=1"
+        export CLEAN=1;;
+    esac
+done
 
 for arg in $@
 do
@@ -864,6 +786,8 @@ do
         SetMSVC_TOOLSET;;
     mingw)
         SetMINGW_TOOLSET;;
+    --force|-f)
+        ;; # already handled in pre-pass above
     all)
         slotAll;;
     help)
@@ -871,14 +795,8 @@ do
         exit;;
     boost)
         buildBOOST;;
-    lapack)
-        buildLAPACK;;
     triangle)
         buildTRIANGLE;;
-    suitesparse)
-        buildSUITESPARSE;;
-    umfpack)
-        buildSUITESPARSE UMFPACK;;
     castxml)
         buildCASTXML;;
     castxmlbin)

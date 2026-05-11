@@ -73,7 +73,7 @@ pg.show(mesh, data=rhomap, label=pg.unit('res'), showMesh=True)
 # and return a data container with apparent resistivity values,
 # geometric factors and estimated data errors specified by the noise setting.
 # The noise is also added to the data. Here 1% plus 1µV.
-# Note, we force a specific noise seed as we want reproducable results for
+# Note, we force a specific noise seed as we want reproducible results for
 # testing purposes.
 data = ert.simulate(mesh, scheme=scheme, res=rhomap, noiseLevel=1,
                     noiseAbs=1e-6, seed=1337)

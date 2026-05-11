@@ -55,7 +55,7 @@ ax[1].set_title('Corrected');
 ###############################################################################
 # The data container does not necessarily contain data errors data errors
 # (token field 'err'), requiring us to enter data errors. We can let the
-# manager guess some defaults for us automaticly or set them manually
+# manager guess some defaults for us automatically or set them manually
 data.estimateError(relativeError=0.03, absoluteUError=5e-5)
 # which internally calls
 # data['err'] = ert.estimateError(data, ...)  # can also set manually

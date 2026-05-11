@@ -317,8 +317,7 @@ DEFINE_PY_VEC_UNARY_OPERATOR__(tan,   TAN)
 DEFINE_PY_VEC_UNARY_OPERATOR__(tanh,  TANH)
 #undef DEFINE_PY_VEC_UNARY_OPERATOR__
 
-    inline RVector mag(const CVector & a){return abs(a);}
-
+inline RVector mag(const CVector & a){return abs(a);}
 
 //** maybe better to move these instantiation into libgimli, but why should the lib have unused template symbols??
 // explicit instantiaion leads to duplicate symbols for architecture arm64
@@ -778,6 +777,25 @@ namespace pyplusplus{ namespace aliases{
 
 }} //pyplusplus::aliases
 
+#if defined ( __APPLE__ )
+#if !defined(PYGIMLI_CAST)
+// Newer libc++ eagerly instantiates std::less<inner_type> when boost.python.indexing's
+// vector_suite registers a sort method on std::vector<std::vector<Matrix<double>>>.
+// Matrix<double> has no operator<, so the lexicographical comparison fails to compile.
+// Disable comparison-based methods for the inner vector type.
+#include "indexing_suite/value_traits.hpp"
+namespace boost { namespace python { namespace indexing {
+template<>
+struct value_traits< std::vector< GIMLI::Matrix< double > > > {
+    static bool const equality_comparable = false;
+    static bool const less_than_comparable = false;
+
+    template< typename PythonClass, typename Policy >
+    static void visit_container_class(PythonClass &, Policy const &) { }
+};
+}}}
+#endif // !defined(PYGIMLI_CAST)
+#endif // if defined ( __APPLE__ )
 #endif // else not PYTEST
 
 #endif // PYTHON_PYGIMLI__H

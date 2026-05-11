@@ -84,7 +84,7 @@ mpl.drawModel(ax, mesh, data)
 plt.show()
 ```
 
-Simliarly, for scalar field values, the function `pygimli.viewer.mpl.drawField()` is utilized:
+Similarly, for scalar field values, the function `pygimli.viewer.mpl.drawField()` is utilized:
 
 ```{code-cell}
 nx = pg.x(mesh.positions())
@@ -164,7 +164,7 @@ pv.drawSlice(ax, mesh, normal=[0,1,0], data=data, label="Cell position x")
 ax.show()
 ```
 
-If you want to take a look at more practical applications and examples that fully use the plotting capabilities of pyGIMLi, please refer to the [examples section](../examples/).
+If you want to take a look at more practical applications and examples that fully use the plotting capabilities of pyGIMLi, please refer to the [examples section](../_examples_auto/index.rst).
 
 ## External plotting
 

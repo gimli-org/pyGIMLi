@@ -19,8 +19,8 @@ def parse_bib(fname):
     return references
 
 
-def write_html():
-    db = parse_bib("gimliuses.bib")
+def write_html(bibfile="gimliuses.bib"):
+    db = parse_bib(bibfile)
     for entry in db:
         entry["author"] = entry["author"].replace(" and ", ", ")
         entry["author"] = entry["author"].replace("~", " ")

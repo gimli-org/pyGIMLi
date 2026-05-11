@@ -22,7 +22,7 @@ from pygimli.frameworks import ParameterModelling
 
 
 class SpectrumModelling(ParameterModelling):
-    """Modelling framework with an array of freqencies as data space.
+    """Modelling framework with an array of frequencies as data space.
 
     Attributes
     ----------

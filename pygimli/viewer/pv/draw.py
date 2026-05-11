@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import os
 import numpy as np
@@ -8,6 +7,7 @@ import pygimli as pg
 from .utils import pgMesh2pvMesh
 
 from pygimli.viewer.mpl.colorbar import cmapFromName
+
 
 pv = pg.optImport('pyvista', requiredFor="properly visualize 3D data")
 
@@ -82,6 +82,7 @@ def drawMesh(ax, mesh, notebook=False, **kwargs):
     if ax is None:
         ax = pv.Plotter(notebook=notebook, theme=theme, **kwargs)
         ax.show_bounds(all_edges=True, minor_ticks=True)
+        ax.add_axes()
 
     if grid is True:
         pass  # implementme

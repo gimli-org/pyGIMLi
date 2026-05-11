@@ -14,7 +14,7 @@ The geoscience software developer group
 `Software underground <https://softwareunderground.org>`_ (SWUNG)
 hosts yearly Transform meetings. We joined in 2021 and 2022 and provided tutorials
 (videos on the `SWUNG youtube channel <https://www.youtube.com/@SoftwareUnderground>`_) 
-accompagnied by Jupyter notebooks 
+accompanied by Jupyter notebooks 
 (`Transform2021 <https://github.com/gimli-org/transform2021>`_ and
 `Transform2022 <https://github.com/gimli-org/transform2022>`_).
 Additionally, there has been a pyGIMLi webinar in the SEG webinar series 

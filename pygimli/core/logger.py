@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
-"""pyGIMLi - Stuff for logging
+#!/usr/bin/env python3
+"""pyGIMLi - Stuff for logging.
 
-    use with
-    pg.info()
-    pg.warn()
-    pg.debug()
-    pg.error() # non critical
-    pg.critical() # raises exception
+use with
+pg.info()
+pg.warn()
+pg.debug()
+pg.error() # non critical
+pg.critical() # raises exception
 
 """
 import logging
@@ -27,6 +27,18 @@ __ANSICOLORS__ = {
 
 
 def _msg(*args):
+    """Format multiple arguments into a single space-separated string.
+
+    Parameters
+    ----------
+    *args :
+        Objects to format; each is converted with :func:`str`.
+
+    Returns
+    -------
+    str
+        Space-separated concatenation of all arguments.
+    """
     msg = ''
     for i, arg in enumerate(args):
         msg += str(arg)
@@ -47,7 +59,19 @@ def _(*args, c=None):
         return '\033[' + c + 'm' + _msg(*args) + __ANSICOLORS__['NC']
 
 
-def _clsNameFromFrame(fr):
+def _get_class_from_frame(fr):
+    """Extract the class of *self* from a stack frame, if present.
+
+    Parameters
+    ----------
+    fr : frame
+        Stack frame object as returned by :mod:`inspect`.
+
+    Returns
+    -------
+    type or None
+        The class of the ``self`` argument, or ``None`` if not a method frame.
+    """
     args, _, _, value_dict = inspect.getargvalues(fr)
     if len(args) and args[0] == 'self':
         instance = value_dict.get('self', None)
@@ -57,6 +81,18 @@ def _clsNameFromFrame(fr):
 
 
 def whereAmI(nr=3):
+    """Return a string describing a caller's location in the call stack.
+
+    Parameters
+    ----------
+    nr : int
+        Stack frame depth to inspect (default 3).
+
+    Returns
+    -------
+    str
+        String of the form ``ClassName.method(file.py:lineno)``.
+    """
     nr = min(len(inspect.stack())-1, nr)
     clsName = _clsNameFromFrame(inspect.stack()[nr][0])
     method = inspect.stack()[nr].function
@@ -198,6 +234,13 @@ class VerboseScope(object):
 
 
 def setVerbose(v):
+    """Set verbose logging level for the pygimli logger.
+
+    Parameters
+    ----------
+    v : bool
+        If True, sets the log level to VERBOSE; if False, reverts to INFO.
+    """
     level = logging.INFO
     if v:
         __verbose_level__ = 1
@@ -210,7 +253,7 @@ def setVerbose(v):
 
 
 def v(funct):
-    """Decorator to enable verbose messages for the scope of a function.
+    """Enable verbose messages for the scope of a function.
 
     Examples
     --------
@@ -237,7 +280,7 @@ def v(funct):
 
 
 def d(funct):
-    """Decorator to enable debug messages for the scope of a function.
+    """Enable debug messages for the scope of a function.
 
     Examples
     --------
@@ -264,6 +307,15 @@ def d(funct):
 
 
 def setDebug(d):
+    """Enable or disable debug logging.
+
+    Affects both the Python logger and the C++ core.
+
+    Parameters
+    ----------
+    d : bool
+        If True, enables DEBUG level logging; if False, reverts to INFO.
+    """
     level = logging.INFO
     if d:
         pgcore.setDebug(True)
@@ -280,23 +332,47 @@ def setDebug(d):
 
 
 def info(*args):
+    """Log an INFO-level message.
+
+    Parameters
+    ----------
+    *args :
+        Message parts, joined with spaces.
+    """
     logger.info(_msg(*args))
 
 
 def warn(*args):
-    logger.warning(f'{whereAmI(nr=2)} - {_msg(*args)}')
+    """Log a WARNING-level message.
+
+    Parameters
+    ----------
+    *args :
+        Message parts, joined with spaces.
+    """
+    logger.warning(_msg(*args))
 
 
 def error(*args):
+    """Log an ERROR-level message including the call location.
+
+    Parameters
+    ----------
+    *args :
+        Message parts, joined with spaces.
+    """
     logger.error(whereAmI(nr=2) + "\n" + _msg(*args))
 
 
 def debug(*args, withTrace=False):
-    """
+    """Log a DEBUG-level message.
+
     Parameters
     ----------
-    withTrace : bool, optional
-        If True, print the traceback of the last exception.
+    *args :
+        Message parts, joined with spaces.
+    withTrace : bool
+        If True, also print the current exception traceback.
     """
     if withTrace:
         traceback.print_exc()
@@ -304,11 +380,30 @@ def debug(*args, withTrace=False):
 
 
 def verbose(*args):
+    """Log a VERBOSE-level message.
+
+    Parameters
+    ----------
+    *args :
+        Message parts, joined with spaces.
+    """
     logger.verbose(_msg(*args))
 
 
 def critical(*args):
-    """First or last argument can be an exception."""
+    """Log a CRITICAL message and raise an Exception.
+
+    Parameters
+    ----------
+    *args :
+        Message parts, joined with spaces.
+        First or last can be an ExceptionType.
+
+    Raises
+    ------
+    Exception
+        Always raised with the formatted message.
+    """
     if len(args) > 1 and isinstance(args[0], type(Exception)):
         e = args[0](_msg(*args[1:]))
         try:
@@ -327,13 +422,19 @@ def critical(*args):
             pass
         raise e
 
-    logger.critical(whereAmI(nr=2) + "\n" + _msg(*args))
-    raise Exception(_msg(*args))
-
 
 def deprecated(msg='', hint=''):
-    logger.warning("Deprecated code usage at:\n" + \
-                   whereAmI() + "\n" + msg + " " + hint)
+    """Emit a deprecation warning including the call site location.
+
+    Parameters
+    ----------
+    msg : str
+        Description of what is deprecated.
+    hint : str
+        Suggested replacement or further guidance.
+    """
+    logger.warning("Deprecated code usage at:")
+    logger.warning(whereAmI() + "\n" + msg + " " + hint)
 
 
 # def renamed(newFunc, removed=''):
@@ -346,9 +447,21 @@ def deprecated(msg='', hint=''):
 
 
 def renameKwarg(old, new, kwargs, ver=''):
-    """Keyword argument old is renamed into keyword argument new.
+    """Handle a renamed keyword argument with a backward-compatible warning.
 
-    Look in kwargs if the old name is used and change the key name.
+    If *old* is present in *kwargs*, it is renamed to *new* in-place and a
+    warning is emitted.
+
+    Parameters
+    ----------
+    old : str
+        Former keyword name.
+    new : str
+        Replacement keyword name.
+    kwargs : dict
+        Keyword argument dictionary to update in-place.
+    ver : str
+        Version in which the old name will be removed.
     """
     if old in kwargs:
         logger.warning("Keyword argument changed from '" + old +
@@ -370,7 +483,13 @@ def renameArg(old, new, kwargs, default, ver=''):
 
 
 def warnNonEmptyArgs(kwargs):
-    """Warn if kwargs is not empty."""
+    """Warn if any unrecognized keyword arguments remain after parsing.
+
+    Parameters
+    ----------
+    kwargs : dict
+        Keyword arguments that should have been fully consumed by the caller.
+    """
     if len(kwargs) > 0:
         logger.warning(whereAmI() +
                        "Unrecognized keyword arguments for method:" +

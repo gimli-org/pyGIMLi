@@ -21,6 +21,15 @@ from . modelling import MRS1dBlockQTModelling
 
 class MultiFOP(pg.core.ModellingBase):  # classical joint FOP => frameworks
     def __init__(self, mrsAll, nlay=3):
+        """Initialise a multi-sounding joint forward operator.
+
+        Parameters
+        ----------
+        mrsAll : list of MRS
+            MRS objects, one per sounding location.
+        nlay : int
+            Number of layers for the 1-D block model.
+        """
         mesh = pg.meshtools.createMesh1DBlock(nlay, 2)  # thk, wc, T2*
         pg.core.ModellingBase.__init__(self, mesh)
         self.fAll = []

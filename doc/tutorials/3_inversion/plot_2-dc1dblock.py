@@ -23,7 +23,7 @@ ab2 = np.logspace(-0.5, 2.5, 40)  # AB/2 distance (current electrodes)
 ###############################################################################
 
 # %%%
-# define a synthetic model and do a forward simulatin including noise
+# define a synthetic model and do a forward simulation including noise
 synres = [100., 500., 30., 800.]  # synthetic resistivity
 synthk = [0.5, 3.5, 6.]  # synthetic thickness (nlay-th layer is infinite)
 ###############################################################################

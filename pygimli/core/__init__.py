@@ -1133,7 +1133,7 @@ def __RVectorPower(self, m):
 pgcore.RVector.__pow__ = __RVectorPower
 
 ##################################
-# usefull aliases
+# useful aliases
 ##################################
 
 Vector = pgcore.RVector
@@ -1162,7 +1162,7 @@ def abs(v):
     Returns
     -------
     length: iterable or scalar
-        Array of lenghts.
+        Array of lengths.
 
     Examples
     --------
@@ -1240,9 +1240,24 @@ pgcore.RVector.__eq__ = __EQ_RVector__
 
 
 ############################
-# usefull stuff
+# useful stuff
 ############################
 def toIVector(v):
+    """Convert an array-like to a pgcore.IVector.
+
+    .. deprecated::
+        Use a plain NumPy integer array instead.  This function will be
+        removed in a future release.
+
+    Parameters
+    ----------
+    v : array-like
+        Values to convert.
+
+    Returns
+    -------
+    pgcore.IVector
+    """
     print("do not use toIVector(v) use ndarray directly .. "
           "this method will be removed soon")
     ret = pgcore.IVector(len(v), 0)

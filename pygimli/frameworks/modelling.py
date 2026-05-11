@@ -313,7 +313,7 @@ class Modelling(pg.core.ModellingBase):
                                                 'zWeight': 1.0,
                                                 'cType': None,  # RM defaults
                                                 'limits': [0, 0],
-                                                'trans': 'Log',  # RM defauts
+                                                'trans': 'Log',  # RM defaults
                                                 'background': None,
                                                 'single': None,
                                                 'fix': None,
@@ -350,7 +350,7 @@ class Modelling(pg.core.ModellingBase):
         if self._regionsNeedUpdate is False:
             return
 
-        # call super class her because self.regionManager() calls allways
+        # call super class her because self.regionManager() calls always
         #  __applyRegionProperies itself
         rMgr = super().regionManager()
         for rID, vals in self._regionProperties.items():
@@ -570,6 +570,13 @@ class MeshModelling(Modelling):
     """Modelling class with a mesh discretization."""
 
     def __init__(self, **kwargs):
+        """Initialise the mesh-based modelling operator.
+
+        Parameters
+        ----------
+        **kwargs :
+            Forwarded to :class:`Modelling`.
+        """
         super().__init__(**kwargs)
         self._axs = None
         self._meshNeedsUpdate = True
@@ -997,7 +1004,7 @@ class LCModelling(Modelling):
             self._fops1D[i].createJacobian(mods[i])
 
     def createParametrization(self, nSoundings, nLayers=4, nPar=1):
-        """Create LCI mesh and suitable constraints informations.
+        """Create LCI mesh and suitable constraints information.
 
         Parameters
         ----------

@@ -14,9 +14,9 @@ try:
     # from ._pygimli_ import *  # check if . can be omitted
     # pgcore = _pygimli_
 
-    from .libs import _pygimli_ as pgcore  
-    from .libs._pygimli_ import *  
-        
+    from .libs import _pygimli_ as pgcore
+    from .libs._pygimli_ import *
+
 except ImportError as e:
     # print("did not find in-place pg core, try import pgcore")
     # import pgcore as _pygimli_

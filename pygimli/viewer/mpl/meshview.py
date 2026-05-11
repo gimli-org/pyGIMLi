@@ -21,9 +21,23 @@ class CellBrowserCacheSingleton(object):
         return CellBrowserCacheSingleton.__instance
 
     def add(self, c):
+        """Add a CellBrowser instance to the cache.
+
+        Parameters
+        ----------
+        c : CellBrowser
+            Instance to register.
+        """
         self.cbCache_.append(c)
 
     def remove(self, c):
+        """Remove a CellBrowser instance from the cache.
+
+        Parameters
+        ----------
+        c : CellBrowser
+            Instance to deregister.
+        """
         self.cbCache_.remove(c)
 
 
@@ -1025,7 +1039,7 @@ def drawField(ax, mesh, data=None, levels=None, nLevs=5,
                         levs = np.linspace(min(levels), max(levels), nCols+1)
 
                 gci = ax.tricontourf(x, y, triangles, z,
-                                     # antialiased=True, # not allways nice
+                                     # antialiased=True, # not always nice
                                      levels=levs, **kwargs)
 
             if contourLines is True:

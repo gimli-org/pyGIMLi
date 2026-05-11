@@ -94,6 +94,7 @@ doc = [
     "sphinxcontrib-programoutput",
     "sphinx-gallery",
     "sphinx_design",
+    "sphinx-copybutton",
 ]
 dev = [
     "pygimli[build, opt, test, doc]",
@@ -222,6 +223,7 @@ ignore = [
     "Q000",  # Allow single quotes in docstrings
     "Q001",  # Allow double quotes in docstrings
     "S110",  # Allow use of except/pass
+    "S301",  # Disable warning for use of pickle (security warning)
     "SIM105", # all try: BaseException except: pass
     "SIM114", # no need for logical if branches
     "SIM223", # Allow if 0 and ...

@@ -25,9 +25,20 @@ def load(fileName, verbose=False, **kwargs):
 
     """
     firstLine = None
+    factor = kwargs.pop("factor", None)
     with codecs.open(fileName, 'r', encoding='iso-8859-15',
                      errors='replace') as fi:
         firstLine = fi.readline()
+        if fileName.lower().endswith(".res"):
+            newLine = fi.readline()
+            while "Current" not in newLine:
+                newLine = fi.readline()
+
+            if "°" in newLine:  # convert degrees in mrad
+                factor = -np.pi/180.
+
+    if factor is None:
+        factor = -1.0
 
     f, amp, phi = None, None, None
 
@@ -38,26 +49,24 @@ def load(fileName, verbose=False, **kwargs):
             pg.info("Reading SIP Fuchs III file")
         f, amp, phi, header = readFuchs3File(fileName,
                                              verbose=verbose, **kwargs)
-        phi *= -np.pi/180.
         # print(header) # not used?
     elif 'SIP-Quad' in firstLine:
         if verbose:
             pg.info("Reading SIP Quad file")
         f, amp, phi, header = readFuchs3File(fileName, nfr=9, namp=10, nphi=11,
                                              nk=7, verbose=verbose, **kwargs)
-        phi *= -np.pi/180.
     elif 'SIP-Fuchs' in firstLine:
         if verbose:
             pg.info("Reading SIP Fuchs file")
         f, amp, phi, drhoa, dphi = readRadicSIPFuchs(fileName,
                                                      verbose=verbose, **kwargs)
-        phi *= -np.pi/180.
     elif fnLow.endswith('.txt') or fnLow.endswith('.csv'):
         f, amp, phi = readTXTSpectrum(fileName)
         amp *= 1.0 # scale it with k if available
     else:
         raise NotImplementedError("Don't know how to read data.")
 
+    phi *= factor
     return f, amp, phi
 
 
@@ -360,7 +369,7 @@ def readSIP256file(resfile, verbose=False):
         elif line.find('Freq') >= 0:
             pass
         elif len(sline) > 1 and rdno > 0:  # some data present
-            # search for two numbers (with .) without a space inbetween
+            # search for two numbers (with .) without a space in between
             # variant 1: do it for every part
             for i, ss in enumerate(sline):
                 if re.search(r'\.20[01][0-9]', ss) is None:  # no date

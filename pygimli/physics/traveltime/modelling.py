@@ -13,6 +13,16 @@ class TravelTimeDijkstraModelling(MeshModelling):
     """Forward modelling class for traveltime using Dijktras method."""
 
     def __init__(self, **kwargs):
+        """Initialise the Dijkstra travel-time forward operator.
+
+        Parameters
+        ----------
+        secNodes : int
+            Number of secondary nodes added to each mesh cell edge for
+            accurate ray-path computation (default 3).
+        **kwargs :
+            Forwarded to :class:`~pygimli.frameworks.MeshModelling`.
+        """
         secNodes = kwargs.pop("secNodes", 3)
         super().__init__(**kwargs)
 
@@ -39,7 +49,7 @@ class TravelTimeDijkstraModelling(MeshModelling):
     def createRefinedFwdMesh(self, mesh):
         """Refine the current mesh for higher accuracy.
 
-        This is called automatic when accesing self.mesh() so it ensures any
+        This is called automatic when accessing self.mesh() so it ensures any
         effect of changing region properties (background, single).
         """
         pg.info(f"Creating refined mesh (secnodes: {self._refineSecNodes}) to "
@@ -50,11 +60,11 @@ class TravelTimeDijkstraModelling(MeshModelling):
         return m
 
     def setMeshPost(self, mesh):
-        """Set mesh after forward operator has been initalized."""
+        """Set mesh after forward operator has been initialized."""
         self._core.setMesh(mesh, ignoreRegionManager=True)
 
     def setDataPost(self, data):
-        """Set data after forward operator has been initalized."""
+        """Set data after forward operator has been initialized."""
         self._core.setData(data)
 
     def createGraph(self, slowness):
@@ -139,6 +149,15 @@ class FatrayDijkstraModellingInterpolate(TravelTimeDijkstraModelling):
     """Shortest-path (Dijkstra) based travel time with fat ray jacobian."""
 
     def __init__(self, frequency=100., **kwargs):
+        """Initialise the fat-ray Dijkstra forward operator.
+
+        Parameters
+        ----------
+        frequency : float
+            Source frequency [Hz] controlling the width of the Fresnel zone.
+        **kwargs :
+            Forwarded to :class:`TravelTimeDijkstraModelling`.
+        """
         super().__init__(**kwargs)
         self.frequency = frequency
         self.iMat = pg.matrix.SparseMapMatrix()
@@ -193,6 +212,15 @@ class FatrayDijkstraModellingMidpoint(TravelTimeDijkstraModelling):
     """Shortest-path (Dijkstra) based travel time with fat ray jacobian."""
 
     def __init__(self, frequency=100., verbose=False):
+        """Initialise the midpoint fat-ray Dijkstra forward operator.
+
+        Parameters
+        ----------
+        frequency : float
+            Source frequency [Hz] controlling the width of the Fresnel zone.
+        verbose : bool
+            Enable verbose output.
+        """
         super().__init__(verbose)
         self.frequency = frequency
         self.mids = None

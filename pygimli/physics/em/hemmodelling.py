@@ -121,7 +121,7 @@ class HEMmodelling(Block1DModelling):
         alpha = np.sqrt(lam ** 2 - np.tile(self.wem, (nl, lam.shape[1], 1)) *
                         epr * mur + np.tile(self.iwm, (nl, lam.shape[1], 1)) *
                         mur / rho)
-        if nl == 1:  # homogenous halfspace
+        if nl == 1:  # homogeneous halfspace
             b1 = alpha.copy()  # (1, 100, nfreq)
             a = np.exp(-alpha * z)
             ap = a.copy()

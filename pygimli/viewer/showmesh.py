@@ -131,7 +131,7 @@ def show(obj=None, data=None, **kwargs):
             if data is None and obj.haveData("t"):
                 data = "t"
 
-            return showDataContainerAsMatrix(obj, "s", "g", data)
+            return showDataContainerAsMatrix(obj, "s", "g", data, **kwargs)
 
     # try to interpret obj as matrices
     if isinstance(obj, pg.core.MatrixBase) or (isinstance(obj, np.ndarray) and
@@ -214,7 +214,7 @@ def show(obj=None, data=None, **kwargs):
         _removeFigHeader(ax)
         return ax, None
 
-    pg.error("Can't interprete obj: {0} to show.".format(obj))
+    pg.error("Can't interpret obj: {0} to show.".format(obj))
     return None, None
 
 
@@ -699,9 +699,12 @@ def showBoundaryNorm(mesh, normMap=None, **kwargs):
     normMap : list
         list of [boundary marker, [norm]] pairs. e.g. [[1, [0.0,1.0]], ... ]
 
-    **kwargs :
-        Will be forwarded to the draw functions and matplotlib methods,
-        respectively.
+    Keyword Arguments
+    -----------------
+    ax : matplotlib.axes [None]
+        Axes object to draw into. Creates a new one if not given.
+    color : str ['Black']
+        Color of the normal arrows and lines.
 
     Returns
     -------

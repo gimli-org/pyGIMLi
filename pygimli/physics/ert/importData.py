@@ -490,7 +490,7 @@ def importAsciiColumns(filename, verbose=False, return_header=False):
 # def importAsciiColumns(...)
 
 
-def readAsDictionary(content, token=None, sep=None):  # obsolote due to numpy?
+def readAsDictionary(content, token=None, sep=None):  # obsolete due to numpy?
     """Read list of strings from a file as column separated dictionary.
 
         e.g.

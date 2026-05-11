@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """Extensions to the core DataContainer class[es]."""
+
 import numpy as np
 from . logger import critical, verbose
 from .core import (RVector, Pos, DataContainer, DataContainerERT)
@@ -8,6 +9,7 @@ from .decorators import deprecate
 
 
 def __DataContainer_str(self):
+    """Return a short human-readable summary of the data container."""
     return "Data: Sensors: " + str(self.sensorCount()) + " data: " + \
         str(self.size()) + ", nonzero entries: " + \
         str([d for d in self.dataMap().keys() if self.isSensorIndex(d) or
@@ -53,6 +55,7 @@ DataContainer.setSensors = __DataContainer_setSensors
 
 
 def __DataContainer_copy(self):
+    """Return a copy of this data container, preserving its concrete type."""
     return type(self)(self)
 DataContainer.copy = __DataContainer_copy
 
@@ -70,7 +73,19 @@ def __DC_setVal(self, key, val):
 DataContainer.__setitem__ = __DC_setVal
 
 
-def __DC_getVal(self, key, **kwargs):
+def __DC_getVal(self, key):
+    """Return data values for *key*, as integer array for sensor-index fields.
+
+    Parameters
+    ----------
+    key : str
+        Data token to retrieve.
+
+    Returns
+    -------
+    numpy.ndarray or pg.Vector
+        Integer array for sensor-index tokens, otherwise the raw pg.Vector.
+    """
     if self.isSensorIndex(key):
         return np.array(self.get(key), dtype=int, **kwargs)
     # return self(key).array() // d['a'][2] = 0.0, would be impossible
@@ -79,6 +94,11 @@ DataContainer.__getitem__ = __DC_getVal
 
 
 def __DataContainer_ensure2D(self):
+    """Swap Y and Z coordinates if sensors are arranged in the X-Z plane.
+
+    Corrects sensor positions when data were stored with depth in the Z
+    direction but the 2-D convention requires depth along Y.
+    """
     sen = self.sensors()
     if ((zVari(sen) or max(abs(z(sen))) > 0) and
             (not yVari(sen) and max(abs(y(sen))) < 1e-8)):
@@ -89,6 +109,7 @@ DataContainer.ensure2D = __DataContainer_ensure2D
 
 
 def __DataContainer_swapXY(self):
+    """Swap X and Y sensor coordinates in-place."""
     sen = self.sensors()
     swapYZ(sen)
     self.setSensorPositions(sen)
@@ -179,6 +200,13 @@ DataContainer.getIndices = __DataContainer_getIndices
 
 
 def __DataContainer_removeData(self, **kwargs):
+    """Remove data entries matching all supplied key=value conditions.
+
+    Parameters
+    ----------
+    **kwargs :
+        Token–value pairs; entries for which all conditions hold are removed.
+    """
     self.markInvalid(self.getIndices(**kwargs))
     self.removeInvalid()
 

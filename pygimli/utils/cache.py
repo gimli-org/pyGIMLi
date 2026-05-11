@@ -527,7 +527,18 @@ def cache(func):
         A wrapper function that caches the return value of the function.
     """
     def wrapper(*args, **kwargs):
-        """Wrap function."""
+        r"""Handle caching.
+
+        Arguments
+        ---------
+        \*args: any
+            The positional arguments of the function.
+
+        Keyword Args
+        ------------
+        kwargs: any
+            The keyword arguments of the function.
+        """
         if not CacheUseSettings.inUse(sys.argv,
                                     manualSkip=kwargs.pop('skipCache', False)):
 

@@ -226,6 +226,18 @@ class DataSchemeManager(object):
         return None
 
     def schemeFromTyp(self, typ):
+        """Return the data scheme matching the given pseudotype.
+
+        Parameters
+        ----------
+        typ : Pseudotype
+            Electrode configuration type to look up.
+
+        Returns
+        -------
+        DataSchemeBase or None
+            The matching scheme, or ``None`` if not found.
+        """
         for s in list(self.schemes_.values()):
             if s.type == typ:
                 return s
@@ -247,6 +259,17 @@ class DataSchemeBase(object):
 
     """
     def __init__(self, typ=Pseudotype.unknown, name="unknown", prefix='uk'):
+        """Initialise a data scheme with type, name and prefix.
+
+        Parameters
+        ----------
+        typ : Pseudotype
+            Electrode configuration type identifier.
+        name : str
+            Human-readable name of the scheme.
+        prefix : str
+            Short prefix string used when looking up schemes by name.
+        """
         self.name = name
         self.prefix = prefix
         self.type = typ
@@ -260,6 +283,7 @@ class DataSchemeBase(object):
 
     @property
     def closed(self):
+        """bool : Whether the electrode chain is closed (wraps to the first electrode)."""
         return self._closed
 
     def create(self, nElectrodes=24, electrodeSpacing=1, sensorList=None,
@@ -285,6 +309,19 @@ class DataSchemeBase(object):
 
     def createElectrodes(self, nElectrodes=24, electrodeSpacing=1,
                          sensorList=None):
+        """Initialise the internal DataContainerERT with electrode positions.
+
+        Parameters
+        ----------
+        nElectrodes : int
+            Number of evenly-spaced electrodes.  Ignored when *sensorList* is
+            given.
+        electrodeSpacing : float
+            Distance between adjacent electrodes [m].
+        sensorList : list of float or pg.Pos, optional
+            Explicit sensor positions.  A scalar is interpreted as an
+            x-coordinate at y=0.
+        """
         self.data_ = pg.DataContainerERT()
 
         if sensorList is not None:
@@ -301,9 +338,21 @@ class DataSchemeBase(object):
         self.nElectrodes_ = self.data_.sensorCount()
 
     def createData(self, **kwargs):
+        """Populate the data container with measurements.
+
+        To be overridden by subclasses.  The base implementation is a no-op
+        placeholder.
+        """
         print('*'*100)
 
     def setInverse(self, inverse=False):
+        """Toggle whether current and potential dipoles are swapped.
+
+        Parameters
+        ----------
+        inverse : bool
+            If True, the A/B and M/N roles are exchanged.
+        """
         self.inverse_ = inverse
 
     def addInverse(self, addInverse=False):
@@ -311,12 +360,36 @@ class DataSchemeBase(object):
         self.addInverse_ = addInverse
 
     def setMaxSeparation(self, maxSep):
+        """Limit the maximum electrode separation included in the scheme.
+
+        Parameters
+        ----------
+        maxSep : float
+            Maximum separation index.  Non-positive values are treated as
+            unlimited.
+        """
         if maxSep > 0.0:
             self.maxSeparation = maxSep
         else:
             self.maxSeparation = 1e99
 
     def createDatum_(self, a, b, m, n, count):
+        """Add a single four-point measurement if all electrode indices are valid.
+
+        Parameters
+        ----------
+        a, b : int
+            Current electrode indices.
+        m, n : int
+            Potential electrode indices.
+        count : int
+            Current data index; incremented by one on success.
+
+        Returns
+        -------
+        int
+            Updated data index.
+        """
         if a < self.nElectrodes_ and b < self.nElectrodes_ and \
                 m < self.nElectrodes_ and n < self.nElectrodes_:
             if self.inverse_:
@@ -331,6 +404,7 @@ class DataSchemeBase(object):
 class DataSchemePolePole(DataSchemeBase):
     """Pole-Pole data scheme."""
     def __init__(self):
+        """Initialise the Pole-Pole data scheme."""
         DataSchemeBase.__init__(self)
         self.name = "Pole Pole (C-P)"
         self.prefix = "pp"
@@ -344,7 +418,7 @@ class DataSchemePolePole(DataSchemeBase):
         ert.createData(elecs, schemeName='pp', **kwargs) instead.
         """
         nElectrodes = self.nElectrodes_
-        # reserve a couple more than nesseccary ###
+        # reserve a couple more than necessary ###
         self.data_.resize((nElectrodes) * (nElectrodes))
 
         count = 0
@@ -367,6 +441,7 @@ class DataSchemePolePole(DataSchemeBase):
 class DataSchemeDipoleDipole(DataSchemeBase):
     """Dipole-dipole data scheme. """
     def __init__(self):
+        """Initialise the Dipole-Dipole data scheme."""
         DataSchemeBase.__init__(self)
         self.name = "Dipole Dipole (CC-PP)"
         self.prefix = "dd"
@@ -453,6 +528,7 @@ class DataSchemeDipoleDipole(DataSchemeBase):
 class DataSchemePoleDipole(DataSchemeBase):
     """Pole-dipole data scheme"""
     def __init__(self):
+        """Initialise the Pole-Dipole data scheme."""
         DataSchemeBase.__init__(self)
         self.name = "Pole Dipole (C-PP)"
         self.prefix = "pd"
@@ -478,7 +554,7 @@ class DataSchemePoleDipole(DataSchemeBase):
         nElectrodes = self.nElectrodes_
 
         # self.createElectrodes(nElectrodes, electrodeSpacing)
-        # reserve a couple more than nesseccary !!!
+        # reserve a couple more than necessary !!!
         self.data_.resize((nElectrodes) * (nElectrodes))
 
         count = 0
@@ -503,6 +579,7 @@ class DataSchemePoleDipole(DataSchemeBase):
 class DataSchemeHalfWenner(DataSchemeBase):
     """Pole-Dipole like Wenner Beta with increasing dipole distance"""
     def __init__(self):
+        """Initialise the Half-Wenner data scheme."""
         DataSchemeBase.__init__(self)
         self.name = "Half Wenner (C-P-P)"
         self.prefix = "hw"
@@ -517,7 +594,7 @@ class DataSchemeHalfWenner(DataSchemeBase):
         """
         nElectrodes = self.nElectrodes_
 
-        # reserve a couple more than nesseccary !!!
+        # reserve a couple more than necessary !!!
         self.data_.resize((nElectrodes) * (nElectrodes))
 
         # print("create", self.maxSeparation)
@@ -559,6 +636,7 @@ class DataSchemeHalfWenner(DataSchemeBase):
 class DataSchemeWennerAlpha(DataSchemeBase):
     """Wenner alpha (C--P--P--C) data scheme with equal distances. """
     def __init__(self):
+        """Initialise the Wenner-alpha data scheme."""
         DataSchemeBase.__init__(self)
         self.name = "Wenner Alpha (C-P-P-C)"
         self.prefix = "wa"
@@ -576,7 +654,7 @@ class DataSchemeWennerAlpha(DataSchemeBase):
         if self.maxSeparation < maxSep:
             maxSep = self.maxSeparation
 
-        # reserve a couple more than nesseccary !!!
+        # reserve a couple more than necessary !!!
         self.data_.resize(nElectrodes * nElectrodes)
 
         count = 0
@@ -596,6 +674,7 @@ class DataSchemeWennerAlpha(DataSchemeBase):
 class DataSchemeWennerBeta(DataSchemeBase):
     """Wenner-beta (C--C--P--P) data scheme with equal distance."""
     def __init__(self):
+        """Initialise the Wenner-beta data scheme."""
         DataSchemeBase.__init__(self)
         self.name = "Wenner Beta(C-C-P-P)"
         self.prefix = "wb"
@@ -613,7 +692,7 @@ class DataSchemeWennerBeta(DataSchemeBase):
         if self.maxSeparation < maxSep:
             maxSep = self.maxSeparation
 
-        # reserve a couple more than nesseccary ###
+        # reserve a couple more than necessary ###
         self.data_.resize((nElectrodes * nElectrodes))
 
         count = 0
@@ -635,6 +714,7 @@ class DataSchemeWennerBeta(DataSchemeBase):
 class DataSchemeSchlumberger(DataSchemeBase):
     """Wenner-Schlumberger (C--P-P--C) data scheme. """
     def __init__(self):
+        """Initialise the Wenner-Schlumberger data scheme."""
         DataSchemeBase.__init__(self)
         self.name = "Schlumberger(C-PP-C)"
         self.prefix = "slm"
@@ -672,6 +752,7 @@ class DataSchemeSchlumberger(DataSchemeBase):
 class DataSchemeMultipleGradient(DataSchemeBase):
     """MultipleGradient (C---P-P--C) data scheme. """
     def __init__(self):
+        """Initialise the Multi-Gradient data scheme."""
         DataSchemeBase.__init__(self)
         self.name = "MultipleGradient(C--P-P--C)"
         self.prefix = "gr"

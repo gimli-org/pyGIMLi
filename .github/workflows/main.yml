@@ -18,7 +18,7 @@ concurrency:
 jobs:
   get-runner:
     name: Choose runner
-    if: ${{ always() }}
+    if: "!contains(github.event.head_commit.message, '[noci]')"
     runs-on: self-hosted
     outputs:
      RUNNER: ${{ runner.name }}
@@ -30,7 +30,7 @@ jobs:
     runs-on: ${{needs.get-runner.outputs.RUNNER}}
     steps:
       - name: Getting pyGIMLi sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # checks out all branches and tags
           path: source

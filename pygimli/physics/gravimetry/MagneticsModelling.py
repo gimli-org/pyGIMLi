@@ -116,6 +116,19 @@ class RemanentMagneticsModelling(MagneticsModelling):
     """Remanent magnetics modelling operator for arbitrary magnetization."""
 
     def __init__(self, mesh, points, cmp=None, igrf=None):
+        """Initialise the remanent magnetics modelling operator.
+
+        Parameters
+        ----------
+        mesh : pg.Mesh
+            Subsurface mesh.
+        points : array-like
+            Measurement positions.
+        cmp : list of str, optional
+            Components to compute; defaults to ``["Bx", "By", "Bz"]``.
+        igrf : list of float, optional
+            IGRF reference vector; defaults to ``[0, 0, 50000]``.
+        """
         self.mesh_ = mesh
         self.mesh_["marker"] = 0
         if cmp is None:

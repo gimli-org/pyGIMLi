@@ -54,7 +54,7 @@ ax.plot(xz[:, 0], xz[:, 1], "k-")
 
 # %%%
 # We now want to include this line into the inversion mesh.
-# Therefore we generate the geometry of the inversion, a polygone from the line
+# Therefore we generate the geometry of the inversion, a polygon from the line
 # and merge both objects before we send it to the mesh generation.
 #
 

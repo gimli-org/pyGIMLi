@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Utility functions for the FE/FV solver."""
 
 import numpy as np
@@ -9,7 +8,7 @@ import pygimli as pg
 def createAnisotropyMatrix(lon, trans, theta):
     """Create anisotropy matrix with desired properties.
 
-    Anistropy tensor from longitudinal value lon,
+    Anisotropy tensor from longitudinal value lon,
     transverse value trans and the angle theta of the symmetry axis relative to the vertical after  cite:WieseGreZho2015
     https://www.researchgate.net/publication/249866312_Explicit_expressions_for_the_Frechet_derivatives_in_3D_anisotropic_resistivity_inversion
 
@@ -49,7 +48,7 @@ class ConstitutiveMatrix(np.ndarray):
 
 
 def toLamMu(E=None, G=None, nu=None, dim=2):
-    r""" Convert elastic parameters to Lame' constants $\lambda$ and $\mu$
+    r"""Convert elastic parameters to Lame' constants $\lambda$ and $\mu$.
 
     Args
     ----
@@ -64,7 +63,8 @@ def toLamMu(E=None, G=None, nu=None, dim=2):
     -------
     lam, mu
         lam is 1. Lame' constant and mu is 2. Lame' constant (shear modulus)
-        If one of the input args is a dictionary of marker and value, the returning values are are dictionary too.
+        If one of the input args is a dictionary of marker and value,
+        the returning values are are dictionary too.
 
     """
     lam = None

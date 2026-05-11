@@ -13,12 +13,13 @@ from .tools import depthWeighting
 class MagManager(MeshMethodManager):
     """Magnetics Manager."""
 
-    def __init__(self, data=None, **kwargs):
+    def __init__(self, data=None, delimiter=None, **kwargs):
         """Create Magnetics Manager instance."""
         self.DATA = kwargs.pop("DATA", None)
         self.x = kwargs.pop("x", None)
         self.y = kwargs.pop("y", np.zeros_like(self.x))
         self.z = kwargs.pop("z", np.zeros_like(self.x))
+        self.utmzone = kwargs.pop("utmzone", 33)
         self.igrf = kwargs.pop("igrf", None)
         self.mesh_ = kwargs.pop("mesh", None)
         self.cmp = kwargs.pop("cmp", None)
@@ -31,17 +32,19 @@ class MagManager(MeshMethodManager):
             self.dem = DEM(self.dem)
 
         if isinstance(data, str):
-            self.DATA = np.genfromtxt(data, names=True)
-            self.x = self.DATA["x"]
-            self.y = self.DATA["y"]
-            self.z = self.DATA["z"]
+            self.DATA = np.genfromtxt(data, names=True, delimiter=delimiter)
+            nam = self.DATA.dtype.names
+            self.x = self.DATA["x"] if "x" in nam else np.zeros(len(self.DATA))
+            self.y = self.DATA["y"] if "y" in nam else np.ones_like(self.x)
+            self.z = self.DATA["z"] if "z" in nam else np.ones_like(self.x)
+
             if self.cmp is None:
                 self.cmp = [t for t in self.DATA.dtype.names
                             if t.startswith("B") or t.startswith("T")]
             if self.igrf is None:
                 import utm
                 lat, lon = utm.to_latlon(np.mean(self.x),
-                                         np.mean(self.y), 33, 'U')
+                                         np.mean(self.y), self.utmzone, 'U')
                 pg.info(f"Center of data: {lat}, {lon}")
                 self.igrf = [lat, lon]
 
@@ -323,6 +326,7 @@ class MagManager(MeshMethodManager):
         geo = mt.createCube(start=[min(self.x)-bnd, min(self.x)-bnd, -depth],
                             end=[max(self.x)+bnd, max(self.y)+bnd, 0])
         if addPoints is True:
+            # get z values from DEM if available
             for xi, yi in zip(self.x, self.y, strict=False):
                 geo.createNode([xi, yi, 0])
         if addPLC:
@@ -396,6 +400,7 @@ class MagManager(MeshMethodManager):
         if noisify:
             dataVec += np.random.randn(len(dataVec)) * noise_level
 
+        dataVec[dataVec == 0] = noise_level * 0.1
         # self.inv_ = pg.Inversion(fop=self.fwd, verbose=True)
         self.inv.setForwardOperator(self.fwd)
         kwargs.setdefault("startModel", 0.001)
@@ -420,8 +425,13 @@ class MagManager(MeshMethodManager):
         else:
             self.inv.setRegularization(cType=C)
 
-        z0 = kwargs.pop("z0", 25)  # Oldenburg&Li(1996)
         dw = kwargs.pop("depthWeighting", True)
+        if isinstance(dw, (float, int)): # take it as z0
+            z0 = dw * 1.0
+            dw = True
+        else:
+            z0 = kwargs.pop("z0", 25)  # Oldenburg&Li(1996)
+
         if np.any(dw):
             pg.info("Using depth")
             if dw is True:
@@ -431,9 +441,9 @@ class MagManager(MeshMethodManager):
             cw = self.fwd.regionManager().constraintWeights()
             if len(cw) > 0 and len(dw) == len(cw):
                 # dw *= cw
-                print(min(dw), max(dw))
+                pg.info(min(dw), max(dw))
             else:
-                print("lengths not matching!")
+                pg.info("lengths not matching!")
 
             dw *= kwargs.pop("mul", 1)
             self.inv.setConstraintWeights(dw)
@@ -460,6 +470,7 @@ class MagManager(MeshMethodManager):
             pg.utils.createPath(folder)
 
         self.inv.response.save(folder+"/response.dat")
+        self.exportLocations(folder+"/points.vtk")
         np.savetxt(folder+"/data.dat", self.inv.dataVals)
         np.savetxt(folder+"/error.dat", self.inv.errorVals)
         self.mesh_["sus"] = self.inv.model
@@ -504,18 +515,18 @@ class MagManager(MeshMethodManager):
         """
         nc = len(self.cmp)
         fig, ax = pg.plt.subplots(ncols=3, nrows=nc, figsize=(12, 3*nc),
-                                sharex=True, sharey=True, squeeze=False)
+                                  sharex=True, sharey=True, squeeze=False)
         vals = np.reshape(self.inv.dataVals, [nc, -1])
         resp = np.reshape(self.inv.response, [nc, -1])
         errs = np.reshape(self.inv.errorVals, [nc, -1])  # relative!
         misf = (vals - resp) / np.abs(errs *  vals)
+        mmis = kwargs.pop('maxMisfit', 3)
+        mm = kwargs.pop('maxField', np.max(np.abs(vals)))
         fkw = kwargs.copy()
         fkw.setdefault('cmap', "bwr")
-        mm = fkw.pop('maxField', np.max(np.abs(vals)))
         fkw.setdefault('vmin', -mm)
         fkw.setdefault('vmax', mm)
         mkw = kwargs.copy()
-        mmis = fkw.pop('maxMisfit', 3)
         mkw.setdefault('cmap', "bwr")
         mkw.setdefault('vmin', -mmis)
         mkw.setdefault('vmax', mmis)
@@ -523,8 +534,19 @@ class MagManager(MeshMethodManager):
             ax[i, 0].scatter(self.x, self.y, c=vals[i], **fkw)
             ax[i, 1].scatter(self.x, self.y, c=resp[i], **fkw)
             ax[i, 2].scatter(self.x, self.y, c=misf[i], **mkw)
+            for j in range(3):
+                ax[i, j].grid()
+                ax[i, j].set_aspect(1)
 
         return fig
+
+
+    def exportLocations(self, filename="points.vtk"):
+        """Export data locations to a VTK file."""
+        pm = pg.Mesh(dim=3, isGeometry=True)
+        pm.createNodes(np.column_stack([self.x, self.y, self.z]));
+        pm.exportVTK(filename)
+
 
     def show3DModel(self, label:str=None, trsh:float=0.025,
                     synth:pg.Mesh=None, invert:bool=False,

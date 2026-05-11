@@ -62,7 +62,7 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
             else:
                 print(len(field), dataMesh)
                 raise Exception("Data length (%i) for streamline is "
-                    "neighter nodeCount (%i) nor cellCount (%i)" %
+                    "neither nodeCount (%i) nor cellCount (%i)" %
                     (len(field), dataMesh.nodeCount(), dataMesh.nodeCount()))
         else:
             if len(field) == mesh.nodeCount():
@@ -72,7 +72,7 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
             else:
                 print(len(field), dataMesh)
                 raise Exception("Data length (%i) for streamline is "
-                    "neighter nodeCount (%i) nor cellCount (%i)" %
+                    "neither nodeCount (%i) nor cellCount (%i)" %
                     (len(field), mesh.nodeCount(), mesh.nodeCount()))
 
     direction = 1
@@ -120,7 +120,7 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
                     raise Exception("data size wrong")
             else:
                 print("mesh:", mesh, len(vx), len(vy))
-                raise Exception("Data length neighter node size or cell size.")
+                raise Exception("Data length neither node size or cell size.")
         else:
             if dataMesh:
                 cd = dataMesh.findCell(pos)

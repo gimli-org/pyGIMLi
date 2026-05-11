@@ -341,6 +341,15 @@ class ColeColeAbs(pg.core.ModellingBase):
     """Cole-Cole model with EM term after Pelton et al. (1978)."""
 
     def __init__(self, f, verbose=False):
+        """Initialise the Cole-Cole amplitude forward operator.
+
+        Parameters
+        ----------
+        f : array-like
+            Measurement frequencies [Hz].
+        verbose : bool
+            Enable verbose output.
+        """
         super().__init__(verbose)
         self.f_ = f  # save frequencies
         self.setMesh(pg.meshtools.createMesh1D(1, 4))  # 3 single parameters

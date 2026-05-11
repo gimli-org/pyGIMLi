@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Management of pygimli user configuration file."""
 
 import json
@@ -14,11 +15,11 @@ rc = {
     'unitStyle': 2,
     # 1: german style: 'value in unit'
     # 2: default style: 'value (unit)'
+    # auto: Use pyvista if installed or set to 'fallback' to force fallback mode
     'view3D': 'auto',
     'pyvista.backend': 'client',
-    # auto: Use pyvista if installed or set it to 'fallback' to force fallback mode
     'globalCache': True,
-    # call pg.wait() before the terminal script ends if there are pending 
+    # call pg.wait() before the terminal script ends if there are pending
     # mpl widgets and your backend this supports
     'waitOnExit': True,
     'matplotlib': 'ipympl',
@@ -26,9 +27,7 @@ rc = {
 
 
 def getCPUCount():
-    """Return number of processors on multiple platoforms."""
-    return pgcore.numberOfCPU()
-    # Windows
+    """Return number of processors on multiple platforms."""
     if os.name == 'nt':
         return int(os.getenv('NUMBER_OF_PROCESSORS'))
     # Linux
@@ -38,12 +37,14 @@ def getCPUCount():
             for line in cpuinfo:
                 if line[:9] == 'processor':
                     retv += 1
+            else:
+                return pgcore.numberOfCPU()
         return retv
+    else:
+        return pgcore.numberOfCPU()
 
     # Please add similar hacks for MacOSX, Solaris, Irix,
     # FreeBSD, HPUX, etc.
-    else:
-        raise RuntimeError('unknown platform')
 
 
 def getConfigPath():

@@ -1,4 +1,4 @@
-"""Framwork for structural coupled cooperative inversion (SCCI).
+"""Framework for structural coupled cooperative inversion (SCCI).
 
 Cooperative of several geophysical methods by structural coupling of
 model roughnesses. The methodology goes back to the following papers:
@@ -8,7 +8,7 @@ model roughnesses. The methodology goes back to the following papers:
 * Hellman et al. (2017): http://dx.doi.org/10.1016/j.jappgeo.2017.06.008
 * Ronczka et al. (2017): http://dx.doi.org/10.5194/se-8-671-2017
 
-and was reimplemented in the projec
+and was reimplemented in the project
 COMET - COupled Magnetic resonance Electrical resistivity Tomography
 by Nico Skibbe et al. (2020), and applied in the papers
 
@@ -180,7 +180,7 @@ class SCCI(object):
                             inv.model)
 
     def _gather(self, attribute, raise_error=False, default=None):
-        """Gather variables from underlaying managers for convenience."""
+        """Gather variables from underlying managers for convenience."""
         ret = []
         for mi, manager in enumerate(self.managers):
             if hasattr(manager, attribute):
@@ -195,7 +195,7 @@ class SCCI(object):
         return ret
 
     def _gather_from_cpp(self, call, raise_error=False, default=None):
-        """Gather variables from given callable from underlaying managers."""
+        """Gather variables from given callable from underlying managers."""
         ret = []
         for mi, manager in enumerate(self.managers):
             if hasattr(manager, call):

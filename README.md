@@ -6,7 +6,7 @@ Readme for Github repository only. (Gets selected before *.rst file)
   <img src="https://www.pygimli.org/_images/pg_logo.png" width="50%">
 </a>
 
-[![pyGIMLi CI](https://github.com/gimli-org/gimli/actions/workflows/main.yml/badge.svg)](https://github.com/gimli-org/gimli/actions/workflows/main.yml)
+[![pyGIMLi CI](https://github.com/gimli-org/pyGIMLi/actions/workflows/main.yml/badge.svg?branch=dev)](https://github.com/gimli-org/pyGIMLi/actions/workflows/main.yml)
 [![Anaconda-Server Badge](https://anaconda.org/gimli/pygimli/badges/license.svg)](https://pygimli.org/license.html)
 [![release](https://img.shields.io/github/release/gimli-org/gimli.svg?style=flat-square)](https://github.com/gimli-org/gimli/releases/latest)
 [![Github commits (since latest release)](https://img.shields.io/github/commits-since/gimli-org/gimli/latest.svg?style=flat-square)](https://github.com/gimli-org/gimli/tree/dev)
@@ -49,7 +49,7 @@ separate environment. Here we call this environment pg, but you can give it any
 name. Note that this environment has to be created only once.
 
 ``` bash
-conda create -n pg -c gimli -c conda-forge "pygimli>=1.5.0"
+conda create -n pg -c gimli -c conda-forge "pygimli>=1.6.0"
 ```
 
 If you are using Windows or Mac, a new environment named “pg” should be visible in the Anaconda Navigator. If you want to use pygimli from the command line, you have to activate the environment. You can put this line in your ~/.bashrc file so that it is activated automatically if you open a terminal.

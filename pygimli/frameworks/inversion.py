@@ -157,7 +157,7 @@ class InversionBase:
     @property
     def dataVals(self):
         """Data vector (deprecated)."""
-        # why deprecated? whats the alternative?
+        # why deprecated? what's the alternative?
         if self._dataVals is None:
             pg.critical("No data. Inversion framework needs data values to run")
 
@@ -170,7 +170,7 @@ class InversionBase:
 
         Values == 0.0 will be set to tolerance
         """
-        # also deprecated? whats the alternative?
+        # also deprecated? what's the alternative?
         if d is None:
             pg.critical("Data values can't be set to None")
         self._dataVals = d
@@ -179,7 +179,7 @@ class InversionBase:
     @property
     def errorVals(self):
         """Errors vector (deprecated)."""
-        # why deprecated? whats the alternative?
+        # why deprecated? what's the alternative?
         return self._errorVals
 
 
@@ -189,7 +189,7 @@ class InversionBase:
 
         Values == 0.0 will be set to tolerance.
         """
-        # also deprecated? whats the alternative?
+        # also deprecated? what's the alternative?
         self._errorVals = d
 
         if self._errorVals is None:
@@ -706,7 +706,7 @@ class InversionBase:
                 np.reshape(tModel, [1, -1])
         else:
             return pg.matrix.MultLeftRightMatrix(self.fop.jacobian(),
-                                                tData, tModel)
+                                                 tData, tModel)
 
 
     def residual(self):
@@ -714,6 +714,7 @@ class InversionBase:
         return (self.dataTrans.fwd(self.dataVals) -
                 self.dataTrans.fwd(self.response)) / \
             self.dataTrans.error(self.response, self.errorVals)
+
 
     def dataGradientFormal(self):  # formal but restricted to existent J
         """Return data gradient from Jacobian and residual, i.e. J^T * dData."""
@@ -723,12 +724,12 @@ class InversionBase:
 
     def dataGradient(self, error_weighted=True):  # also works for fop.STy
         """Return data gradient from jacobian and residual, i.e. J^T * dData."""
-        tData = self.dataTrans.deriv(self.response)
+        tData = self.dataTrans.deriv(self.response) # dd/dr
         if error_weighted:
             tData /= self.dataTrans.error(self.response, self.errorVals)
 
         return self.fop.STy(-self.residual()*tData) / \
-            self.modelTrans.deriv(self.model)
+            self.modelTrans.deriv(self.model) * 2
 
 
     def modelGradient(self):
@@ -739,7 +740,7 @@ class InversionBase:
         else:
             C = pg.matrix.MultLeftMatrix(self.fop.constraints(), self.cWeight)
 
-        return C.transMult(C.mult(self.modelTrans(self.model)))
+        return C.transMult(C.mult(self.modelTrans(self.model))) * 2
 
 
     def gradient(self):
@@ -821,8 +822,8 @@ class DescentInversion(InversionBase):  # noqa: D101
         super().__init__(**kwargs)
 
 
-    def modelUpdate(self):
-        """Return negative gradient of objective function as search direction."""
+    def triggerJacobian(self):
+        """."""
         if self.fop.STy.__doc__ is pg.Modelling.STy.__doc__:  # original
             if len(self.model) != self.fop.jacobian().cols():
                 self._jacobianOutdated = True
@@ -830,25 +831,45 @@ class DescentInversion(InversionBase):  # noqa: D101
             if self._jacobianOutdated:
                 self.fop.createJacobian(self.model)
 
-        return -self.gradient()
+
+    def modelUpdate(self):
+        """Return negative gradient of objective function as search direction."""
+        self.triggerJacobian()
+        grad = -self.gradient()
+        return grad  # / np.linalg.norm(grad)
 
 
-class NLCGInversion(InversionBase):
+class NLCGInversion(DescentInversion):
     """Non-linear conjugate-gradient minimization."""
 
     def __init__(self, **kwargs):
         """Initialize."""
         super().__init__(**kwargs)
+        self.dm = np.array([0])
+        self.delta = 1
 
     def modelUpdate(self):
         """Initialize."""
-        return None
+        self.dm /= self.olddelta
+        self.currgradient = -self.gradient()
+        self.delta = sum(self.currgradient**2)
+        self.dm *= self.delta
+        self.dm += self.currgradient
+
+        return self.dm
 
 
 class LBFGSInversion(InversionBase):
     """Limited-memory BFGS (L-BFGS) minimization."""
 
     def __init__(self, **kwargs):
+        """Initialise the L-BFGS inversion.
+
+        Parameters
+        ----------
+        **kwargs :
+            Forwarded to :class:`InversionBase`.
+        """
         super().__init__(**kwargs)
 
     def modelUpdate(self):
@@ -882,12 +903,23 @@ class ClassicInversion:
     model : array
         Holds the last active model
     maxIter : int [20]
-        Maximal interation number.
+        Maximal iteration number.
     stopAtChi1 : bool [True]
         Stop iteration when chi² is one. If set to False the iteration stops
         after maxIter or convergence reached (self.inv.deltaPhiAbortPercent())
     """
     def __init__(self, fop=None, inv=None, **kwargs):
+        """Initialise the classic inversion framework.
+
+        Parameters
+        ----------
+        fop : forward operator, optional
+            Forward operator to use.
+        inv : inversion object, optional
+            Pre-built C++ inversion object; constructed automatically if None.
+        **kwargs :
+            Recognised keys: ``verbose`` (bool), ``debug`` (bool).
+        """
         self._debug = kwargs.pop('debug', False)
         self._verbose = kwargs.pop('verbose', False)
 
@@ -1384,7 +1416,7 @@ class ClassicInversion:
             marker, strength)
 
     def setConstraintWeights(self, cWeight):
-        """Set weighting factors for the invidual rows of the C matrix."""
+        """Set weighting factors for the individual rows of the C matrix."""
         self.inv.setCWeight(cWeight)
 
     def run(self, dataVals, errorVals=None, **kwargs):
@@ -1725,7 +1757,7 @@ class ClassicInversion:
                 np.reshape(tModel, [1, -1])
         else:
             return pg.matrix.MultLeftRightMatrix(self.fop.jacobian(),
-                                                tData, tModel)
+                                                 tData, tModel)
 
     def residual(self):
         """Residual vector (data-reponse)/error using data transform."""
@@ -1758,6 +1790,15 @@ class MarquardtInversion(Inversion):
     """Marquardt scheme, i.e. local damping with decreasing strength."""
 
     def __init__(self, fop=None, **kwargs):
+        """Initialise the Marquardt inversion.
+
+        Parameters
+        ----------
+        fop : forward operator, optional
+            Forward operator to use.
+        **kwargs :
+            Forwarded to :class:`Inversion`.
+        """
         super().__init__(fop, **kwargs)
         self.stopAtChi1 = False
         self.inv.setLocalRegularization(True)
@@ -1807,6 +1848,15 @@ class Block1DInversion(MarquardtInversion):
     """
 
     def __init__(self, fop=None, **kwargs):
+        """Initialise the 1-D block model inversion.
+
+        Parameters
+        ----------
+        fop : pg.frameworks.Block1DModelling, optional
+            Forward operator.  Must be an instance of Block1DModelling.
+        **kwargs :
+            Forwarded to :class:`MarquardtInversion`.
+        """
         # pg.warn("move this to the manager")
         super().__init__(fop=fop, **kwargs)
 
@@ -1997,7 +2047,15 @@ class LCInversion(Inversion):
     """Quasi-2D Laterally constrained inversion (LCI) framework."""
 
     def __init__(self, fop=None, **kwargs):
+        """Initialise the laterally constrained inversion.
 
+        Parameters
+        ----------
+        fop : forward operator, optional
+            Wrapped automatically in :class:`~pygimli.frameworks.LCModelling`.
+        **kwargs :
+            Forwarded to :class:`Inversion` and :class:`LCModelling`.
+        """
         if fop is not None:
             f = pg.frameworks.LCModelling(fop, **kwargs)
 

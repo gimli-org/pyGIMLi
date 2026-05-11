@@ -367,7 +367,7 @@ class FDEM:
             Lower boundary for the model
 
         uBound : float
-            Upper boundary for the model. 0 means no upper booundary
+            Upper boundary for the model. 0 means no upper boundary
 
         verbose : bool
             Be verbose

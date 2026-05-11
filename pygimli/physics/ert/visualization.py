@@ -209,6 +209,9 @@ def drawERTData(ax, data, vals=None, **kwargs):
             x-width of individual rectangles
         * ind : integer iterable or IVector
             indices to limit display
+        * switch : bool [False]
+            Switch the roles of current and potential electrodes for the
+            configuration label and midpoint/separation computation.
         * circular : bool
             Plot in polar coordinates when plotting via patchValMap
 

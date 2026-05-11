@@ -1408,7 +1408,7 @@ def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
                 if mat.shape[0] % len(ud) != 0:
                     print(mat)
                     print(mat.shape, len(ud))
-                    pg.error("Matrix size missmatch for vector valued problem")
+                    pg.error("Matrix size mismatch for vector valued problem")
                 else:
                     dofPerCoeff = mat.shape[0] // len(ud)
 
@@ -1421,7 +1421,7 @@ def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
         else:
             if nCoeff > 1:
                 print('nCoeff:', nCoeff, 'ud:', ud, 'idx:', idx)
-                pg.error('number of coefficents > 1 but uDirichlet is scalar.')
+                pg.error('number of coefficients > 1 but uDirichlet is scalar.')
 
             if ud is not None:
                 ret[idx] = ud
@@ -1660,7 +1660,7 @@ def assembleRobinBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
             print(boundary)
             print(a)
             print(a.ndim)
-            pg.error("Can't interprete robin value.")
+            pg.error("Can't interpret robin value.")
 
         if hasattr(a, '__iter__'):
             if len(a) == 1:
@@ -1796,7 +1796,7 @@ def createForceVector(mesh, f, userData={}):
     Parameters
     ----------
     f: convertible
-        List of rhs side options. Must be convertable to createLoadVector.
+        List of rhs side options. Must be convertible to createLoadVector.
         See :py:mod:`createLoadVector`
     rhs: np.array()
         Squeezed vector of length mesh.nodeCount() * mesh.dimensions()
@@ -1811,7 +1811,7 @@ def createForceVector(mesh, f, userData={}):
         rhs[i*mesh.nodeCount():(i+1)*mesh.nodeCount()] = \
             createLoadVector(mesh, f[i], userData)
 
-    # rhs.reshape(mesh.nodeCount() * mesh.dim()) #contiguity not guarantied
+    # rhs.reshape(mesh.nodeCount() * mesh.dim()) #contiguity not guaranteed
     return rhs
 
 
@@ -1901,7 +1901,7 @@ def createLoadVector(mesh, f=1.0, userData={}):
             fArray = f
         elif len(f) == mesh.nodeCount() * mesh.dim():
             # vector values for each node
-            # maybe just for special cases with allready processed rhs
+            # maybe just for special cases with already processed rhs
             return f
 
     elif callable(f) and not isinstance(f, pg.Vector):
@@ -2313,7 +2313,7 @@ def solveFiniteElements(mesh, a=1.0, b=None, f=0.0, bc=None,
         Note this is only a shortcut
         for `bc={'Dirichlet': [mesh.node(nodeID), value]}`.
 
-        The parameter `a` for Neumann boundary condition is choosen
+        The parameter `a` for Neumann boundary condition is chosen
         automatically from the diffusivity parameter `a` of the associated cell.
 
     times: array [None]
@@ -2669,7 +2669,7 @@ def checkCFL(times, mesh, vMax, verbose=False):
 def crankNicolson(times, S, I, f=None,
                   u0=None, theta=1.0, dirichlet=None,
                   solver=None, progress=None):
-    """Solve time dependend problems using Crank-Nicolson scheme.
+    """Solve time dependent problems using Crank-Nicolson scheme.
 
     Limitations so far:
         S = Needs to be constant over time (i.e. no change in coefficients)
@@ -2698,7 +2698,7 @@ def crankNicolson(times, S, I, f=None,
         * 0.5: probably best tradeoff but can also be unstable
 
     dirichlet: dirichlet generator
-        Genertor object to applay dirichlet boundary conditions
+        Generator object to apply dirichlet boundary conditions
     solver: LinSolver [None]
         Provide a pre configured solver if you want some special.
     progress: Progress [None]

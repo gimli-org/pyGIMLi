@@ -282,7 +282,7 @@ out = plt.plot(v, inv.response, "*")
 # -----------------------------------
 #
 # Say you want to combine geostatistic operators with a damping, you can
-# create a block matrix pasting the matric vertically.
+# create a block matrix pasting the matrix vertically.
 #
 
 C = pg.matrix.BlockMatrix()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pygimli base functions.
 
-Some needs to be sorted. Need to fit nameing conventions!
+Some needs to be sorted. Need to fit naming conventions!
 """
 import os.path
 import time
@@ -43,7 +43,7 @@ def chi2(a, b, err, trans=None):
     return pg.math.dot(d, d) / len(d)
 
 
-# fc_cleaning compatibilty to bert
+# fc_cleaning compatibility to bert
 rmswitherr = rmsWithErr
 
 

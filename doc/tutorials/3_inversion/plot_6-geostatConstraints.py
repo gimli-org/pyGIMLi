@@ -18,7 +18,7 @@ by the distances H between the model cells i and j into the three directions
                 \left(\frac{\textbf{H}^z_{ij}}{I_{z}}\right)^{2}}\right)}.
 
 It defines the correlation between model cells as a function of correlation
-lenghts (ranges) :math:`I_x`, :math:`I_y`, and :math:`I_z`. Of course, the
+lengths (ranges) :math:`I_x`, :math:`I_y`, and :math:`I_z`. Of course, the
 orientation of the coordinate axes is arbitrary and can be chosen by rotation.
 Let us illustrate this by a simple mesh:
 """  # noqa: D205, D400

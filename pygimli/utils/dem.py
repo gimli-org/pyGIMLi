@@ -217,7 +217,7 @@ class DEM:
         Arguments
         ---------
         cmap: str="terrain"
-            matplotlib colormap definiton
+            matplotlib colormap definition
         cbar: bool=True
             Add colorbar to the plot or not.
         ax: matplotlib axes object

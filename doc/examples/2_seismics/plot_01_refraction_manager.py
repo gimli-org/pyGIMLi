@@ -58,7 +58,7 @@ scheme.setSensors(pos)
 ###############################################################################
 # Synthetic data generation
 # -------------------------
-# Now we initialize the TravelTime manager and asssign P-wave velocities to the
+# Now we initialize the TravelTime manager and assign P-wave velocities to the
 # layers. To this end, we create a map from cell markers 0 through 3 to
 # velocities (in m/s) and generate a velocity vector. To check whether the
 # model looks correct, we plot it along with the sensor positions.
@@ -75,7 +75,7 @@ pg.viewer.mpl.drawSensors(ax, scheme.sensors(), diam=1.0,
 ###############################################################################
 # We use this model to create noisified synthetic data and look at the
 # traveltime data matrix. Note, we force a specific noise seed as we want
-# reproducable results for testing purposes.
+# reproducible results for testing purposes.
 
 data = tt.simulate(slowness=1.0 / vp, scheme=scheme, mesh=mesh,
                    noiseLevel=0.001, noiseAbs=0.001, seed=1337, verbose=True)

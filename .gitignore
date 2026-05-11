@@ -13,6 +13,7 @@ doc/_static/usecases/original/
 *sg_execution_times.rst
 *.ipynb
 *.ipynb_checkpoints*
+doc/jupyter_execute/
 
 doc/user-guide/*_files
 doc/user-guide/*.html

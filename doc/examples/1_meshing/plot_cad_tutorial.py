@@ -10,7 +10,7 @@ In this example you will learn how to create a geometry in
 # sphinx_gallery_thumbnail_path = '_static/cad_tutorial/gmsh_fig.png'
 
 ###############################################################################
-# Gmsh comes with a build-in CAD engine for defining a geometry, as shown
+# Gmsh comes with a built-in CAD engine for defining a geometry, as shown
 # in the `flexible mesh generation example <https://www.pygimli.org/_examples_auto/1_meshing/plot_gmsh-example.html#sphx-glr-examples-auto-1-meshing-plot-gmsh-example-py>`_,
 # but using a parametric CAD program such as FreeCAD is much more intuitive and flexible.
 #
@@ -129,7 +129,7 @@ import numpy as np
 import pygimli as pg
 gmsh = pg.optImport("gmsh", "Install GMesh by running: pip install gmsh")
 
-# Download all nessesary files
+# Download all necessary files
 geom_filename = pg.getExampleFile("cad/dike_mod.brep")
 elec_pos_filename = pg.getExampleFile("cad/elec_pos.csv")
 
@@ -167,7 +167,7 @@ if gmsh:
 #    elementary entities of the geometry. It is also handy later to QC
 #    whether physical groups were set correctly.
 # 3. Clip the mesh and geometry with Tools → Clipping.
-# 4. The number of elements ect. can be found in the Tools → Statistics
+# 4. The number of elements etc. can be found in the Tools → Statistics
 #    window.
 #
 #
@@ -197,7 +197,7 @@ tags = {"outer region": 2,
     "electrodes": []}
 
 if gmsh:
-    # Syncronize CAD representation with the Gmsh model (t1.py)
+    # Synchronize CAD representation with the Gmsh model (t1.py)
     # Otherwise gmsh.model.get* methods don't work.
     gmsh.model.occ.synchronize()
     # Set mesh sizes for the dike and outer region.
@@ -222,8 +222,8 @@ if gmsh:
 if gmsh:
     # positions: np.array([elec#, x, y, z, y "over ground"])
     pos = np.genfromtxt(elec_pos_filename, delimiter=",", skip_header=1)
-    # Electrodes are put at 2 cm depth, such that they can be embeded in the volume of the dike.
-    # Embeding the electrodes into the surface elements complicates meshing.
+    # Electrodes are put at 2 cm depth, such that they can be embedded in the volume of the dike.
+    # Embedding the electrodes into the surface elements complicates meshing.
     elec_depth = 0.02               # elec depth [m]
     pos[:, 3] = pos[:, 3] - elec_depth
     # Add the electrodes to the Gmsh model and put the tags into the Dict

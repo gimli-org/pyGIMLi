@@ -238,7 +238,7 @@ class ERTManager(MeshMethodManager):
                     elif data.allNonZero('u') and data.allNonZero('i'):
 
                         pg.info("Creating apparent resistivies from "
-                                "voltage and currrent rhoa = u/i * k")
+                                "voltage and current rhoa = u/i * k")
                         data['rhoa'] = data['u']/data['i'] * data['k']
 
                     else:

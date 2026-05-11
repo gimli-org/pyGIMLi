@@ -41,9 +41,9 @@ class ProgressBar:
     def __init__(self, its, width=60, sign=":", **kwargs):
         #ruff: noqa: D301
         """Create animated text-based progress bar.
-
-        TODO
-        * optional: 'estimated time' instead of 'x of y complete'
+        
+        # TODO
+        # * optional: 'estimated time' instead of 'x of y complete'
 
         Arguments
         ---------
@@ -173,9 +173,9 @@ def trimDocString(docstring):
     Examples
     --------
     >>> from pygimli.utils import trimDocString
-    >>> docstring = '    This is a string with indention and whitespace.   '
+    >>> docstring = '    This is a string with indentation and whitespace.   '
     >>> trimDocString(docstring).replace('with', 'without')
-    'This is a string without indention and whitespace.'
+    'This is a string without indentation and whitespace.'
     """
     if not docstring:
         return ''

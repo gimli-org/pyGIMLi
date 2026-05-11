@@ -72,7 +72,7 @@ class TestRVectorMethods(unittest.TestCase):
         self.assertEqual(sum(1 + v), 10)
         self.assertEqual(sum(-1 - v), -10)
         self.assertEqual(sum(1 / v), 5)
-        # no clue why this doesnt work .. we might could hack them if someone need it
+        # no clue why this doesn't work .. we might could hack them if someone need it
         #self.assertEqual(sum(v * 2), 10)
 
         self.assertEqual(sum(v + v), 10)

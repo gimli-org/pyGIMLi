@@ -8,7 +8,7 @@ kernelspec:
 # First modelling
 
 This first modeling tutorial solves the stationary heat equation in 2D, an example from
-the pyGIMLi paper {cite}`rueckerRuecker2017`, [Examples here](https://cg17.pygimli.org).
+the pyGIMLi paper {cite}`Ruecker2017`, [Examples here](https://cg17.pygimli.org).
 
 ```{code-cell} ipython3
 import pygimli as pg

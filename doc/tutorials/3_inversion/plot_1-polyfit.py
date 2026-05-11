@@ -203,7 +203,7 @@ logmisfit = np.log(y) - np.log(inv.response)
 print(np.sqrt(np.mean(logmisfit**2))*100)
 
 ###############################################################################
-# So the absolut logarithmic misfit is close to the relative misfit.
+# So the absolute logarithmic misfit is close to the relative misfit.
 # In inversion, neither of the quantities is minimized. Instead, we use the
 # error to compute an error-weighted misfit (ERMS), sometimes also referred to
 # as inversion RMS (to recognize since it is without data unit or %).

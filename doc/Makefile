@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    =
+SPHINXOPTS    = --jobs auto -b dirhtml
 SPHINXBUILD   = sphinx-build
 SOURCEDIR     = ./
 BUILDDIR      = _build
@@ -41,12 +41,12 @@ api:
 	cp -f pygimliapi/physics_overwrite pygimliapi/_generated/pygimli.physics.rst
 
 html-nogallery: api
-	$(SPHINXBUILD) -D plot_gallery=0 -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	$(SPHINXBUILD) -D plot_gallery=0 "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	@echo
 	@echo "Build finished without gallery. The HTML pages are in $(BUILDDIR)."
 
 html: api
-	$(SPHINXBUILD) -v -D abort_on_example_error=True -b html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	$(SPHINXBUILD) -v -D abort_on_example_error=True "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)."
 

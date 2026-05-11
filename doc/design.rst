@@ -1,3 +1,5 @@
+:orphan:
+
 .. _sec:design:
 
 Software design

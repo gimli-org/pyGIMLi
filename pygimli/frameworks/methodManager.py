@@ -196,7 +196,7 @@ class MethodManager:
 
         Called once in the constructor to force the manager to create the
         necessary forward operator member. Can be recalled if you need to
-        changed the mangers own forward operator object. If you want an own
+        changed the managers own forward operator object. If you want an own
         instance of a valid FOP call createForwardOperator.
         """
         fop = self._fop if self._fop is not None else self.createForwardOperator(**kwargs)
@@ -297,7 +297,27 @@ class MethodManager:
         return np.ones(len(data)) * errLevel
 
     def simulate(self, model, **kwargs):
-        """Run a simulation aka the forward task."""
+        """Run a simulation aka the forward task.
+
+        Parameters
+        ----------
+        model : iterable
+            Model parameter values to use for the forward computation.
+
+        Keyword Arguments
+        -----------------
+        noiseLevel : float [0.0]
+            Add relative Gaussian noise with this level (e.g., 0.03 for 3%).
+            No noise is added if 0.
+        seed : int [None]
+            Seed for the random number generator used when adding noise.
+
+        Returns
+        -------
+        ra : pg.Vector
+            Forward response. If ``noiseLevel > 0``, returns ``(ra, err)``
+            where ``err`` is the absolute error vector.
+        """
         ra = self.fop.response(par=model)
 
         noiseLevel = kwargs.pop('noiseLevel', 0.0)
@@ -518,7 +538,20 @@ class MethodManager:
         return self.showModel(model, ax=ax, **kwargs)
 
     def showFit(self, ax=None, **kwargs):
-        """Show the last inversion data and response."""
+        """Show the last inversion data and response.
+
+        Parameters
+        ----------
+        ax : mpl axes [None]
+            Axes object to draw into. Creates a new one if not given.
+
+        Keyword Arguments
+        -----------------
+        hideFittingAnnotation : bool [False]
+            Do not show the rrms and chi² text annotation.
+        hideLegend : bool [False]
+            Do not show the legend.
+        """
         ax, cBar = self.showData(data=self.inv.dataVals,
                                  error=self.inv.errorVals,
                                  label='Data',
@@ -550,6 +583,8 @@ class MethodManager:
             If not None save figure.
         axs: [mpl.Axes]
             Give 3 axes and its plotted into them instead of creating 3 new.
+        figsize: tuple [(11, 6)]
+            Figure size passed to ``plt.figure()``.
 
         """
         saveFig = kwargs.pop('saveFig', None)
@@ -875,8 +910,8 @@ class MeshMethodManager(MethodManager):
         kwargs.setdefault("cMin", min(self.inv.dataVals))
         kwargs.setdefault("cMax", max(self.inv.dataVals))
         self.showData(data=self.inv.dataVals,
-                              orientation=orientation,
-                              ax=axs[0], **kwargs)
+                      orientation=orientation,
+                      ax=axs[0], **kwargs)
         axs[0].text(0.0, 1.03, "Data",
                     transform=axs[0].transAxes,
                     horizontalalignment='left',

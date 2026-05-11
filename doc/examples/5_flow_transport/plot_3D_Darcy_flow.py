@@ -53,7 +53,7 @@ kMap =[[1, 1e-4], [2, 1e-6]]
 kArray = pg.solver.parseMapToCellArray(kMap, mesh)
 
 # %%%
-# We set two different heads for the left and right bounday
+# We set two different heads for the left and right boundary
 # and solve the Darcy equation using Finite Elements
 #
 

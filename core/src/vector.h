@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2007-2025 by the GIMLi development team                    *
+ *   Copyright (C) 2007-2026 by the GIMLi development team                    *
  *   Carsten Rücker carsten@resistivity.net                                   *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -867,7 +867,9 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
                 throwError("Vector with borrowed data can't be resized.");
             }
             reserve(n);
-            for (Index i = size_; i < n; i ++) data_[i]=fill;
+            if (n > size_) {
+                for (Index i = size_; i < n; i ++) data_[i]=fill;
+            }
             size_ = n;
         }
     }
