@@ -29,7 +29,7 @@ def createCrossholeData(sensors=None, x=None, z=None):
         if x is None or z is None:
             raise ValueError("Both x and z must be given")
 
-        sensors = np.array([(xi, zi) for zi in z for xi in x])
+        sensors = np.array([(xi, zi) for xi in x for zi in z])
 
     if len(sensors) % 2 > 0:
         pg.error("createCrossholeData is only defined for an equal number of"
