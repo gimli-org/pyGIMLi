@@ -587,7 +587,7 @@ def convertMeshioMesh(mesh, verbose=False):
 def fromSubsurface(obj, order='C', verbose=False):
     """Convert subsurface object to pygimli mesh.
 
-    See more: https://softwareunderground.github.io/subsurface/
+    See more: https://github.com/softwareunderground/subsurface
 
     Order refers to np.flatten(order) strategy for structured cell data
     arrangement, e.g., use 'F' (Fortran style) for gempy meshes.

@@ -53,7 +53,7 @@ sys.path.append(os.path.abspath(join(TRUNK_PATH, "pygimli")))
 ################################################################################
 project = "pyGIMLi"
 year = datetime.date.today().year
-copyright = f"{year} - pyGIMLi Development Team"
+copyright = f"{year} - {project} Development Team"
 
 # The version info for the project you"re documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -66,7 +66,7 @@ version = pg.__version__
 release = pg.__version__.split("+")[0]
 
 
-pg._g(f'pygimli version: {version}')
+pg._g(f'pyGIMLi version: {version}')
 
 ################################################################################
 # -- General SPHINX configuration
@@ -254,6 +254,7 @@ html_css_files = [
 html_js_files = [
     ("js/custom-icons.js", {"defer": "defer"}),
     "js/jquery-3.7.1.min.js",
+    ("js/init-tooltips.js", {"defer": "defer"}),
 ]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
@@ -377,6 +378,10 @@ try:
         "remove_config_comments": True,
         # Only parse filenames starting with plot_
         "filename_pattern": "/plot_",
+        # Exclude disabled files (tmp_deactivated_*) and tmp/ subdirs from
+        # the gallery entirely, so they don't surface with the default
+        # no_image.png placeholder thumbnail.
+        "ignore_pattern": r"(tmp_deactivated_.*|/tmp/.*)",
         "first_notebook_cell": ("# Checkout www.pygimli.org for more examples"),
         "reset_modules": (reset_mpl),
         # Avoid representation of mpl axis, LineCollections, etc.
@@ -385,6 +390,7 @@ try:
         "show_signature": False,
         "download_all_examples": False,
         "parallel": 1,
+        "abort_on_example_error": True,  # Fail early
         # 'matplotlib_animations': (True, 'mp4'),
     }
 
@@ -418,7 +424,7 @@ try:
         pyvista.global_theme.font.title_size = 22
         pyvista.global_theme.return_cpos = False
         pyvista.set_jupyter_backend("html")
-        extensions += ["pyvista.ext.viewer_directive"]
+        extensions += ["pyvista.ext.viewer_directive", "pyvista_dirhtml_fix"]
 
         old_scrapers = list(sphinx_gallery_conf["image_scrapers"])
         sphinx_gallery_conf["image_scrapers"] = tuple([DynamicScraper()] + old_scrapers)

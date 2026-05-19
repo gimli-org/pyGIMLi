@@ -69,7 +69,7 @@ We use or link some third-party software (beside the usual tool stack: cmake, gc
 - pyplusplus: <https://pypi.org/project/pyplusplus/>
 - pyvista: <https://docs.pyvista.org/>
 - suitesparse, umfpack: <https://people.engr.tamu.edu/davis/suitesparse.html>
-- Tetgen: <http://wias-berlin.de/software/index.jsp?id=TetGen&lang=1>
+- Tetgen: <https://wias-berlin.de/software/tetgen/>
 - Triangle: <https://www.cs.cmu.edu/~quake/triangle.html>
 
 :::{toctree}
