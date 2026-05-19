@@ -75,12 +75,14 @@ jobs:
             cp -R build-py*/doc/_build/html/. _site/
         - name: Deploy to pygimli.org via FTP (release only)
           if: github.ref == 'refs/heads/release'
-          uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+          uses: SamKirkland/FTP-Deploy-Action@v4.4.0
           with:
             server:  ${{ secrets.FTP_URL }}
             username: ${{ secrets.FTP_USER }}
             password: ${{ secrets.FTP_PW }}
             local-dir: ./_site/
+            timeout: 60000
+            log-level: verbose
   merging:
     name: Automerging
     needs: [get-runner,tests,docs]
