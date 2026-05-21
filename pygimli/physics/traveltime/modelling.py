@@ -13,6 +13,16 @@ class TravelTimeDijkstraModelling(MeshModelling):
     """Forward modelling class for traveltime using Dijktras method."""
 
     def __init__(self, **kwargs):
+        """Initialise the Dijkstra travel-time forward operator.
+
+        Parameters
+        ----------
+        secNodes : int
+            Number of secondary nodes added to each mesh cell edge for
+            accurate ray-path computation (default 3).
+        **kwargs :
+            Forwarded to :class:`~pygimli.frameworks.MeshModelling`.
+        """
         secNodes = kwargs.pop("secNodes", 3)
         super().__init__(**kwargs)
 
@@ -139,6 +149,15 @@ class FatrayDijkstraModellingInterpolate(TravelTimeDijkstraModelling):
     """Shortest-path (Dijkstra) based travel time with fat ray jacobian."""
 
     def __init__(self, frequency=100., **kwargs):
+        """Initialise the fat-ray Dijkstra forward operator.
+
+        Parameters
+        ----------
+        frequency : float
+            Source frequency [Hz] controlling the width of the Fresnel zone.
+        **kwargs :
+            Forwarded to :class:`TravelTimeDijkstraModelling`.
+        """
         super().__init__(**kwargs)
         self.frequency = frequency
         self.iMat = pg.matrix.SparseMapMatrix()
@@ -193,6 +212,15 @@ class FatrayDijkstraModellingMidpoint(TravelTimeDijkstraModelling):
     """Shortest-path (Dijkstra) based travel time with fat ray jacobian."""
 
     def __init__(self, frequency=100., verbose=False):
+        """Initialise the midpoint fat-ray Dijkstra forward operator.
+
+        Parameters
+        ----------
+        frequency : float
+            Source frequency [Hz] controlling the width of the Fresnel zone.
+        verbose : bool
+            Enable verbose output.
+        """
         super().__init__(verbose)
         self.frequency = frequency
         self.mids = None

@@ -11,7 +11,7 @@ boundaries (edges in 2D, faces in 3D) and cells (triangles, quadrangles in 2D,
 hexahedra or tetrahedra in 3D) with associated markers and arbitrary data for
 nodes or cells.
 
-https://www.pygimli.org/_tutorials_auto/1_basics/plot_2-anatomy_of_a_mesh.html
+https://www.pygimli.org/_tutorials_auto/1_mesh/plot_2-anatomy_of_a_mesh.html
 gives a good overview on the properties of a mesh. Here we demonstrate how to
 create and manipulate meshes from the scratch.
 """

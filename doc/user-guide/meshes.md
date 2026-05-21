@@ -26,18 +26,22 @@ from matplotlib.patheffects import withStroke
 
 
 def circle(x, y, text=None, radius=0.15, c="blue"):
-    circle = Circle((x, y), radius, clip_on=False, zorder=10, linewidth=1,
-                    edgecolor='black', facecolor=(0, 0, 0, .0125),
-                    path_effects=[withStroke(linewidth=5, foreground='w')])
+    circle = Circle(
+        (x, y), radius,
+        clip_on=False, zorder=10, linewidth=1,
+        edgecolor="black", facecolor=(0, 0, 0, 0.0125),
+        path_effects=[withStroke(linewidth=5, foreground="w")],
+    )
     ax.add_artist(circle)
     ax.plot(x, y, color=c, marker=".")
     ax.text(x, y - (radius + 0.05), text, backgroundcolor="white",
-            ha='center', va='top', weight='bold', color=c)
+            ha="center", va="top", weight="bold", color=c)
 
-m = pg.createGrid(4,4)
+
+m = pg.createGrid(4, 4)
 
 # Create matplotlib figure and set size
-fig, ax = plt.subplots(figsize=(8,8), dpi=90)
+fig, ax = plt.subplots(figsize=(8, 8), dpi=90)
 ax.set_title("The anatomy of a pyGIMLi mesh", fontweight="bold")
 
 # Visualize mesh with the generic pg.show command
@@ -46,7 +50,7 @@ pg.show(m, ax=ax)
 # Number all cells
 for cell in m.cells():
     node = cell.allNodes()[2]
-    ax.text(node.x() - 0.5, node.y() - .05, "m.cell(%d)" % cell.id(),
+    ax.text(node.x() - 0.5, node.y() - 0.05, "m.cell(%d)" % cell.id(),
             fontsize=11, ha="center", va="top", color="grey")
 
 # Mark horizontal and vertical extent
@@ -63,7 +67,6 @@ circle(m.cell(cid).center().x(), m.cell(cid).center().y(),
 # Mark node
 circle(m.node(1).x(), m.node(6).y(), "Mesh node position", c="green")
 
-
 # Mark boundary center
 bid = 15
 boundary_center = m.boundary(bid).center()
@@ -71,24 +74,22 @@ circle(boundary_center.x(), boundary_center.y(),
        "Mesh boundary center", c="red")
 
 # Create boundary around cell
-bid = [14,17,21,20]
-bounds = []
-for i in bid:
-    b = m.boundaries()[i] # equivalent to mesh.boundary(17)
-    bounds.append(b)
-for bound in bounds:
-    n1 = bound.allNodes()[0]
-    n2 = bound.allNodes()[1]
+bids = [14, 17, 21, 20]
+for i in bids:
+    b = m.boundaries()[i]
+    n1, n2 = b.allNodes()[0], b.allNodes()[1]
     ax.plot([n1.x(), n2.x()], [n1.y(), n2.y()], "b-", lw=3, zorder=10)
-ax.annotate('Mesh cell', xy=(b.center().x(), b.center().y()),
-            xycoords='data', xytext=(8, 25), textcoords='offset points',
-            weight='bold', color="blue",
-            arrowprops=dict(arrowstyle='->',
-                            connectionstyle="arc",
-                            color="blue"))
+
+ax.annotate(
+    "Mesh cell",
+    xy=(b.center().x(), b.center().y()),
+    xycoords="data", xytext=(8, 25), textcoords="offset points",
+    weight="bold", color="blue",
+    arrowprops=dict(arrowstyle="->", connectionstyle="arc", color="blue"),
+)
 
 ax.text(3.0, -0.5, "Made with matplotlib & pyGIMLi",
-        fontsize=10, ha="right", color='.5')
+        fontsize=10, ha="right", color=".5")
 fig.tight_layout(pad=5.7)
 pg.wait()
 ```
@@ -121,12 +122,12 @@ The mesh class holds either geometric definitions (piece-wise linear complex - *
 
 It is common practice to classify meshes into two main types - structured and unstructured.
 
-**Structured** meshes are meshes with implicit connectivit, exhibiting a  well-known pattern in which the cells are arranged. As the cells are in a particular order, the topology of such mesh is regular. Such meshes enable easy identification of neighboring cells and points, because of their formation and structure. Often structured meshes have orthogonal quadrilateral (2D) or hexahedral (3D) elements.
+**Structured** meshes are meshes with implicit connectivity, exhibiting a well-known pattern in which the cells are arranged. As the cells are in a particular order, the topology of such mesh is regular. Such meshes enable easy identification of neighboring cells and points, because of their formation and structure. Often structured meshes have orthogonal quadrilateral (2D) or hexahedral (3D) elements.
 
 :::: {admonition} Structured meshes
 :class: info
 
-A regularly spaced mesh consisting of rectangles or hexahedrons is usually called a grid. However, a grid is just a special variant of a mesh so GIMLi treats it the same. The only difference is how they are created.
+A regularly spaced mesh consisting of rectangles or hexahedrons is usually called a grid. However, a grid is just a special variant of a mesh so pyGIMLi treats it the same. The only difference is how they are created.
 ::::
 
 **Unstructured** meshes, as the name suggests, are more general and can randomly form any geometry shape. Unlike structured meshes, the connectivity pattern is not fixed hence unstructured meshes do not follow a uniform pattern. However, unstructured meshes are more flexible and thus allow for more complex applications.
@@ -138,24 +139,23 @@ jupyter:
 ---
 from pygimli.meshtools import polytools as plc
 
-fig, (ax1,ax2) = plt.subplots(1,2,figsize=(16,8), dpi=90)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8), dpi=90)
 ax1.set_title("Structured mesh", fontweight="bold")
 ax2.set_title("Unstructured mesh", fontweight="bold")
 
 # Create geometry
 world = plc.createWorld(start=[-10, 0], end=[10, -10], marker=1,
                         worldMarker=False)
-c1 = plc.createCircle(pos=[0.0, -5.0], radius=3.0, area=.3)
 
 # Structured mesh
-xmin, xmax = -10, 10.
-zmin, zmax = -10., 0.
+xmin, xmax = -10, 10.0
+zmin, zmax = -10.0, 0.0
 
 xreg = np.linspace(xmin, xmax, 20)
 zreg = np.linspace(zmin, zmax, 10)
-m_reg = pg.meshtools.createGrid(xreg,zreg,marker=2)
-
+m_reg = pg.meshtools.createGrid(xreg, zreg, marker=2)
 pg.show(m_reg, ax=ax1)
+
 # Unstructured mesh
 m = pg.meshtools.createMesh(world, quality=34, area=1)
 pg.show(m, ax=ax2)
@@ -170,12 +170,12 @@ fig.tight_layout()
 To create a regular 2D grid, pyGIMLi offers a variety of tools that help with the task. To create a regular grid, we first of all have to create the extent of the mesh in x and z direction. For this example, we create a mesh of *20 x 10 m* with a regular cell size of *1 x 1 m*. After defining the extent, we can simply call the pg.meshtools.createGrid() and get an overview of the number of nodes, cells and boundaries:
 
 ```{code-cell}
-xmin, xmax = -10, 10.
-zmin, zmax = -10., 0.
+xmin, xmax = -10, 10.0
+zmin, zmax = -10.0, 0.0
 
 xreg = np.linspace(xmin, xmax, 20)
 zreg = np.linspace(zmin, zmax, 10)
-m_reg = pg.meshtools.createGrid(xreg,zreg,marker=2)
+m_reg = pg.meshtools.createGrid(xreg, zreg, marker=2)
 m_reg
 ```
 
@@ -203,30 +203,62 @@ pg.show(m_reg)
 
 After covering the basics of regular grids, we want to dive into the world of irregular meshes.
 
-However, we first of all have to create a **geometry** that is used as underlying susurface model for the mesh creation.
+#### Defining the **geometry**/PLC of the region of interest
+
+Creating meshes in pyGIMLi is a two-stage process: First, the geometry (and
+subgeometries) of the region of interest is defined using the so-called PLCs,
+with subsequent addition of smaller details. Only after the geometries have
+been defined, as a last step, the actual mesh generation.
+
+:::{admonition} Piecewise Linear Complexes (PLCs)
+:class: info
+
+Think of a PLC as one piece of geometry defined by nodes connected by lines.
+The PLCs can then be combined to created complex geometries, which, at a later
+state, are then provided to mesh generator that then fills the geometries with
+mesh cells that can be used for subsequent FE modelling.
+
+More information about piecewise linear complexes (PLCs) can be found in the
+tetgen mesh generator manual: https://codeberg.org/TetGen/Manuals
+
+:::
+
+There is a wide variety of functions available to create (and combine) PLCs. A
+simple example of creating a layered subsurface would be:
 
 ```{code-cell}
-# dimensions of the world
+# dimensions of the world [m]
 left = -30
 right = 30
 depth = 25
 
-world = mt.createWorld(start=[left, 0],
-                       end=[right, -depth],
-                       layers=[-5], worldMarker=False)
+world = mt.createWorld(
+    start=[left, 0],
+    end=[right, -depth],
+    layers=[-5],
+    worldMarker=False,
+)
 print(world)
-pg.show(world)
+_ = pg.show(world)
 ```
 
 :::{admonition} Region markers
 :class: info
 
-A mesh can have different regions, which are defined by **region markers** for each cell. Region markers can be used to assign properties for forward modelling as well as to control the inversion behavior.
+A mesh can have different regions, which are defined by **region markers** for
+each cell. Region markers can be used to assign properties for forward
+modelling, as well as to control the inversion behavior.
+
+Note that markers can also be assigned to PLCs and will later on propagated to
+all cells that comprise a PLC.
 
 For more information, see the later section on **Markers**
 :::
 
-We are using the mt.createWorld() function to create a world based on the gíven x- & z-coordinates. The following table lists all handy functions that can be utilized when creating a geometry in pyGIMLi:
+
+We are using the `mt.createWorld()` function to create a world based on the given
+x- & z-coordinates. The following table lists all handy functions that can be
+utilized when creating a geometry in pyGIMLi:
 
 :::: {admonition} PLC creation in pyGIMLi
 :class: tip
@@ -248,20 +280,54 @@ We are using the mt.createWorld() function to create a world based on the gíven
 :::
 ::::
 
-pyGIMLi has different ways to create meshes. mt.createMesh creates a mesh using Triangle, a two-dimensional constrained Delaunay mesh generator.
+#### The actual mesh generation
 
-The additional input parameters control the maximum triangle area and the mesh smoothness. The quality factor prescribes the minimum angles allowed in the final mesh. This can improve numerical accuracy, however, fine meshes lead to increased computational costs. Notice that we are now using showMesh which is convenient for 2D mesh visualization.
+pyGIMLi has different ways to create meshes. mt.createMesh creates a mesh using
+Triangle, a two-dimensional constrained Delaunay mesh generator.
+
+The additional input parameters control the maximum triangle area and the mesh
+smoothness. The quality factor prescribes the minimum angles allowed in the
+final mesh. This can improve numerical accuracy, however, fine meshes lead to
+increased computational costs. Notice that we are now using showMesh which is
+convenient for 2D mesh visualization.
 
 ```{code-cell}
 from pygimli.viewer import showMesh
 
-mesh = mt.createMesh(world,
-                     area=2.0,
-                     quality=33,
-                     smooth=[2, 4] # [0:no smoothing or 1:node center or 2:weighted node center, # of iter]
-                    )
-showMesh(mesh, markers=True, showMesh=True);
+# smooth=[type, iterations] — type: 0 (off), 1 (node center), 2 (weighted)
+mesh = mt.createMesh(world, area=2.0, quality=33, smooth=[2, 4])
+showMesh(mesh, markers=True, showMesh=True)
 ```
+
+:::{admonition} Mesh refinement
+:class: info
+Finite-Element modelings often require local mesh refinement to achieve
+suitable accuracy for a given application. Pygimli basically offers two
+approaches to do this:
+
+* Choose a suitable `quality` parameter when calling `createMesh`, resulting in
+  a mesh with a globally-acceptable mesh size. This has the disadvantage of
+  increasing the total mesh size significantly, leading to potentially (very)
+long computation times
+* Add nodes with suitably small distances to the PLC _before_ calling
+  `createMesh`. In order to incorporate these nodes, the mesh generator is then
+  forced to locally include correspondingly small mesh cells. In order to achieve
+  continuity, mesh sizes will then gradually increase to the globally-accepted
+  mesh size.
+  A PLC object has the method `plc.createNode([x, y, z])` which can be used to
+  add a node at the location (x, y, z).
+
+:::
+
+:::{admonition} 2D mesh quality and cell areas
+:class: info
+
+TODO
+
+:::
+
+
+
 
 ## Utilizing markers
 
@@ -274,34 +340,40 @@ When constructing complex geometries out of basic geometric shapes (e.g., circle
 Let's take a closer look at the region markers of the two-layer case presented above. Every region marker of a specific mesh region has a position, which it is assigned to.  By using ``, we can visualize the position in the PLC:
 
 ```{code-cell}
-
-fig, ax = plt.subplots(1,1)
+fig, ax = plt.subplots(1, 1)
 pg.show(world, ax=ax)
 for nr, marker in enumerate(world.regionMarkers()):
-    print('Position marker number {}:'.format(nr + 1), marker.x(), marker.y(),
-          marker.z())
-    ax.text(marker.x()+2,marker.y()+2, f"Region marker position {nr+1}",
-            fontweight="bold",fontsize=11, ha="left", va="top", color="black")
-    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color='k')
-
+    print(f"Position marker number {nr + 1}:",
+          marker.x(), marker.y(), marker.z())
+    ax.text(marker.x() + 2, marker.y() + 2,
+            f"Region marker position {nr + 1}",
+            fontweight="bold", fontsize=11,
+            ha="left", va="top", color="black")
+    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color="k")
 ```
 
 By default, pyGIMLi assigns unique markers to every region of the PLC, starting from 1. A marker value of 0 is assigned to a region if no region marker is found - but even if this happens, we could still manually add a marker to the specific region. For now, we want to add a polygon to the already existing 2-layer PLC. This is done using the `createPolygon()` function. Within this function, we have two adjusting variables for the region markers - *marker* and *markerPosition*. The first variable specifies the marker number and the second the position of the marker. Note, that the **position** of a region marker has to lie **within its region** to work! In this case, we specify the newly defined region to have the marker 3. The marker position is set to *[-10, -10]*.
 
 ```{code-cell}
-poly = mt.createPolygon([[left, -20], [right,-15],[right,-5],[left,-5]], isClosed=True, marker=3, markerPosition=[-10, -10])
+poly = mt.createPolygon(
+    [[left, -20], [right, -15], [right, -5], [left, -5]],
+    isClosed=True, marker=3, markerPosition=[-10, -10],
+)
 geometry = world + poly
-fig, ax = plt.subplots(1,1)
+
+fig, ax = plt.subplots(1, 1)
 pg.show(geometry, ax=ax)
 for nr, marker in enumerate(geometry.regionMarkers()):
-    print('Position marker number {}:'.format(nr + 1), marker.x(), marker.y(),
-          marker.z())
-    ax.text(marker.x()+2,marker.y()+2, f"Region marker position {nr+1}",
-            fontweight="bold",fontsize=11, ha="left", va="top", color="black")
-    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color='k')
+    print(f"Position marker number {nr + 1}:",
+          marker.x(), marker.y(), marker.z())
+    ax.text(marker.x() + 2, marker.y() + 2,
+            f"Region marker position {nr + 1}",
+            fontweight="bold", fontsize=11,
+            ha="left", va="top", color="black")
+    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color="k")
 ```
 
-Of course it is also possible to assign the same region marker to multiple parts of your PLC. This gets especially handy as soon as you start assigning physical parameters to your meshed geometry for modelling and/or inversion purposes. For more detailed information on this matter, please take a look at the [modelling section](modelling.md) of the user guide.
+Of course, it is also possible to assign the same region marker to multiple parts of your PLC. This gets especially handy as soon as you start assigning physical parameters to your meshed geometry for modelling and/or inversion purposes. For more detailed information on this matter, please take a look at the [modelling section](modelling.md) of the user guide.
 
 ### Boundary markers
 
@@ -314,15 +386,12 @@ If we assume a simple rectangular world without additional layers, we have two d
 2) Set `createWorld(worldMarker=True)`, which leads to the top holding the boundary marker -1 and other outer boundaries -2.
 
 ```{code-cell}
-start = [left,0]
+start = [left, 0]
 end = [right, -depth]
-world1 = mt.createWorld(start=start,
-                       end=end, worldMarker=False)
+world1 = mt.createWorld(start=start, end=end, worldMarker=False)
+world2 = mt.createWorld(start=start, end=end, worldMarker=True)
 
-world2 = mt.createWorld(start=start,
-                       end=end, worldMarker=True)
-
-fig, (ax1,ax2) = plt.subplots(1,2,figsize=(16,12), dpi=90)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 12), dpi=90)
 ax1.set_title("worldMarker = False", fontweight="bold")
 ax2.set_title("worldMarker = True", fontweight="bold")
 
@@ -333,10 +402,9 @@ pg.show(world2, markers=True, ax=ax2)
 Let's assume that we want to add an additional feature to our PLC, such as a rectangle. Doing so, the circle is automatically assigned a boundary marker - in this case 1. However, assuming the case where we set `worldMarker=False`, this marker is already assigned to the left boundary of the PLC (which could cause problems in any modelling application later on). So we need to adapt the boundary marker of the circle, which is simply done as follows:
 
 ```{code-cell}
+c1 = plc.createRectangle(start=[-10, -5], end=[10, -10], marker=2)
+geom1 = world1 + c1
 
-c1 = plc.createRectangle(start=[-10,-5], end=[10,-10], marker=2)
-geom1 = world1+c1
-# %%
 for i in range(geom1.boundaryCount()):
     if i >= 4:
         geom1.boundary(i).setMarker(5)
@@ -410,22 +478,39 @@ In some cases, the modelling domain may require different degrees of flexibility
 pyGIMLi offers the possibility to merge two meshes by calling {py:class}`merge2Meshes <pygmli.meshtools.merge2Meshes()>`.
 
 ```{code-cell}
-xmin, xmax = -30, 30.
-zmin, zmax = -50, -25.
+xmin, xmax = -30, 30.0
+zmin, zmax = -50, -25.0
 
 xreg = np.linspace(xmin, xmax, 30)
 zreg = np.linspace(zmin, zmax, 25)
 
+# Structured region below the unstructured one
 mesh2merge = mt.createGrid(xreg, zreg, marker=3)
-mergedMesh = mt.merge2Meshes(mesh,mesh2merge)
+
+plc = mt.createWorld(
+    start=[left, 0],
+    end=[right, -depth],
+    layers=[-5],
+    worldMarker=False,
+)
+for x in xreg[1:-1]:
+    plc.createNode([x, -depth])
+
+mesh = mt.createMesh(plc, area=2.0, quality=33, smooth=[2, 4])
+mergedMesh = mt.merge2Meshes(mesh, mesh2merge)
+
 pg.show(mergedMesh, markers=True, showMesh=True)
 ```
 
 The merged meshes appear as a singular hybrid mesh now, so we can append a triangle boundary as for non-hybrid meshes:
 
 ```{code-cell}
-mesh_append = mt.appendTriangleBoundary(mergedMesh, xbound=50., ybound=50., quality=31, smooth=True,
-                                 marker=4, isSubSurface=True, addNodes=10)
+mesh_append = mt.appendTriangleBoundary(
+    mergedMesh,
+    xbound=50.0, ybound=50.0,
+    quality=31, smooth=True,
+    marker=4, isSubSurface=True, addNodes=10,
+)
 
 ax, cb = pg.show(mesh_append)
 ```
@@ -457,7 +542,6 @@ pg.show(scaled_mesh)
 Another valuable mesh modification tool is the mesh.rotate function. By providing a rotation angle and the rotation plane, we can adjust the orientation angle of our mesh:
 
 ```{code-cell}
-import numpy as np
 rotated_mesh = pg.Mesh(mesh)
 rotated_mesh.rotate([0, 0, np.deg2rad(-20)])
 pg.show(rotated_mesh)

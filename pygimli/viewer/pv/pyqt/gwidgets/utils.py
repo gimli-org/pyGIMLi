@@ -45,6 +45,13 @@ class GToolBar(QWidget):
     """
 
     def __init__(self, parent=None):
+        """Initialise the 3D viewer toolbar.
+
+        Parameters
+        ----------
+        parent : QWidget, optional
+            Parent widget.
+        """
         super(GToolBar, self).__init__(parent)
         self.setupWidget()
 
@@ -236,6 +243,13 @@ class GToolBar(QWidget):
         self.setLayout(lt)
 
     def addExtraCMap(self, cMap):
+        """Add an additional colormap entry to the colormap combo box.
+
+        Parameters
+        ----------
+        cMap : str
+            Matplotlib colormap name to add.
+        """
         for icon, name in self._createPixmap([cMap]):
             self.cbbx_cmap.addItem(icon, name)
             self.cbbx_cmap.setIconSize(QSize(40, 15))
@@ -269,6 +283,19 @@ class GToolBar(QWidget):
 class GButton(QPushButton):
 
     def __init__(self, text=None, tooltip=None, checkable=False, size=None):
+        """Initialise a styled push button.
+
+        Parameters
+        ----------
+        text : str, optional
+            Button label.
+        tooltip : str, optional
+            Tooltip string.
+        checkable : bool
+            If True, the button toggles on/off.
+        size : [int, int], optional
+            Fixed [width, height] in pixels.
+        """
         super(GButton, self).__init__(None)
         self.setText(text)
         self.setToolTip(tooltip)
@@ -280,6 +307,13 @@ class GButton(QPushButton):
 class GLineEdit(QLineEdit):
 
     def __init__(self, tooltip=None):
+        """Initialise a numeric line-edit with a double-value validator.
+
+        Parameters
+        ----------
+        tooltip : str, optional
+            Tooltip string.
+        """
         super(GLineEdit, self).__init__(None)
         self.setToolTip(tooltip)
         self.setFixedWidth(200)
@@ -292,6 +326,13 @@ class GLineEdit(QLineEdit):
 class GComboBox(QComboBox):
 
     def __init__(self, tooltip=None):
+        """Initialise a combo box with a tooltip.
+
+        Parameters
+        ----------
+        tooltip : str, optional
+            Tooltip string.
+        """
         super(GComboBox, self).__init__(None)
         self.setToolTip(tooltip)
 
@@ -300,6 +341,7 @@ class _GDoubleSlider(QSlider):
     # https://gist.github.com/dennis-tra/994a65d6165a328d4eabaadbaedac2cc
 
     def __init__(self, *args, **kwargs):
+        """Initialise a high-precision floating-point slider."""
         super().__init__(*args, **kwargs)
         self.decimals = 5
         self._max_int = 10 ** self.decimals
@@ -312,15 +354,31 @@ class _GDoubleSlider(QSlider):
 
     @property
     def _value_range(self):
+        """Return the current value range (max - min)."""
         return self._max_value - self._min_value
 
     def value(self):
+        """Return the current floating-point slider value."""
         return float(super().value()) / self._max_int * self._value_range + self._min_value
 
     def setValue(self, value):
+        """Set the slider to the given floating-point value.
+
+        Parameters
+        ----------
+        value : float
+            Target value, clamped to [minimum, maximum].
+        """
         super().setValue(int((value - self._min_value) / self._value_range * self._max_int))
 
     def setMinimum(self, value):
+        """Set the minimum bound of the slider range.
+
+        Parameters
+        ----------
+        value : float
+            New minimum; must not exceed the current maximum.
+        """
         if value > self._max_value:
             raise ValueError("Minimum limit cannot be higher than maximum")
 
@@ -328,6 +386,13 @@ class _GDoubleSlider(QSlider):
         self.setValue(self.value())
 
     def setMaximum(self, value):
+        """Set the maximum bound of the slider range.
+
+        Parameters
+        ----------
+        value : float
+            New maximum; must not be below the current minimum.
+        """
         if value < self._min_value:
             raise ValueError("Minimum limit cannot be higher than maximum")
 
@@ -335,15 +400,24 @@ class _GDoubleSlider(QSlider):
         self.setValue(self.value())
 
     def minimum(self):
+        """Return the current minimum bound."""
         return self._min_value
 
     def maximum(self):
+        """Return the current maximum bound."""
         return self._max_value
 
 
 class GSlider(_GDoubleSlider):
 
     def __init__(self, tooltip=None):
+        """Initialise a horizontal floating-point slider with a tooltip.
+
+        Parameters
+        ----------
+        tooltip : str, optional
+            Tooltip string.
+        """
         super(GSlider, self).__init__(None)
         self.setOrientation(Qt.Horizontal)
         self.setToolTip(tooltip)
@@ -352,6 +426,15 @@ class GSlider(_GDoubleSlider):
 class GDoubleSpinBox(QDoubleSpinBox):
 
     def __init__(self, tooltip, parent=None):
+        """Initialise a high-precision double spin box.
+
+        Parameters
+        ----------
+        tooltip : str
+            Tooltip string.
+        parent : QWidget, optional
+            Parent widget.
+        """
         super(GDoubleSpinBox, self).__init__(parent)
         self.setToolTip(tooltip)
         self.setFixedWidth(200)

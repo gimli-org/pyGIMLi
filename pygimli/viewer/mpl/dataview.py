@@ -14,9 +14,17 @@ def generateMatrix(xvec, yvec, vals, **kwargs):
     ----------
     xvec, yvec, vals : iterables (list, np.array, pg.Vector) of same length
 
-    full: bool [False]
-        generate a fully symmetric matrix containing all unique xvec+yvec
-        otherwise A is squeezed to the individual unique vectors
+    Keyword Arguments
+    -----------------
+    full : bool [False]
+        Generate a fully symmetric matrix containing all unique xvec+yvec.
+        Otherwise A is squeezed to the individual unique vectors.
+    fillx : bool [False]
+        Fill gaps in x direction using the median spacing.
+    filly : bool [False]
+        Fill gaps in y direction using the median spacing.
+    verbose : bool [True]
+        Print info about skipped data points and filling operations.
 
     Returns
     -------
@@ -72,13 +80,20 @@ def showValMapPatches(vals, xVec=None, yVec=None, dx=1, dy=None, **kwargs):
     Parameters
     ----------
     vals : iterable
-        values to plot
+        Values to plot.
     xVec/yVec : iterable
-        x/y axis values
+        x/y axis values.
     dx/dy : float
-        patch width
-    circular : bool
-        assume circular (cyclic) positions
+        Patch width.
+
+    Keyword Arguments
+    -----------------
+    circular : bool [False]
+        Assume circular (cyclic) positions.
+    ax : mpl.Axes [None]
+        Axes to draw into. Creates a new one if not given.
+    colorBar : bool [True]
+        Whether to create a color bar.
     """
     ax, _ = pg.show(ax=kwargs.pop('ax', None))
 
@@ -92,18 +107,23 @@ def showValMapPatches(vals, xVec=None, yVec=None, dx=1, dy=None, **kwargs):
 
 
 def drawValMapPatches(ax, vals, xVec=None, yVec=None, dx=1, dy=None, **kwargs):
-    """Show values as patches over x and y vector.
+    """Draw values as patches over x and y vector.
 
     Parameters
     ----------
+    ax : mpl.Axes
+        Axes to draw into.
     vals : iterable
-        values to plot
+        Values to plot.
     xVec/yVec : iterable
-        x/y axis values
+        x/y axis values.
     dx/dy : float
-        patch width
-    circular : bool
-        assume circular (cyclic) positions
+        Patch width.
+
+    Keyword Arguments
+    -----------------
+    circular : bool [False]
+        Assume circular (cyclic) positions.
     """
     from matplotlib.collections import PatchCollection
     from matplotlib.patches import Wedge, Rectangle

@@ -570,6 +570,13 @@ class MeshModelling(Modelling):
     """Modelling class with a mesh discretization."""
 
     def __init__(self, **kwargs):
+        """Initialise the mesh-based modelling operator.
+
+        Parameters
+        ----------
+        **kwargs :
+            Forwarded to :class:`Modelling`.
+        """
         super().__init__(**kwargs)
         self._axs = None
         self._meshNeedsUpdate = True

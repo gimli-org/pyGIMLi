@@ -884,6 +884,21 @@ pgcore.RVector.__eq__ = __EQ_RVector__
 # useful stuff
 ############################
 def toIVector(v):
+    """Convert an array-like to a pgcore.IVector.
+
+    .. deprecated::
+        Use a plain NumPy integer array instead.  This function will be
+        removed in a future release.
+
+    Parameters
+    ----------
+    v : array-like
+        Values to convert.
+
+    Returns
+    -------
+    pgcore.IVector
+    """
     print("do not use toIVector(v) use ndarray directly .. "
           "this method will be removed soon")
     ret = pgcore.IVector(len(v), 0)

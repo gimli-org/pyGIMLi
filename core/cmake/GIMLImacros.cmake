@@ -4,7 +4,7 @@
 function(cprint)
     list(GET ARGV 0 Color)
     list(REMOVE_AT ARGV 0)
-    execute_process(COMMAND 
+    execute_process(COMMAND
     cmake -E cmake_echo_color --${Color} ${ARGV})
 
 
@@ -43,14 +43,14 @@ macro(add_python_module PYTHON_MODULE_NAME SOURCE_DIR EXTRA_LIBS OUTDIR)
     include_directories(${Boost_INCLUDE_DIR})
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
     include_directories(${CMAKE_CURRENT_BINARY_DIR}/generated/)
-    
+
     add_definitions(-DPYGIMLI)
     add_definitions(-DBOOST_PYTHON_NO_PY_SIGNATURES)
     add_definitions(-DBOOST_PYTHON_USE_GCC_SYMBOL_VISIBILITY)
-    
+
     add_library(${PYTHON_TARGET_NAME} MODULE ${${PYTHON_MODULE_NAME}_SOURCE_FILES})
     set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES PREFIX "")
-        
+
     #TODO check!! (python3-config --extension-suffix)
 
     if (APPLE)
@@ -62,10 +62,10 @@ macro(add_python_module PYTHON_MODULE_NAME SOURCE_DIR EXTRA_LIBS OUTDIR)
     else()
         # set(GIMLI_LIBRARY "${CMAKE_BINARY_DIR}/${LIBRARY_INSTALL_DIR}/libgimli.so")
     endif()
-    
-    # target_link_libraries(${PYTHON_TARGET_NAME} ${GIMLI_LIBRARY}) 
-    # target_link_libraries(${PYTHON_TARGET_NAME} $<TARGET_FILE:gimli>) 
-    target_link_libraries(${PYTHON_TARGET_NAME} gimli) 
+
+    # target_link_libraries(${PYTHON_TARGET_NAME} ${GIMLI_LIBRARY})
+    # target_link_libraries(${PYTHON_TARGET_NAME} $<TARGET_FILE:gimli>)
+    target_link_libraries(${PYTHON_TARGET_NAME} gimli)
     target_link_libraries(${PYTHON_TARGET_NAME} ${Boost_PYTHON_LIBRARY})
     #target_link_libraries(${PYTHON_TARGET_NAME} ${Python_LIBRARIES})
 
@@ -85,19 +85,19 @@ macro(add_python_module PYTHON_MODULE_NAME SOURCE_DIR EXTRA_LIBS OUTDIR)
                         LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL ${OUTDIR})
     set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
                         LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO ${OUTDIR})
-    
+
     if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_CLANGXX)
 	    set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
                             COMPILE_FLAGS "-fvisibility=hidden -Wno-unused-value -Wno-infinite-recursion"
                                 )
-        
+
         if (WIN32 AND ADDRESSMODEL EQUAL "64")
-            set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES 
+            set_target_properties(${PYTHON_TARGET_NAME} PROPERTIES
                                 DEFINE_SYMBOL "MS_WIN64")
         endif()
     endif()
-    
-    
+
+
     #--copy pattern files to build folder--
     ## needed?
     # set(PYTHON_IN_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -109,7 +109,7 @@ macro(add_python_module PYTHON_MODULE_NAME SOURCE_DIR EXTRA_LIBS OUTDIR)
     #                 "${PYTHON_MODULE_NAME}/*.xrc"
     #                 "${PYTHON_MODULE_NAME}/*.fbp")
 
-    
+
 
     # foreach(file ${PYTHON_FILES})
 
@@ -148,7 +148,7 @@ function(find_python_module module)
         # A module's location is usually a directory, but for binary modules
         # it's a .so file.
         execute_process(COMMAND "${Python_EXECUTABLE}" "-c"
-            "import re, ${module}; print(re.compile('\\__init__.py.*').sub('',${module}.__file__))"
+            "import re, ${module}; print(re.compile('__init__.py.*').sub('',${module}.__file__))"
             RESULT_VARIABLE _${module}_status
             OUTPUT_VARIABLE _${module}_location
             OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -192,27 +192,59 @@ macro(findBuildTools)
 endmacro(findBuildTools)
 
 
+# Usage: find_or_build_package(<package> <get_package> [LOCAL] [FORCE] [VERSION <ver>])
+#   LOCAL  - prefer local/external build over system package
+#   FORCE  - unconditionally rebuild the package
+#   VERSION <ver> - require at least this version; rebuild if too old
 macro(find_or_build_package package get_package)
 
     set (extraMacroArgs ${ARGN})
+    set (foceLocal False)
+    set (forceRebuild False)
+    set (requiredVersion "")
 
-    # Did we get any optional args?
+    # Parse optional args: LOCAL, FORCE and VERSION <ver>
     list(LENGTH extraMacroArgs numExtraArgs)
-    if (${numExtraArgs} GREATER 0)
-        list(GET extraMacroArgs 0 optionalArg)
-        set(foceLocal True)
-    else()
-        set(foceLocal False)
-    endif()
+    set(_i 0)
+    while(_i LESS numExtraArgs)
+        list(GET extraMacroArgs ${_i} _arg)
+        if (_arg STREQUAL "LOCAL")
+            set(foceLocal True)
+        elseif (_arg STREQUAL "FORCE")
+            set(forceRebuild True)
+        elseif (_arg STREQUAL "VERSION")
+            math(EXPR _inext "${_i} + 1")
+            if (_inext LESS numExtraArgs)
+                list(GET extraMacroArgs ${_inext} requiredVersion)
+                set(_i ${_inext})
+            endif()
+        endif()
+        math(EXPR _i "${_i} + 1")
+    endwhile()
 
     string(TOUPPER ${package} upper_package)
-    find_or_build_package_check(${package} ${get_package} ${upper_package}_FOUND ${foceLocal})
+    find_or_build_package_check(${package} ${get_package} ${upper_package}_FOUND ${foceLocal} "${requiredVersion}" ${forceRebuild})
 endmacro()
 
+
+# Usage: build_package(<package> <get_package> [FORCE])
+#   FORCE - pass --force flag to buildThirdParty.sh to force a clean rebuild
 macro(build_package package get_package)
+    set(_bp_extraArgs ${ARGN})
+    set(_bp_force False)
+    foreach(_bp_arg ${_bp_extraArgs})
+        if (_bp_arg STREQUAL "FORCE")
+            set(_bp_force True)
+        endif()
+    endforeach()
+
     findBuildTools()
 
-    message(STATUS "building ${package} from foreign sources into ${THIRDPARTY_DIR}" )
+    if (_bp_force)
+        message(STATUS "building ${package} (FORCED) from foreign sources into ${THIRDPARTY_DIR}")
+    else()
+        message(STATUS "building ${package} from foreign sources into ${THIRDPARTY_DIR}")
+    endif()
 
     file(MAKE_DIRECTORY ${THIRDPARTY_DIR})
 
@@ -224,51 +256,96 @@ macro(build_package package get_package)
         set(get_package ${lower_package})
     endif()
 
+    set(_bp_cmd bash ${PROJECT_SOURCE_DIR}/core/scripts/buildThirdParty.sh ${get_package})
+    if (_bp_force)
+        list(APPEND _bp_cmd "--force")
+    endif()
+
     execute_process(
-        COMMAND
-            bash ${PROJECT_SOURCE_DIR}/core/scripts/buildThirdParty.sh ${get_package}
+        COMMAND ${_bp_cmd}
         WORKING_DIRECTORY
             ${THIRDPARTY_DIR}
     )
 endmacro()
 
-macro(find_or_build_package_check 
-        package 
-        get_package 
-        checkVar 
+
+macro(find_or_build_package_check
+        package
+        get_package
+        checkVar
         forceLocal
+        requiredVersion
+        forceRebuild
         )
 
-    message(STATUS "** Find or build ${package} at: ${checkVar} force: ${forceLocal}")
-    find_package(${package})
-    message(STATUS "Found: ${${package}_FOUND}")
+    message(STATUS "${package} ** Find or build at: ${checkVar} force: ${forceLocal} version: '${requiredVersion}'")
 
+    if (requiredVersion)
+        find_package(${package} ${requiredVersion})
+    else()
+        find_package(${package})
+    endif()
     string(TOUPPER ${package} upper_package)
     string(TOLOWER ${package} lower_package)
 
-    set (FORCE_LOCAL_REBUILD 0)
+    message(STATUS "${package} found: ${${upper_package}_FOUND} (version: ${${upper_package}_VERSION})")
 
-    message(STATUS "Local build ${package} forced: ${forceLocal}")
-
-    if ($ENV{CLEAN})
-        if(${forceLocal} OR ${package}_LOCAL)
-            set(FORCE_LOCAL_REBUILD 1)
-            set(ENV{CLEAN} 1)
-            message(STATUS "Rebuild forced for: ${package}")
+    # Version check: if a version is required and the found version is known, compare
+    set(_version_ok TRUE)
+    if (requiredVersion AND ${upper_package}_FOUND)
+        set(_found_ver "")
+        foreach(_vvar ${upper_package}_VERSION ${package}_VERSION)
+            if (DEFINED ${_vvar} AND NOT "${${_vvar}}" STREQUAL "")
+                set(_found_ver "${${_vvar}}")
+                break()
+            endif()
+        endforeach()
+        if (_found_ver)
+            if (_found_ver VERSION_LESS requiredVersion)
+                message(STATUS "${package} version ${_found_ver} is less than required ${requiredVersion} -- will rebuild.")
+                set(_version_ok FALSE)
+            else()
+                message(STATUS "${package} version ${_found_ver} satisfies >= ${requiredVersion}")
+            endif()
+        else()
+            message(STATUS "${package} version unknown, cannot verify requirement ${requiredVersion}")
         endif()
     endif()
 
-    if (NOT ${checkVar} OR ${FORCE_LOCAL_REBUILD})
+    set (FORCE_LOCAL_REBUILD 0)
 
-        build_package(${package} ${get_package})
+    message(STATUS "${package}: Local build forced: ${forceLocal}, Force rebuild: ${forceRebuild}")
 
-        message(STATUS "checking again for ${package} ...")
-		find_package(${package})
-        message(STATUS "Found: ${${package}_FOUND}")
+    if (${forceRebuild} OR NOT ${_version_ok})
+        set(FORCE_LOCAL_REBUILD 1)
+        message(STATUS "${package}: FORCE flag set -- unconditional rebuild.")
+    elseif ($ENV{CLEAN})
+        if(${forceLocal} OR ${package}_LOCAL)
+            set(FORCE_LOCAL_REBUILD 1)
+            set(ENV{CLEAN} 1)
+            message(STATUS "${package}: rebuild forced by CLEAN env.")
+        endif()
+    endif()
+
+    if (NOT ${checkVar} OR NOT ${_version_ok} OR ${FORCE_LOCAL_REBUILD})
+
+        if (${FORCE_LOCAL_REBUILD})
+            build_package(${package} ${get_package} FORCE)
+        else()
+            build_package(${package} ${get_package})
+        endif()
+
+        message(STATUS "${package}: checking again for ...")
+        if (requiredVersion)
+            find_package(${package} ${requiredVersion})
+        else()
+            find_package(${package})
+        endif()
+        message(STATUS "${package} found: ${${package}_FOUND}")
 
         set(${package}_LOCAL 1 CACHE INTERNAL "this package was build local")
     else()
-        message(STATUS "** Find or build ${package} done.")
+        message(STATUS "${package}: find or build done.")
     endif()
 endmacro()
 

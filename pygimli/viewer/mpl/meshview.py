@@ -21,9 +21,23 @@ class CellBrowserCacheSingleton(object):
         return CellBrowserCacheSingleton.__instance
 
     def add(self, c):
+        """Add a CellBrowser instance to the cache.
+
+        Parameters
+        ----------
+        c : CellBrowser
+            Instance to register.
+        """
         self.cbCache_.append(c)
 
     def remove(self, c):
+        """Remove a CellBrowser instance from the cache.
+
+        Parameters
+        ----------
+        c : CellBrowser
+            Instance to deregister.
+        """
         self.cbCache_.remove(c)
 
 

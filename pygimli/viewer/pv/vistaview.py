@@ -98,7 +98,6 @@ def showMesh3DVista(mesh, data=None, **kwargs):
 
     plotter = drawModel(kwargs.pop("ax", None),
                         mesh, data, notebook=notebook, cMap=cMap,
-                        #offScreen=True,
                         **kwargs)
 
     # seems top be broken on some machines
@@ -111,11 +110,6 @@ def showMesh3DVista(mesh, data=None, **kwargs):
         plotter.__show = plotter.show
         plotter.show = lambda *args, **kwargs: plotter.__show(
             *args, jupyter_backend="trame", **kwargs
-        )
-    elif pyvista.BUILDING_GALLERY:
-        plotter.__show = plotter.show
-        plotter.show = lambda *args, **kwargs: plotter.__show(
-            *args, jupyter_backend="html", **kwargs
         )
 
     if hold is False:

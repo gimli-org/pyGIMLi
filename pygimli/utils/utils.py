@@ -41,9 +41,9 @@ class ProgressBar:
     def __init__(self, its, width=80, sign=":", **kwargs):
         #ruff: noqa: D301
         """Create animated text-based progress bar.
-
-        TODO
-        * optional: 'estimated time' instead of 'x of y complete'
+        
+        # TODO
+        # * optional: 'estimated time' instead of 'x of y complete'
 
         Arguments
         ---------

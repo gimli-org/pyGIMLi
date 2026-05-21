@@ -6,7 +6,7 @@ kernelspec:
 
 # Visualization
 
-As presented in the [Fundamentals](fundamentals.md), pyGIMLi offers some basic post-processing routines for plotting. For 2D and 3D visualizations, we rely on [Matplotlib](https://matplotlib.org/g) and [pyVista](https://docs.pyvista.org/), respectively, and provide the following frameworks:
+As presented in the [Fundamentals](fundamentals.md), pyGIMLi offers some basic post-processing routines for plotting. For 2D and 3D visualizations, we rely on [Matplotlib](https://matplotlib.org/) and [pyVista](https://docs.pyvista.org/), respectively, and provide the following frameworks:
 
 ```{eval-rst}
 .. autosummary::
@@ -20,7 +20,7 @@ In the following, we will give a brief overview on the most important aspects on
 
 ## Plotting in 2D
 
-For plotting in 2D, the method `pygimli.viewer.showMesh()` is called, which creates an axis object and plots a 2D mesh, if provided with node or cell data. As already discussed in the [fundamentals](visualization.md) section, the type of data determines the appropriate draw method.
+For plotting in 2D, the method `pygimli.viewer.showMesh()` is called, which creates an axis object and plots a 2D mesh, if provided with node or cell data. As already discussed in the [fundamentals](fundamentals.md) section, the type of data determines the appropriate draw method.
 
 [This matplotlib glossary](https://matplotlib.org/stable/api/axes_api.html) comprehends all possible adjustments that you can apply to plots based on `pg.show()`. In the following table, we summarized the most relevant functions:
 

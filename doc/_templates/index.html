@@ -4,14 +4,16 @@
 {% block body %}
 
 <h1 class="display-5">
-  pyGIMLi is an open-source library for multi-method modelling and inversion in geophysics.
+  Open-source multi-method modelling and inversion in geophysics.
 </h1>
-<a class="btn btn-primary btn-lg mt-2" href="{{pathto('about')}}">
-  <i class="fas fa-book me-1"></i> Learn more
-</a>
-<a class="btn btn-success btn-lg mt-2 ms-2 text-white" href="{{pathto('user-guide/getting-started/index')}}">
-  <i class="fas fa-rocket me-1"></i> Getting started
-</a>
+<div class="d-flex flex-column flex-sm-row gap-2 mt-2">
+  <a class="btn btn-primary btn-lg" href="{{pathto('about')}}">
+    <i class="fas fa-book me-1"></i> Learn more
+  </a>
+  <a class="btn btn-success btn-lg text-white" href="{{pathto('user-guide/getting-started/index')}}">
+    <i class="fas fa-rocket me-1"></i> Getting started
+  </a>
+</div>
 
 <h1 class="mt-5">Showcase
   <small class="text-muted">
@@ -108,7 +110,7 @@ You found a bug or desperately miss a certain functionality? Fill out a
 <a href="https://github.com/gimli-org/gimli/issues">bug report or a feature
   request</a>. If you have used pyGIMLi for an interesting application, consider
 <a href="mailto:mail@pygimli.org">sending us</a> your example. Please <a
-  href="https://www.pygimli.org/citation.html">cite the pyGIMLi paper</a> or derived ones when using it for scientific
+  href="{{ pathto('about/citation') }}">cite the pyGIMLi paper</a> or derived ones when using it for scientific
 purposes.
 <div class="mb-2"></div>
 {% endblock body %}
