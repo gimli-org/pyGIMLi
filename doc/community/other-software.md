@@ -24,7 +24,7 @@ An open-source research code for petrophysical joint inversion of seismic refrac
 
 Software for estimation of electrical conductivity models using multi-coil rigid-boom electromagnetic induction measurements. Evaluates the well-posedness of inverse problems for layered conductivity models.
 
-> Carrizo Mascarell, M., Werthmüller, D. & Slob, E. (2024). MC_RB_EM_1D: Estimation of electrical conductivity models using multi-coil rigid-boom electromagnetic induction measurements. *Computers & Geosciences*, 193, 105732. [DOI: 10.1016/j.cageo.2024.105732](https://doi.org/10.1016/j.cageo.2024.105732)
+> Carrizo Mascarell, M., Werthmüller, D. & Slob, E. (2024). Estimation of electrical conductivity models using multi-coil rigid-boom electromagnetic induction measurements. *Computers & Geosciences*, 193, 105732. [DOI: 10.1016/j.cageo.2024.105732](https://doi.org/10.1016/j.cageo.2024.105732)
 
 ## PyMERRY <a href="https://github.com/RodolpheCattin/PyMERRY" title="GitHub Repository"><i class="fa-brands fa-github"></i></a>
 

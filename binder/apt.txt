@@ -1,0 +1,5 @@
+libgl1
+libosmesa6
+xvfb
+libnss-wrapper
+tetgen

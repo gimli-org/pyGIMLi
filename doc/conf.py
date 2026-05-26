@@ -386,12 +386,22 @@ try:
         "reset_modules": (reset_mpl),
         # Avoid representation of mpl axis, LineCollections, etc.
         "ignore_repr_types": r"matplotlib[text, axes, collections]",
-        "notebook_extensions": {},
         "show_signature": False,
         "download_all_examples": False,
         "parallel": 1,
         "abort_on_example_error": True,  # Fail early
         # 'matplotlib_animations': (True, 'mp4'),
+        # Binder integration for interactive tutorials
+        # Notebooks are generated on-the-fly by jupytext in postBuild
+        'binder': {
+            'org': 'gimli-org',
+            'repo': 'gimli',
+            'branch': 'dev',
+            'binderhub_url': 'https://mybinder.org',
+            'dependencies': ['binder/requirements.txt', 'binder/apt.txt', 'binder/postBuild'],
+            'notebooks_dir': 'binder/notebooks',
+            'use_jupyter_lab': True,
+        },
     }
 
     # from sphinx_mpatch.patch_sphinx_gallery import _matplotlib_scraper as matplotlib_scraper
@@ -780,7 +790,7 @@ myst_dmath_allow_labels = True
 # myst_heading_anchors = 2
 nb_execution_mode = "auto"
 nb_execution_timeout = 600
-nb_execution_excludepatterns = ["*.ipynb", "*Untitled*", "_examples_auto/**/*", "_tutorials_auto/**/*"]
+nb_execution_excludepatterns = ["*.ipynb", "*Untitled*", "_examples_auto/**/*", "_tutorials_auto/**/*", "user-guide/inversion.md"]
 nb_execution_raise_on_error = True # Important for GitHub Action
 nb_execution_show_tb = True
 
