@@ -129,7 +129,7 @@ python -m venv .venv --prompt=pg
 :::
 
 :::{tab-item} macOS
-:sync: os-mac
+:sync: os-macos
 
 ```bash
 python -m venv .venv --prompt=pg
@@ -150,25 +150,25 @@ source .venv/bin/activate
 :::
 ::::
 
-To install pygimli using `pip`:
+To install pygimli:
 
 ```bash
 pip install pygimli
 ```
 
-To update pygimli using `pip`:
+To update pygimli:
 
 ```bash
 pip install -U pygimli
 ```
 
-Find available version:
+Find available versions:
 
 ```bash
 pip index versions pygimli
 ```
 
-To install a specific version using `pip`:
+To install a specific version:
 
 ```bash
 pip install pygimli==x.x.x
