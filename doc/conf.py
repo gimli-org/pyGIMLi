@@ -790,7 +790,7 @@ myst_dmath_allow_labels = True
 # myst_heading_anchors = 2
 nb_execution_mode = "auto"
 nb_execution_timeout = 600
-nb_execution_excludepatterns = ["*.ipynb", "*Untitled*", "_examples_auto/**/*", "_tutorials_auto/**/*", "user-guide/inversion.md"]
+nb_execution_excludepatterns = ["*.ipynb", "*Untitled*", "_examples_auto/**/*", "_tutorials_auto/**/*"]
 nb_execution_raise_on_error = True # Important for GitHub Action
 nb_execution_show_tb = True
 

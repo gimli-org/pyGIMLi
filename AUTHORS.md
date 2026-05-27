@@ -1,7 +1,5 @@
 - [Carsten Rücker](https://orcid.org/0000-0002-8231-9861)
 
-  *Berlin University of Technology, Department of Applied Geophysics, Berlin, Germany*
-
   <carsten@pygimli.org>
 
 - [Thomas Günther](https://orcid.org/0000-0001-5409-0273)
