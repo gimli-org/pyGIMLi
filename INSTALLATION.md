@@ -20,60 +20,135 @@
 </p><br>
 ```
 
-On all platforms, we recommend to install pyGIMLi via the conda package manager
-contained in the Anaconda Python distribution. For details on how to install
-Anaconda, see [this page](https://docs.anaconda.com/anaconda/install/).
+pyGIMLi is available for Windows, macOS, and Linux and can be installed via various package managers:
 
-Note that Anaconda comes with many (great) packages, many of which you likely
-will not use. If you want to save space, you can install the [light-weight
-version Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/).
+::::{tab-set}
 
-:::{note}
-After installing Anaconda or Miniconda, make sure that you have at least
-version 23.10.0 of conda (`conda --version`).
+:::{tab-item} pip
+
+```bash
+pip install pygimli
+```
+
 :::
 
-% TODO: Temporarily disabled. PDF needs to update version automatically.
-
-% A **step-by-step guide for Windows users** can be found `here
-
-% <https://www.pygimli.org/_downloads/pygimli_win_install_guide.pdf>`_.
-
-To avoid conflicts with other packages, we recommend to install pyGIMLi in a
-separate environment. Here we call this environment `pg`, but you can give
-it any name. Note that this environment has to be created only once.
-
-Open a terminal (Linux & Mac) or the Anaconda Prompt (Windows) and type:
+:::{tab-item} uv
 
 ```bash
-conda create -n pg -c gimli -c conda-forge "pygimli>=1.6.0"
+uv add pygimli
 ```
 
-If you want to use pyGIMLi from the command line, you have to activate the
-environment. You can put this line in your `~/.bashrc` file so that it is
-activated automatically if you open a terminal.
+:::
+
+:::{tab-item} conda
 
 ```bash
-conda activate pg
+conda install -c gimli -c conda-forge pygimli
 ```
 
-After that you can use pyGIMLi with your text editor of choice and a terminal.
+:::
 
-
-## Using pip
-
-*Currently only available for linux and windows.*
-
-pyGIMLi can be also installed using the default python installer using `pip`. If you don't use a conda environment we encurage the use of a virtual environment.
+:::{tab-item} pixi
 
 ```bash
-python -m venv .venv --promp=pg
-.venv/bin/activate     # for linux
-#or for windows
+pixi add --channel gimli --channel conda-forge pygimli
+```
+
+:::
+
+::::
+
+While we do not have a preference on the package manager you use, we recommend to avoid mixing them and generally encourage the use of separated environments, which will be discussed for `pip` and `conda` below.
+
+## Installing via [`pip`](https://pip.pypa.io/en/stable/getting-started/)
+
+`pip` is the default command to install Python packages.
+On most systems `pip` ships together with Python, so installing a Python 3 is usually all you need:
+
+::::{tab-set}
+
+:::{tab-item} Windows
+:sync: os-windows
+
+Install Python with the official
+[python.org installer](https://www.python.org/downloads/windows/) and tick
+**"Add python.exe to PATH"** during setup, or install it from the Microsoft
+Store.
+
+:::
+
+:::{tab-item} macOS
+:sync: os-macos
+
+Recent macOS versions no longer ship Python. Install it with the official
+[python.org installer](https://www.python.org/downloads/macos/) or via
+[Homebrew](https://brew.sh):
+
+```bash
+brew install python
+```
+
+:::
+
+:::{tab-item} Linux
+:sync: os-linux
+
+Python is preinstalled on most distributions. Install Python, `pip` and `venv`
+via your package manager, e.g.:
+
+```bash
+sudo apt install python3 python3-pip python3-venv    # Debian/Ubuntu
+sudo dnf install python3 python3-pip                 # Fedora
+sudo pacman -S python python-pip                     # Arch
+```
+
+:::
+
+::::
+
+Verify that everything is available (use `py` instead of `python3` on Windows):
+
+```bash
+python3 --version
+python3 -m pip --version
+```
+
+To avoid conflicts with other packages we install pyGIMLi into a separate
+environment, here called `pg` (you can pick any name; the environment only has to be created once). 
+
+::::{tab-set}
+
+:::{tab-item} Windows
+:sync: os-windows
+
+```bash
+python -m venv .venv --prompt=pg
 .venv/Scripts/activate
 ```
-Its maybe not a bad idea to keep evironments if you have a working toolchain and test new pygimli version in a new virtual environment first.
 
+:::
+
+:::{tab-item} macOS
+:sync: os-mac
+
+```bash
+python -m venv .venv --prompt=pg
+source .venv/bin/activate
+```
+
+:::
+
+
+:::{tab-item} Linux
+:sync: os-linux
+
+```bash
+python -m venv .venv --prompt=pg
+source .venv/bin/activate
+```
+
+:::
+::::
 
 To install pygimli using `pip`:
 
@@ -96,20 +171,38 @@ pip index versions pygimli
 To install a specific version using `pip`:
 
 ```bash
-pip install pygimli==$version
+pip install pygimli==x.x.x
 ```
 
+## Installing via `conda/mamba`
 
-## Usage with Spyder or JupyterLab
+We recommend to install the conda/mamba package managers via the lightweight and free Miniforge distribution (<https://conda-forge.org/download/>).
+
+```bash
+# These two lines are optional but recommended
+conda create -n pg
+conda activate pg
+
+conda install -c gimli pygimli
+```
+
+Once the environment is activated you can use pyGIMLi from the command line with
+your editor of choice. To activate it automatically in every new terminal, add
+the activation command (`conda activate pg`) to
+your shell startup file, e.g. `~/.bashrc`.
+
+## Using pyGIMLi with Spyder or JupyterLab
 
 Depending on your preferences, you can also install third-party software such as
-the MATLAB-like integrated development environment (<https://www.spyder-ide.org>):
+the MATLAB-like integrated development environment
+[Spyder](https://www.spyder-ide.org):
 
 ```bash
 conda install -c conda-forge spyder
 ```
 
-Or alternatively, the web-based IDE JupyterLab (<https://jupyterlab.readthedocs.io>):
+Or alternatively, the web-based IDE
+[JupyterLab](https://jupyterlab.readthedocs.io):
 
 ```bash
 conda install -c conda-forge jupyterlab
@@ -132,66 +225,116 @@ jupyter lab
 ## pyGIMLi on Google Colab
 
 Even though still experimental, pyGIMLi can be run on Google Colab without any
-installation on your own computer. Just create a new Notebook and install the
+installation on your own computer. Just create a new notebook and install the
 pyGIMLi package via pip:
 
-    !pip install pygimli tetgen
+```bash
+!pip install pygimli tetgen
+```
 
-It turns out that there are some packages preinstalled that lead to some
-incompatibl numpy version, so you might have to uninstall them first.
+Some preinstalled packages may pull in an incompatible NumPy version, so you
+might have to uninstall them first:
 
-.. code:: python
-
-    !pip uninstall -y numba tensorflow pytensor thinc
-    !pip install pygimli tetgen
+```python
+!pip uninstall -y numba tensorflow pytensor thinc
+!pip install pygimli tetgen
+```
 
 ## Staying up-to-date
 
-Update your pyGIMLi installation from time to time, if want to have the newest
-functionality.
+Update your pyGIMLi installation from time to time to get the newest
+functionality:
+
+::::{tab-set}
+:::{tab-item} pip
+:sync: pm-pip
+
+```bash
+pip install -U pygimli
+```
+
+:::
+
+:::{tab-item} conda
+:sync: pm-conda
 
 ```bash
 conda update -c gimli -c conda-forge pygimli
 ```
 
-If something went wrong and you are running an old, not further
-supported Python version, consider a fresh install in a new clean environment.
-The only drawback of using conda is that you are bound to the rhythm in which we
-update the conda packages. In order to work with the latest Python codes you
-should create an environment with the latest pyGIMLi C++ core only,
+:::
+::::
+
+If something went wrong and you are running an old, no longer supported Python
+version, consider a fresh install in a new clean environment.
+
+## Development version
+
+The conda packages follow our release rhythm. To work with the latest Python
+code from `git` while still using the pre-built C++ core, first create an
+environment with only `pgcore`:
+
+
+::::{tab-set}
+:::{tab-item} pip
+:sync: pm-pip
+
+```bash
+python -m venv .venv --prompt pgcore
+source .venv/bin/activate # Mac/Linux
+.venv/Scripts/activate # windows
+pip install pgcore
+```
+
+:::
+
+:::{tab-item} conda
+:sync: pm-conda
 
 ```bash
 conda create -n pgcore -c gimli -c conda-forge pgcore
+conda activate pgcore
 ```
 
-retrieve the source code by git
+:::
+::::
+
+Retrieve the source code with git:
 
 ```bash
 git clone https://github.com/gimli-org/gimli
 cd gimli
 ```
 
-and install pygimli as a development package using conda
+and install pyGIMLi as an editable (development) package:
 
-```bash
-conda develop .
-```
+::::{tab-set}
 
-or using pip
+:::{tab-item} pip
+:sync: pm-pip
 
 ```bash
 pip install --no-build-isolation --no-deps -e .
 ```
 
-Alternatively you could set the `PYTHONPATH` variable, but you would have to care
-for dependencies by yourself.
+:::
 
-Later you can just update the pyGIMLi code by
+:::{tab-item} conda
+:sync: pm-conda
+
+```bash
+conda develop .
+```
+
+:::
+
+::::
+
+Alternatively you could set the `PYTHONPATH` variable, but then you would have to take care of dependencies yourself. Later you can update the pyGIMLi code with:
 
 ```bash
 git pull
 ```
 
-Only if you need recent changes to the C++ core, you have to compile
-pyGIMLi using your systems toolchain as described in
-<https://www.pygimli.org/compilation.html#sec-build>
+Only if you need recent changes to the C++ core itself do you have to compile pyGIMLi with your system toolchain, as described in the
+[build guide](https://www.pygimli.org/compilation.html#sec-build).
