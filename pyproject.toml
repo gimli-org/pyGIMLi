@@ -64,7 +64,8 @@ opt = [
     "matplotlib>3.7",
     "meshio",
     "pyvista[all]",
-    "scipy",
+    "scipy<1.18", # 1.18 forces py>3.11
+    #"scipy<1.17", # 1.17 forces py>3.10
     #"scipy>=1.14,<1.15",
     "tetgen>=0.6.5",
     "tqdm",
