@@ -1,6 +1,43 @@
 # Changelog
 
-##
+## v1.6.0 (11/05/2026)
+
+``` bash
+conda install -c gimli -c conda-forge pygimli=1.6.0
+```
+
+#### New features & enhancements
+- Structurally coupled cooperative inversion (SCCI) framework, with `drawCWeight`, an `arsinh` transformation and a petrophysical joint-inversion example
+- Matrix-free / implicit Jacobian built from a forward operator via `fop.Sx(x)` and `fop.STy(y)`
+- Complex-valued matrix support: `complex2RealMatrix` plus first steps toward complex mass/stiffness matrices
+- Error propagation based on absolute errors (groundwork in the inversion frameworks)
+- `physics.ves.simulate` for VES forward simulation without a manager
+- `pg.viewer.mpl.showModel1D` as a 1D counterpart to `showMesh`/`showModel`
+- `TravelTimeManager.showMisfit()` and several `MagManager` improvements (`exportLocations`, better data-fit display, init)
+- `depthWeighting` keyword can now also be passed as a depth value
+- `createSphere` mesh primitive (#908) and error handling for time-lapse data (#889)
+
+#### Bug fixes
+- Wrong data unit when reading SIP Fuchs III files
+- Wrong numbers for the forward-operator-based matrix
+- Removed erroneous absolute value in the chargeability forward computation
+- Boundary limits and backend handling in 3D (PyVista) visualization (#925)
+- Problems combining DEMs and an error in the inversion class
+- Removed deprecated `pkg_resources` import
+
+#### Documentation
+- Reworked unstructured-meshes section (#881), new getting-started/how-to-continue sections, expanded inversion and FE-modelling guides
+- Added missing docstrings (#955), Schiffler (2025) citation, paper carousel and "other software built with pyGIMLi" page (#933)
+- Interactive tutorials runnable in the browser via Binder (#962)
+
+#### Build & CI
+- Fixed macOS compilation and updated CastXML binaries; fixed Linux and manylinux builds and pgcore dependency issues
+- Added a deploy target and `SKIP_GALLERY` switch; moved to `actions/checkout@v6`
+
+**Full Changelog**: https://github.com/gimli-org/pyGIMLi/compare/v1.5.5...v1.6.0
+
+---
+
 ## v1.1 (06/05/2020)
 Release presented at EGU2020: https://doi.org/10.5194/egusphere-egu2020-18751
 
