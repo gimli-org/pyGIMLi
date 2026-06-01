@@ -723,7 +723,7 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
         if (newCapacity != capacity_) {
             ValueType * buffer = new ValueType[newCapacity];
 
-            std::memcpy(buffer, data_,
+            std::memcpy((void*)buffer, data_,
                         sizeof(ValueType) * min(capacity_, newCapacity));
             // std::destroy_at(data_);
             if (data_) delete [] data_;

@@ -49,7 +49,7 @@ dependencies = [
 
 [project.optional-dependencies]
 build = [
-    "numpy>=2.1.3",
+    "numpy>=2.4.0",
     "pygccxml",
     "pyplusplus",
     "build",
@@ -64,7 +64,8 @@ opt = [
     "matplotlib>3.7",
     "meshio",
     "pyvista[all]",
-    "scipy>=1.14,<1.15",
+    "scipy",
+    #"scipy>=1.14,<1.15",
     "tetgen>=0.6.5",
     "tqdm",
 ]

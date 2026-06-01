@@ -11,10 +11,8 @@ CASTXML_URL=https://github.com/CastXML/CastXML.git
 #CASTXML_REV=d5934bd08651dbda95a65ccadcc5f39637d7bc59 #current functional
 #CASTXML_REV=9d7a46d639ce921b8ddd36ecaa23c567d003294a #last functional
 
-# Check for updates https://data.kitware.com/#search/results?query=castxml&mode=text
-#CASTXML_BIN_LINUX=https://data.kitware.com/api/v1/item/63bed74d6d3fc641a02d7e98/download # 0.5.0
-#CASTXML_BIN_WIN=https://data.kitware.com/api/v1/file/63bed83a6d3fc641a02d7ea3/download # 0.5.0
-CASTXML_BIN_WIN=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/castxml-windows.zip
+#CASTXML_BIN_WIN=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v0.6.5/castxml-windows.zip
+CASTXML_BIN_WIN=https://github.com/CastXML/CastXMLSuperbuild/releases/download/v2026.01.30/castxml-windows-win11-amd64.zip
 
 if [[ $(uname -m) == 'arm64' ]]; then
     # ARM means new Apple M chips
@@ -44,6 +42,27 @@ PYPLUSPLUS_REV=1.8.5
 CPPUNIT_URL=http://svn.code.sf.net/p/cppunit/code/trunk
 
 ### END # not in use anymore due to system packages .. should be removed
+
+
+function green(){
+    # green message
+    echo -e '\033[0;32m'$1'\033[0m'
+}
+
+function blue(){
+    # blue message
+    echo -e '\033[0;34;49m'$1'\033[0m'
+}
+
+function yellow(){
+    # yellow message
+    echo -e '\033[0;33;49m'$1'\033[0m'
+}
+
+function red(){
+    # red message
+    echo -e '\033[0;31;49m'$1'\033[0m'
+}
 
 
 checkTOOLSET(){
@@ -215,11 +234,20 @@ function copySRC_From_EXT_PATH(){
 }
 
 function getWITH_WGET(){
-    _URL_=$1
-    _SRC_=$2
-    _PAC_=$3
 
-    echo "** get with wget ** " $_URL_ $_SRC_ $_PAC_
+    # If first arg is a full URL pointing to a .zip file, split it into base URL and package name
+    if [[ "$1" == *.zip ]]; then
+        FULL_URL="$1"
+        _PAC_="${FULL_URL##*/}"
+        _URL_="${FULL_URL%/*}"
+        _SRC_="$2"
+    else
+        _URL_=$1
+        _SRC_=$2
+        _PAC_=$3
+    fi
+    
+    green "** get with wget ** " $_URL_ $_SRC_ $_PAC_
     echo "wget -nc -nd $_URL_/$_PAC_"
     echo "--------------------------------------------------"
 
@@ -261,55 +289,6 @@ function getWITH_WGET(){
         echo "Skipping .. source tree already exists. Use with CLEAN=1 if you want to force installation."
     fi
 
-}
-
-getWITH_SVN(){
-    SVN="svn"
-    _URL_=$1
-    _SRC_=$2
-    _BRANCH_=$3
-
-    echo "----SVN--$_URL_ -> $_SRC_ : $_BRANCH_----------------"
-    echo "--------------------------------------------------"
-
-    if ( [ -d $_SRC_ ] ); then
-        pushd $_SRC_
-            "$SVN" up
-        popd
-    else
-        pushd $SRC_DIR
-            "$SVN" co $_URL_ $_SRC_
-        popd
-    fi
-}
-
-getWITH_HG(){
-    HG="hg"
-    _URL_=$1
-    _SRC_=$2
-    _BRANCH_=$3
-
-    echo "----HG--$_URL_ -> $_SRC_ : $_BRANCH_----------------"
-    echo "--------------------------------------------------"
-
-    if ( [ -d $_SRC_ ] ); then
-        pushd $_SRC_
-#            "$HG" fetch
-            $HG pull -u
-            $HG up
-        popd
-    else
-        pushd $SRC_DIR
-            ${HG} --config ui.clonebundles=false clone ${_URL_} ${_SRC_}
-        popd
-    fi
-    if [ -n $_BRANCH_ ]; then
-        pushd $_SRC_
-          echo $_SRC_ $_BRANCH_
-          $HG checkout $_BRANCH_
-          #"$HG" revert -r $_BRANCH_ --all
-        popd
-    fi
 }
 
 getWITH_GIT(){
