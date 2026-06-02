@@ -483,13 +483,15 @@ autoclass_content = "class"
 autosummary_generate = True
 autosummary_generate_overwrite = False
 autosummary_imported_members = True
+
 autodoc_mock_imports = [
-    "os",
-    "os.path" "sys",
-    "locale",
-    "numpy",
-    "matplotlib",
-    "matplotlib.pyplot",
+    # "os",
+    # "os.path",
+    # "sys",
+    # "locale",
+    # "numpy", # mocks np and prevents scipy from importing
+    # "matplotlib",
+    # "matplotlib.pyplot",
     "pyvista",
     "pyqt5",
 ]

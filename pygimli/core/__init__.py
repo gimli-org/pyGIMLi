@@ -928,9 +928,8 @@ def asvector(array):
 
 
 # ##########################
-# We want ModellingBase with multi threading jacobian brute force
+# We want ModellingBase with multi threading Jacobian brute force
 # ##########################
-
 
 def __GLOBAL__response_mt_shm_(fop, model, shm, i):
     resp = fop.response_mt(model, i)
@@ -939,27 +938,54 @@ def __GLOBAL__response_mt_shm_(fop, model, shm, i):
         shm[j] = resp[j]
 
 
+def __MP_context__(method='fork'):
+    """Get multiprocessing context.
+
+    Currently only 'fork' is supported on Linux. On Windows and macOS,
+    multiprocessing is not supported due to the need for pickling
+    Boost.Python objects (will come in pg-2.0).
+    In these cases, this function returns None,
+    and the code falls back to single-threaded execution.
+    """
+    import multiprocessing
+
+    # Explicitly use 'fork' so Boost.Python objects never need to be
+    # pickled, regardless of the platform's default start method.
+    # 'fork' is always available on Linux across all Python versions.
+    # from python 3.14 on linux forkserver (requires pickling) is default
+    # so we catch the ValueError and fall back to single-threaded execution.
+
+    # TODO: add pickling and use forkserver on windows and macOS to
+    # enable multi-threaded Jacobian there as well
+    if sys.platform == 'win32' or sys.platform == 'darwin':
+        return None
+
+    try:
+        return multiprocessing.get_context(method)
+    except ValueError:
+        return None
+
+
 def __ModellingBase__createJacobian_mt__(self, model, resp):
+    """Create Jacobian with multi threading. (patch to multiproc.)."""
+    def calcSerial():
+        self.createJacobian(model, resp)
+
+    _ctx = __MP_context__('fork')
+    if _ctx is None:
+        calcSerial()
+        return
+
     from math import ceil
-    from multiprocessing import Process, Array
     import numpy as np
 
-    nModel = len(model)
-    # nData = len(resp)  # not used
-
     fak = 1.05
-
+    nModel = len(model)
     dModel = pgcore.RVector(len(model))
     nProcs = self.multiThreadJacobian()
 
-    if sys.platform == 'win32' or sys.platform == 'darwin':
-        # strange pickle problem: see  python test_PhysicsManagers.py ves
-        from .logger import warn
-        warn('Multiprocess Jacobian currently unavailable for Win32 and Mac.')
-        nProcs = 1
-
     if nProcs == 1:
-        self.createJacobian(model, resp)
+        calcSerial()
         return
 
     shm = []
@@ -981,10 +1007,10 @@ def __ModellingBase__createJacobian_mt__(self, model, resp):
                 modelChange[i] *= fak
                 dModel[i] = modelChange[i] - model[i]
 
-                shm.append(Array('d', len(resp)))
+                shm.append(_ctx.Array('d', len(resp)))
                 procs.append(
-                    Process(target=__GLOBAL__response_mt_shm_,
-                            args=(self, modelChange, shm[i], i)))
+                    _ctx.Process(target=__GLOBAL__response_mt_shm_,
+                                 args=(self, modelChange, shm[i], i)))
 
         for i, p in enumerate(procs):
             p.start()
@@ -1002,18 +1028,28 @@ def __ModellingBase__createJacobian_mt__(self, model, resp):
 
 
 def __ModellingBase__responses_mt__(self, models, respos):
+    """Calculate responses for multiple models. (patch to multiproc.)."""
+    def calcSerial():
+        if len(respos) != len(models):
+            raise ValueError("models and respos need to have the same length")
+
+        for i, m in enumerate(models):
+            respos[i] = self.response_mt(m, i)
+
+    _ctx = __MP_context__('fork')
+    if _ctx is None:
+        calcSerial()
+        return
+
+    from math import ceil
+    import numpy as np
 
     nModel = len(models)
     nProcs = self.multiThreadJacobian()
 
     if nProcs == 1:
-        for i, m in enumerate(models):
-            respos[i] = self.response_mt(m, i)
+        calcSerial()
         return
-
-    from math import ceil
-    from multiprocessing import Process, Array
-    import numpy as np
 
     if models.ndim != 2:
         raise BaseException("models need to be a matrix(N, nModel):" +
@@ -1038,10 +1074,10 @@ def __ModellingBase__responses_mt__(self, models, respos):
         for i in range(int(pCount * nProcs), int((pCount + 1) * nProcs)):
 
             if i < nModel:
-                shm.append(Array('d', nData))
+                shm.append(_ctx.Array('d', nData))
                 procs.append(
-                    Process(target=__GLOBAL__response_mt_shm_,
-                            args=(self, models[i], shm[i], i)))
+                    _ctx.Process(target=__GLOBAL__response_mt_shm_,
+                                 args=(self, models[i], shm[i], i)))
 
         for i, p in enumerate(procs):
             p.start()
