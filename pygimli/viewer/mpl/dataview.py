@@ -578,12 +578,12 @@ def showDataContainerAsMatrix(data, x=None, y=None, v=None, **kwargs):
     verbose = kwargs.get('verbose', False)
     if isinstance(x, str):
         xToken = x
-        x = data(x)
+        x = data[x]
     elif hasattr(x, '__iter__') and isinstance(x[0], str):
         num = np.zeros(data.size())
         for token in x:
             num *= mul
-            num += data(token) + plus
+            num += data[token] + plus
             xToken += token + ' '
         x = num.copy()
 
@@ -592,17 +592,17 @@ def showDataContainerAsMatrix(data, x=None, y=None, v=None, **kwargs):
 
     if isinstance(y, str):
         yToken = y
-        y = data(y)
+        y = data[y]
     elif hasattr(y, '__iter__') and isinstance(y[0], str):
         num = np.zeros(data.size())
         for token in y:
             num *= mul
-            num += data(token) + plus
+            num += data[token] + plus
             yToken += token + ' '
         y = num.copy()
 
     if isinstance(v, str):
-        v = data(v)
+        v = data[v]
 
 #        kwargs.setdefault('ymap', {n: i for i, n in enumerate(np.unique(y))})
     if verbose:

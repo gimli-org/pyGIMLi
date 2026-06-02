@@ -24,7 +24,7 @@ def drawTravelTimeData(ax, data, t=None):
     if min(min(shots), min(geoph)) == 1:
         startOffsetIDX = 1
 
-    tShow = data('t')
+    tShow = data['t']
     if t is not None:
         tShow = t
 
@@ -33,7 +33,7 @@ def drawTravelTimeData(ax, data, t=None):
     ax.figure.show()  # a draw function should never trigger a figure show
 
     for shot in shots:
-        gIdx = pg.find(data('s') == shot)
+        gIdx = pg.find(data['s'] == shot)
         sensorIdx = [int(i__ - startOffsetIDX) for i__ in data['g'][gIdx]]
         ax.plot(x[sensorIdx], tShow[gIdx], 'x-')
 
@@ -156,7 +156,7 @@ def drawVA(ax, data, vals=None, usePos=True, pseudosection=False, **kwargs):
         vals = data(vals)
 
     if vals is None:
-        vals = data('t')
+        vals = data['t']
 
     px = pg.x(data)
     gx = np.asarray([px[g] for g in data.id("g")])

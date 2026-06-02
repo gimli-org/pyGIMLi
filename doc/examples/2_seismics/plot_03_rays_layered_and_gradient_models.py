@@ -67,7 +67,7 @@ def analyticalSolution2Layer(x, zlay=25, v1=1000, v2=3000):
 # We first create an unstructured mesh:
 
 sensors = np.arange(131, step=10.0)
-plc = mt.createWorld([-20, -60], [150, 0], worldMarker=False)
+plc = mt.createWorld([-20, -60], [150, 0], worldMarkers=False)
 for pos in sensors:
     plc.createNode([pos, 0.0])
 mesh_gradient = mt.createMesh(plc, quality=33, area=3)

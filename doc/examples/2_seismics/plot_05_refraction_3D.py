@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """
 Refraction in 3D
 ================
@@ -50,7 +49,7 @@ pg.show(mesh, vel, label=pg.utils.unit("vel"), showMesh=True)
 # Set-up data container.
 
 data = tt.createRAData(sensors)
-data.markInvalid(data("s") > 1)
+data.markInvalid(data["s"] > 1)
 data.set("t", np.zeros(data.size()))
 data.removeInvalid()
 

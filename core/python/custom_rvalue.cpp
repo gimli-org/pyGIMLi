@@ -250,6 +250,7 @@ template < class ValueType > void * checkConvertibleNumpyScalar(PyObject * obj){
                 return NULL;
             }
         }
+
         // if (typeid(ValueType) == typeid(double)){
         //     if (!PyObject_TypeCheck(obj, &PyDoubleArrType_Type)){
         //         __DC("\t", obj, "\t abort check .. Object cannot convert to double")
@@ -257,13 +258,14 @@ template < class ValueType > void * checkConvertibleNumpyScalar(PyObject * obj){
         //     }
         // }
 
-        if (typeid(ValueType) == typeid(long)){
-            if (!PyObject_TypeCheck(obj, &PyIntegerArrType_Type) &&
-                !PyObject_TypeCheck(obj, &PyLongArrType_Type)){
-                __DC("\t", obj, "\t abort check .. Object cannot convert to long")
-                return NULL;
-            }
-        }
+        // this would prevent np.float->long
+        // if (typeid(ValueType) == typeid(long)){
+        //     if (!PyObject_TypeCheck(obj, &PyIntegerArrType_Type) &&
+        //         !PyObject_TypeCheck(obj, &PyLongArrType_Type)){
+        //         __DC("\t", obj, "\t abort check .. Object cannot convert to long")
+        //         return NULL;
+        //     }
+        // }
         __DC("\t", obj, "\t ok.")
         return obj;
     }

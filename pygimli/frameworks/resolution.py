@@ -27,7 +27,7 @@ def scaledJacobianMatrix(inv):
     if isinstance(J, pg.Matrix):  # e.g. ERT
         return left * pg.utils.gmat2numpy(J) * right
     elif isinstance(J, pg.SparseMapMatrix):  # e.g. Traveltime
-        return left * pg.utils.sparseMat2Numpy.sparseMatrix2Dense(J) * right
+        return left * pg.matrix.asArray(J) * right
     else:
         raise TypeError("Matrix type cannot be converted")
 
@@ -60,7 +60,8 @@ def resolutionMatrix(inv, returnRD=False):
         data resolution matrix
     """
     DJ = scaledJacobianMatrix(inv)
-    C = pg.utils.sparseMat2Numpy.sparseMatrix2Dense(inv.fop.constraints())
+    C = pg.matrix.asArray(inv.fop.constraints())
+    #C = pg.matrix.asCOO(inv.fop.constraints())
     cw = inv.fop.regionManager().constraintWeights()
     CC = np.reshape(cw ,[-1, 1]) * C
     JTJ = DJ.T @ DJ

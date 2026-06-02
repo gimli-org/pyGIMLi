@@ -84,6 +84,8 @@ def showMesh3DVistaProcess(mesh, data=None, **kwargs):
     # for compatibility remove show kwargs that are not needed
     kwargs.pop("figsize", False)
 
+    backend = kwargs.pop("backend", None) # not sure if needed
+
     hold = kwargs.pop("hold", False)
     cMap = kwargs.pop("cMap", "viridis")
     notebook = kwargs.pop("notebook", pg.isNotebook())
@@ -144,14 +146,16 @@ def showMesh3DVista(*args, **kwargs):
     Draw PV window in an own Process to allow multiple windows
     for terminal users.
     """
-    if pg.isNotebook() or pg.isIPyTerminal():
+    ctx = pg.core.__MP_context__(method='fork')
+
+    if ctx is None or pg.isNotebook() or pg.isIPyTerminal():
         return showMesh3DVistaProcess(*args, **kwargs)
 
     #pg.info(pg.viewer.mpl.isInteractive(), pg.isNotebook(), pg.isIPyTerminal())
 
     if pg.viewer.mpl.isInteractive() and not kwargs.get('hold', False):
 
-        __PV_windows__.append(Process(target=showMesh3DVistaProcess,
+        __PV_windows__.append(ctx.Process(target=showMesh3DVistaProcess,
                                 args=args, kwargs=kwargs))
         ret = __PV_windows__[-1].start()
 

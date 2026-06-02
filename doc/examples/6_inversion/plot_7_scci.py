@@ -34,9 +34,9 @@ def createSynthModel(nSeg=32):
     world = mt.createCircle(boundaryMarker=-1, nSegments=nSeg*2)
     tri = mt.createPolygon([[-0.8, -0], [-0.5, -0.7], [0.7, 0.5]],
                            isClosed=True, area=0.0015)
-    c1 = mt.createCircle(radius=0.2, pos=[-0.2, 0.5], segments=16,
+    c1 = mt.createCircle(radius=0.2, pos=[-0.2, 0.5], nSegments=16,
                          area=0.0025, marker=3)
-    c2 = mt.createCircle(radius=0.2, pos=[0.32, -0.3], segments=16,
+    c2 = mt.createCircle(radius=0.2, pos=[0.32, -0.3], nSegments=16,
                          area=0.0025, marker=3)
 
     poly = mt.mergePLC([world, tri, c1, c2])

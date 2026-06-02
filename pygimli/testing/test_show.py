@@ -1,12 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+"""A view tests for visualization."""
 import sys
 
 import numpy as np
-
 import pygimli as pg
 from pygimli import plt
-
 import pygimli.meshtools as mt
 
 
@@ -294,12 +292,12 @@ def testShowPV():
     pg.viewer.pv.drawSlice(ax, m1, data=u, label='x', normal=[0, 1, 0])
     ax.show()
 
+
 def testShowPV2():
     print('Show HexP2 Mesh (x)')
     h1 = mt.createGrid(2, 2, 2)
     h1 = h1.createP2()
     h1.show(pg.x(h1))
-
 
 
 def testPVBackends():
@@ -312,13 +310,13 @@ def testPVBackends():
     """
     m1 = mt.createCube()
 
+    print('Fallback')
+    pg.rc['view3D'] = 'fallback'
+    pg.show(m1)
 
-    # pg.rc['view3D'] = 'fallback'
-    # pg.show(m1)
-
-    pg.rc['view3D'] = 'pyvista'
     print('Default')
     pg.show(m1)
+    pg.rc['view3D'] = 'pyvista'
     print('Trame-client')
     pg.show(m1, backend='client')
     # print('ipyvtklink')

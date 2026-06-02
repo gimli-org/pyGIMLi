@@ -34,6 +34,7 @@ SparseMatrix = pgcore.RSparseMatrix
 SparseMapMatrix = pgcore.RSparseMapMatrix
 BlockMatrix = pgcore.RBlockMatrix
 
+
 # General Monkeypatch core classes
 __Matrices = [pgcore.MatrixBase,
               #pgcore.RSparseMatrix,
@@ -61,6 +62,25 @@ def __Matrix_array_ufunc__(self, ufunc, method, *inputs, **kwargs):
             return self.__mul__(inputs[1])
         # if isinstance(inputs[0], np.ndarray):
         #     return pg.core.mult(self, np.squeeze(inputs[0]))
+
+    if ufunc == np.add:
+        ## for self + np.float
+        if len(inputs) == 2 and id(self) == id(inputs[0]):
+            return self.__add__(float(inputs[1]))
+
+        ## for np.float + self
+        if len(inputs) == 2 and id(self) == id(inputs[1]):
+            return self.__add__(float(inputs[0]))
+
+    if ufunc == np.subtract:
+        ## for self - np.float
+        if len(inputs) == 2 and id(self) == id(inputs[0]):
+            return self.__sub__(float(inputs[1]))
+
+        ## for np.float - self
+        if len(inputs) == 2 and id(self) == id(inputs[1]):
+            return self.__rsub__(float(inputs[0]))
+
 
     pg._r('self:', self)
     pg._r('self:', id(self))
@@ -91,10 +111,10 @@ pgcore.RMatrix.dtype = float
 pgcore.CMatrix.dtype = complex#
 pgcore.RDenseMatrix.dtype = float
 pgcore.RSparseMapMatrix.dtype = float
-pgcore.CSparseMapMatrix.dtype = complex
 pgcore.RSparseMatrix.dtype = float
-pgcore.CSparseMatrix.dtype = complex
 pgcore.RBlockMatrix.dtype = float
+pgcore.CSparseMapMatrix.dtype = complex
+pgcore.CSparseMatrix.dtype = complex
 pgcore.CBlockMatrix.dtype = complex
 
 
@@ -256,7 +276,7 @@ def __SparseMatrix_str(self):
     if S.cols() < 25:
         s += '\n'
 
-        M = pg.matrix.asDense(self)
+        M = pg.matrix.asArray(self)
         for mi in M:
             for v in mi:
                 if (abs(v) < 1e-12 and abs(v) > 0):
@@ -859,6 +879,7 @@ def sparseMatrix2Array(matrix, indices=True, getInCRS=True):
 
 def sparseMatrix2Dense(matrix):
     """Convert sparse matrix to dense ndarray."""
+    return asCSR(matrix).toarray()
     rr, cc, vals = sparseMatrix2Array(matrix, indices=True, getInCRS=False)
     mat = np.zeros((matrix.rows(), matrix.cols()))
 
@@ -866,8 +887,7 @@ def sparseMatrix2Dense(matrix):
         mat[r, cc[i]] = vals[i]
 
     return mat
-toDense = sparseMatrix2Dense
-asDense = sparseMatrix2Dense
+asArray = sparseMatrix2Dense
 
 
 def removeEntries(A, rows=None, cols=None):

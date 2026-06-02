@@ -10,7 +10,7 @@ from pygimli.core import (MatrixBase)
 
 from pygimli.core.matrix import (asCSC, asCSR, asCOO,
                                  asSparseMapMatrix, asSparseMatrix,
-                                 asDense, sparseMatrix2Array,
+                                 asArray, sparseMatrix2Array,
                                  reduceEntries, removeEntries)
 
 IdentityMatrix = pgcore.IdentityMatrix
@@ -18,6 +18,9 @@ Matrix = pgcore.RMatrix
 SparseMatrix = pgcore.RSparseMatrix
 SparseMapMatrix = pgcore.RSparseMapMatrix
 BlockMatrix = pgcore.RBlockMatrix
+CMatrix = pgcore.CMatrix
+CSparseMatrix = pgcore.CSparseMatrix
+CSparseMapMatrix = pgcore.CSparseMapMatrix
 
 
 class MultMatrix(MatrixBase):

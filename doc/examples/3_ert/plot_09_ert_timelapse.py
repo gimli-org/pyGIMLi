@@ -36,10 +36,10 @@ print(scheme)
 #
 
 world = mt.createWorld(start=[-50, 0], end=[100, -50], boundary=1,
-                       layers=[-1, -7], worldMarker=True)
+                       layers=[-1, -7], worldMarkers=True)
 for pos in scheme.sensorPositions():
     world.createNode(pos, marker=-99)
-    world.createNode(pos+pg.RVector3(0, -0.2))
+    world.createNode(pos+pg.Pos(0, -0.2))
 
 # Create some heterogeneous block
 plcs = [world]
@@ -64,7 +64,7 @@ ax.set_ylim(-10, 0)
 #
 
 rhomap = [[1, 100.0], [2, 50.0], [3, 20.0], [4, 50.0], [5, 50.0], [6, 50.0]]
-noise = dict(noiseLevel=0.01, noiseAbs=0, verbose=False)
+noise = dict(noiseLevel=0.01, noiseAbs=0, verbose=False, seed=42)
 mgr = ert.Manager()
 data = ert.simulate(mesh=mesh, res=rhomap, scheme=scheme, **noise)
 rhoTracer = 10
@@ -78,7 +78,7 @@ for i in range(nT+1):
     data = ert.simulate(mesh, res=rhomap, scheme=scheme, **noise)
     DATA.append(data)
     ert.show(data, ax=ax[1, i], **cDict)
-    ratio = data('rhoa') / DATA[0]('rhoa')
+    ratio = data['rhoa'] / DATA[0]['rhoa']
     if i > 0:
         ert.show(data, ratio, ax=ax[2, i],
                 cMap='bwr', cMin=1/1.5, cMax=1.5, colorBar=False)
@@ -135,7 +135,6 @@ print(tl)
 
 tl.invert(zWeight=0.3, lam=100)
 print(tl.chi2s)
-
 # %%%
 # After inversion, on can show the models by `tl.showAllModels`. For convenience
 # (and if many timesteps are involved), one can also generate a multi-page pdf
@@ -144,7 +143,7 @@ print(tl.chi2s)
 # `pg.show(tl.pd, tl.models[i])`.
 #
 
-tl.showAllModels();
+tl.showAllModels()
 for a in ax.flat:
     pg.viewer.mpl.drawPLC(a, geom, fillRegion=False, fitView=False)
 

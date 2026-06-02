@@ -659,7 +659,7 @@ def drawMeshBoundaries(ax, mesh, hideMesh=False, useColorMap=False,
 
     lwd = lambda l, d: l if l is not None else d
 
-    if not hideMesh and lw > 0:
+    if not hideMesh and lwd(lw,0) > 0:
         drawSelectedMeshBoundaries(ax,
                                    mesh.findBoundaryByMarker(0),
                                    color=color or (0.0, 0.0, 0.0, 1.0),

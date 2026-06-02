@@ -342,12 +342,28 @@ def createColorBar(gci, orientation='horizontal', size=0.2, pad=None,
                 if orientation == 'horizontal':
                     if pad is None:
                         pad = 0.5
-                    cax = divider.append_axes("bottom", size=size, pad=pad)
+                    try:
+                        cax = divider.append_axes("bottom", size=size, pad=pad)
+                    except Exception as e:
+                        if 'TclError' in type(e).__name__:
+                            pg.warning("TclError: probably no display available, " \
+                                        "fallback to last axis.")
+                            cax = ax.get_figure().axes[-1]
+                        else:
+                            raise
 
                 else:
                     if pad is None:
                         pad = 0.1
-                    cax = divider.append_axes("right", size=size, pad=pad)
+                    try:
+                        cax = divider.append_axes("right", size=size, pad=pad)
+                    except Exception as e:
+                        if 'TclError' in type(e).__name__:
+                            pg.warning("TclError: probably no display available, " \
+                                        "fallback to last axis.")
+                            cax = ax.get_figure().axes[-1]
+                        else:
+                            raise
 
             cbar = cbarTarget.colorbar(gci, cax=cax, orientation=orientation)
 

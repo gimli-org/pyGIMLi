@@ -1260,7 +1260,6 @@ def linSolve(mat, b, solver=None, verbose=False, **kwargs):
             pg.warning('Matrix reordering for pg core solver not yet implemented')
         _m = pg.matrix.asSparseMatrix(mat)
 
-        pg._b(verbose)
         solver = pg.core.LinSolver(_m, verbose=verbose)
 
         if verbose:
@@ -1534,7 +1533,7 @@ def assembleNeumannBC(rhs, boundaryPairs, nDim=1, time=0.0, userData={},
         raise BaseException("Boundary pairs need to be a list of "
                             "[boundary, value]")
 
-    Se = pg.matrix.ElementMatrix()
+    Se = pg.core.matrix.ElementMatrix()
 
     dof = len(rhs) // nDim
 
@@ -1635,8 +1634,8 @@ def assembleRobinBC(mat, boundaryPairs, rhs=None, time=0.0, userData={},
         raise BaseException("Boundary pairs need to be a list of "
                             "[boundary, value]")
 
-    S_Dir = pg.matrix.ElementMatrix()
-    S_Neu = pg.matrix.ElementMatrix()
+    S_Dir = pg.core.matrix.ElementMatrix()
+    S_Neu = pg.core.matrix.ElementMatrix()
 
     # if isinstance(rhs, np.ndarray):
     #     rhs = pg.Vector(rhs)
@@ -1916,7 +1915,7 @@ def createLoadVector(mesh, f=1.0, userData={}):
         fArray = cellValues(mesh, f, userData=userData)
 
     if len(fArray) == mesh.cellCount():
-        b_l = pg.matrix.ElementMatrix()
+        b_l = pg.core.matrix.ElementMatrix()
 
         for c in mesh.cells():
             if fArray[c.id()] != 0.0:
@@ -1935,7 +1934,7 @@ def createLoadVector(mesh, f=1.0, userData={}):
     elif len(fArray) == mesh.nodeCount():
         # nodal values
         fA = pg.Vector(fArray)
-        b_l = pg.matrix.ElementMatrix()
+        b_l = pg.core.matrix.ElementMatrix()
         for c in mesh.cells():
             b_l.u(c)
             # rhs.addVal(b_l.row(0) * fArray[b_l.idx()], b_l.idx())
@@ -2046,8 +2045,10 @@ def createStiffnessMatrix(mesh, a=None, isVector=False):
                 else:
                     vN = False
 
+                #pg._b(a[c.id()])
                 # al.gradU2(c, a[c.id()], voigtNotation=vN)
                 al.gradU2(c, np.array(a[c.id()]), voigtNotation=vN)
+                #print(al)
                 A.add(al)
 
     # if isComplex is True:
@@ -2099,7 +2100,7 @@ def createMassMatrix(mesh, b=None):
     # create matrix structure regarding the mesh
     # B.buildSparsityPattern(mesh)
     # define a local element matrix
-    # B_l = pg.matrix.ElementMatrix()
+    # B_l = pg.core.matrix.ElementMatrix()
     # for c in mesh.cells():
     #    B_l.u2(c)
     # # check if b[i] == B*b

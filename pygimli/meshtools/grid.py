@@ -7,6 +7,7 @@ import pygimli as pg
 # type from python3.12
 # type Mesh = pg.Mesh
 
+
 def createGrid(x=None, y=None, z=None, **kwargs):# -> Mesh:
     """Create grid style mesh.
 
@@ -90,7 +91,7 @@ def createGrid(x=None, y=None, z=None, **kwargs):# -> Mesh:
     return pg.core.pgcore.createGrid(**kwargs)
 
 
-def createGridPieShaped(r, degree=10.0, h=2, marker=0):
+def createGridPieShaped(r, degree=10.0, h=2, marker=0, phi=None):
     """Create a 2D pie shaped grid (segment from annulus or circle).
 
     TODO
@@ -137,7 +138,7 @@ def createGridPieShaped(r, degree=10.0, h=2, marker=0):
     """
     mesh = pg.Mesh(dim=2)
 
-    if degree is None:
+    if phi is None:
         x = r
 
         for i in range(0, len(x)):
@@ -246,7 +247,6 @@ def createFrustums(r, phi, h=0):
     """
     m = pg.meshtools.createGrid(r, degree=phi/(2*np.pi)*360, h=0)
     out = pg.meshtools.extrude(m, z=[0, 2*r[0]*np.sin(2*phi)])
-
 
     for i in range(out.nodeCount()):
         n = out.node(i)

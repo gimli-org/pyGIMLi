@@ -59,7 +59,7 @@ def _(*args, c=None):
         return '\033[' + c + 'm' + _msg(*args) + __ANSICOLORS__['NC']
 
 
-def _get_class_from_frame(fr):
+def _clsNameFromFrame(fr):
     """Extract the class of *self* from a stack frame, if present.
 
     Parameters

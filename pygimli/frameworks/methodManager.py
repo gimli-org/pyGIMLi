@@ -446,7 +446,6 @@ class MethodManager:
         errVals = self._ensureError(err, dataVals)
 
         self.preRun(**kwargs)
-        pg._g(dataVals)
         self.fw.run(dataVals, errVals, **kwargs)
         self.postRun(**kwargs)
 

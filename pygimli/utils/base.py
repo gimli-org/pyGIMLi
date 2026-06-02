@@ -58,10 +58,11 @@ def gmat2numpy(mat):
 
     TODO implement correct rval
     """
-    nmat = np.zeros((len(mat), len(mat[0])))
-    for i, row in enumerate(mat):
-        nmat[i] = row
-    return nmat
+    return np.asarray(mat)
+    # nmat = np.zeros((len(mat), len(mat[0])))
+    # for i, row in enumerate(mat):
+    #     nmat[i] = row
+    # return nmat
 
 
 def numpy2gmat(nmat):

@@ -186,14 +186,16 @@ class TestMeshGenerator(unittest.TestCase):
     def test_createMesh3D_Frustums(self):
         slice = 0.025
 
-        mesh = pg.meshtools.createFrustums([1, 1.2], phi=slice*2*np.pi, h=0)
+        mesh = pg.meshtools.createFrustums([1.0, 1.2],
+                                           phi=slice*2*np.pi, h=0)
 
-        #mesh.show(markers=True, showMesh=True)
+        mesh.show(markers=True, showMesh=True)
         pg.meshtools.checkMeshConsistency(mesh)
 
         for b in mesh.boundaries():
             if b.leftCell() is None:
                 print(b)
+
 
     def test_createPartMesh(self):
         mesh = pg.meshtools.createMesh1D(np.linspace(0, 1, 10))

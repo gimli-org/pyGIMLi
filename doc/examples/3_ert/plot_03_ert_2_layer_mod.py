@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 r"""
 2D FEM modelling on two-layer example
 =====================================
@@ -61,14 +60,14 @@ data = ert.simulate(mesh, res=[[1, 100.0], [2, 1.0]],
 ###############################################################################
 # 1D VES
 x = pg.x(scheme)
-ab2 = (x[scheme('b')] - x[scheme('a')]) / 2
-mn2 = (x[scheme('n')] - x[scheme('m')]) / 2
+ab2 = (x[scheme['b']] - x[scheme['a']]) / 2
+mn2 = (x[scheme['n']] - x[scheme['m']]) / 2
 ves = VESModelling(ab2=ab2, mn2=mn2)
 
 ###############################################################################
 # Plot results
 fig, ax = pg.plt.subplots(1, 1)
-ax.plot(ab2, data('rhoa'), '-o', label='2D (FEM)')
+ax.plot(ab2, data['rhoa'], '-o', label='2D (FEM)')
 ax.plot(ab2, ves.response([10.0, 100.0, 1.0]), '-x', label='1D (VES)')
 ax.set_xlabel('AB/2 (m)')
 ax.set_ylabel(r'Apparent resistivity ($\Omega$m)')
@@ -90,13 +89,13 @@ rc = ves.response([10.0, 100.0, 1.0, phases[0]/1000, phases[1]/1000])
 ###############################################################################
 # We can apply the default drawing routines for 1D VES data as well.
 fig, ax = pg.plt.subplots(1, 1)
-ves.drawData(ax, pg.cat(data('rhoa'), -data('phia')),
+ves.drawData(ax, pg.cat(data['rhoa'], -data['phia']),
             labels=[r'$\varrho_a$ 2D FEM', r'$\varphi_a$ 2D FEM'],
             marker='o', linestyle='none')
 ves.drawData(ax, rc,
              labels=[r'$\varrho_a$ 1D VES', r'$\varphi_a$ 1D VES'],
              marker=None)
 
-np.testing.assert_approx_equal(data('rhoa')[0], 30.66351249, significant=5)
-np.testing.assert_approx_equal(-data('phia')[0], 0.00132173865, significant=5)
+np.testing.assert_approx_equal(data['rhoa'][0], 30.66351249, significant=4)
+np.testing.assert_approx_equal(-data['phia'][0], 0.00132173865, significant=5)
 

@@ -470,7 +470,7 @@ function install(){
 
     pushd $PROJECT_ROOT
         use_venv $VENV_PYGIMLI
-        install_WHL_E [opt]
+        install_WHL_E [opt,test]
         testReport
     popd
 

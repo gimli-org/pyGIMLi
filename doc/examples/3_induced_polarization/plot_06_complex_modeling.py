@@ -33,7 +33,7 @@ scheme = ert.createData(
 ###############################################################################
 # Mesh generation
 world = mt.createWorld(
-    start=[-55, 0], end=[105, -80], worldMarker=True)
+    start=[-55, 0], end=[105, -80], worldMarkers=True)
 
 polarizable_anomaly = mt.createCircle(
     pos=[40, -7], radius=5, marker=2

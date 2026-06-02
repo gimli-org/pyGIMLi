@@ -1,30 +1,16 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
+#!/usr/bin/env python3
 import os
 import environment_for_pygimli_build
 
-try:
-    import pygimli as pg
-    print('*'*40, pg)
-    print(dir(pg))
+class pygimli:
+    def _g(self, *args):
+        print(*args)
+    def warn(self, *args):
+        print(*args)
+    def error(self, *args):
+        print(*args)
 
-    try:
-        pg._g('pygimli installation found')
-    except:
-        pg._g = lambda a: print(a)
-        pg.warn = _g
-        pg.error = _g
-except:
-    class pygimli:
-        def _g(self, *args):
-            print(*args)
-        def warn(self, *args):
-            print(*args)
-        def error(self, *args):
-            print(*args)
-
-    pg = pygimli
+pg = pygimli
 
 
 WRAPPER_DEFINITION_Pos =\

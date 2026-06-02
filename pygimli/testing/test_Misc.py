@@ -136,6 +136,7 @@ class TestMisc(unittest.TestCase):
         data.createFourPointData(2, pos[0], pos[1], pos[2], pos[3])
         pos = np.arange(4, dtype=np.int64)
         data.createFourPointData(3, pos[0], pos[1], pos[2], pos[3])
+
         pos = np.arange(4, dtype=float)
         data.createFourPointData(4, pos[0], pos[1], pos[2], pos[3])
         pos = np.arange(4, dtype=np.float32)
@@ -146,6 +147,11 @@ class TestMisc(unittest.TestCase):
         data.createFourPointData(7, pos[0], pos[1], pos[2], pos[3])
         pos = range(4)
         data.addFourPointData(pos[0], pos[1], pos[2], pos[3])
+        ## unsure if this is needed or if autoconverion might ambiguity
+        # pg.core.setDeepDebug(1)
+        # data.createFourPointData(4, 0.0, 1.0, 2.0, 3.0)
+        # pg.core.setDeepDebug(0)
+
         #print(data('a'), data('b'), data('m'), data('n'))
         self.assertEqual(sum(data['a']), 9*0)
         self.assertEqual(sum(data['b']), 9*1)
@@ -179,12 +185,12 @@ class TestMisc(unittest.TestCase):
         self.assertEqual(v1.hash(), pg.Vector(10, 2.).hash())
 
         ### Lists:
-        self.assertEqual(pg.utils.valHash([1, 0, 0])==
-                         pg.utils.valHash([0, 1, 0]), False)
+        self.assertNotEqual(pg.utils.valHash([1, 0, 0]),
+                            pg.utils.valHash([0, 1, 0]))
 
-        ### Dicts
-        self.assertEqual(pg.utils.valHash({'A':{'b':[0,None]}}) ==
-                         pg.utils.valHash({'A':{'b':[0,None]}}), True)
+        # ### Dicts
+        self.assertEqual(pg.utils.valHash({'A':{'b':[0,None]}}),
+                         pg.utils.valHash({'A':{'b':[0,None]}}))
 
 
     def test_HashData(self):
@@ -334,8 +340,6 @@ class TestMisc(unittest.TestCase):
                   #pg.BVector(np.asarray(np.random.random(42)*100, dtype='int')<50),
                 ]:
             _tst(a)
-
-
 
     # does not work .. need time to implement
     # def test_DataContainerWrite(self):

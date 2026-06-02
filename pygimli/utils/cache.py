@@ -133,7 +133,8 @@ def valHash(a:any, verbose:bool=False)-> int:
             pg.error('no hash for numpy array')
 
     if isinstance(a, list | tuple):
-        hsh = 1
+        _PRIME = 1000003 # polynomial rolling hash prime
+        hsh = 0
         for i, item in enumerate(a):
             if hasattr(item, '__hash__') \
                 and not isinstance(item, list|np.ndarray):
@@ -146,7 +147,7 @@ def valHash(a:any, verbose:bool=False)-> int:
                   ^ valHash(item, verbose=verbose)
                 if verbose is True:
                     pg._y(i, type(item), h)
-            hsh = hsh ^ h
+            hsh = hsh * _PRIME + h
         if verbose is True:
             pg._y(hsh)
 

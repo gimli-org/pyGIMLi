@@ -8,7 +8,7 @@ import pygimli as pg
 from pygimli.solver.leastsquares import lsqr as lssolver
 from pygimli.core.trans import str2Trans
 from pygimli.utils import prettyFloat as pf
-from pygimli.core.matrix import asDense
+from pygimli.core.matrix import asArray
 from .linesearch import lineSearch
 
 
@@ -1419,6 +1419,7 @@ class ClassicInversion:
         """Set weighting factors for the individual rows of the C matrix."""
         self.inv.setCWeight(cWeight)
 
+
     def run(self, dataVals, errorVals=None, **kwargs):
         """Run inversion.
 
@@ -1534,29 +1535,29 @@ class ClassicInversion:
 
         if self.verbose:
             pg.info('Starting inversion.')
-            print("fop:", self.inv.fop())
+            pg.info("fop:", self.inv.fop())
             if isinstance(self.inv.transData(), pg.trans.TransCumulative):
-                print("Data transformation (cumulative):")
+                pg.info("Data transformation (cumulative):")
                 for i in range(self.inv.transData().size()):
-                    print("\t", i, self.inv.transData().at(i))
+                    pg.info("\t", i, self.inv.transData().at(i))
             else:
-                print("Data transformation:", self.inv.transData())
+                pg.info("Data transformation:", self.inv.transData())
 
             if isinstance(self.inv.transModel(), pg.trans.TransCumulative):
-                print("Model transformation (cumulative):")
+                pg.info("Model transformation (cumulative):")
                 for i in range(self.inv.transModel().size()):
                     if i < 10:
-                        print("\t", i, self.inv.transModel().at(i))
+                        pg.info("\t", i, self.inv.transModel().at(i))
                     else:
                         print(".", end='')
             else:
-                print("Model transformation:", self.inv.transModel())
+                pg.info("Model transformation:", self.inv.transModel())
 
-            print("min/max (data): " + pf(min(self._dataVals)) + "/" +
+            pg.info("min/max (data): " + pf(min(self._dataVals)) + "/" +
                   pf(max(self._dataVals)))
-            print("min/max (error): " + pf(100 * min(self._errorVals)) + "%/" +
+            pg.info("min/max (error): " + pf(100 * min(self._errorVals)) + "%/" +
                   pf(100*max(self._errorVals))+"%")
-            print("min/max (start model): " + pf(min(startModel)) +
+            pg.info("min/max (start model): " + pf(min(startModel)) +
                   "/" + pf(max(startModel)))
 
         # To ensure reproduceability of the run() call, inv.start() will
@@ -1576,8 +1577,8 @@ class ClassicInversion:
         self.inv.start()
         self.maxIter = maxIterTmp
         if self.verbose:
-            print(f"inv.iter 0 ... chi² = {self.chi2():7.2f}")
-            # print("inv.iter 0 ... chi² = {0}".format(round(self.chi2(), 2)))
+            pg.info(f"inv.iter 0 ... chi² = {self.chi2():7.2f}")
+            # pg.info("inv.iter 0 ... chi² = {0}".format(round(self.chi2(), 2)))
 
         if self._postStep and callable(self._postStep):
             self._postStep(0, self)
@@ -1603,12 +1604,12 @@ class ClassicInversion:
                 else:
                     self.inv.oneStep()
             except RuntimeError as e:
-                print(e)
+                pg._y(e)
                 pg.error('One step failed. '
                          'Aborting and going back to last model')
 
             if np.isnan(self.model).any():
-                print(self.model)
+                pg.info("Model: ", self.model)
                 pg.critical('invalid model')
 
             # resp = self.inv.response()  # NOT USED
@@ -1633,7 +1634,7 @@ class ClassicInversion:
             dPhi = phi / lastPhi
 
             if self.verbose:
-                print(f"chi² = {chi2:7.2f} (dPhi = {(1 - dPhi) * 100:.2f}%) lam: {lam:.1f}")
+                pg.info(f"chi² = {chi2:7.2f} (dPhi = {(1 - dPhi) * 100:.2f}%) lam: {lam:.1f}")
 
             if chi2 <= 1 and self.stopAtChi1:
                 print("\n")
@@ -1656,7 +1657,7 @@ class ClassicInversion:
         # will never work as expected until we unpack kwargs .. any idea for
         # better strategy?
         # if len(kwargs.keys()) > 0:
-        #     print("Warning! unused keyword arguments", kwargs)
+        #     pg._y("Warning! unused keyword arguments", kwargs)
 
         self.model = self.inv.model()
         return self.model
@@ -1750,7 +1751,7 @@ class ClassicInversion:
         if numpy_matrix:
             J = self.fop.jacobian()
             if isinstance(J, pg.SparseMapMatrix):
-                J = asDense(self.fop.jacobian())
+                J = asArray(self.fop.jacobian())
 
             return np.reshape(tData, [-1, 1]) * \
                 pg.utils.gmat2numpy(J) * \

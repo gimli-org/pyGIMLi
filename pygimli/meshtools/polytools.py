@@ -301,8 +301,8 @@ def createRectangle(start=None, end=None, pos=None, size=None, **kwargs):
     return poly
 
 
-def createWorld(start, end, marker=1, area=0., layers=None, worldMarkers=True,
-                **kwargs):
+def createWorld(start, end, marker=1, area=0., layers=None,
+                worldMarkers=True, **kwargs):
     """Create simple rectangular 2D or 3D world.
 
     Create simple rectangular [hexagonal] world with
@@ -2229,7 +2229,7 @@ def createSphere(size=None, pos=None, nSegments=20, nRings=10,
     Mesh: Nodes: 182 Cells: 0 Boundaries: 360
     >>> sphere = mt.createSphere()
     >>> print(sphere.bb())
-    [RVector3: (-0.5, -0.5, -0.5), RVector3: (0.5, 0.5, 0.5)]
+    [Pos: (-0.5, -0.5, -0.5), Pos: (0.5, 0.5, 0.5)]
     >>> uvs = mt.createSphere([6, 5, 2], nSegments=25, nRings=15)
     >>> pg.show(uvs, showMesh=True, markers=True) # doctest: +ELLIPSIS
     (<pyvista...

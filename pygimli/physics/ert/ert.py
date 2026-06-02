@@ -239,7 +239,7 @@ def simulate(mesh, scheme, res, **kwargs):
                 pg.info("Data error estimate (min:max) ",
                       min(ret['err']), ":", max(ret['err']))
 
-        rhoa *= 1. + pg.randn(ret.size(), seed=seed) * ret('err')
+        rhoa *= 1. + pg.randn(ret.size(), seed=seed) * ret['err']
         ret['rhoa'] = rhoa
 
         ipError = None

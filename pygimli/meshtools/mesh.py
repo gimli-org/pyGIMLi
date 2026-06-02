@@ -369,10 +369,10 @@ def refineHex2Tet(mesh, style=1):
     Mesh: Nodes: 8 Cells: 1 Boundaries: 6
     >>> tet = mt.refineHex2Tet(hex, style=1)
     >>> print(tet)
-    Mesh: Nodes: 8 Cells: 6 Boundaries: 12
+    Mesh: Nodes: 8 Cells: 6 Boundaries: 18
     >>> tet = mt.refineHex2Tet(hex, style=2)
     >>> print(tet)
-    Mesh: Nodes: 8 Cells: 5 Boundaries: 12
+    Mesh: Nodes: 8 Cells: 5 Boundaries: 16
     """
     out = pg.Mesh(3)
 

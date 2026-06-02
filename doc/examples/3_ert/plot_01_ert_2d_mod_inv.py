@@ -15,10 +15,10 @@ from pygimli.physics import ert
 ###############################################################################
 # Geometry definition
 # -------------------
-# Create geometry definition for the modelling domain. ``worldMarker=True``
+# Create geometry definition for the modelling domain. ``worldMarkers=True``
 # indicates the default boundary conditions for the ERT
 world = mt.createWorld(start=[-50, 0], end=[50, -50], layers=[-1, -5],
-                       worldMarker=True)
+                       worldMarkers=True)
 
 ###############################################################################
 # Create some heterogeneous circular anomaly
@@ -43,7 +43,7 @@ pg.show(geom)
 # -------------------------
 # Create a Dipole Dipole ('dd') measuring scheme with 21 electrodes.
 scheme = ert.createData(elecs=np.linspace(start=-15, stop=15, num=21),
-                           schemeName='dd')
+                        schemeName='dd')
 
 ###############################################################################
 # Put all electrode (aka sensors) positions into the PLC to enforce mesh

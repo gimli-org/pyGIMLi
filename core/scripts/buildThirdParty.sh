@@ -246,7 +246,7 @@ function getWITH_WGET(){
         _SRC_=$2
         _PAC_=$3
     fi
-    
+
     green "** get with wget ** " $_URL_ $_SRC_ $_PAC_
     echo "wget -nc -nd $_URL_/$_PAC_"
     echo "--------------------------------------------------"

@@ -1267,17 +1267,19 @@ def toIVector(v):
 
 
 ############################
-# for pickleing
+# for pickling
 ############################
 
 def __ByteBuffer_setstate(self, state):
-    """Recover bytestream data from state['_bytestream_']"""
+    """Recover bytestream data from state['_bytestream_']."""
     self.fill(state['_bytestream_'])
 
+
 def __ByteBuffer_reduce(self):
-    """Create bytestream data"""
+    """Create bytestream data."""
     return (pgcore.ByteBuffer, (),
         dict(_bytestream_=self.array()))
+
 
 pgcore.ByteBuffer.__setstate__ = __ByteBuffer_setstate
 pgcore.ByteBuffer.__reduce__ = __ByteBuffer_reduce
@@ -1655,8 +1657,5 @@ from .trans import *  # why do we need that?
 # from .matrix import (Cm05Matrix, LMultRMatrix, LRMultRMatrix, MultLeftMatrix,
 #                      MultLeftRightMatrix, MultRightMatrix, RMultRMatrix)
 from .matrix import (BlockMatrix, SparseMatrix, SparseMapMatrix, IdentityMatrix,
-                     Matrix)
-
-from .matrix import (asCSC, asCSR, asCOO, asSparseMapMatrix, asSparseMatrix,
-                     asDense, reduceEntries, removeEntries,
-                     )
+                     Matrix, asCSC, asCSR, asCOO, asSparseMapMatrix, asSparseMatrix,
+                     asArray, reduceEntries, removeEntries)

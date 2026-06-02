@@ -97,7 +97,7 @@ def showERTData(data, vals=None, **kwargs):
     if isinstance(vals, str):
         if data.haveData(vals):
             kwargs.setdefault('label', pg.utils.unit(vals))
-            vals = data(vals)
+            vals = data[vals]
         else:
             pg.critical('field not in data container: ', vals)
 

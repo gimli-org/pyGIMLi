@@ -38,7 +38,7 @@ scheme["k"] = ert.createGeometricFactors(scheme)
 ###############################################################################
 # Now we set up a 2D mesh.
 
-world = mt.createWorld(start=[0, 0], end=[30, -10], worldMarker=True)
+world = mt.createWorld(start=[0, 0], end=[30, -10], worldMarkers=True)
 for pos in scheme.sensorPositions():
     world.createNode(pos)
 
@@ -63,7 +63,7 @@ def getABMN(scheme, idx):
     `scheme`."""
     coords = {}
     for elec in "abmn":
-        elec_id = int(scheme(elec)[idx])
+        elec_id = int(scheme[elec][idx])
         elec_pos = scheme.sensorPosition(elec_id)
         coords[elec] = elec_pos.x(), elec_pos.y()
     return coords

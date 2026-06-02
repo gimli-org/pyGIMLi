@@ -87,7 +87,7 @@ def __DC_getVal(self, key):
         Integer array for sensor-index tokens, otherwise the raw pg.Vector.
     """
     if self.isSensorIndex(key):
-        return np.array(self.get(key), dtype=int, **kwargs)
+        return np.array(self.get(key), dtype=int)
     # return self(key).array() // d['a'][2] = 0.0, would be impossible
     return self.ref(key)
 DataContainer.__getitem__ = __DC_getVal

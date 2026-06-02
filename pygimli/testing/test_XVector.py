@@ -187,9 +187,9 @@ class TestRVectorMethods(unittest.TestCase):
         """ Pos
         """
         p = pg.Pos(1.0, 0.0)
-        
+
         #pg.core.setDeepDebug(2)
-        
+
         p2 = p + 2
 
         #exit()
@@ -210,8 +210,8 @@ class TestRVectorMethods(unittest.TestCase):
 
         p = pg.Pos(1.0, 1.0, 1.0)
         #np.testing.assert_equal(abs(p), p.abs()) # not implemented
-        
-        
+
+
 
     def test_R3VectorOP(self):
         """ [Pos, ...]
@@ -232,10 +232,10 @@ class TestRVectorMethods(unittest.TestCase):
         sr = pg.core.stdVectorRVector()
         sr.append(pg.core.RVector(5))
         sr.append(pg.core.RVector(10))
-        
+
         for i in range(len(sr)):
             np.testing.assert_array_equal(sr[i], [0]*len(sr[i]))
-        
+
         sr += 1.0
         for i in range(len(sr)):
             np.testing.assert_array_equal(sr[i], [1]*len(sr[i]))
@@ -282,7 +282,7 @@ class TestRVectorMethods(unittest.TestCase):
 
         t = abs(r3) ## perfcheck candidate
         np.testing.assert_equal(len(t), len(r3))
-        
+
         for i in range(len(t)):
             np.testing.assert_array_equal(t[i], abs(r3[i]))
 
@@ -320,13 +320,13 @@ class TestRVectorMethods(unittest.TestCase):
         a = pg.Vector(np.arange(10.))
 
         np.testing.assert_array_equal(a[:], np.arange(10.)[:])
-        np.testing.assert_array_equal(a[:, np.newaxis], 
+        np.testing.assert_array_equal(a[:, np.newaxis],
                                       np.array(a)[:, np.newaxis])
         np.testing.assert_array_equal(a[::], np.arange(10.)[::])
         np.testing.assert_array_equal(a[:-1], np.arange(10.)[:-1])
-        np.testing.assert_array_equal(a[:-9], np.arange(10.)[:-9])      
-        
-        np.testing.assert_array_equal(a[:-10], np.arange(10.)[:-10])      
+        np.testing.assert_array_equal(a[:-9], np.arange(10.)[:-9])
+
+        np.testing.assert_array_equal(a[:-10], np.arange(10.)[:-10])
 
         np.testing.assert_array_equal(a[::1], np.arange(10.)[::1])
         np.testing.assert_array_equal(a[::-1], np.arange(10.)[::-1])
@@ -419,7 +419,7 @@ class TestRVectorMethods(unittest.TestCase):
     def testIndexGetter(self):
         s = pg.core.RVector(range(5))
         np.testing.assert_array_equal(s, s[range(5)])
-                
+
         s = pg.IVector(range(5))
         np.testing.assert_array_equal(s, s[range(5)])
         np.testing.assert_array_equal(s, s[s])
@@ -443,30 +443,31 @@ class TestRVectorMethods(unittest.TestCase):
         np.testing.assert_array_equal(a == 1, [True]*10)
         np.testing.assert_array_equal(a != 1, [False]*10)
         np.testing.assert_array_equal(a < 1, [False]*10)
-        
+
         # print(a < 1, np.array([False]*10))
         # np.testing.assert_equal(len(a < 1), 10)
 
 
-
     def testUFunc(self):
         t = pg.Vector(5, 1)
-        
+
         np.testing.assert_equal(t*2, np.array(t)*2.0)
         np.testing.assert_equal(2*t, np.array(t)*2.0)
-        
+
         np.testing.assert_equal(t*np.float64(2), np.array(t)*2.0)
         np.testing.assert_equal(np.float64(2)*t, np.array(t)*2.0)
         np.testing.assert_equal(np.int64(2)*t, np.array(t)*2.0)
         np.testing.assert_equal(t*np.int64(2), np.array(t)*2.0)
-        
+
         M = pg.Matrix(3, 3) + 1.0
         np.testing.assert_equal(np.float64(2)*M, 2*np.array(M))
         np.testing.assert_equal(M*np.float64(2), 2*np.array(M))
         np.testing.assert_equal(np.int64(2)*M, 2*np.array(M))
         np.testing.assert_equal(M*np.int64(2), 2*np.array(M))
-        np.testing.assert_equal(np.int64(2) + M, 2+np.array(M))
-        np.testing.assert_equal(M + np.int64(2), 2+np.array(M))
+        np.testing.assert_equal(np.int64(2) + M, 2 + np.array(M))
+        np.testing.assert_equal(M + np.int64(2), 2 + np.array(M))
+        np.testing.assert_equal(np.int64(2) - M, 2 - np.array(M))
+        np.testing.assert_equal(M - np.int64(2), np.array(M)-2)
 
 
 class TestMatrixMethods(unittest.TestCase):
@@ -476,11 +477,11 @@ class TestMatrixMethods(unittest.TestCase):
         for i in range(A.size()):
             A.setVal(i,i, 1.0)
 
-        np.testing.assert_equal(A + 2.0 * A == 
+        np.testing.assert_equal(A + 2.0 * A ==
                                 A + A * 2.0, True)
 
         ## check to ignore np.*.__mul__ in case A has __rmul__ function
-        np.testing.assert_equal(A + np.float64(2.0) * A == 
+        np.testing.assert_equal(A + np.float64(2.0) * A ==
                                 A + A * np.float64(2.0), True)
 
     def testRMatrixIndex(self):
@@ -538,7 +539,7 @@ class TestMatrixMethods(unittest.TestCase):
         ### Without GC patch () this fails since mat() is copy by reference, and E is destructed after createE().mat() has been called so mat is not more valid
         np.testing.assert_equal(createE().mat().row(0), [1.0, 1.0])
 
-        
+
 
 if __name__ == '__main__':
 

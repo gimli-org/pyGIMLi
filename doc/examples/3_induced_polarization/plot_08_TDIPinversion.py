@@ -32,7 +32,7 @@ import pygimli.meshtools as mt
 #
 
 world = mt.createWorld(start=[-50, 0], end=[50, -50],
-                       layers=[-1, -5], worldMarker=True)
+                       layers=[-1, -5], worldMarkers=True)
 scheme = ert.createData(elecs=pg.utils.grange(start=-10, end=10, n=21),
                         schemeName='dd')
 circle = mt.createCircle(pos=[0, -3], radius=1, marker=4)

@@ -1,6 +1,51 @@
 # Changelog
+
+
 ## autogen
 see on github
+
+
+## v2.0beta
+
+``` bash
+pip install pygimli=2
+```
+
+### New features
+
+* a lot core internals for finite element assembling used by Oskar (`https://gitlab.com/base-fn/oskar`)
+
+* profiling with `tictoc`
+``` bash
+    with pg.tictoc('A'):
+        # runtime of the code here will be measured and dropped into a global table
+        for _ in range(10):
+            with pg.tictoc('B'):
+                # code for another runtime measuring
+
+
+    # print global runtime table of 'A' and all subsequent called `tictocs`.
+    print(pg.timings('A'))
+```
+    * todo, runtime important parts will get some default `tictocs`
+
+* pickling for some core data types: `Mesh`, `Vector`
+
+* new Matrix class (`DenseMatrix`), using OpenBlas basic multiplications, which replace default `RMatrix` after further testing (still beta phase).
+
+
+* ...
+
+
+### Important changes
+
+* callable data access has been globally dropped in favour of index access:
+    e.g.: `data['t']` instead of `data('t')`
+
+* Renamed:
+    `RVector3` -> `Pos`
+
+* ...
 
 ## v1.6.0 (11/05/2026)
 
