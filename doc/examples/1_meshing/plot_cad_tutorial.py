@@ -4,7 +4,7 @@ CAD to mesh tutorial
 ====================
 
 In this example you will learn how to create a geometry in
-`FreeCAD <https://www.freecadweb.org/>`_ and then export and mesh it using
+`FreeCAD <https://www.freecad.org/>`_ and then export and mesh it using
 `Gmsh <http://gmsh.info/>`_.
 """
 # sphinx_gallery_thumbnail_path = '_static/cad_tutorial/gmsh_fig.png'
@@ -23,7 +23,7 @@ In this example you will learn how to create a geometry in
 #     conda install -c conda-forge gmsh python-gmsh
 #
 # In case you also want to try out FreeCAD, installing it from their
-# `website <https://www.freecadweb.org/downloads.php>`_ will give you the
+# `website <https://www.freecad.org/downloads.php>`_ will give you the
 # most up to date version.
 #
 # This example is based on an ERT modelling and inversion experiment on a
@@ -51,7 +51,7 @@ In this example you will learn how to create a geometry in
 # 1. Each region of the geometry designed separately in the Part
 #    workbench, or in the Part Design workbench for more complicated
 #    geometries. To get familiar with the part design workbench, this
-#    `FreeCAD-tutorial <https://wiki.freecadweb.org/Basic_Part_Design_Tutorial_017>`_
+#    `FreeCAD-tutorial <https://wiki.freecad.org/Basic_Part_Design_Tutorial_017>`_
 #    with some videos is great.
 # 2. Merge all regions into one single ”compsolid”, i.e.composite
 #    solid. Meaning one object that consists of multiple solids that
@@ -328,9 +328,7 @@ if gmsh:
 #    Gmsh <https://gitlab.onelab.info/gmsh/gmsh/-/blob/master/demos/api/terrain_stl.py>`_
 # -  `Meshing with Gmsh from
 #    QGIS <https://github.com/ccorail/qgis-gmsh/wiki>`_
-# -  `FreeCAD GeoMatics
-#    workbench <https://github.com/HakanSeven12/FreeCAD-Geomatics-Workbench>`_
-#    (`replaces GeoData
-#    workbench <https://forum.freecadweb.org/viewtopic.php?f=8&t=37178&hilit=geodata#p316040>`_)
+# -  FreeCAD GeoMatics workbench
+#    (replaces the older GeoData workbench)
 #    allows for GPS, LiDAR and GIS data to be imported to FreeCAD
 #

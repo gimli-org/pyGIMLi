@@ -114,7 +114,10 @@ def registerShowPendingFigsAtExit():
                         pg.info(f'Showing pending widgets ({backend}) on exit. '
                                  'Close all figures or Ctrl-C to quit the ' \
                                  'program')
-                        pg.wait()
+                        try:
+                            pg.wait()
+                        except Exception as e:
+                            pg.debug(f'pg.wait() failed on exit: {e}')
 
     __registeredShowPendingFigsAtExit__ = True
 

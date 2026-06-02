@@ -99,9 +99,9 @@ def showMesh3DVistaProcess(mesh, data=None, **kwargs):
         pg.error("pyqt show gui currently not maintained")
         return None
 
-    plotter = drawModel(kwargs.pop("ax", None), mesh,
-                        data, notebook=notebook,
-                        cMap=cMap, **kwargs)
+    plotter = drawModel(kwargs.pop("ax", None),
+                        mesh, data, notebook=notebook, cMap=cMap,
+                        **kwargs)
 
     # seems top be broken on some machines
     if kwargs.get("aa", False):
@@ -115,7 +115,8 @@ def showMesh3DVistaProcess(mesh, data=None, **kwargs):
         plotter.show = lambda *args, **kwargs: plotter.__show(
             *args, jupyter_backend="trame", **kwargs)
 
-    elif pyvista.BUILDING_GALLERY:
+    ### TODO: check if needed for pv sphinx target rendering
+    elif 0 and pyvista.BUILDING_GALLERY:
         if not hasattr(plotter, "__show"):
             pyvista.set_new_attribute(plotter, "__show", plotter.show)
         plotter.show = lambda *args, **kwargs: plotter.__show(

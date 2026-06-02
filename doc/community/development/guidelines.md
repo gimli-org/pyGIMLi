@@ -189,7 +189,7 @@ Run pylint from shell to check code:
 pylint --rcfile $GIMLIROOT/.pylintrc file.py
 ```
 
-Run prospector to check code like landscape.io do:
+Run prospector to check code:
 
 ```bash
 prospector --profile=$GIMLIROOT/.prospector.yml file.py

@@ -56,11 +56,20 @@ def optImport(module, requiredFor="use the full functionality"):
     try:
         mod = import_module(module)
     except ImportError:
-        msg = ("No module named \'%s\'.\nYou need to install this optional "
-               "dependency to %s.")
-        print(msg % (module, requiredFor))
+        msg = (f"No module named '{module}'.\nYou need to install this optional "
+               f"dependency to {requiredFor}.")
+        print(msg)
         # exception would be better her but then the test fails
         # raise Exception(msg % (module, requiredFor))
+    except TypeError as e:
+        import traceback
+        import scipy as sp
+        msg = (f"Failed to import '{module}' due to a compatibility error.\n"
+               f"You may need to update this optional dependency to "
+               f"{requiredFor}.\n"
+               f"np: {np.__version__}, scipy: {sp.__version__}\n\n"
+               f"{traceback.format_exc()}")
+        print(msg)
 
     return mod
 

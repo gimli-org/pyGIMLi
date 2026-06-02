@@ -461,7 +461,7 @@ void transMult_MM_T(const Mat & A, const Mat & B,
     }
 
 #else
-    mult_MV_fallback_T(A, B, C, a, b, bIsTrans, n);
+    transMult_MM_fallback_T(A, B, C, a, b, bIsTrans, n);
 #endif
 
 }

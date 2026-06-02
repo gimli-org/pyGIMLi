@@ -143,6 +143,14 @@ def show(obj=None, data=None, **kwargs):
         if isinstance(obj, spmatrix):
             return showMatrix(obj, **kwargs)
     except ImportError:
+        pg._r("scipy.sparse is not available. Cannot show sparse matrices.")
+        pass
+    except TypeError as e:
+        traceback.print_exc(file=sys.stdout)
+        print(e)
+        # weird error of scipy.sparse.__init__.py for lower python version?
+        # TypeError: unsupported operand type(s) for |: 'Generator' and 'RandomState'
+        pg._r("scipy.sparse may not compatible.")
         pass
 
     ### obj is list of Pos -> draw dots

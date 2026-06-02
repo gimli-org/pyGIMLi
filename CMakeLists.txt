@@ -6,6 +6,9 @@ endif()
 if (POLICY CMP0094)
     cmake_policy(SET CMP0094 NEW) #Python_FIND_STRATEGY LOCATION
 endif()
+if (POLICY CMP0167)
+    cmake_policy(SET CMP0167 OLD) # keep FindBoost module
+endif()
 
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR "In-source builds not allowed.
@@ -99,13 +102,13 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overloaded-virtual")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_BIND_GLOBAL_PLACEHOLDERS")
 
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -ansi -pedantic -fno-omit-frame-pointer -Wall")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -std=gnu++11 -pedantic -fno-omit-frame-pointer -Wall")
     #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -std=c++11 -ansi -pedantic -fno-omit-frame-pointer -Wall")
     #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fopenmp")
 
     ### debug settings
     # run with -DCMAKE_BUILD_TYPE=Debug
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -p -g -ansi -pedantic -fno-common -fno-omit-frame-pointer -Wall")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -p -g -std=gnu++11 -pedantic -fno-common -fno-omit-frame-pointer -Wall")
 
     if (WIN32 OR CONDA_BUILD)
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wno-parentheses") # from boost since gcc.8 maybe need to be checked
@@ -539,6 +542,7 @@ set(CMAKE_FIND_DEBUG_MODE FALSE)
 message(STATUS "BLAS found:" ${BLAS_FOUND})
 if (BLAS_FOUND)
     message(STATUS "OpenBLAS is used: ${BLAS_LIBRARIES}")
+    message(STATUS "searching for cblas.h: " ${OpenBLAS_INCLUDE_DIR})
 
     if (MINGW)
         get_filename_component(MINGW_ROOT ${BLAS_LIBRARIES} PATH)
@@ -551,6 +555,7 @@ if (BLAS_FOUND)
             PATHS
                 ${MINGW_ROOT}/include/OpenBLAS/
         )
+        message(STATUS "OpenBLAS cblas.h in MINGW_ROOT: ${OpenBLAS_INCLUDE_DIR}")
     endif()
 
     if (NOT OpenBLAS_INCLUDE_DIR)
@@ -583,21 +588,28 @@ if (BLAS_FOUND)
         message(STATUS "OpenBLAS cblas.h: ${OpenBLAS_INCLUDE_DIR}")
     endif()
 
-    if (OpenBLAS_INCLUDE_DIR)
-        # cblas.h alone is not enough: conda-forge ships a netlib-style cblas.h
-        # that lacks OpenBLAS extensions. Probe for the actual symbol.
-        include(CheckSymbolExists)
-        set(_old_includes ${CMAKE_REQUIRED_INCLUDES})
-        set(CMAKE_REQUIRED_INCLUDES ${OpenBLAS_INCLUDE_DIR})
-        check_symbol_exists(openblas_set_num_threads "cblas.h" _OPENBLAS_CBLAS_HAS_SYMBOL)
-        set(CMAKE_REQUIRED_INCLUDES ${_old_includes})
-        if (_OPENBLAS_CBLAS_HAS_SYMBOL)
-            set(OPENBLAS_CBLAS_FOUND 1)
+    if (CONDA_BUILD)
+
+        if (OpenBLAS_INCLUDE_DIR)
+            message(STATUS "checking for needed OpenBLAS symbol in cblas")
+            # cblas.h alone is not enough: conda-forge ships a netlib-style cblas.h
+            # that lacks OpenBLAS extensions. Probe for the actual symbol.
+            include(CheckSymbolExists)
+            set(_old_includes ${CMAKE_REQUIRED_INCLUDES})
+            set(CMAKE_REQUIRED_INCLUDES ${OpenBLAS_INCLUDE_DIR})
+            check_symbol_exists(openblas_set_num_threads "cblas.h" _OPENBLAS_CBLAS_HAS_SYMBOL)
+            set(CMAKE_REQUIRED_INCLUDES ${_old_includes})
+            if (_OPENBLAS_CBLAS_HAS_SYMBOL)
+                set(OPENBLAS_CBLAS_FOUND 1)
+            else()
+                message(STATUS "cblas does not contain 'openblas_set_num_threads'")
+                set(OPENBLAS_CBLAS_FOUND 0)
+            endif()
         else()
             set(OPENBLAS_CBLAS_FOUND 0)
         endif()
     else()
-        set(OPENBLAS_CBLAS_FOUND 0)
+        set(OPENBLAS_CBLAS_FOUND 1)
     endif()
 
     set(OPENBLAS_FOUND TRUE)

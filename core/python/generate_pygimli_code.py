@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""This script generates the pygimli python bindings using py++ and pygccxml."""
+"""This script generates the pygimli python bindings using py++ and pygccxml."
+"""
 import os
 import shutil
 import sys
@@ -249,8 +250,13 @@ def generate(defined_symbols, extraIncludes):
 
             if '.exe' not in casterpath:
                 casterpath += '\\' + caster + '.exe'
-
-            cflags = ''
+            # GCC 16 libstdc++ defines __int128 specializations *both* via
+            # __GLIBCXX_TYPE_INT_N_0 (the GCC built-in alias) *and* directly
+            # as __int128.  When CastXML/Clang parses with both macros active
+            # the two sets collide.  Undefining the GCC alias macro leaves only
+            # the direct __int128 specialisations and resolves all "redefinition
+            # of '__is_integral_helper<__int128>'" errors.
+            cflags = '-std=gnu++20 -U__GLIBCXX_TYPE_INT_N_0 -U__GLIBCXX_BITSIZE_INT_N_0'
         else:
             casterpath = settings.caster_path
             cflags = '-std=c++11'
