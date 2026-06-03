@@ -1,16 +1,16 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+"""Test for core.Vector<*> conversion and operators."""
 
 import unittest
-
 import numpy as np
-
 import pygimli as pg
 
 
 class TestRVectorMethods(unittest.TestCase):
+    """Vector methods."""
 
     def test_XVectorBasics(self):
+        """Test basic operators for Vector, CVector, IVector."""
 
         def testVector(v):
 
@@ -32,9 +32,9 @@ class TestRVectorMethods(unittest.TestCase):
         testVector(pg.BVector(5, True))
         testVector(pg.IVector(5, 1))
 
+
     def test_XVectorSetVal(self):
-        """
-        """
+        """Test setVal for Vector, CVector, IVector."""
         #
         vec = pg.Vector(5, 1.0)
         self.assertEqual(vec[0], 1.0)
@@ -57,7 +57,9 @@ class TestRVectorMethods(unittest.TestCase):
         vec.setVal(7.0, vec > 0.0)
         self.assertEqual(vec[0], 7.0)
 
+
     def test_IVectorOP(self):
+        """Test operators for IVector."""
         v = pg.IVector(5, 1)
 
         # print(v + 2)
@@ -72,7 +74,8 @@ class TestRVectorMethods(unittest.TestCase):
         self.assertEqual(sum(1 + v), 10)
         self.assertEqual(sum(-1 - v), -10)
         self.assertEqual(sum(1 / v), 5)
-        # no clue why this doesn't work .. we might could hack them if someone need it
+        # no clue why this doesn't work .. we might could hack them if
+        # someone need it
         #self.assertEqual(sum(v * 2), 10)
 
         self.assertEqual(sum(v + v), 10)
@@ -81,12 +84,16 @@ class TestRVectorMethods(unittest.TestCase):
         self.assertEqual(sum(v / v), 5)
         self.assertEqual(sum(2 * v), 10)
 
+
     def test_IndexArray(self):
+        """Test IndexArray."""
         v = pg.core.IndexArray([0,1,2,3])
         self.assertEqual(sum(v), 6)
         np.testing.assert_array_equal(v + 1, [1, 2, 3, 4])
 
+
     def test_RVectorOP(self):
+        """Test operators for Vector."""
         v = pg.Vector(5, 1.0)
 
         self.assertEqual(sum(v + 1), 10)
@@ -135,8 +142,9 @@ class TestRVectorMethods(unittest.TestCase):
         #self.assertEqual(sum(1.0 * v), 5)
         #self.assertEqual(sum(1.0 / v), 5)
 
-    def test_RVectorIndexRW(self):
 
+    def test_RVectorIndexRW(self):
+        """Test index access for Vector."""
         v = pg.Vector(5, 2.0)
         np.testing.assert_array_equal(v, [2, 2, 2, 2, 2])
 
@@ -177,23 +185,18 @@ class TestRVectorMethods(unittest.TestCase):
         v.setVal(1.0, 1)
         np.testing.assert_array_equal(v, [5, 1, 1, 3, 5])
 
+
     def test_RVectorFuncts(self):
+        """Test universal functions for Vector."""
         v = pg.Vector(5, 2.0)
         self.assertEqual(sum(pg.math.pow(v, 2)), 20)
         self.assertEqual(sum(pg.math.pow(v, 2.0)), 20)
         self.assertEqual(sum(pg.math.pow(v, v)), 20)
 
+
     def test_Pos(self):
-        """ Pos
-        """
+        """Test operators for Pos."""
         p = pg.Pos(1.0, 0.0)
-
-        #pg.core.setDeepDebug(2)
-
-        p2 = p + 2
-
-        #exit()
-        #np.testing.assert_array_equal(p + p/2, p + p/2.)
 
         np.testing.assert_array_equal(p, [1.0, 0.0, 0.0])
         np.testing.assert_array_equal(p + p, [2.0, 0.0, 0.0])
@@ -212,23 +215,28 @@ class TestRVectorMethods(unittest.TestCase):
         #np.testing.assert_equal(abs(p), p.abs()) # not implemented
 
 
-
-    def test_R3VectorOP(self):
-        """ [Pos, ...]
-        """
-        r3 = pg.core.R3Vector(10) + 2.0
+    def test_PosVectorOP(self):
+        """Test operators for [Pos, ...]."""
+        r3 = pg.core.PosVector(10) + 2.0
 
         np.testing.assert_array_equal(r3, [pg.Pos(2, 2, 2)]*10)
         np.testing.assert_array_equal(r3 * 2.0, [pg.Pos(4, 4, 4)]*10)
+        np.testing.assert_array_equal(r3 * np.long(2), [pg.Pos(4, 4, 4)]*10)
+
+        #TODO native RValue suuport for int->double conversion to avoid this hack
+        #pg.core.setDeepDebug(1)
+        #r3*2
+        #halt
+
         np.testing.assert_array_equal(r3 * 2, [pg.Pos(4, 4, 4)]*10)
         np.testing.assert_array_equal(r3 / 2.0, [pg.Pos(1.0, 1.0, 1.0)]*10)
         np.testing.assert_array_equal(1 / r3, [pg.Pos(0.5, 0.5, 0.5)]*10)
         np.testing.assert_array_equal(-1 - r3, [pg.Pos(-3.0, -3.0, -3.0)]*10)
         np.testing.assert_array_equal(abs(r3 / abs(r3)), [1.0]*10)
 
+
     def test_stdVectorRVectorOP(self):
-        """ operators for [RVector, ...]
-        """
+        """Test operators for [RVector, ...]."""
         sr = pg.core.stdVectorRVector()
         sr.append(pg.core.RVector(5))
         sr.append(pg.core.RVector(10))
@@ -260,7 +268,7 @@ class TestRVectorMethods(unittest.TestCase):
         for i in range(len(t)):
             np.testing.assert_array_equal(t[i], 1/sr[i])
 
-        t = sr*abs((-1*sr))
+        t = sr*abs(-1*sr)
         np.testing.assert_equal(len(t), len(sr))
 
         for i in range(len(t)):
@@ -271,14 +279,13 @@ class TestRVectorMethods(unittest.TestCase):
             np.testing.assert_array_equal(t[i], sr[i]+1)
 
 
-    def test_stdVectorR3VectorOP(self):
-        """ operators for [R3Vector, ...]
-        """
-        r3 = pg.core.stdVectorR3Vector()
-        r3.append(pg.core.R3Vector(7) + 2.0)
-        r3.append(2 + pg.core.R3Vector(4))
-        r3.append(3.15 + pg.core.R3Vector(10))
-        r3.append(pg.core.R3Vector(9) + 4)
+    def test_stdVectorPosVectorOP(self):
+        """Test operators for [PosVector, ...]."""
+        r3 = pg.core.stdVectorPosVector()
+        r3.append(pg.core.PosVector(7) + 2.0)
+        r3.append(2 + pg.core.PosVector(4))
+        r3.append(3.15 + pg.core.PosVector(10))
+        r3.append(pg.core.PosVector(9) + 4)
 
         t = abs(r3) ## perfcheck candidate
         np.testing.assert_equal(len(t), len(r3))
@@ -297,8 +304,9 @@ class TestRVectorMethods(unittest.TestCase):
             np.testing.assert_array_equal(abs(t[i]), [2]*len(r3[i]))
 
 
-    def test_R3VectorIndex(self):
-        r3 = pg.core.R3Vector(10)
+    def test_PosVectorIndex(self):
+        """Test index access for [Pos, ...]."""
+        r3 = pg.core.PosVector(10)
 
         self.assertEqual(r3[0], pg.Pos(0, 0, 0))
         np.testing.assert_array_equal(r3[0], pg.Pos(0, 0, 0))
@@ -315,8 +323,9 @@ class TestRVectorMethods(unittest.TestCase):
         d = pg.utils.dist(r3)
         self.assertEqual(sum(d), 1+2+3)
 
-    def test_Slices(self):
 
+    def test_Slices(self):
+        """Test slice access for Vector."""
         a = pg.Vector(np.arange(10.))
 
         np.testing.assert_array_equal(a[:], np.arange(10.)[:])
@@ -342,7 +351,9 @@ class TestRVectorMethods(unittest.TestCase):
 
         np.testing.assert_array_equal(sum(a[:-1]), sum(a[:len(a)-1]))
 
+
     def test_IndexAccess(self):
+        """Test index access for Vector."""
         # (double) array/vector
         an = np.arange(10.)
         ag = pg.Vector(an)
@@ -416,7 +427,9 @@ class TestRVectorMethods(unittest.TestCase):
         np.testing.assert_array_equal(sum(I), 2)
         np.testing.assert_array_equal(np.sum(I), 2)
 
+
     def testIndexGetter(self):
+        """Test index getter for Vector."""
         s = pg.core.RVector(range(5))
         np.testing.assert_array_equal(s, s[range(5)])
 
@@ -428,7 +441,9 @@ class TestRVectorMethods(unittest.TestCase):
         np.testing.assert_array_equal(s, s[range(5)])
         np.testing.assert_array_equal(s, s[s])
 
+
     def testComparison(self):
+        """Test comparison operators for Vector."""
         a = pg.Vector(10, 1)
         b = pg.Vector(10, 2)
 
@@ -449,6 +464,7 @@ class TestRVectorMethods(unittest.TestCase):
 
 
     def testUFunc(self):
+        """Test universal functions for Vector."""
         t = pg.Vector(5, 1)
 
         np.testing.assert_equal(t*2, np.array(t)*2.0)
@@ -471,8 +487,10 @@ class TestRVectorMethods(unittest.TestCase):
 
 
 class TestMatrixMethods(unittest.TestCase):
+    """Test matrix methods."""
 
     def testSparseMatrixBasics(self):
+        """Test basic operators for SparseMapMatrix."""
         A = pg.SparseMapMatrix(3,3)
         for i in range(A.size()):
             A.setVal(i,i, 1.0)
@@ -484,7 +502,9 @@ class TestMatrixMethods(unittest.TestCase):
         np.testing.assert_equal(A + np.float64(2.0) * A ==
                                 A + A * np.float64(2.0), True)
 
+
     def testRMatrixIndex(self):
+        """Test index access for Matrix."""
         A = pg.Matrix(3,4)
         A[0] = pg.Vector(4,1)
 
@@ -502,10 +522,11 @@ class TestMatrixMethods(unittest.TestCase):
         # A[2][2] = 2.0
         # np.testing.assert_equal(sum(A[2]), 2)
 
-    def testRDensMatrixAccess(self):
 
-        A = pg.core.RMatrix(2,2)
-        A = pg.core.RDenseMatrix(2,2)
+    def testRDensMatrixAccess(self):
+        """Test access for RDenseMatrix."""
+        #A = pg.core.RMatrix(2,2)
+        #A = pg.core.RDenseMatrix(2,2)
         # print(type(A[0] + 1.0))
         # print(A[0] + 1)
         # print(A[0] + 1)
@@ -514,8 +535,9 @@ class TestMatrixMethods(unittest.TestCase):
         # for v in A[0] + 1:
         #     print(v)
 
-    def testRDensMatrixRefCounting(self):
 
+    def testRDensMatrixRefCounting(self):
+        """Test reference counting for RDenseMatrix."""
         def createE():
             E = pg.core.ElementMatrix()
             E.setIds([0, 1], [0,0])
@@ -536,9 +558,10 @@ class TestMatrixMethods(unittest.TestCase):
         E = createE()
         np.testing.assert_equal(E.mat().row(0), [1.0, 1.0])
 
-        ### Without GC patch () this fails since mat() is copy by reference, and E is destructed after createE().mat() has been called so mat is not more valid
+        ### Without GC patch () this fails since mat() is copy
+        # by reference, and E is destructed after createE().mat()
+        # has been called so mat is not more valid
         np.testing.assert_equal(createE().mat().row(0), [1.0, 1.0])
-
 
 
 if __name__ == '__main__':

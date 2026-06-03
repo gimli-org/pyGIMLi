@@ -331,6 +331,7 @@ def generate(defined_symbols, extraIncludes):
         'register_numpy_to_int64_conversion',
         'register_numpy_to_uint64_conversion',
         'register_numpy_to_double_conversion',
+        'register_int_to_double_conversion',
         'register_numpy_to_rmatrix_conversion',
         'register_numpy_to_rdensematrix_conversion',
         'register_numpy_to_int32_conversion',

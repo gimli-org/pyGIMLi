@@ -915,7 +915,30 @@ struct Numpy2Double{
 private:
 };
 
+struct PyInt2Double{
+    static void * convertible(PyObject * obj){
+        __DC(obj, "check convertible (", obj->ob_type->tp_name, ") -> double(PyInt2Double)")
+        if (!PyLong_Check(obj)) return NULL;
+        return obj;
+    }
+    static void construct(PyObject * obj,
+                          bp::converter::rvalue_from_python_stage1_data * data){
+        double value = PyLong_AsDouble(obj);
+        void * storage = reinterpret_cast<
+            bp::converter::rvalue_from_python_storage< double > *
+        >(data)->storage.bytes;
+        new (storage) double(value);
+        data->convertible = storage;
+    }
+};
+
 } //r_values_impl
+
+void register_int_to_double_conversion(){
+    bp::converter::registry::push_back(& r_values_impl::PyInt2Double::convertible,
+                                        & r_values_impl::PyInt2Double::construct,
+                                        bp::type_id< double >());
+}
 
 void register_numpy_to_int64_conversion(){
     bp::converter::registry::push_back(& r_values_impl::Numpy2Long::convertible,

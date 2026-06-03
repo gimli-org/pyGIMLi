@@ -344,11 +344,12 @@ typedef Vector < Pos >      PosVector;
 typedef PosVector           R3Vector;
 
 typedef std::vector < SIndex > SIndexArray;
-typedef std::vector< GIMLI::Vector< double > >      stdVectorRVector;
-typedef std::vector< GIMLI::R3Vector >              stdVectorR3Vector;
-typedef std::vector< GIMLI::Matrix< double > >      stdVectorRMatrix;
-typedef std::vector< stdVectorRMatrix >             stdVectorMatrixVector;
-
+typedef std::vector < GIMLI::Vector< double > >      stdVectorRVector;
+typedef std::vector < GIMLI::R3Vector >              stdVectorR3Vector;
+typedef stdVectorR3Vector                           stdVectorPosVector;
+typedef std::vector < GIMLI::Matrix< double > >      stdVectorRMatrix;
+typedef std::vector < stdVectorRMatrix >             stdVectorMatrixVector;
+//typedef std::vector < std::set < unsigned long long > > stdVectorSetULL;
 typedef Matrix < double > RMatrix;
 typedef Matrix < Complex > CMatrix;
 typedef DenseMatrix < double > RDenseMatrix;

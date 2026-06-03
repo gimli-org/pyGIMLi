@@ -127,30 +127,27 @@ function build_pre(){
     pushd $PROJECT_ROOT
         new_venv $VENV_BUILD
 
-        # this prevents pgcore being in dependencies since it can't be resolved
-        # for new platforms or new python versions. Maybe add manual installation
-        # of build prerequisites here if necessary.
-
-        echo "Check if pgcore can be installed from PyPI"
-        if uv pip install pgcore --dry-run 2>/dev/null; then
-            green "pgcore is available on PyPI"
-            echo "uv pip install -e $PROJECT_SRC/[build]"
-            uv pip install -e $PROJECT_SRC/[build]
-        else
-            yellow "pgcore is not available for the $PYVERSION platform ${OS} on PyPI."
-            yellow "Installing build dependencies manually"
-
-            uv pip install "setuptools>=75.8.2"
-            uv pip install "numpy>=2.1.3"
-            uv pip install "pygccxml"
-            uv pip install "pyplusplus"
-            uv pip install build twine wheel
-            uv pip install "auditwheel; sys_platform == 'linux'"
-            uv pip install "delvewheel; sys_platform == 'win32'"
-            uv pip install "delocate; sys_platform == 'darwin'"
-            uv pip install "scooby"
-        fi
-
+        # Install the basic needs for pgcore build
+        green "Installing build dependencies from $PROJECT_SRC/pyproject.toml"
+        exclude=("pgcore" "matplotlib" "scipy")
+        python - "$PROJECT_SRC/pyproject.toml" "${exclude[@]}" <<'PYEOF'
+import sys, subprocess, re
+toml_path = sys.argv[1]
+excluded = [e.lower() for e in sys.argv[2:]]
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+with open(toml_path, "rb") as f:
+    data = tomllib.load(f)
+def not_excluded(dep):
+    name = re.split(r"[>=<!;\[@ ]", dep)[0].lower()
+    return name not in excluded
+deps = [d for d in data["project"]["dependencies"] if not_excluded(d)]
+build = [d for d in data["project"]["optional-dependencies"]["build"] if not_excluded(d)]
+subprocess.check_call(["uv", "pip", "install"] + deps + build)
+PYEOF
+        
         rm -rf $BUILD_DIR
         mkdir -p $BUILD_DIR
     popd

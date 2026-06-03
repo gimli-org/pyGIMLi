@@ -13,9 +13,16 @@ from .logger import error, critical, _r, _g, _y, _b
 from .base import (isInt, isScalar, isArray, isPos,
                    isPosList)
 
-# #######################################
-# ###  Global convenience functions #####
-# #######################################
+##################################
+# useful aliases
+##################################
+
+Vector = pgcore.RVector
+Pos = pgcore.Pos
+PosVector = pgcore.R3Vector
+PosList = PosVector
+Inversion = pgcore.RInversion
+stdVectorPosVector = pgcore.stdVectorR3Vector
 
 pgcore.load = None
 
@@ -973,6 +980,36 @@ pgcore.stdVectorRVector.__array_ufunc__ = __stdVectorRVector__array_ufunc__
 
 
 ##################################
+# R3Vector (PosVector) additional operators
+# TODO native RValue suuport for int->double conversion to avoid this hack
+##################################
+
+__R3Vector_mul_orig = pgcore.R3Vector.__mul__
+__R3Vector_rmul_orig = pgcore.R3Vector.__rmul__
+__R3Vector_add_orig = pgcore.R3Vector.__add__
+__R3Vector_radd_orig = pgcore.R3Vector.__radd__
+__R3Vector_sub_orig = pgcore.R3Vector.__sub__
+__R3Vector_rsub_orig = pgcore.R3Vector.__rsub__
+__R3Vector_div_orig = pgcore.R3Vector.__truediv__
+__R3Vector_rdiv_orig = pgcore.R3Vector.__rtruediv__
+
+def _r3v_coerce(op, self, other):
+    """Call op, coercing int to float to avoid unevaluated VectorExpr."""
+    if isinstance(other, int):
+        return op(self, float(other))
+    return op(self, other)
+
+pgcore.R3Vector.__mul__ = lambda self, o: _r3v_coerce(__R3Vector_mul_orig, self, o)
+pgcore.R3Vector.__rmul__ = lambda self, o: _r3v_coerce(__R3Vector_rmul_orig, self, o)
+pgcore.R3Vector.__add__ = lambda self, o: _r3v_coerce(__R3Vector_add_orig, self, o)
+pgcore.R3Vector.__radd__ = lambda self, o: _r3v_coerce(__R3Vector_radd_orig, self, o)
+pgcore.R3Vector.__sub__ = lambda self, o: _r3v_coerce(__R3Vector_sub_orig, self, o)
+pgcore.R3Vector.__rsub__ = lambda self, o: _r3v_coerce(__R3Vector_rsub_orig, self, o)
+pgcore.R3Vector.__truediv__ = lambda self, o: _r3v_coerce(__R3Vector_div_orig, self, o)
+pgcore.R3Vector.__rtruediv__ = lambda self, o: _r3v_coerce(__R3Vector_rdiv_orig, self, o)
+
+
+##################################
 # stdVectorR3Vector operators
 ##################################
 
@@ -1131,16 +1168,6 @@ def __RVectorPower(self, m):
 
 
 pgcore.RVector.__pow__ = __RVectorPower
-
-##################################
-# useful aliases
-##################################
-
-Vector = pgcore.RVector
-Pos = pgcore.Pos
-PosVector = pgcore.R3Vector
-PosList = PosVector
-Inversion = pgcore.RInversion
 
 
 ############################
