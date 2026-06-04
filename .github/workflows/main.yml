@@ -8,6 +8,7 @@ on:
     branches:
       - dev
       - release
+      - 2.0beta
   pull_request:
     branches:
       - dev

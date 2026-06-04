@@ -14,11 +14,13 @@ try:
     # from ._pygimli_ import *  # check if . can be omitted
     # pgcore = _pygimli_
 
+    #print("importing inplace core")
     from .libs import _pygimli_ as pgcore
     from .libs._pygimli_ import *
+    #print("inplace core")
 
 except ImportError as e:
-    # print("did not find in-place pg core, try import pgcore")
+    #print("did not find in-place pg core, try import pgcore")
     # import pgcore as _pygimli_
     import pgcore
     # from pgcore import _pygimli_  # check version compatibility

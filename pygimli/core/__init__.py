@@ -1063,8 +1063,6 @@ def __stdVectorR3Vector_NEG__(self):
 pgcore.stdVectorR3Vector.__neg__ = __stdVectorR3Vector_NEG__
 
 
-
-
 ##################################
 # stdVectorRMatrix operators
 ##################################
