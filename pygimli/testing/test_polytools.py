@@ -1,5 +1,5 @@
-"""Tests for pygimli.meshtools.polytools
-"""
+#!/usr/bin/env python
+"""Tests for pygimli.meshtools.polytools."""
 import numpy as np
 import unittest
 
@@ -96,18 +96,20 @@ class TestCreateRectangle(unittest.TestCase):
 
         assert rect1.regionMarkers()[0] == rect2.regionMarkers()[0]
 
+
     def test_region_markerposition_start_end(self):
         rect1 = mt.createRectangle(
             start=[0.0, -1.5],
             end=[4.0, -4.0],
             isClosed=True,
             marker=10,
-            markerPosition=[0.0, 0.0],
+            markerPos=[0.0, 0.0],
         )
         assert rect1.regionMarkers()[0].x() == 0
         assert rect1.regionMarkers()[0].y() == 0
 
         assert rect1.regionMarkers()[0].marker() == 10
+
 
     def test_region_markerposition_pos_size(self):
         # scaled version
@@ -116,7 +118,7 @@ class TestCreateRectangle(unittest.TestCase):
             size=[4.0, 2.5],
             isClosed=True,
             marker=5,
-            markerPosition=[0.0, 0.0],
+            markerPos=[0.0, 0.0],
         )
         assert rect1.regionMarkers()[0].x() == 0
         assert rect1.regionMarkers()[0].y() == 0
@@ -348,6 +350,7 @@ class Test3DMerge(unittest.TestCase):
         pg.show(m, m.cellMarkers())
         # pg.show(mt.createMesh(w))
 
+
     def test_face_in_face(self):
         """Test subface with different marker constructed with hole marker."""
         w = mt.createCube(marker=1, boundaryMarker=1)
@@ -385,6 +388,7 @@ class Test3DMerge(unittest.TestCase):
         np.testing.assert_array_equal(
             pg.unique(pg.sort(mesh.boundaryMarkers())),
             [0, 1, 2])
+
 
     def test_cube_cube_halfside(self):
         """Add half size cube on another cube"""

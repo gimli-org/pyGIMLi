@@ -80,9 +80,10 @@ def setPolyRegionMarker(poly, marker=1, area=0.0, isHole=False, **kwargs):
         Absolute marker position if you don't want the marker in the center of
         the geometry.
     """
-    markerPos = pg.renameKwarg('markerPosition', 'markerPos', kwargs, '2.1')
-
+    pg.renameKwarg('markerPosition', 'markerPos', kwargs, '2.1')
+    markerPos = kwargs.get('markerPos', None)
     pos = None
+
     if markerPos is not None:
         pos = markerPos
     else:
@@ -123,7 +124,7 @@ def createRectangle(start=None, end=None, pos=None, size=None, **kwargs):
 
         marker : int [1]
             Marker for the resulting triangle cells after mesh generation
-        markerPosition : floats [x, y] [pos + (end - start) * 0.2]
+        markerPos : floats [x, y] [pos + (end - start) * 0.2]
             Absolute position of the marker (works for both regions and
             holes).
         area : float [0]
@@ -154,7 +155,7 @@ def createRectangle(start=None, end=None, pos=None, size=None, **kwargs):
     >>> import pygimli as pg
     >>> import pygimli.meshtools as mt
     >>> r1 = mt.createRectangle(pos=[1, -1], size=[4.0, 4.0],
-    ...                      marker=1, area=0.1, markerPosition=[0, -2])
+    ...                      marker=1, area=0.1, markerPos=[0, -2])
     >>> r2 = mt.createRectangle(start=[0.5, -0.5], end=[2, -2],
     ...                      marker=2, area=1.1)
     >>> pnts3 = [[-0.5, 0], [0, 0.2], [-0.2, 0.5], [-0.3, 0.25]]
@@ -170,6 +171,8 @@ def createRectangle(start=None, end=None, pos=None, size=None, **kwargs):
     >>> pg.viewer.mpl.drawSensors(ax, pnts5)
     """
     pnts = kwargs.pop('pnts', None)
+    pg.renameKwarg('markerPosition', 'markerPos', kwargs, '2.1')
+    markerPos = kwargs.get('markerPos', None)
 
     if pnts is not None:
         if len(pnts) == 1:
@@ -293,8 +296,7 @@ def createRectangle(start=None, end=None, pos=None, size=None, **kwargs):
     sPos = poly.bb()[0]
     ePos = poly.bb()[1]
 
-    kwargs['markerPosition'] = kwargs.pop('markerPosition',
-                                          sPos + (ePos - sPos) * 0.2)
+    kwargs['markerPos'] = kwargs.pop('markerPos', sPos + (ePos - sPos) * 0.2)
 
     setPolyRegionMarker(poly, **kwargs)
 
@@ -547,7 +549,7 @@ def createCircle(pos=None, radius=1, nSegments=12, start=0, end=2.*math.pi,
 
     _polyCreateDefaultEdges(poly, **kwargs)
 
-    if kwargs.get('marker', None) is not None:
+    if kwargs.get('marker', None) is not None or kwargs.get('isHole', False):
         setPolyRegionMarker(poly, **kwargs)
 
     # need a better way mess with these or wrong kwargs
