@@ -569,9 +569,8 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
     if mesh.cellCount() == 0:
         showMesh = False
         if mesh.boundaryCount() == 0:
-            pg.viewer.mpl.drawPLC(ax, mesh, showNodes=True,
-                                  fillRegion=False,
-                                  showBoundary=False,
+            pg.viewer.mpl.drawPLC(ax, mesh,
+                                  nodes=True, regions=False, boundaries=False,
                                   **kwargs)
             showBoundary = False
             # ax.plot(pg.x(mesh), pg.y(mesh), '.', color='black')
@@ -800,11 +799,9 @@ def show1D(mesh, obj, **kwargs):
 
     elif obj is None:
 
-
-        pg.viewer.mpl.drawPLC(ax, mesh, showNodes=True,
-                              fillRegion=False,
-                              showBoundary=False,
-                                  **kwargs)
+        pg.viewer.mpl.drawPLC(ax, mesh,
+                              nodes=True, regions=False, boundaries=False,
+                              **kwargs)
         return ax, None
     else:
         pg._r(kwargs)

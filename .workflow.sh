@@ -127,6 +127,7 @@ function build_pre(){
     pushd $PROJECT_ROOT
         new_venv $VENV_BUILD
 
+        uv pip install tomllib
         # Install the basic needs for pgcore build
         green "Installing build dependencies from $PROJECT_SRC/pyproject.toml"
         exclude=("pgcore" "matplotlib" "scipy")
@@ -147,7 +148,7 @@ deps = [d for d in data["project"]["dependencies"] if not_excluded(d)]
 build = [d for d in data["project"]["optional-dependencies"]["build"] if not_excluded(d)]
 subprocess.check_call(["uv", "pip", "install"] + deps + build)
 PYEOF
-        
+
         rm -rf $BUILD_DIR
         mkdir -p $BUILD_DIR
     popd

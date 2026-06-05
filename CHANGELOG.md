@@ -33,6 +33,7 @@ pip install pygimli=2
 
 * new Matrix class (`DenseMatrix`), using OpenBlas basic multiplications, which replace default `RMatrix` after further testing (still beta phase).
 
+* pg.show() is forwarded as method to the `Mesh` class, so that `mesh.show()` is now possible. The old `pg.show(mesh)` is still working.
 
 * ...
 
@@ -43,7 +44,10 @@ pip install pygimli=2
     e.g.: `data['t']` instead of `data('t')`
 
 * Renamed:
-    `RVector3` -> `Pos`
+    *  `RVector3` -> `Pos`
+    * some keyword arguments has been renamed with an appropriate warning if the old ones are used. Idea is to improve code readability, e.g.,
+    `pg.show(geo, fillRegion=True, showNodes=True, showBoundaryMarkers=True)` become now:
+    `geo.show(regions=False, nodes=True, boundaryMarkers=True)`
 
 * ...
 

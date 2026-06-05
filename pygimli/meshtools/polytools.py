@@ -52,9 +52,7 @@ def _polyCreateDefaultEdges(poly, boundaryMarker=1, isClosed=True, **kwargs):
         poly.translate(center)  # move back to pos
 
 
-
-def setPolyRegionMarker(poly, marker=1, area=0.0, markerPosition=None,
-                        isHole=False, **kwargs):
+def setPolyRegionMarker(poly, marker=1, area=0.0, isHole=False, **kwargs):
     """Set region markers to single elementary geometry (internal).
 
     Internal to set region markers.
@@ -71,9 +69,6 @@ def setPolyRegionMarker(poly, marker=1, area=0.0, markerPosition=None,
     area : float[0]
         The region max cell size, every resulting mesh cell will get a cell
         size lower than area in m² or m³ for 3D, respectively.
-    markerPosition : pg.Pos
-        Absolute marker position if you don't want the marker in the center of
-        the geometry.
     isHole : bool [False]
         Marks the geometry as a hole and will be cut in any merge mesh.
 
@@ -81,10 +76,15 @@ def setPolyRegionMarker(poly, marker=1, area=0.0, markerPosition=None,
     -----------------
     **kwargs
         Additional kwargs
+    markerPosition : pg.Pos
+        Absolute marker position if you don't want the marker in the center of
+        the geometry.
     """
+    markerPos = pg.renameKwarg('markerPosition', 'markerPos', kwargs, '2.1')
+
     pos = None
-    if markerPosition is not None:
-        pos = markerPosition
+    if markerPos is not None:
+        pos = markerPos
     else:
         center = pg.center(poly.positions())
         p0 = poly.node(0).pos()
@@ -317,8 +317,8 @@ def createWorld(start, end, marker=1, area=0., layers=None,
     ----
         * 3D with layers
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     start: [x, y, [z]]
         Upper/Left/[Front] Corner
     end: [x, y, [z]]
@@ -334,9 +334,13 @@ def createWorld(start, end, marker=1, area=0., layers=None,
         Specify kind of preset boundary marker [-1, -2] or
         ascending order [1, 2, 3, 4 ..]
 
-    Other Parameters
-    ----------------
-    Forwarded to createCube
+    Keyword Args
+    ------------
+    markerPos: [x,y]
+        Optional position for a single region marker position.
+
+    ** kwargs
+        Forwarded to createCube
 
     Returns
     -------
@@ -411,8 +415,8 @@ def createWorld(start, end, marker=1, area=0., layers=None,
         n = poly.createNode([start[0], depth])
         if i > 0:
             if len(z) == 2:
-                poly.addRegionMarker(n.pos() + [0.2, 0.2],
-                                     marker=marker, area=area[0])
+                mPos = kwargs.pop('markerPos', n.pos() + [0.2, 0.2])
+                poly.addRegionMarker(mPos, marker=marker, area=area[0])
             else:
                 poly.addRegionMarker(n.pos() + [0.2, 0.2],
                                      marker=i, area=area[i - 1])
@@ -468,24 +472,25 @@ def createCircle(pos=None, radius=1, nSegments=12, start=0, end=2.*math.pi,
         Starting angle in radians
     end : double [2*pi]
         Ending angle in radians
-    **kwargs:
 
-        marker: int [1]
-            Marker for the resulting triangle cells after mesh generation
-        markerPosition : floats [x, y] [0.0, 0.0]
-            Position of the marker (works for both regions and holes)
-        area: float [0]
-            Maximum cell size for resulting triangles after mesh generation
-        isHole: bool [False]
-            The polygon will become a hole instead of a triangulation
-        boundaryMarker: int [1]
-            Marker for the resulting boundary edges
-        leftDirection: bool [True]
-            Rotational direction
-        isClosed: bool [True]
-            Add closing edge between last and first node.
-        rotate: double [0]
-            Rotation angle in radians to rotate the circle around its center.
+    Keyword Arguments
+    -----------------
+    marker: int [None]
+        Marker for the resulting triangle cells after mesh generation
+    markerPosition : floats [x, y] [0.0, 0.0]
+        Position of the marker (works for both regions and holes)
+    area: float [0]
+        Maximum cell size for resulting triangles after mesh generation
+    isHole: bool [False]
+        The polygon will become a hole instead of a triangulation
+    boundaryMarker: int [1]
+        Marker for the resulting boundary edges
+    leftDirection: bool [True]
+        Rotational direction
+    isClosed: bool [True]
+        Add closing edge between last and first node.
+    rotate: double [0]
+        Rotation angle in radians to rotate the circle around its center.
 
     Returns
     -------
@@ -542,7 +547,7 @@ def createCircle(pos=None, radius=1, nSegments=12, start=0, end=2.*math.pi,
 
     _polyCreateDefaultEdges(poly, **kwargs)
 
-    if kwargs.pop('isClosed', True):
+    if kwargs.get('marker', None) is not None:
         setPolyRegionMarker(poly, **kwargs)
 
     # need a better way mess with these or wrong kwargs

@@ -693,8 +693,7 @@ def drawMeshBoundaries(ax, mesh, hideMesh=False, useColorMap=False,
     updateAxes_(ax)
 
 
-def drawPLC(ax, mesh, fillRegion=True, regionMarker=True,
-            boundaryMarkers=False, showNodes=False, fitView=True, **kwargs):
+def drawPLC(ax, mesh, fitView=True, **kwargs):
     """Draw 2D PLC into given axes.
 
     Parameters
@@ -703,19 +702,23 @@ def drawPLC(ax, mesh, fillRegion=True, regionMarker=True,
 
     mesh : :gimliapi:`GIMLI::Mesh`
 
-    fillRegion: bool [True]
-        Fill the regions with default colormap.
     regionMarker: bool [True]
         Show region marker.
-    boundaryMarkers: bool [False]
-        Show boundary marker.
-    showNodes: bool [False]
-        Draw all nodes as little dots.
     fitView : bool [True]
         Adjust ax limits to mesh bounding box.
 
     Keyword Arguments
     -----------------
+    regions: bool [True]
+        Fill the regions with default color map.
+    regionMarkers: bool [True]
+        Show region marker.
+    nodes: bool [False]
+        Draw all nodes as little dots.
+    boundaries: bool [True]
+        Draw the thicker lines for boundaries using drawMeshBoundaries.
+    boundaryMarkers: bool [False]
+        Show boundary marker.
     **kwargs
         Additional kwargs forwarded to the draw functions and mpl methods,
         respectively.
@@ -727,7 +730,7 @@ def drawPLC(ax, mesh, fillRegion=True, regionMarker=True,
     >>> import pygimli.meshtools as mt
     >>> # Create geometry definition for the modelling domain
     >>> world = mt.createWorld(start=[-20, 0], end=[20, -16],
-    ...                        layers=[-2, -8], worldMarker=False)
+    ...                        layers=[-2, -8], worldMarkers=False)
     >>> # Create a heterogeneous block
     >>> block = mt.createRectangle(start=[-6, -3.5], end=[6, -6.0],
     ...                            marker=10,  boundaryMarker=10, area=0.1)
@@ -735,9 +738,21 @@ def drawPLC(ax, mesh, fillRegion=True, regionMarker=True,
     >>> geom = world + block
     >>> _ = pg.viewer.mpl.drawPLC(ax, geom)
     """
-    #    eCircles = []
+    pg.renameKwarg('fillRegion', 'regions', kwargs, '2.1')
+    fillRegions = kwargs.pop('regions', True)
+    pg.renameKwarg('showNodes', 'nodes', kwargs, '2.1')
+    showNodes = kwargs.pop('nodes', False)
+    pg.renameKwarg('showBoundary', 'boundaries', kwargs, '2.1')
+    showBoundary = kwargs.pop('boundaries', True)
+    pg.renameKwarg('showBoundaryMarkers', 'boundaryMarkers', kwargs, '2.1')
+    showBoundaryMarkers = kwargs.pop('boundaryMarkers', False)
+    pg.renameKwarg('regionMarker', 'regionMarkers', kwargs, '2.1')
+    showRegionMarkers = kwargs.pop('regionMarkers', True)
+
+    orientation = kwargs.pop('orientation', 'horizontal')
+
     cbar = None
-    if fillRegion and mesh.boundaryCount() > 2:
+    if fillRegions is True and mesh.boundaryCount() > 2:
         tmpMesh = pg.meshtools.createMesh(mesh, quality=20, area=0)
         if tmpMesh.cellCount() == 0:
             gci = None
@@ -753,43 +768,42 @@ def drawPLC(ax, mesh, fillRegion=True, regionMarker=True,
                             snap=True,
                             )
 
-            if regionMarker is True:
-                orient = kwargs.pop('orientation', 'horizontal')
-                cbar = createColorBar(gci, orientation=orient,
-                                      label="Region markers")
+            cbar = createColorBar(gci, orientation=orientation,
+                                    label="Region markers")
 
-                updateColorBar(cbar,
-                               cMap=cmapFromName("Set3",
-                                                 ncols=len(uniquemarkers)),
-                               cMin=-0.5,
-                               cMax=len(uniquemarkers) - 0.5)
-                ticks = np.arange(len(uniquemarkers))
+            updateColorBar(cbar,
+                            cMap=cmapFromName("Set3",
+                                                ncols=len(uniquemarkers)),
+                            cMin=-0.5,
+                            cMax=len(uniquemarkers) - 0.5)
+            ticks = np.arange(len(uniquemarkers))
 
-                cbar.set_ticks(ticks)
-                areas = {}
-                for reg in mesh.regionMarkers():
-                    areas[reg.marker()] = reg.area()
-                    # if kwargs.get("regionMarkers", True):
-                    if regionMarker:
-                        ax.plot(reg.x(), reg.y(), "mx", alpha=0.5)
-                        ax.text(reg.x(), reg.y(), str(reg.marker()),
-                                color="m", ha="center", va="center")
+            cbar.set_ticks(ticks)
+            areas = {}
+            for reg in mesh.regionMarkers():
+                areas[reg.marker()] = reg.area()
 
-                labels = []
-                for marker in uniquemarkers:
-                    label = "{:d}".format(marker)
-                    if marker in areas and areas[marker] > 0:
-                        label += "\n$A$={:g}".format(areas[marker])
-                        # label += "\n(area: %s)" % areas[marker]
-                    labels.append(label)
-                cbar.set_ticklabels(labels)
+            labels = []
+            for marker in uniquemarkers:
+                label = "{:d}".format(marker)
+                if marker in areas and areas[marker] > 0:
+                    label += "\n$A$={:g}".format(areas[marker])
+                    # label += "\n(area: %s)" % areas[marker]
+                labels.append(label)
+            cbar.set_ticklabels(labels)
 
     else:
         gci = None
-        if kwargs.pop('showBoundary', True):
+        if showBoundary is True:
             drawMeshBoundaries(ax, mesh, **kwargs)
 
-    if showNodes:
+    if showRegionMarkers is True:
+        for reg in mesh.regionMarkers():
+            ax.plot(reg.x(), reg.y(), "mx", alpha=0.5)
+            ax.text(reg.x(), reg.y(), str(reg.marker()),
+                    color="m", ha="center", va="center")
+
+    if showNodes is True:
         for n in mesh.nodes():
             col = (0.0, 0.0, 0.0, 0.5)
 
@@ -800,18 +814,22 @@ def drawPLC(ax, mesh, fillRegion=True, regionMarker=True,
             ax.plot(n.pos()[0], n.pos()[1], 'o',
                     color=col, zorder=10, **kwargs)
 
+
+    if showBoundaryMarkers is True:
+        drawBoundaryMarkers(ax, mesh, **kwargs)
+
     #        eCircles.append(mpl.patches.Circle((n.pos()[0], n.pos()[1])))
     #        eCircles.append(mpl.patches.Circle((n.pos()[0], n.pos()[1]), 0.1))
     #        cols.append(col)
     #    p = mpl.collections.PatchCollection(eCircles, color=cols)
     #    ax.add_collection(p)
 
-    if regionMarker:
+    if showRegionMarkers is True:
         for hole in mesh.holeMarker():
             ax.text(hole[0], hole[1], 'H', color='black',
                     va="center", ha="center")
 
-    if fitView:
+    if fitView is True:
         ax.autoscale(enable=True, axis='both', tight=True)
         ax.set_aspect('equal')
 
