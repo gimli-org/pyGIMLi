@@ -127,7 +127,7 @@ function build_pre(){
     pushd $PROJECT_ROOT
         new_venv $VENV_BUILD
 
-        uv pip install tomllib
+        uv pip install tomli
         # Install the basic needs for pgcore build
         green "Installing build dependencies from $PROJECT_SRC/pyproject.toml"
         exclude=("pgcore" "matplotlib" "scipy")
