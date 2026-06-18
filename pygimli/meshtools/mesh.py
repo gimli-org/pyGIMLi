@@ -1,8 +1,6 @@
 """General mesh generation and maintenance."""
 
 import os
-from turtle import fd
-from matplotlib import markers
 import numpy as np
 import pygimli as pg
 
