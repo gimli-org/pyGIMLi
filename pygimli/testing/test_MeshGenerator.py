@@ -96,11 +96,11 @@ class TestMeshGenerator(unittest.TestCase):
             mesh = pg.meshtools.createMesh(plc,
                                            syscall=False, verbose=False,
                                            area=0.01, quality=1.12)
-        except ImportError as e:
+        except Exception as e:
+            print(e)
             if "tetgen python wrapper not installed" in str(e):
                 self.skipTest("tetgen python wrapper not installed")
-        except Exception as e:
-            raise e
+
         self._testTetMesh(mesh, plc)
 
 

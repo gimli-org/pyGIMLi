@@ -197,8 +197,10 @@ def createMeshTetgen(plc, quality=1.5, area=0, preserveBoundary=False,
                                           verbose=verbose, **kwargs)
     else:
         tg = pg.optImport("tetgen",
-                          "You need tetgen installed to create 3D meshes."
+                          "to create 3D meshes using tetgen wrapper."
                           "try: pip install tetgen")
+        if tg is None:
+            raise ImportError("tetgen python wrapper not installed")
 
         tmp = pg.optImport('tempfile')
         fd, plcFname = tmp.mkstemp(suffix='.poly')
