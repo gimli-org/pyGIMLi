@@ -60,14 +60,20 @@ class TestMeshGenerator(unittest.TestCase):
         return mt.mergePLC3D([w, c])
 
 
-    def _testTetMesh(self, mesh, plc):
+    def _testTetMesh(self, mesh, plc, tgVersion='1.5'):
         """Test tet mesh."""
         if _show_:
             pg.show(mesh, showMesh=True, markers=True)
 
-        self.assertEqual(mesh.nodeCount(), 107)
-        self.assertEqual(mesh.cellCount(), 351)
-        self.assertEqual(mesh.boundaryCount(), 783)
+        print(f"Testing tetgen version {tgVersion} mesh generation.")
+        if "1.6" in tgVersion:
+            self.assertEqual(mesh.nodeCount(), 107)
+            self.assertEqual(mesh.cellCount(), 351)
+            self.assertEqual(mesh.boundaryCount(), 783)
+        else:
+            self.assertEqual(mesh.nodeCount(), 567)
+            self.assertEqual(mesh.cellCount(), 2069)
+            self.assertEqual(mesh.boundaryCount(), 4541)
 
         self.assertEqual(sorted(pg.unique(mesh.boundaryMarkers())),
                          sorted([0, *pg.unique(plc.boundaryMarkers())]))
@@ -82,10 +88,12 @@ class TestMeshGenerator(unittest.TestCase):
             mesh = pg.meshtools.createMesh(plc,
                                            verbose=False,
                                            area=0.01, quality=1.12)
-        except RuntimeError as e:
+        except RuntimeError:
             self.skipTest("tetgen binary not found in PATH")
 
-        self._testTetMesh(mesh, plc)
+        import subprocess
+        v = subprocess.getoutput("tetgen -h | grep Version").split()[-1]
+        self._testTetMesh(mesh, plc, tgVersion=v)
 
 
     def testPyTetgen(self):
@@ -106,7 +114,7 @@ class TestMeshGenerator(unittest.TestCase):
         except Exception as e:
             print(e)
 
-        self._testTetMesh(mesh, plc)
+        self._testTetMesh(mesh, plc, tgVersion="1.6")
 
 
     def testTriangleMAC(self):
