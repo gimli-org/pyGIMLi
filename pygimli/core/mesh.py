@@ -72,6 +72,35 @@ def __Mesh_createNodes__(self, posList):
 Mesh.createNodes = __Mesh_createNodes__
 
 
+def __Mesh_createCells__(self, cellList, marker=0):
+    """Create cells for all cell in cellList."""
+    if isinstance(marker, (int, float)):
+        marker = np.full(len(cellList), marker)
+    if marker.ndim == 2:
+        warn("Marker has more than one dimension. Maybe you want to use ")
+    marker = np.squeeze(marker)
+
+    try:
+        return [self.createCell(c, m) for c, m in zip(cellList, marker)]
+    except:
+        return [self.createCell(c, m)
+                    for c, m in zip(np.asarray(cellList).T, marker)]
+Mesh.createCells = __Mesh_createCells__
+
+
+def __Mesh_createBoundaries__(self, boundaryList, marker=0):
+    """Create boundaries for all boundary in boundaryList."""
+    if isinstance(marker, (int, float)):
+        marker = np.full(len(boundaryList), marker)
+    marker = np.squeeze(marker)
+    try:
+        return [self.createBoundary(b, m) for b, m in zip(boundaryList, marker)]
+    except:
+        return [self.createBoundary(b, m)
+                    for b, m in zip(np.asarray(boundaryList).T, marker)]
+Mesh.createBoundaries = __Mesh_createBoundaries__
+
+
 def __addPLCs__(self, other):
     """Add another mesh or a list of points as a new PLC."""
     if isR3Array(other):

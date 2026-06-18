@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 ERT field data with topography
 ==============================
@@ -13,7 +12,6 @@ Simple example of data measured over a slagdump demonstrating:
 The data is the profile 11 already shown by Günther et al. (2006, Fig. 11).
 """
 # sphinx_gallery_thumbnail_number = 7
-import matplotlib.pyplot as plt
 import pygimli as pg
 from pygimli.physics import ert
 
@@ -25,8 +23,11 @@ data = pg.getExampleData('ert/slagdump.ohm', verbose=True)
 print(data)
 
 ###############################################################################
-# Let us first have a look at the topography contained in the data
-plt.plot(pg.x(data), pg.z(data), 'x-')
+# Let us first have a look at the topography contained in the data.
+# Hint. Using pg.plt applies lazy evaluated import of matplotlib.pyplot,
+# opens all figures in interactive mode and don't need a plt.show() at the end
+# of the script.
+pg.plt.plot(pg.x(data), pg.z(data), 'x-')
 
 ###############################################################################
 # The data file does not contain geometric factors (token field 'k'),
@@ -46,11 +47,11 @@ _ = ert.showData(data, vals=k0/ data['k'], label='Topography effect',
 # wrong analytical formula and once with the numerical values in data['k']
 data['rhoa'] = data['r'] * data['k']
 kw = dict(cMin=6, cMax=33)
-fig, ax = plt.subplots(ncols=2)
-data.show(data['r']*k0, ax=ax[0], **kw);
+fig, ax = pg.plt.subplots(ncols=2)
+data.show(data['r']*k0, ax=ax[0], **kw)
 data.show(ax=ax[1], **kw)
 ax[0].set_title('Uncorrected')
-ax[1].set_title('Corrected');
+ax[1].set_title('Corrected')
 
 ###############################################################################
 # The data container does not necessarily contain data errors data errors

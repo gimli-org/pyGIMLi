@@ -1,5 +1,4 @@
-"""Tests for pygimli.meshtools.polytools
-"""
+"""Tests for pygimli.meshtools.polytools."""
 import numpy as np
 import unittest
 
@@ -8,8 +7,10 @@ import pygimli.meshtools as mt
 
 
 class TestMisc(unittest.TestCase):
+    """Test miscellaneous functions."""
 
     def test_appendTriangleBoundary(self):
+        """Test appendTriangleBoundary."""
         geom = mt.createWorld(start=[-10, 0], end=[10, -10], layers=[-5, -10])
         mesh = mt.createMesh(geom, area=1)
 
@@ -24,6 +25,8 @@ class TestMisc(unittest.TestCase):
 
 
 class TestCreateRectangle(unittest.TestCase):
+    """Test createRectangle function."""
+
     def test_region_marker_position_basics(self):
         rect1 = mt.createRectangle(
             start=[0.0, 0.0],
@@ -157,7 +160,10 @@ class TestCreateCircle(unittest.TestCase):
 
 
 class TestCreatePolygon(unittest.TestCase):
+    """Test createPolygon function."""
+
     def test_default_create(self):
+        """Test default createPolygon function."""
         polygon = mt.createPolygon(
             [[-1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [1.0, -1]],
             isClosed=True,
@@ -168,7 +174,9 @@ class TestCreatePolygon(unittest.TestCase):
                    0.001) < 1e-8
         assert polygon.regionMarkers()[0].marker() == 1
 
+
     def test_default_create_different_center(self):
+        """Test createPolygon function with a different center."""
         polygon = mt.createPolygon(
             [[0.0, 0.0], [1.0, 0.0], [1.0, -1.0], [0.0, -1]],
             isClosed=True,
@@ -178,7 +186,10 @@ class TestCreatePolygon(unittest.TestCase):
                    0.001) < 1e-8
         assert polygon.regionMarkers()[0].marker() == 2
 
+
     def test_create_with_custom_markerPosition(self):
+        """Test createPolygon function with a custom marker position."""
+
         polygon = mt.createPolygon(
             [[0.0, 0.0], [1.0, 0.0], [1.0, -1.0], [0.0, -1]],
             isClosed=True,
@@ -192,6 +203,7 @@ class TestCreatePolygon(unittest.TestCase):
 
 
 class Test3DMerge(unittest.TestCase):
+    """Test 3D merge functions."""
 
     @pg.skipOnDefaultTest
     def test_PosTouchFace(self):
@@ -214,27 +226,32 @@ class Test3DMerge(unittest.TestCase):
         m.createNode(n)
         self.assertEqual(m.boundary(0).nodeCount(), 5)
 
-    def test_cubeBasics(self):
+
+    def testCubeBasics(self):
+        """Test basic cube creation and mesh generation."""
         plc = mt.createCube()
         for i, b in enumerate(plc.boundaries()):
-            b.setMarker(i+1)
+            b.setMarker(i + 1)
 
         mesh = mt.createMesh(plc)
 
         for marker in pg.unique(pg.sort(plc.boundaryMarkers())):
             b1 = plc.boundaries(plc.boundaryMarkers() == marker)[0]
             b2 = mesh.boundaries(mesh.boundaryMarkers() == marker)[0]
-
             np.testing.assert_array_equal(b1.norm(), b2.norm())
 
-    def test_cube_cube_same(self):
+
+    def testCubeCubeSame(self):
+        """Test merging two identical cubes."""
         c1 = mt.createCube()
         c2 = mt.createCube()
         m = mt.mergePLC3D([c1, c2])
         self.assertEqual(c1.nodeCount(), m.nodeCount())
         self.assertEqual(c1.boundaryCount(), m.boundaryCount())
 
-    def test_cube_cube_equalface(self):
+
+    def testCubeCubeEqualface(self):
+        """Test merging two cubes with one face in common."""
         w = mt.createCube(marker=1)
         c = mt.createCube(marker=2)
         c.translate([c.xmax()-w.xmin(), 0.0])
@@ -269,6 +286,7 @@ class Test3DMerge(unittest.TestCase):
 
         # w.exportPLC('t.poly')
         # pg.show(mt.createMesh(w))
+
 
     def test_cube_cube_coplanar_touchface(self):
         w = mt.createCube(marker=1)

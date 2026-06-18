@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
 """General mesh generation and maintenance."""
 
 import os
+from turtle import fd
+from matplotlib import markers
 import numpy as np
 import pygimli as pg
 
@@ -140,15 +141,89 @@ def createMesh(poly, quality=32, area=0.0, smooth=None, switches=None,
         if quality == 32:
             quality = 1.2
 
-        tmp = pg.optImport('tempfile')
-        fd, namePLC = tmp.mkstemp(suffix='.poly')
-        pg.meshtools.exportPLC(poly, namePLC)
-        os.close(fd)  # needed for win32 to free the file for closing
-
-        mesh = pg.meshtools.syscallTetgen(namePLC, quality, area,
-                                          verbose=verbose, **kwargs)
+        mesh = createMeshTetgen(poly, quality=quality, area=area,
+                                verbose=verbose, **kwargs)
 
         return mesh
+
+
+def createMeshTetgen(plc, quality=1.5, area=0, preserveBoundary=False,
+                     verbose=False, **kwargs):
+    """Create a tetgen wrapper.
+
+    TODO
+    ----
+        * translate default params -> kwargs to superseed switches for
+        python wrapper
+        * direct conversion of PLC to tetgen input format
+        for direct python wrapper without file usage. Need to be implemented
+        in the tetgen python wrapper first.
+    """
+    sysCallTetgen = kwargs.pop('syscall', True)
+
+    switches = kwargs.pop('switches', None)
+
+    if switches is None:
+        switches = 'pzAC'
+
+        if area>0:
+            switches += 'a' + str(area)
+        else:
+            switches += 'a'
+
+        switches += 'q' + str(quality)
+
+        if verbose is False:
+            switches += 'Q'
+        else:
+            pass
+
+        if preserveBoundary is True:
+            switches += 'Y'
+
+    if sysCallTetgen is True:
+        import shutil
+        if shutil.which('tetgen') is None:
+            raise RuntimeError("tetgen binary not found in PATH")
+
+        if kwargs.get('verbose', False):
+            pg.info("Using system call to tetgen.")
+
+        tmp = pg.optImport('tempfile')
+        fd, plcFname = tmp.mkstemp(suffix='.poly')
+        pg.meshtools.exportPLC(plc, plcFname)
+        os.close(fd)  # needed for win32 to free the file for closing
+        mesh = pg.meshtools.syscallTetgen(plcFname, switches=switches,
+                                          verbose=verbose, **kwargs)
+    else:
+        tg = pg.optImport("tetgen",
+                          "You need tetgen installed to create 3D meshes."
+                          "try: pip install tetgen")
+
+        tmp = pg.optImport('tempfile')
+        fd, plcFname = tmp.mkstemp(suffix='.poly')
+        pg.meshtools.exportPLC(plc, plcFname)
+        os.close(fd)  # needed for win32 to free the file for closing
+
+        tet = tg.TetGen(plcFname)
+
+        #TODO: translate params -> kwargs to superseeds switches
+        #kwargs['minratio'] = quality
+        #kwargs['maxvolume'] = area
+        if switches == "ignore":
+            switches = None
+
+        tet.tetrahedralize(verbose=verbose, switches=switches, **kwargs)
+
+        mesh = pg.Mesh(dim=3)
+        mesh.createNodes(tet.node)
+        mesh.createCells(tet.elem, tet.attributes)
+        mesh.createBoundaries(tet.trifaces, tet.triface_markers)
+
+        mesh.createNeighborInfos()
+
+    return mesh
+
 
 
 def checkMeshConsistency(mesh):
@@ -2172,7 +2247,7 @@ def extractUpperSurface2dMesh(mesh, zCut=None):
     bMesh = mesh.createSubMesh(mesh.boundaries(bind))
 
     mesh2d = pg.Mesh(2)
-    [mesh2d.createNode(n.pos()) for n in bMesh.nodes()]
+    mesh2d.createNodes(bMesh.nodes())
     for b in bMesh.boundaries():
         mesh2d.createCell([n.id() for n in b.nodes()])
 
@@ -2189,7 +2264,3 @@ def extractUpperSurface2dMesh(mesh, zCut=None):
         mesh2d[k] = mesh[k][cind]
 
     return mesh2d
-
-
-if __name__ == "__main__":
-    pass
