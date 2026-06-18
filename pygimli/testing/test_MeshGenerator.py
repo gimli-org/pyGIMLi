@@ -83,8 +83,7 @@ class TestMeshGenerator(unittest.TestCase):
                                            verbose=False,
                                            area=0.01, quality=1.12)
         except RuntimeError as e:
-            if "tetgen binary not found in PATH" in str(e):
-                self.skipTest("tetgen binary not found in PATH")
+            self.skipTest("tetgen binary not found in PATH")
 
         self._testTetMesh(mesh, plc)
 
@@ -96,10 +95,16 @@ class TestMeshGenerator(unittest.TestCase):
             mesh = pg.meshtools.createMesh(plc,
                                            syscall=False, verbose=False,
                                            area=0.01, quality=1.12)
+
+        except ImportError as e:
+            print(e)
+            self.skipTest("tetgen python wrapper not installed")
+        except OSError as e:
+            if "This file was not able to be automatically read by pyvista."\
+                in str(e):
+                self.skipTest("tetgen wrapper probably to old.")
         except Exception as e:
             print(e)
-            if "tetgen python wrapper not installed" in str(e):
-                self.skipTest("tetgen python wrapper not installed")
 
         self._testTetMesh(mesh, plc)
 

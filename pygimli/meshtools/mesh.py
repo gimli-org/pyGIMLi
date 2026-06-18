@@ -267,7 +267,7 @@ def checkMeshConsistency(mesh):
     return not fail
 
 
-def createMeshFromHull(mesh, fixNodes=[], **kwargs):
+def createMeshFromHull(mesh, fixNodes=None, **kwargs):
     """Create a new 2D triangular mesh from the boundaries of mesh.
 
     Parameters
@@ -288,6 +288,8 @@ def createMeshFromHull(mesh, fixNodes=[], **kwargs):
         Returning mesh. If fixed nodes are requested,
         a list of the new IDs are returned in advance.
     """
+    if fixNodes is None:
+        fixNodes = []
     plc = pg.Mesh(mesh.dim(), isGeometry=True)
 
     bounds = mesh.boundaries(mesh.boundaryMarkers() != 0)
