@@ -70,6 +70,10 @@ class TestMeshGenerator(unittest.TestCase):
             self.assertEqual(mesh.nodeCount(), 107)
             self.assertEqual(mesh.cellCount(), 351)
             self.assertEqual(mesh.boundaryCount(), 783)
+        elif "1.5.1" in tgVersion:
+            self.assertEqual(mesh.nodeCount(), 583)
+            self.assertEqual(mesh.cellCount(), 2154)
+            self.assertEqual(mesh.boundaryCount(), 4716)
         else:
             self.assertEqual(mesh.nodeCount(), 567)
             self.assertEqual(mesh.cellCount(), 2069)
@@ -81,19 +85,44 @@ class TestMeshGenerator(unittest.TestCase):
                          sorted([1, 2]))
 
 
-    def testTetgen(self):
+        for marker in pg.unique(pg.sort(plc.boundaryMarkers())):
+            b1 = plc.boundaries(plc.boundaryMarkers() == marker)[0]
+            b2 = mesh.boundaries(mesh.boundaryMarkers() == marker)[0]
+            if b2.outside():
+                np.testing.assert_array_equal(b1.norm(), b2.norm())
+
+
+    def testTetgen(self, version=None):
         """Test interface to tetgen mesh generation."""
+        tetgen = f"tetgen-{version}" if version else "tetgen"
         plc = self._testPLC()
         try:
             mesh = pg.meshtools.createMesh(plc,
-                                           verbose=False,
-                                           area=0.01, quality=1.12)
+                                           syscall=True, verbose=False,
+                                           area=0.01, quality=1.12,
+                                           tetgen=tetgen,
+                                           )
         except RuntimeError:
-            self.skipTest("tetgen binary not found in PATH")
+            self.skipTest(f"{tetgen} binary not found in PATH")
 
         import subprocess
-        v = subprocess.getoutput("tetgen -h | grep Version").split()[-1]
-        self._testTetMesh(mesh, plc, tgVersion=v)
+        v = subprocess.getoutput(f"{tetgen} -h | grep Version").split()[-1]
+        self._testTetMesh(mesh, plc, tgVersion=version)
+
+
+    def testTetgen150(self):
+        """Test interface to tetgen mesh generation with version 1.5."""
+        self.testTetgen(version="1.5.0")
+
+
+    def testTetgen151(self):
+        """Test interface to tetgen mesh generation with version 1.5.1."""
+        self.testTetgen(version="1.5.1")
+
+
+    def testTetgen160(self):
+        """Test interface to tetgen mesh generation with version 1.6.0."""
+        self.testTetgen(version="1.6.0")
 
 
     def testPyTetgen(self):

@@ -1001,10 +1001,8 @@ public:
         }
 
         int nVals = 0;
-        for (std::vector < std::set< Index > >::iterator mIt = idxMap.begin();
-             mIt != idxMap.end(); mIt++){
-            //std::sort((*mIt).begin(), (*mIt).end());
-            nVals += (*mIt).size();
+        for (const auto & s : idxMap){
+            nVals += s.size();
         }
 
 //         std::cout << "timwe: " << swatch.duration( true) << std::endl;
@@ -1017,9 +1015,9 @@ public:
         colPtr_[0] = 0;
         Index k = 0;
         row = 0;
-        for (std::vector < std::set< Index > >::iterator mIt = idxMap.begin(); mIt != idxMap.end(); mIt++){
-            for (std::set< Index >::iterator sIt = (*mIt).begin(); sIt != (*mIt).end(); sIt++){
-                rowIdx_[k] = (*sIt);
+        for (const auto & s : idxMap){
+            for (const auto & idx : s){
+                rowIdx_[k] = idx;
                 vals_[k] = (ValueType)0.0;
                 k++;
             }

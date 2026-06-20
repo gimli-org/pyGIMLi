@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import sys
 import unittest
 import numpy as np
@@ -7,15 +6,16 @@ import pygimli as pg
 
 
 class TestRVectorMethods(unittest.TestCase):
+    """Test right hand side conversion from python to c++."""
 
     def test_RVector(self):
-        """ implemented in custom_rvalue.cpp"""
+        """implemented in custom_rvalue.cpp"""
         a = pg.Vector(10)
         self.assertEqual(a.size(), 10.0)
         self.assertEqual(sum(a), 0.0)
 
     def test_ListToRVector3(self):
-        """ implemented in custom_rvalue.cpp"""
+        """implemented in custom_rvalue.cpp."""
         x = [0.0, 1.0, 0.0]
         p = pg.RVector3(x)
         self.assertEqual(p.dist(x), 0.0)

@@ -435,11 +435,13 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                     gci = drawField(ax, mesh, data, **kwargs)
                 else:
                     pg.error("Data size invalid")
-                    print("Data: ", len(data), min(data), max(data),
-                          pg.core.haveInfNaN(data))
+                    print(data)
+                    # print("Data: ", len(data), min(data), max(data),
+                    #       pg.core.haveInfNaN(data))
                     print("Mesh: ", mesh)
                     validData = False
                     drawMesh(ax, mesh)
+                    gci = None
 
                 return gci, validData
 

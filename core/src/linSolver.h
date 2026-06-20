@@ -34,7 +34,7 @@ enum SolverType{AUTOMATIC,LDL,CHOLMOD,UMFPACK,UNKNOWN};
 class DLLEXPORT LinSolver : public SolverWrapper{
 public:
     LinSolver(bool verbose=false);
-    
+
     LinSolver(RSparseMatrix & S, bool verbose=false);
 
     LinSolver(RSparseMapMatrix & S, bool verbose=false);
@@ -57,7 +57,7 @@ public:
     CVector solve(const CVector & rhs);
 
     void setSolverType(SolverType solverType=AUTOMATIC);
-    
+
     // void setSolver(const std::string & name);
 
     /*! Forwarded to the wrapper to overwrite settings within S. stype =-2 -> use S.stype()*/
@@ -94,9 +94,9 @@ template < class Mat, class Vec > int solveLU(const Mat & A, Vec & x, const Vec 
 
     int N = 0;
     uint n = b.size();
-    int ps[n];
+    std::vector< int > ps(n);
 
-    double scales[n];
+    std::vector< double > scales(n);
     double pivot, biggest, mult, tempf;
     uint pivotindex = 0, tmpIdx = 0;
 

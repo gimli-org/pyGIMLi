@@ -135,10 +135,9 @@ class TestMisc(unittest.TestCase):
         data.createFourPointData(2, pos[0], pos[1], pos[2], pos[3])
         pos = np.arange(4, dtype=np.int64)
         data.createFourPointData(3, pos[0], pos[1], pos[2], pos[3])
-        pg.core.setDeepDebug(1)
+        #pg.core.setDeepDebug(1)
         pos = np.arange(4, dtype=float)
         data.createFourPointData(4, pos[0], pos[1], pos[2], pos[3])
-        return
         pos = np.arange(4, dtype=np.float32)
         data.createFourPointData(5, pos[0], pos[1], pos[2], pos[3])
         pos = np.arange(4, dtype=np.float64)

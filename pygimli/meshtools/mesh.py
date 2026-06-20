@@ -53,6 +53,11 @@ def createMesh(poly, quality=32, area=0.0, smooth=None, switches=None,
     ---------------
     preserveBoundary: bool
         Preserver boundary nodes, no more nodes on boundaries.
+    syscall: bool [None]
+        If None, try system call to tetgen first,
+        then fall back to pv-python tetgen wrapper.
+        If True or False, only try system call to tetgen
+        or pv-python tetgen wrapper, respectively.
 
     Returns
     -------
@@ -139,8 +144,20 @@ def createMesh(poly, quality=32, area=0.0, smooth=None, switches=None,
         if quality == 32:
             quality = 1.2
 
-        mesh = createMeshTetgen(poly, quality=quality, area=area,
-                                verbose=verbose, **kwargs)
+        ## syscall is None: auto first try syscall then pv-tetgen
+        ## if syscall is set only try tetgen or pv-tetgen
+        syscall = kwargs.pop('syscall', None)
+
+        try:
+            mesh = createMeshTetgen(poly, quality=quality, area=area,
+                                    verbose=verbose, syscall=syscall,
+                                    **kwargs)
+        except RuntimeError as e:
+            if syscall is None:
+                mesh = createMeshTetgen(poly, quality=quality, area=area,
+                                verbose=verbose, syscall=False, **kwargs)
+            else:
+                raise e
 
         return mesh
 
@@ -180,19 +197,21 @@ def createMeshTetgen(plc, quality=1.5, area=0, preserveBoundary=False,
             switches += 'Y'
 
     if sysCallTetgen is True:
+        tetgenBin = kwargs.get('tetgen', 'tetgen')
         import shutil
-        if shutil.which('tetgen') is None:
-            raise RuntimeError("tetgen binary not found in PATH")
+        if shutil.which(tetgenBin) is None:
+            raise RuntimeError(f"{tetgenBin} binary not found in PATH")
 
         if kwargs.get('verbose', False):
-            pg.info("Using system call to tetgen.")
+            pg.info(f"Using system call to {tetgenBin}.")
 
         tmp = pg.optImport('tempfile')
         fd, plcFname = tmp.mkstemp(suffix='.poly')
         pg.meshtools.exportPLC(plc, plcFname)
         os.close(fd)  # needed for win32 to free the file for closing
         mesh = pg.meshtools.syscallTetgen(plcFname, switches=switches,
-                                          verbose=verbose, **kwargs)
+                                          verbose=verbose,
+                                          **kwargs)
     else:
         tg = pg.optImport("tetgen",
                           "to create 3D meshes using tetgen wrapper."
