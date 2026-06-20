@@ -259,7 +259,8 @@ class TestShow(unittest.TestCase):
             m1 = mt.createMesh(m1+m2, area=0.1)
         except RuntimeError:
             self.skipTest("Tet meshing failed, check if tetgen is available.")
-
+        except OSError:
+            self.skipTest("Tet meshing failed, pv-pytetgen is too old.")
 
         print('Show Cells:', m1)
         m1.setCellMarkers(range(m1.cellCount()))

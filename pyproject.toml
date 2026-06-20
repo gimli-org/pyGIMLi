@@ -14,7 +14,7 @@ exclude = ["core*"]
 name = "pygimli"
 dynamic = ["version"]
 
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
   { name = "Carsten Rücker" },
   { name = "Thomas Günther" },

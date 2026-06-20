@@ -155,7 +155,8 @@ def createMesh(poly, quality=32, area=0.0, smooth=None, switches=None,
         except RuntimeError as e:
             if syscall is None:
                 mesh = createMeshTetgen(poly, quality=quality, area=area,
-                                verbose=verbose, syscall=False, **kwargs)
+                                        verbose=verbose, syscall=False,
+                                        **kwargs)
             else:
                 raise e
 
@@ -163,8 +164,24 @@ def createMesh(poly, quality=32, area=0.0, smooth=None, switches=None,
 
 
 def createMeshTetgen(plc, quality=1.5, area=0, preserveBoundary=False,
-                     verbose=False, **kwargs):
+                     syscall=True, verbose=False, **kwargs):
     """Create a tetgen wrapper.
+
+    Arguments
+    ---------
+    plc: :gimliapi:`GIMLI::Mesh`
+        Input mesh containing the PLC. Needs to contain nodes and boundaries.
+    quality: float
+        Tetgen quality. Be careful with values below 1.12.
+    area: float
+        Maximum volume of tetrahedra.
+    preserveBoundary: bool
+        If True, preserves the boundary of the input mesh.
+    syscall: bool
+        If True, uses the system call to tetgen.
+        If False, uses the tetgen Python wrapper.
+    verbose: bool
+        If True, enables verbose output.
 
     TODO
     ----
@@ -174,7 +191,8 @@ def createMeshTetgen(plc, quality=1.5, area=0, preserveBoundary=False,
         for direct python wrapper without file usage. Need to be implemented
         in the tetgen python wrapper first.
     """
-    sysCallTetgen = kwargs.pop('syscall', True)
+    if syscall is None:
+        syscall = True
 
     switches = kwargs.pop('switches', None)
 
@@ -196,7 +214,7 @@ def createMeshTetgen(plc, quality=1.5, area=0, preserveBoundary=False,
         if preserveBoundary is True:
             switches += 'Y'
 
-    if sysCallTetgen is True:
+    if syscall is True:
         tetgenBin = kwargs.get('tetgen', 'tetgen')
         import shutil
         if shutil.which(tetgenBin) is None:
@@ -214,8 +232,8 @@ def createMeshTetgen(plc, quality=1.5, area=0, preserveBoundary=False,
                                           **kwargs)
     else:
         tg = pg.optImport("tetgen",
-                          "to create 3D meshes using tetgen wrapper."
-                          "try: pip install tetgen")
+                            "to create 3D meshes using tetgen wrapper."
+                            "try: pip install tetgen")
         if tg is None:
             raise ImportError("tetgen python wrapper not installed")
 

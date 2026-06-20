@@ -105,8 +105,12 @@ class TestMeshGenerator(unittest.TestCase):
         except RuntimeError:
             self.skipTest(f"{tetgen} binary not found in PATH")
 
-        import subprocess
-        v = subprocess.getoutput(f"{tetgen} -h | grep Version").split()[-1]
+        if version is None:
+            import subprocess
+            version = subprocess.getoutput(f"{tetgen} -h | grep Version").split()[-1]
+            if version == '1.5':
+                version = '1.5.1' ## default for testing server
+
         self._testTetMesh(mesh, plc, tgVersion=version)
 
 

@@ -233,6 +233,8 @@ class Test3DMerge(unittest.TestCase):
             return mt.createMesh(plc, area=0.1)
         except RuntimeError:
             self.skipTest("Tet meshing failed, check if tetgen is available.")
+        except OSError:
+            self.skipTest("Tet meshing failed, pv-pytetgen is too old.")
 
 
     def testCubeCubeSame(self):
@@ -578,6 +580,8 @@ class Test3DMerge(unittest.TestCase):
                                  isSubSurface=False)
         except RuntimeError:
             self.skipTest("Tet meshing failed, check if tetgen is available.")
+        except OSError:
+            self.skipTest("Tet meshing failed, pv-pytetgen is too old.")
         # ax, _ = pg.show(mesh, mesh.cellMarkers(), hold=True, opacity=0.5)
 
         # try:
