@@ -1,4 +1,4 @@
-pygimli
+pygimli[all]
 tetgen
 matplotlib
 pyvista[jupyter]
