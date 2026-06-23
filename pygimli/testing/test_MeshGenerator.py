@@ -66,6 +66,7 @@ class TestMeshGenerator(unittest.TestCase):
             pg.show(mesh, showMesh=True, markers=True)
 
         print(f"Testing tetgen version {tgVersion} mesh generation.")
+        print(mesh)
         if "1.6" in tgVersion:
             self.assertEqual(mesh.nodeCount(), 107)
             self.assertEqual(mesh.cellCount(), 351)
@@ -75,6 +76,7 @@ class TestMeshGenerator(unittest.TestCase):
             self.assertEqual(mesh.cellCount(), 2154)
             self.assertEqual(mesh.boundaryCount(), 4716)
         else:
+            # 1.5.0
             self.assertEqual(mesh.nodeCount(), 567)
             self.assertEqual(mesh.cellCount(), 2069)
             self.assertEqual(mesh.boundaryCount(), 4541)
