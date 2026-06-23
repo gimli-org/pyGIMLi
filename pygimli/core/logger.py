@@ -421,6 +421,7 @@ def critical(*args):
         except Exception:
             pass
         raise e
+    raise Exception(_msg(*args))
 
 
 def deprecated(msg='', hint=''):

@@ -458,7 +458,8 @@ DEFINE_XVECTOR_STUFF__(RVector) //RVector last since auto rhs conversion will fa
     extern template std::vector< SIndex > sort(const std::vector < SIndex > & a);
 
     extern template RVector pow(const RVector & a, double power);
-    extern template RVector pow(const RVector & a, int power);
+    //## no default conversion for int to double, or loose precision, so only double version
+    //extern template RVector pow(const RVector & a, int power);
     extern template RVector pow(const RVector & a, const RVector & power);
     extern template RVector cat(const RVector & a, const RVector & b);
 
@@ -549,6 +550,13 @@ DEFINE_XVECTOR_STUFF__(RVector) //RVector last since auto rhs conversion will fa
     void mult_Mv_add_sv(RVector & rhs, const GIMLI::RSparseMapMatrix & M,
                         const RVector & v1, const double s, const RVector & v2);
 
+    //*! Inplace clip minimal values to minVal
+    void clipMin(std::vector< GIMLI::RVector > & v, const double & minVal);
+    //*! Inplace clip maximal values to maxVal
+    void clipMax(std::vector< GIMLI::RVector > & v, const double & maxVal);
+    //*! Inplace clip values to [minVal, maxVal]
+    void clip(std::vector< GIMLI::RVector > & v,
+              const double & minVal, const double & maxVal);
 
     // extern template std::vector< std::vector< GIMLI::RMatrix > >;
 

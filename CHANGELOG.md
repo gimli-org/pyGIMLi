@@ -33,9 +33,9 @@ pip install pygimli=2
 
 * new Matrix class (`DenseMatrix`), using OpenBlas basic multiplications, which replace default `RMatrix` after further testing (still beta phase).
 
-* pg.show() is forwarded as method to the `Mesh` class, so that `mesh.show()` is now possible. The old `pg.show(mesh)` is still working.
+* pg.show(obj) is forwarded as method to the `Mesh` class, so that `mesh.show()` is now possible. The old `pg.show(mesh)` is still working.
 
-* ...
+* pg.clip(obj) to clip values to a specified range.
 
 
 ### Important changes

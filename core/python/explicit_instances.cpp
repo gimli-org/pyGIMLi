@@ -178,7 +178,7 @@ DEFINE_XVECTOR_STUFF__(RVector) //RVector last since auto rhs conversion will fa
     template std::vector< SIndex > sort(const std::vector < SIndex > & a);
 
     template RVector pow(const RVector & a, double power);
-    template RVector pow(const RVector & a, int power);
+    //template RVector pow(const RVector & a, int power);
     template RVector pow(const RVector & a, const RVector & power);
     template RVector cat(const RVector & a, const RVector & b);
 
@@ -297,6 +297,24 @@ DEFINE_XVECTOR_STUFF__(RVector) //RVector last since auto rhs conversion will fa
 }
 
     }
+
+    void clipMin(std::vector< GIMLI::RVector > & v, const double & minVal){
+        for (size_t i = 0; i < v.size(); i ++){
+            v[i].clipMin(minVal);
+        }
+    }
+    void clipMax(std::vector< GIMLI::RVector > & v, const double & maxVal){
+        for (size_t i = 0; i < v.size(); i ++){
+            v[i].clipMax(maxVal);
+        }
+    }
+    void clip(std::vector< GIMLI::RVector > & v,
+              const double & minVal, const double & maxVal){
+        for (size_t i = 0; i < v.size(); i ++){
+            v[i].clip(minVal, maxVal);
+        }
+    }
+
 
 // template class PolynomialElement< double >;
 // template class BlockMatrix< double >;

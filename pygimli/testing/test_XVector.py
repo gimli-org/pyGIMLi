@@ -236,47 +236,88 @@ class TestRVectorMethods(unittest.TestCase):
 
 
     def test_stdVectorRVectorOP(self):
-        """Test operators for [RVector, ...]."""
+        """Test operators for sr=[RVector, ...].
+            BINOP(sr, float) -> sr
+            BINOP(float, sr) -> sr
+            BINOP(np.array, sr) -> sr
+            BINOP(sr, np.array) -> sr
+        """
         sr = pg.core.stdVectorRVector()
         sr.append(pg.core.RVector(5))
         sr.append(pg.core.RVector(10))
 
-        for i in range(len(sr)):
-            np.testing.assert_array_equal(sr[i], [0]*len(sr[i]))
+        for i, v in enumerate(sr):
+            np.testing.assert_array_equal(v, [0]*len(v))
 
         sr += 1.0
-        for i in range(len(sr)):
-            np.testing.assert_array_equal(sr[i], [1]*len(sr[i]))
+        for i, v in enumerate(sr):
+            np.testing.assert_array_equal(v, [1]*len(v))
 
         sr -= 2
-        for i in range(len(sr)):
-            np.testing.assert_array_equal(sr[i], [-1]*len(sr[i]))
+        for i, v in enumerate(sr):
+            np.testing.assert_array_equal(v, [-1]*len(v))
 
         sr *= -2
-        for i in range(len(sr)):
-            np.testing.assert_array_equal(sr[i], [2]*len(sr[i]))
+        for i, v in enumerate(sr):
+            np.testing.assert_array_equal(v, [2]*len(v))
 
         sr /= 4.0
-        for i in range(len(sr)):
-            np.testing.assert_array_equal(sr[i], [0.5]*len(sr[i]))
+        for i, v in enumerate(sr):
+            np.testing.assert_array_equal(v, [0.5]*len(v))
 
-        t = sr*3
-        for i in range(len(t)):
-            np.testing.assert_array_equal(t[i], sr[i]*3)
+        for i, v in enumerate(sr*3):
+            np.testing.assert_array_equal(v, sr[i]*3)
 
-        t = 1/sr
-        for i in range(len(t)):
-            np.testing.assert_array_equal(t[i], 1/sr[i])
+        for i, v in enumerate(1/sr):
+            np.testing.assert_array_equal(v, 1/sr[i])
 
-        t = sr*abs(-1*sr)
-        np.testing.assert_equal(len(t), len(sr))
+        for i, v in enumerate(sr*abs(-1*sr)):
+            np.testing.assert_array_equal(v, sr[i]**2)
 
-        for i in range(len(t)):
-            np.testing.assert_array_equal(t[i], sr[i]**2)
+        for i, v in enumerate(sr + 1.0):
+            np.testing.assert_array_equal(v, sr[i]+1)
 
-        t = sr + 1.0
-        for i in range(len(t)):
-            np.testing.assert_array_equal(t[i], sr[i]+1)
+        #
+        ###  BINOP(ndarray, sr) -> sr
+        #
+        a = np.full(len(sr), 2.0)
+
+        for i, v in enumerate(sr + a):
+            np.testing.assert_array_equal(v, sr[i] + a[i])
+
+        for i, v in enumerate(a + sr):
+            np.testing.assert_array_equal(v, a[i] + sr[i])
+
+        for i, v in enumerate(sr - a):
+            np.testing.assert_array_equal(v, sr[i] - a[i])
+
+        for i, v in enumerate(a - sr):
+            np.testing.assert_array_equal(v, a[i] - sr[i])
+
+        for i, v in enumerate(sr * a):
+            np.testing.assert_array_equal(v, sr[i] * a[i])
+
+        for i, v in enumerate(a * sr):
+            np.testing.assert_array_equal(v, a[i] * sr[i])
+
+        for i, v in enumerate(sr / a):
+            np.testing.assert_array_equal(v, sr[i] / a[i])
+
+        for i, v in enumerate(a / sr):
+            np.testing.assert_array_equal(v, a[i] / sr[i])
+
+        #
+        ### unary operators
+        #
+        for i, v in enumerate(-sr):
+            np.testing.assert_array_equal(v, -sr[i])
+
+        for i, v in enumerate(sr**-1):
+            np.testing.assert_array_equal(v, sr[i]**-1)
+
+        for i, v in enumerate(sr**a):
+            np.testing.assert_array_equal(v, sr[i]**a[i])
+
 
 
     def test_stdVectorPosVectorOP(self):

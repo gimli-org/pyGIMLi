@@ -61,10 +61,22 @@ public:
      *Return the Index of the new data. Should be size()-1. a, b, m, n can be -1 for unused sensor.*/
     Index addFourPointData(SIndex a, SIndex b, SIndex m, SIndex n);
 
+    /*! Compatibility function for adding four point data using double values. */
+    Index addFourPointData(double a, double b, double m, double n){
+        return addFourPointData((SIndex)a, (SIndex)b, (SIndex)m, (SIndex)n);
+    }
+
     /*! Create data point at a given position in the dataContainer.
      The container will be resized if i is larger then this.size(). */
     Index createFourPointData(Index i, SIndex eaID, SIndex ebID, SIndex emID, SIndex enID);
 
+    /*! Compatibility function for creating four point data using double values. */
+    Index createFourPointData(Index i, double eaID, double ebID, double emID, double enID){
+        return createFourPointData(i, (SIndex)eaID, (SIndex)ebID, (SIndex)emID, (SIndex)enID);
+    }
+
+    /*! Virtual method with some data validity rules.
+    Wrong data should be marked invalid here. */
     virtual void checkDataValidityLocal();
 
     CurrentPattern currentPatternToElectrode(Index pattern);

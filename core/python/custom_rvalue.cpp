@@ -258,7 +258,14 @@ template < class ValueType > void * checkConvertibleNumpyScalar(PyObject * obj){
         //     }
         // }
 
-        // this would prevent np.float->long
+        // this prevent np.float->long. float to long could eat precision int(float)
+        if (typeid(ValueType) == typeid(bool)){
+            if (!PyObject_TypeCheck(obj, &PyBoolArrType_Type)){
+                __DC("\t", obj, "\t abort check .. Object cannot convert to bool")
+                return NULL;
+            }
+        }
+        //
         // if (typeid(ValueType) == typeid(long)){
         //     if (!PyObject_TypeCheck(obj, &PyIntegerArrType_Type) &&
         //         !PyObject_TypeCheck(obj, &PyLongArrType_Type)){

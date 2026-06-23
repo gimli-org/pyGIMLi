@@ -45,7 +45,7 @@ classifiers = [
 dependencies = [
     "setuptools>=75.8.2",
     "scooby",
-    "pgcore>=2.0b2",
+    "pgcore==2.0b3",
     "numpy>=2.4.0",
     "scipy<1.18", # 1.18 forces py>3.11 (build-runner)
     "matplotlib",

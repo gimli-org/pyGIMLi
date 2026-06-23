@@ -6,16 +6,18 @@ import numpy as np
 import pygimli as pg
 
 
-class TestConversionMethods(unittest.TestCase):
+class TestRighthandValueConversions(unittest.TestCase):
+    """Test conversion of Python types into c++ types."""
 
     def test_RVector(self):
-        """ implemented in custom_rvalue.cpp"""
+        """Implemented in custom_rvalue.cpp."""
         a = pg.Vector(10)
         self.assertEqual(a.size(), 10.0)
         self.assertEqual(sum(a), 0.0)
 
+
     def test_ListToPos(self):
-        """ implemented in custom_rvalue.cpp"""
+        """Implemented in custom_rvalue.cpp."""
         x = [0.0, 1.0, 0.0]
         p = pg.Pos(x)
         self.assertEqual(p.dist(x), 0.0)
@@ -24,8 +26,9 @@ class TestConversionMethods(unittest.TestCase):
         p = pg.Pos((0.0, 1.0, 0.0))
         self.assertEqual(p.dist([0.0, 1.0, 0.0]), 0.0)
 
+
     def test_ListToIndexArray(self):
-        """ implemented in custom_rvalue.cpp"""
+        """Implemented in custom_rvalue.cpp."""
         idx = [0, 1, 1, 0]
 
         I = pg.core.IndexArray(idx)
@@ -40,8 +43,9 @@ class TestConversionMethods(unittest.TestCase):
         self.assertEqual(I.size(), 2)
         self.assertEqual(pg.sum(I), sum(idx))
 
+
     def test_ListToRVector(self):
-        """ implemented in custom_rvalue.cpp"""
+        """Implemented in custom_rvalue.cpp."""
         l = [1.0, 2.0, 3.0, 4.0]
         a = pg.Vector(l)
         self.assertEqual(a.size(), len(l))
@@ -55,8 +59,9 @@ class TestConversionMethods(unittest.TestCase):
         x = pg.Vector(l)
         self.assertEqual(x.size(), len(l))
 
+
     def test_ListToR3Vector(self):
-        """ implemented in custom_rvalue.cpp"""
+        """Implemented in custom_rvalue.cpp."""
         x = [0.0, 1.0, 0.0]
         p = pg.Pos(x)
         pl = [p, p, p]
@@ -171,6 +176,7 @@ class TestConversionMethods(unittest.TestCase):
 
         #self.assertEqual(pg.sum(pg.math.real(a)), len(x))
 
+
     def test_NumpyToRMatrix(self):
         """Implemented in custom_rvalue.cpp."""
         M = np.ndarray((5, 4))
@@ -195,6 +201,7 @@ class TestConversionMethods(unittest.TestCase):
         A = pg.Matrix(M.T)
         self.assertEqual(A.row(0), M[:,0])
         self.assertEqual(A.row(1), M[:,1])
+
 
     def test_NumpyToRDenseMatrix(self):
         """Implemented in custom_rvalue.cpp."""
@@ -235,6 +242,7 @@ class TestConversionMethods(unittest.TestCase):
 
 
     def __test_array_conversion(self, v, dtype, perf=False):
+        """Test conversion of RVector to numpy array."""
         pg.tic()
         a = v.array()
         dur1 = pg.dur(reset=True)
@@ -289,14 +297,16 @@ class TestConversionMethods(unittest.TestCase):
         self.assertEqual(len(d), len(v))
         self.assertEqual(sum(d), len(v)*2)
 
+
     def test_RVectorToNumpy(self):
-        """Implemented through hand_made_wrapper.py"""
+        """Implemented through hand_made_wrapper.py."""
         # check ob wirklich from array genommen wird!
         v = pg.Vector(1000000, 2.0)
         self.__test_array_conversion(v, 'float', perf=False)
 
+
     def test_CVectorToNumpy(self):
-        """Implemented through hand_made_wrapper.py"""
+        """Implemented through hand_made_wrapper.py."""
         # check ob wirklich from array genommen wird!
         v = pg.CVector(10, 1.1 + 1j*3)
         a = np.array(v)
@@ -305,8 +315,9 @@ class TestConversionMethods(unittest.TestCase):
         self.assertEqual(len(a), 10)
         self.assertEqual(a[0], 1.1 + 1j*3)
 
+
     def test_BVectorToNumpy(self):
-        """Implemented through hand_made_wrapper.py"""
+        """Implemented through hand_made_wrapper.py."""
         # check ob wirklich from array genommen wird!
         # wird es noch nicht .. siehe __init__.py:__BVectorArrayCall__
         v = pg.Vector(10, 1)
@@ -330,7 +341,7 @@ class TestConversionMethods(unittest.TestCase):
 
 
     def test_IndexArrayToNumpy(self):
-        """Implemented through hand_made_wrapper.py"""
+        """Implemented through hand_made_wrapper.py."""
         v = pg.core.IndexArray(1000000, 2)
         self.assertEqual(type(v), pg.core.IndexArray)
 
@@ -338,7 +349,7 @@ class TestConversionMethods(unittest.TestCase):
 
 
     def test_StdVecIToNumpy(self):
-        """Implemented through hand_made_wrapper.py"""
+        """Implemented through hand_made_wrapper.py."""
         A = pg.matrix.SparseMapMatrix(range(10), range(10), np.ones(10))
         A = pg.matrix.asSparseMatrix(A)
 
@@ -356,7 +367,7 @@ class TestConversionMethods(unittest.TestCase):
 
 
     def test_PosToNumpy(self):
-        """Implemented through hand_made_wrapper.py"""
+        """Implemented through hand_made_wrapper.py."""
         v = pg.Pos()
 
         a = np.array(v)
@@ -365,7 +376,7 @@ class TestConversionMethods(unittest.TestCase):
 
 
     def test_R3VectorToNumpy(self):
-        """Implemented through hand_made_wrapper.py"""
+        """Implemented through hand_made_wrapper.py."""
         mesh = pg.createGrid(x=[0, 1, 2], y=[0, 1, 2], z=[1, 2])
 
         v = np.asarray(mesh.positions())
@@ -381,7 +392,7 @@ class TestConversionMethods(unittest.TestCase):
 
 
     def test_RMatrixToNumpy(self):
-        """Implemented through automatic iterator """
+        """Implemented through automatic iterator."""
         M = np.arange(20.).reshape((5, 4))
         A = pg.Matrix(M)
         N = np.array(A)
@@ -398,11 +409,12 @@ class TestConversionMethods(unittest.TestCase):
         np.testing.assert_equal(M, M2)
         A = np.array(pg.Matrix(4,4))
 
+
     def test_NumpyToScalar(self):
-        """Implemented through automatic iterator """
+        """Implemented through automatic iterator."""
         x = pg.Vector(2)
         x3 = pg.core.R3Vector(2)
-        w = pg.Vector()
+
 
         x += np.float32(1.0)
         np.testing.assert_equal(sum(x + 1.0), 4.0)
@@ -418,10 +430,10 @@ class TestConversionMethods(unittest.TestCase):
         pg.core.HarmonicModelling(np.int64(1), x)
         pg.core.HarmonicModelling(np.uint64(1), x)
 
-        # pg.PolynomialModelling(1, np.int32(1), x3, x);
-        # pg.PolynomialModelling(1, np.int64(1), x3, x);
-        # pg.PolynomialModelling(1, np.uint32(1), x3, x);
-        # pg.PolynomialModelling(1, np.uint64(1), x3, x);
+        pg.core.PolynomialModelling(1, np.int32(1), x3, x)
+        pg.core.PolynomialModelling(1, np.int64(1), x3, x)
+        pg.core.PolynomialModelling(1, np.uint32(1), x3, x)
+        pg.core.PolynomialModelling(1, np.uint64(1), x3, x)
 
         x = pg.Pos(0.0, 0.0, 0.0)
         x += np.float32(1)
@@ -430,6 +442,10 @@ class TestConversionMethods(unittest.TestCase):
         np.testing.assert_equal(x -1 , pg.Pos(0.0, 0.0, 0.0))
         np.testing.assert_equal(x - np.float32(1), pg.Pos(0.0, 0.0, 0.0))
         np.testing.assert_equal(x - np.float64(1), pg.Pos(0.0, 0.0, 0.0))
+
+        x = pg.Vector(2) + 2.0
+        np.testing.assert_equal(x**np.float32(1.5), x**1.5)
+        np.testing.assert_equal(x**np.float64(1.5), x**1.5)
 
 
 if __name__ == '__main__':

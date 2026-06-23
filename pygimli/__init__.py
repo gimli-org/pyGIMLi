@@ -339,7 +339,7 @@ def timings(name='/'):
                         pass
 
                     table.append([k, np.mean(ts), len(ts), sum(ts),
-                        str(perc).rjust(3*(k.count('/')),'-'),
+                        str(perc).rjust(3, '-').rjust(3*(k.count('/')),'-'),
                                 None])
 
                     tree[k].data = sum(ts)

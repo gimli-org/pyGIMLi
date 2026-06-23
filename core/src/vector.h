@@ -1890,10 +1890,12 @@ template < class T > Vector < T > pow(const Vector < T > & v, double npower){
     return r;
 }
 
+// pow(int) is dangerous since it can be interpreted as pow(vec, int(float))
+// by python rvalue conversion and would consume precision
 // no template < int|double > since castxml interprets it as pow(vec,vec(int))
-template < class T > Vector < T > pow(const Vector < T > & v, int npower){
-    return pow(v, (double)npower);
-}
+// template < class T > Vector < T > pow(const Vector < T > & v, int npower){
+//     return pow(v, (double)npower);
+// }
 
 template < class T > Vector< T > sort(const Vector < T > & a){
  #ifndef PYGIMLI_CAST

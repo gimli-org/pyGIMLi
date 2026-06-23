@@ -122,12 +122,14 @@ class TestMisc(unittest.TestCase):
 
 
     def test_Operators(self):
+        """Test operators of Vector."""
         t = pg.Vector(10, 1.0)
         self.assertEqual(len(t == 1.0), len(t > 0))
         self.assertEqual(len(t == 1.0), len(t == 1))
 
 
     def test_Int64Problem(self):
+        """Test if int64 values can be used in DataContainer."""
         data = pg.DataContainerERT()
         data.createFourPointData(0, 0, 1, 2, 3)
         pos = np.arange(4, dtype=int)
@@ -160,6 +162,7 @@ class TestMisc(unittest.TestCase):
 
 
     def test_PosConstMember(self):
+        """Test const member of Pos."""
         p1 = pg.Pos(1.0, 0.0, 0.0)
         p2 = pg.Pos(0.0, 1.0, 0.0)
 
@@ -168,8 +171,7 @@ class TestMisc(unittest.TestCase):
 
 
     def test_Hash(self):
-        """ Test hash functionality of some selected classes.
-        """
+        """Test hash functionality of some selected classes."""
         ### pg.Vector
         v1 = pg.Vector(10, 2.)
         v2 = pg.Vector(10, 2.)
@@ -194,8 +196,7 @@ class TestMisc(unittest.TestCase):
 
 
     def test_HashData(self):
-        """ Test hash functionality of DataContainer
-        """
+        """Test hash functionality of DataContainer."""
         d1 = pg.DataContainerERT()
         d2 = pg.DataContainerERT()
 
@@ -221,8 +222,7 @@ class TestMisc(unittest.TestCase):
 
 
     def test_HashMesh(self):
-        """ Test hash functionality of Mesh.
-        """
+        """Test hash functionality of Mesh."""
         m1 = pg.Mesh()
         m2 = pg.Mesh()
 
@@ -236,8 +236,7 @@ class TestMisc(unittest.TestCase):
 
 
     def test_Cache(self):
-        """ Test caching of functions.
-        """
+        """Test caching of functions."""
         @pg.cache
         def c1(N):
             return np.linspace(0, 1, N)
@@ -246,12 +245,11 @@ class TestMisc(unittest.TestCase):
 
 
     def test_BinaryIO(self):
-        """ Test binary IO of some selected classes.
-        """
+        """Test binary IO of some selected classes."""
         import tempfile as tmp
 
         def _tst(a):
-            """Generic binary IO tester."""
+            """Binary IO test."""
             _, fn = tmp.mkstemp()
 
             if isinstance(a, pg.Mesh):
@@ -265,7 +263,7 @@ class TestMisc(unittest.TestCase):
 
 
         def _tst2(a):
-            """Generic binary IO tester."""
+            """Binary IO test."""
             _, fn = tmp.mkstemp()
 
             fname = a.save(fn, pg.core.Binary)
@@ -291,12 +289,11 @@ class TestMisc(unittest.TestCase):
 
 
     def test_Pickle(self):
-        """ Test pickling of some selected classes.
-        """
+        """Test pickling of some selected classes."""
         import pickle
 
         def _tst(a):
-            """Generic pickle tester."""
+            """Pickle test."""
             p = pickle.dumps(a)
             b = pickle.loads(p)
 
@@ -350,15 +347,12 @@ class TestMisc(unittest.TestCase):
     #     fi.close()
 
     def test_DataTypes(self):
-        """Test data types.
-        """
+        """Test data types."""
         pg.core.showSizes()
 
 
     def test_Table(self):
-        """Test Table creation and printing.
-        """
-
+        """Test Table creation and printing."""
         r1 = [1, 2, 3]
         r2 = [4, 5, 6]
         # default is per row

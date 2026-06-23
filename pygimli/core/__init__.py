@@ -859,8 +859,12 @@ pgcore.stdVectorRVector.__neg__ = __stdVectorRVector_NEG__
 def __stdVectorRVector_POW__(self, exp):
     """Power operator."""
     ret = pgcore.stdVectorRVector()
-    for i, ai in enumerate(self):
-        ret.append(ai**exp)
+    if hasattr(exp, '__iter__'):
+        for i, ai in enumerate(self):
+            ret.append(ai**exp[i])
+    else:
+        for i, ai in enumerate(self):
+            ret.append(ai**exp)
     return ret
 pgcore.stdVectorRVector.__pow__ = __stdVectorRVector_POW__
 
@@ -882,7 +886,9 @@ def __stdVectorRVector_IOP__(self, a, OP):
         for i in range(len(self)):
             getattr(self[i], OP)(a)
     else:
-        critical(f'Cannot {OP} stdVectorRVector with different lengths. {len(self)} != {len(a)}')
+        critical(ValueError,
+                 f"Cannot {OP} stdVectorRVector with different lengths. "
+                 f"{len(self)} != {len(a)}")
 
     return self
 
@@ -897,7 +903,9 @@ def __stdVectorRVector_BIOP__(self, b, OP):
             #print(i, ai, b[i], OP)
             ret.append(getattr(ai, OP)(b[i]))
     else:
-        critical(f'Cannot {OP} stdVectorRVector with different lengths. {len(self)} != {len(b)}')
+        critical(ValueError,
+                 f"Cannot {OP} stdVectorRVector with different lengths. "
+                 f"{len(self)} != {len(b)}")
 
     return ret
 
@@ -931,20 +939,27 @@ def __stdVectorRVector__array_ufunc__(self, ufunc, method, *inputs, **kwargs):
             return inputs[1] * inputs[0]
 
     ## default apply numpy function
+    if len(inputs[0]) != len(inputs[1]):
+        raise ValueError(f"Cannot apply ufunc {ufunc} to stdVectorRVector "
+                            "with different lengths: "
+                            f"{len(inputs[0])} != {len(inputs[1])}")
     try:
         if ufunc == np.add:
             if isinstance(inputs[0], pgcore.stdVectorRVector) \
                 and isinstance(inputs[1], pgcore.stdVectorRVector):
                 ## should not be here
-                pg.warning('This should not be here, but we need to fix this for now')
+                pg.warning("This should not be here, " \
+                            "but we need to fix this for now")
                 return inputs[0] + inputs[1]
 
         ret = pgcore.stdVectorRVector()
+        npArray = np.asarray(inputs[0])
         for i, ai in enumerate(self):
             if isinstance(inputs[0], pgcore.stdVectorRVector):
-                ret.append(ufunc(ai, inputs[1][i]))
+                pg.warning('Should not be here.')
+                ret.append(ufunc(ai, npArray[i]))
             else:
-                ret.append(ufunc(inputs[1][i], ai))
+                ret.append(ufunc(npArray[i], ai))
         return ret
     except Exception as exc:
         print(exc)
@@ -1150,6 +1165,7 @@ def find(v):
         # print('orig find')
         return pgcore.find(v)
 
+__PY_POW__ = pow
 
 def pow(v, p):
     """Power function.
@@ -1163,7 +1179,6 @@ def pow(v, p):
 
 def __RVectorPower(self, m):
     return pow(self, m)
-
 
 pgcore.RVector.__pow__ = __RVectorPower
 
@@ -1247,6 +1262,34 @@ def abs(v):
         return __PY_ABS__(v)
     except BaseException:
         return pgcore.fabs(v)
+
+
+def clip(v, aMin, aMax):
+    """Clip values to a specified range."""
+    if isinstance(v, pgcore.RVector):
+        if aMin is None and aMax is None:
+            return v
+        elif aMin is None:
+            v.clipMax(aMax)
+        elif aMax is None:
+            v.clipMin(aMin)
+        else:
+            v.clip(aMin, aMax)
+        return v
+    elif isinstance(v, stdVectorRVector):
+        if aMin is None and aMax is None:
+            return v
+        elif aMin is None:
+            pgcore.clipMax(v, aMax)
+        elif aMax is None:
+            pgcore.clipMin(v, aMin)
+        else:
+            pgcore.clip(v, aMin, aMax)
+        return v
+    elif isinstance(v, np.ndarray):
+        return np.clip(v, aMin, aMax)
+    else:
+        raise TypeError(f"Unsupported type for clip: {type(v)}")
 
 
 # default BVector operator == (RVector, int) will be casted to
@@ -1475,10 +1518,10 @@ def __ModellingBase__responses_mt__(self, models, respos):
         return
 
     if models.ndim != 2:
-        raise BaseException("models need to be a matrix(N, nModel):" +
+        raise ValueError("models need to be a matrix(N, nModel):" +
                             str(models.shape))
     if respos.ndim != 2:
-        raise BaseException("respos need to be a matrix(N, nData):" +
+        raise ValueError("respos need to be a matrix(N, nData):" +
                             str(respos.shape))
 
     nData = len(respos[0])
@@ -1516,6 +1559,7 @@ def __ModellingBase__responses_mt__(self, models, respos):
 
 
 class ModellingBaseMT__(pgcore.ModellingBase):
+    """ModellingBase with multi threading Jacobian brute force."""
 
     def __init__(self, mesh=None, dataContainer=None, verbose=False):
         if mesh and dataContainer:
@@ -1548,7 +1592,6 @@ ModellingBase = ModellingBaseMT__
 ############################
 # some backward compatibility
 ############################
-
 
 def __getCoords(coord, dim, ent):
     """Syntactic sugar to find all x-coordinates of a given entity."""
@@ -1596,7 +1639,7 @@ def __getCoords(coord, dim, ent):
             return ent[:, dim]
 
     # use logger here
-    raise Exception(
+    raise ValueError(
         "Don't know how to find the " + coord + "-coordinates of entity:", ent)
 
 
