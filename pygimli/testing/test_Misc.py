@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-# write a correct test!
+"""Miscellaneous tests for pygimli."""
 import unittest
 
 import pygimli as pg
@@ -138,7 +136,6 @@ class TestMisc(unittest.TestCase):
         data.createFourPointData(2, pos[0], pos[1], pos[2], pos[3])
         pos = np.arange(4, dtype=np.int64)
         data.createFourPointData(3, pos[0], pos[1], pos[2], pos[3])
-
         pos = np.arange(4, dtype=float)
         data.createFourPointData(4, pos[0], pos[1], pos[2], pos[3])
         pos = np.arange(4, dtype=np.float32)

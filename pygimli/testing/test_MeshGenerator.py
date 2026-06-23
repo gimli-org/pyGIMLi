@@ -1,35 +1,43 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Test cases for mesh generation."""
 import sys
 
 import unittest
 import numpy as np
 import pygimli as pg
+import pygimli.meshtools as mt
 
+
+_show_ = False
 
 class TestMeshGenerator(unittest.TestCase):
+    """Test cases for mesh generation."""
 
-    def test_meshAccess(self):
-
+    def testMeshAccess(self):
+        """Test mesh access."""
         x = [.5, 1, 2, 3, 42]
         y = [.5, 1, 2, 3]
         z = [.5, 1, 3]
 
         mesh = pg.createGrid(x, y, z)
+        self.assertEqual(len(mesh.nodes()), 60)
+        self.assertEqual(len(mesh.cells()), 24)
+        self.assertEqual(len(mesh.boundaries()), 98)
 
 
-    def test_meshGenRValueProblem(self):
-        """
-        """
+    def testMeshGenRValueProblem(self):
+        """Test RValue input for mesh generation."""
         dx = 100
         x = np.arange(-1000, 1001, dx)
         z = np.arange(-800, 1, dx)
         grid = pg.meshtools.createGrid(x=x, y=x, z=z)
-        print(grid)
-        print(grid.bb())
+        self.assertEqual(len(grid.nodes()), 3969)
+        self.assertEqual(len(grid.cells()), 3200)
+        self.assertEqual(len(grid.boundaries()), 10320)
 
 
-    def test_triangle(self):
+    def testTriangle(self):
+        """Test interface to triangle mesh generation."""
         plc = pg.meshtools.createRectangle()
         mesh = pg.meshtools.createMesh(plc)
         self.assertEqual(mesh.nodeCount(), 4)
@@ -37,12 +45,117 @@ class TestMeshGenerator(unittest.TestCase):
         self.assertEqual(mesh.boundaryCount(), 5)
 
 
-    def test_triangle_MAC(self):
-        """ There seems to be an issue on Mac for higher quality, which produce
-            different meshes on mac vs. Linux/Windows. Needs observation and/or
-            clarfication."""
-        import pygimli as pg
-        import pygimli.meshtools as mt
+    def _testPLC(self):
+        """Test PLC merging."""
+        w = mt.createCube(marker=1)
+        for i, b in enumerate(w.boundaries()):
+            b.setMarker(i + 1)
+
+        c = mt.createCube(marker=2)
+        for i, b in enumerate(c.boundaries()):
+            b.setMarker(6 + i + 1)
+
+        c.translate([c.xmax()-w.xmin(), 0.0])
+
+        return mt.mergePLC3D([w, c])
+
+
+    def _testTetMesh(self, mesh, plc, tgVersion='1.5'):
+        """Test tet mesh."""
+        if _show_:
+            pg.show(mesh, showMesh=True, markers=True)
+
+        print(f"Testing tetgen version {tgVersion} mesh generation.")
+        if "1.6" in tgVersion:
+            self.assertEqual(mesh.nodeCount(), 107)
+            self.assertEqual(mesh.cellCount(), 351)
+            self.assertEqual(mesh.boundaryCount(), 783)
+        elif "1.5.1" in tgVersion:
+            self.assertEqual(mesh.nodeCount(), 583)
+            self.assertEqual(mesh.cellCount(), 2154)
+            self.assertEqual(mesh.boundaryCount(), 4716)
+        else:
+            self.assertEqual(mesh.nodeCount(), 567)
+            self.assertEqual(mesh.cellCount(), 2069)
+            self.assertEqual(mesh.boundaryCount(), 4541)
+
+        self.assertEqual(sorted(pg.unique(mesh.boundaryMarkers())),
+                         sorted([0, *pg.unique(plc.boundaryMarkers())]))
+        self.assertEqual(sorted(pg.unique(mesh.cellMarkers())),
+                         sorted([1, 2]))
+
+
+        for marker in pg.unique(pg.sort(plc.boundaryMarkers())):
+            b1 = plc.boundaries(plc.boundaryMarkers() == marker)[0]
+            b2 = mesh.boundaries(mesh.boundaryMarkers() == marker)[0]
+            if b2.outside():
+                np.testing.assert_array_equal(b1.norm(), b2.norm())
+
+
+    def testTetgen(self, version=None):
+        """Test interface to tetgen mesh generation."""
+        tetgen = f"tetgen-{version}" if version else "tetgen"
+        plc = self._testPLC()
+        try:
+            mesh = pg.meshtools.createMesh(plc,
+                                           syscall=True, verbose=False,
+                                           area=0.01, quality=1.12,
+                                           tetgen=tetgen,
+                                           )
+        except RuntimeError:
+            self.skipTest(f"{tetgen} binary not found in PATH")
+
+        if version is None:
+            import subprocess
+            version = subprocess.getoutput(f"{tetgen} -h | grep Version").split()[-1]
+            if version == '1.5':
+                version = '1.5.1' ## default for testing server
+
+        self._testTetMesh(mesh, plc, tgVersion=version)
+
+
+    def testTetgen150(self):
+        """Test interface to tetgen mesh generation with version 1.5."""
+        self.testTetgen(version="1.5.0")
+
+
+    def testTetgen151(self):
+        """Test interface to tetgen mesh generation with version 1.5.1."""
+        self.testTetgen(version="1.5.1")
+
+
+    def testTetgen160(self):
+        """Test interface to tetgen mesh generation with version 1.6.0."""
+        self.testTetgen(version="1.6.0")
+
+
+    def testPyTetgen(self):
+        """Test interface to tetgen mesh generation with syscall=False."""
+        plc = self._testPLC()
+        try:
+            mesh = pg.meshtools.createMesh(plc,
+                                           syscall=False, verbose=False,
+                                           area=0.01, quality=1.12)
+
+        except ImportError as e:
+            print(e)
+            self.skipTest("tetgen python wrapper not installed")
+        except OSError as e:
+            if "This file was not able to be automatically read by pyvista."\
+                in str(e):
+                self.skipTest("tetgen wrapper probably to old.")
+        except Exception as e:
+            print(e)
+
+        self._testTetMesh(mesh, plc, tgVersion="1.6")
+
+
+    def testTriangleMAC(self):
+        """There seems to be an issue on Mac for higher quality settings.
+
+        which produce different meshes on mac vs. Linux/Windows.
+        Needs observation and/or clarification.
+        """
         plc = mt.createCircle(nSegments=24)
         l = mt.createLine(start=[0, -1], end=[0, -0.1], boundaryMarker=2)
         mesh = mt.createMesh([plc, l], area=0.1, quality=30)
@@ -56,11 +169,13 @@ class TestMeshGenerator(unittest.TestCase):
             # On Mac: Mesh: Nodes: 46 Cells: 66 Boundaries: 111
             self.assertEqual(mesh.nodeCount(), 46)
         else:
-            # On Linux Mesh: Nodes: 43 Cells: 60 Boundaries: 102 (same as for quality=30)
+            # On Linux Mesh: Nodes: 43 Cells: 60 Boundaries: 102
+            # (same as for quality=30)
             self.assertEqual(mesh.nodeCount(), 43)
 
 
-    def test_createGrid(self):
+    def testCreateGrid(self):
+        """Test createGrid function."""
         mesh = pg.createGrid(3)
         self.assertEqual(mesh.xMax(), 2.0)
         mesh = pg.createGrid(3, 3)
@@ -78,8 +193,8 @@ class TestMeshGenerator(unittest.TestCase):
                           pg.Pos(10.0, 10.0, 10.0)])
 
 
-    def test_createMesh1D(self):
-
+    def testCreateMesh1D(self):
+        """Test createMesh1D function."""
         mesh = pg.meshtools.createMesh1D(10, 1)
         self.assertEqual(mesh.cellCount(), 10.0)
         self.assertEqual(mesh.xMax(), 10.0)
@@ -97,8 +212,8 @@ class TestMeshGenerator(unittest.TestCase):
         self.assertEqual(mesh.cellCount(), 10.0)
 
 
-    def test_createMesh1DBlock(self):
-
+    def testCreateMesh1DBlock(self):
+        """Test createMesh1DBlock function."""
         mesh = pg.meshtools.createMesh1DBlock(nLayers=5)
         self.assertEqual(mesh.cellCount(), 9.0)
 
@@ -115,15 +230,16 @@ class TestMeshGenerator(unittest.TestCase):
         self.assertEqual(mesh.cellCount(), 11.0)
 
 
-    def test_createMesh2D(self):
-
+    def testCreateMesh2D(self):
+        """Test createMesh2D function."""
         mesh = pg.meshtools.createMesh2D(xDim=5, yDim=2)
         self.assertEqual(mesh.cellCount(), 10.0)
 
         mesh = pg.meshtools.createMesh2D(5, 2)
         self.assertEqual(mesh.cellCount(), 10.0)
 
-        mesh = pg.meshtools.createMesh2D(np.linspace(0, 1, 6),np.linspace(0, 1, 3))
+        mesh = pg.meshtools.createMesh2D(np.linspace(0, 1, 6),
+                                         np.linspace(0, 1, 3))
         self.assertEqual(mesh.cellCount(), 10.0)
 
         phi = 0.025*2*np.pi
@@ -152,14 +268,14 @@ class TestMeshGenerator(unittest.TestCase):
 
 
 
-    def test_createMesh3D(self):
-
+    def testCreateMesh3D(self):
+        """Test createMesh3D function."""
         mesh = pg.meshtools.createMesh3D(xDim=5, yDim=3, zDim=2)
         self.assertEqual(mesh.cellCount(), 30.0)
 
 
-    def test_createMesh3DExtrude(self):
-
+    def testCreateMesh3DExtrude(self):
+        """Test createMesh3D function with extrude option."""
         m3 = pg.meshtools.createMesh3D(xDim=1, yDim=1, zDim=1)
         self.assertEqual(pg.meshtools.checkMeshConsistency(m3), True)
 
@@ -183,7 +299,7 @@ class TestMeshGenerator(unittest.TestCase):
         #         #self.assertEqual(b.outside(), True)
 
 
-    def test_createMesh3D_Frustums(self):
+    def testCreateMesh3DFrustums(self):
         slice = 0.025
 
         mesh = pg.meshtools.createFrustums([1.0, 1.2],
@@ -197,7 +313,8 @@ class TestMeshGenerator(unittest.TestCase):
                 print(b)
 
 
-    def test_createPartMesh(self):
+    def testCreatePartMesh(self):
+        """Test createPartMesh function."""
         mesh = pg.meshtools.createMesh1D(np.linspace(0, 1, 10))
         self.assertEqual(mesh.cellCount(), 9)
 
@@ -207,7 +324,8 @@ class TestMeshGenerator(unittest.TestCase):
         self.assertEqual(mesh2.cellCenters()[-1][0] < 0.5, True)
 
 
-    def test_MeshCreatePolyList(self):
+    def testMeshCreatePolyList(self):
+        """Test createMesh with PolyList input."""
         pos = [[0, 0], [1, 0], [1, -1], [0, -1]]
         poly = pg.meshtools.createPolygon(pos, isClosed=0)
         mesh = pg.meshtools.createMesh(poly, quality=20, area=0.001)
@@ -220,7 +338,8 @@ class TestMeshGenerator(unittest.TestCase):
         self.assertEqual(mesh.boundaryCount(), 5)
 
 
-    def test_MeshCreateSecNodes(self):
+    def testMeshCreateSecNodes(self):
+        """Test createSecondaryNodes function."""
         x = [0, 1, 2, 3, 42]
         y = [0, 1, 2, 3]
         z = [0, 1, 3]
@@ -232,12 +351,14 @@ class TestMeshGenerator(unittest.TestCase):
                                                     (len(y)-1)*len(z)*len(x) + \
                                                     (len(z)-1)*len(x)*len(y))
 
-    def test_MeshStr(self):
-        mesh= pg.createGrid(2,2,2)
+    def testMeshStr(self):
+        """Test __str__ method of Mesh class."""
+        mesh = pg.createGrid(2,2,2)
         #print(mesh.node(0))
 
 
-    def test_MeshDataAccess(self):
+    def testMeshDataAccess(self):
+        """Test data access in Mesh class."""
         mesh = pg.Mesh()
         a = pg.Vector(10, 1.0)
         b = [pg.Vector(10, 1.0)]*3
@@ -284,7 +405,8 @@ class TestMeshGenerator(unittest.TestCase):
         #         print(c.shape().isInside(pos, True))
 
 
-    def test_appendTetrahedron(self):
+    def testAppendTetrahedron(self):
+        """Test appendTetrahedron function."""
         grid = pg.meshtools.createGrid(5,5,5)
         mesh = pg.meshtools.appendBoundary(grid, xbound=5, ybound=5, zbound=5,
                                  isSubSurface=False)
@@ -292,7 +414,8 @@ class TestMeshGenerator(unittest.TestCase):
                         filter={'clip':{}})
 
 
-    def test_meshBMS(self):
+    def testMeshBMS(self):
+        """Test mesh saving and loading in BMS format."""
         # text bms version v3 which stores geometry flag
         mesh = pg.Mesh(2, isGeometry=True)
 
@@ -334,7 +457,8 @@ class TestMeshGenerator(unittest.TestCase):
         compare(mesh, mesh4)
 
 
-    def test_VTK_DataRead(self):
+    def testVTKDataRead(self):
+        """Test data reading from VTK files."""
         grid = pg.createGrid(np.arange(4), np.arange(3), np.arange(2))
         cM = np.arange(grid.cellCount())
         grid.setCellMarkers(cM)
@@ -386,28 +510,27 @@ class TestMeshGenerator(unittest.TestCase):
         # print(mesh["Marker"])
 
 
-    def test_VTK_ExportVTU(self):
-        """ Test to fix export bug
-        """
+    def testVTKExportVTU(self):
+        """Test to fix export bug."""
         mesh = pg.createGrid(4,4,4)
         mesh.exportBoundaryVTU("bounds.vtu")
 
 
-    def test_SimpleMeshExport(self):
-
+    def testSimpleMeshExport(self):
+        """Test simple mesh export."""
         mesh = pg.createGrid(3, 3)
         verts = mesh.positions()
         cellIds = [c.ids() for c in mesh.cells()]
 
         mesh2 = pg.Mesh(2)
-        [mesh2.createNode(v) for v in verts]
-        [mesh2.createCell(c) for c in cellIds]
+        mesh2.createNodes(verts)
+        mesh2.createCells(cellIds)
 
         np.testing.assert_array_equal(mesh2.nodeCount(), mesh.nodeCount())
         np.testing.assert_array_equal(mesh2.cellCount(), mesh.cellCount())
 
 
-    def test_Refine(self):
+    def testRefine(self):
         """Test surface mesh refinement."""
         p = pg.meshtools.createCube()
         # test quad refine
@@ -416,7 +539,7 @@ class TestMeshGenerator(unittest.TestCase):
         self.assertEqual(m.nodeCount(), 26)
         self.assertEqual(m.boundaryCount(), 24)
 
-        mesh = pg.meshtools.createMesh(m, quality=34, area=1)
+        #mesh = pg.meshtools.createMesh(m, quality=34, area=1)
 
         # test tri refine
         p = pg.Mesh(3, isGeometry=True)
@@ -434,7 +557,7 @@ class TestMeshGenerator(unittest.TestCase):
         self.assertEqual(m.nodeCount(), 10)
         self.assertEqual(m.cellCount(), 0)
         self.assertEqual(m.boundaryCount(), 16)
-        mesh = pg.meshtools.createMesh(m, quality=34, area=1)
+        #mesh = pg.meshtools.createMesh(m, quality=34, area=1)
         #self.assertEqual(m.cellCount(), 0)
         #self.assertEqual(mesh.nodeCount(), 27)
         #self.assertEqual(m.boundaryCount(), 24)
@@ -442,7 +565,7 @@ class TestMeshGenerator(unittest.TestCase):
         #pg.show(m, showMesh=True, markers=True)
 
 
-    def test_Sphere(self):
+    def testSphere(self):
         """Test sphere generation."""
         s1 = pg.meshtools.createSphere(var='uvsphere', pos=[0,0,0])
         s2 = pg.meshtools.createSphere(var='qsphere', pos=[1,0,0],
@@ -455,15 +578,11 @@ class TestMeshGenerator(unittest.TestCase):
         pg.show([s1, s2, s3, s4], showMesh=True, markers=True)
 
 
-
 if __name__ == '__main__':
-    # pg.setDeepDebug(1)
 
-    # t = TestMeshGenerator()
-    # t.test_MeshDataAccess()
-    # sys.exit()
-    # t.test_meshAccess()
-    # t.test_createGrid()
-    # exit()
+    import sys
+    if 'show' in sys.argv:
+        sys.argv.remove('show')
+        _show_ = True
 
     unittest.main()

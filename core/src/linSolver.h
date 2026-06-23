@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2007-2024 by the GIMLi development team                    *
+ *   Copyright (C) 2007-2026 by the GIMLi development team                    *
  *   Carsten Ruecker carsten@resistivity.net                                  *
  *                                                                            *
  *   Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -34,7 +34,7 @@ enum SolverType{AUTOMATIC,LDL,CHOLMOD,UMFPACK,UNKNOWN};
 class DLLEXPORT LinSolver : public SolverWrapper{
 public:
     LinSolver(bool verbose=false);
-    
+
     LinSolver(RSparseMatrix & S, bool verbose=false);
 
     LinSolver(RSparseMapMatrix & S, bool verbose=false);
@@ -60,7 +60,7 @@ public:
     CVector solve(const CVector & rhs);
 
     void setSolverType(SolverType solverType=AUTOMATIC);
-    
+
     // void setSolver(const std::string & name);
 
     /*! Forwarded to the wrapper to overwrite settings within S. stype =-2 -> use S.stype()*/
@@ -97,9 +97,9 @@ template < class Mat, class Vec > int solveLU(const Mat & A, Vec & x, const Vec 
 
     int N = 0;
     uint n = b.size();
-    int *ps = new int[n];
+    std::vector< int > ps(n);
+    std::vector< double > scales(n);
 
-    double *scales = new double[n];
     double pivot, biggest, mult, tempf;
     uint pivotindex = 0, tmpIdx = 0;
 
@@ -166,10 +166,6 @@ template < class Mat, class Vec > int solveLU(const Mat & A, Vec & x, const Vec 
         for (uint j = i + 1; j < n + N; j++) dot += lu[ps[i]][j] * x[j];
         x[i] = (x[i] - dot) / lu[ps[i]][i];
     }
-
-    delete [] ps;
-    delete [] scales;
-
 
     if (rms(Vec(A * x - b)) > 1e-9){
         std::cerr << "rms(A * x -b) " << rms((const Vec)(A * x - b)) << std::endl;

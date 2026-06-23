@@ -1865,8 +1865,9 @@ def exportTetgenPoly(poly, filename, float_format='.12e', **kwargs):
         out.write(polytxt)
 
 
-def syscallTetgen(filename, quality=1.2, area=0, preserveBoundary=False,
-                  verbose=False, tetgen='tetgen'):
+
+
+def syscallTetgen(filename, switches, verbose=False, tetgen='tetgen'):
     """Create a mesh from a PLC by system-calling :term:`Tetgen`.
 
     Create a :term:`Tetgen` :cite:`Si2004` mesh from a PLC.
@@ -1875,14 +1876,8 @@ def syscallTetgen(filename, quality=1.2, area=0, preserveBoundary=False,
     ----------
     filename: str
 
-    quality: float [1.2]
-        Refines mesh (to improve mesh quality). [1.1 ... ]
-
-    area: float [0.0]
-        Maximum cell size (m³)
-
-    preserveBoundary: bool [False]
-        Preserve PLC boundary mesh
+    switches: str
+        Switches for tetgen, e.g. 'pazVACq1.2'
 
     verbose: bool [False]
         be verbose
@@ -1896,33 +1891,10 @@ def syscallTetgen(filename, quality=1.2, area=0, preserveBoundary=False,
     mesh : :gimliapi:`GIMLI::Mesh`
     """
     filebody = filename.replace('.poly', '')
+    syscal = f"{tetgen} -{switches} {filebody}.poly"
 
-    # tetgen -pazVAC -q1.2 $MESH
-    # test -O2
-    syscal = tetgen + ' -pzAC'
-
-    if area > 0:
-        syscal += 'a' + str(area)
-    else:
-        syscal += 'a'
-
-    syscal += 'q' + str(quality)
-
-    if not verbose:
-        syscal += 'Q'
-    else:
-        pass
-        # syscal += 'V'
-
-    if preserveBoundary:
-        syscal += 'Y'
-
-    syscal += ' ' + filebody + '.poly'
-
-    if verbose:
-        print(syscal)
-
-    pg.debug(syscal)
+    if verbose is True:
+        pg.info(syscal)
 
     system(syscal)
 

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """General mesh generation and maintenance."""
 
 import os
@@ -55,6 +53,11 @@ def createMesh(poly, quality=32, area=0.0, smooth=True, switches=None,
     ---------------
     preserveBoundary: bool
         Preserver boundary nodes, no more nodes on boundaries.
+    syscall: bool [None]
+        If None, try system call to tetgen first,
+        then fall back to pv-python tetgen wrapper.
+        If True or False, only try system call to tetgen
+        or pv-python tetgen wrapper, respectively.
 
     Returns
     -------
@@ -140,15 +143,123 @@ def createMesh(poly, quality=32, area=0.0, smooth=True, switches=None,
         if quality == 32:
             quality = 1.2
 
-        tmp = pg.optImport('tempfile')
-        fd, namePLC = tmp.mkstemp(suffix='.poly')
-        pg.meshtools.exportPLC(poly, namePLC)
-        os.close(fd)  # needed for win32 to free the file for closing
+        ## syscall is None: auto first try syscall then pv-tetgen
+        ## if syscall is set only try tetgen or pv-tetgen
+        syscall = kwargs.pop('syscall', None)
 
-        mesh = pg.meshtools.syscallTetgen(namePLC, quality, area,
-                                          verbose=verbose, **kwargs)
+        try:
+            mesh = createMeshTetgen(poly, quality=quality, area=area,
+                                    verbose=verbose, syscall=syscall,
+                                    **kwargs)
+        except RuntimeError as e:
+            if syscall is None:
+                mesh = createMeshTetgen(poly, quality=quality, area=area,
+                                        verbose=verbose, syscall=False,
+                                        **kwargs)
+            else:
+                raise e
 
         return mesh
+
+
+def createMeshTetgen(plc, quality=1.5, area=0, preserveBoundary=False,
+                     syscall=True, verbose=False, **kwargs):
+    """Create a tetgen wrapper.
+
+    Arguments
+    ---------
+    plc: :gimliapi:`GIMLI::Mesh`
+        Input mesh containing the PLC. Needs to contain nodes and boundaries.
+    quality: float
+        Tetgen quality. Be careful with values below 1.12.
+    area: float
+        Maximum volume of tetrahedra.
+    preserveBoundary: bool
+        If True, preserves the boundary of the input mesh.
+    syscall: bool
+        If True, uses the system call to tetgen.
+        If False, uses the tetgen Python wrapper.
+    verbose: bool
+        If True, enables verbose output.
+
+    TODO
+    ----
+        * translate default params -> kwargs to superseed switches for
+        python wrapper
+        * direct conversion of PLC to tetgen input format
+        for direct python wrapper without file usage. Need to be implemented
+        in the tetgen python wrapper first.
+    """
+    if syscall is None:
+        syscall = True
+
+    switches = kwargs.pop('switches', None)
+
+    if switches is None:
+        switches = 'pzAC'
+
+        if area>0:
+            switches += 'a' + str(area)
+        else:
+            switches += 'a'
+
+        switches += 'q' + str(quality)
+
+        if verbose is False:
+            switches += 'Q'
+        else:
+            pass
+
+        if preserveBoundary is True:
+            switches += 'Y'
+
+    if syscall is True:
+        tetgenBin = kwargs.get('tetgen', 'tetgen')
+        import shutil
+        if shutil.which(tetgenBin) is None:
+            raise RuntimeError(f"{tetgenBin} binary not found in PATH")
+
+        if kwargs.get('verbose', False):
+            pg.info(f"Using system call to {tetgenBin}.")
+
+        tmp = pg.optImport('tempfile')
+        fd, plcFname = tmp.mkstemp(suffix='.poly')
+        pg.meshtools.exportPLC(plc, plcFname)
+        os.close(fd)  # needed for win32 to free the file for closing
+        mesh = pg.meshtools.syscallTetgen(plcFname, switches=switches,
+                                          verbose=verbose,
+                                          **kwargs)
+    else:
+        tg = pg.optImport("tetgen",
+                            "to create 3D meshes using tetgen wrapper."
+                            "try: pip install tetgen")
+        if tg is None:
+            raise ImportError("tetgen python wrapper not installed")
+
+        tmp = pg.optImport('tempfile')
+        fd, plcFname = tmp.mkstemp(suffix='.poly')
+        pg.meshtools.exportPLC(plc, plcFname)
+        os.close(fd)  # needed for win32 to free the file for closing
+
+        tet = tg.TetGen(plcFname)
+
+        #TODO: translate params -> kwargs to superseeds switches
+        #kwargs['minratio'] = quality
+        #kwargs['maxvolume'] = area
+        if switches == "ignore":
+            switches = None
+
+        tet.tetrahedralize(verbose=verbose, switches=switches, **kwargs)
+
+        mesh = pg.Mesh(dim=3)
+        mesh.createNodes(tet.node)
+        mesh.createCells(tet.elem, tet.attributes)
+        mesh.createBoundaries(tet.trifaces, tet.triface_markers)
+
+        mesh.createNeighborInfos()
+
+    return mesh
+
 
 
 def checkMeshConsistency(mesh):
@@ -192,7 +303,7 @@ def checkMeshConsistency(mesh):
     return not fail
 
 
-def createMeshFromHull(mesh, fixNodes=[], **kwargs):
+def createMeshFromHull(mesh, fixNodes=None, **kwargs):
     """Create a new 2D triangular mesh from the boundaries of mesh.
 
     Parameters
@@ -213,6 +324,8 @@ def createMeshFromHull(mesh, fixNodes=[], **kwargs):
         Returning mesh. If fixed nodes are requested,
         a list of the new IDs are returned in advance.
     """
+    if fixNodes is None:
+        fixNodes = []
     plc = pg.Mesh(mesh.dim(), isGeometry=True)
 
     bounds = mesh.boundaries(mesh.boundaryMarkers() != 0)
@@ -2276,7 +2389,7 @@ def extractUpperSurface2dMesh(mesh, zCut=None):
     bMesh = mesh.createSubMesh(mesh.boundaries(bind))
 
     mesh2d = pg.Mesh(2)
-    [mesh2d.createNode(n.pos()) for n in bMesh.nodes()]
+    mesh2d.createNodes(bMesh.nodes())
     for b in bMesh.boundaries():
         mesh2d.createCell([n.id() for n in b.nodes()])
 
@@ -2293,7 +2406,3 @@ def extractUpperSurface2dMesh(mesh, zCut=None):
         mesh2d[k] = mesh[k][cind]
 
     return mesh2d
-
-
-if __name__ == "__main__":
-    pass

@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 """Generates the pygimli python bindings using py++ and pygccxml."""
+import glob
 import os
 import shutil
 import sys
+import tempfile
 
 class pg:
     def _g(*args):
@@ -263,6 +265,48 @@ def generate(defined_symbols, extraIncludes):
         raise Exception("Problems determine castxml binary")
 
     settings.includesPaths.insert(0, os.path.abspath(extraIncludes))
+
+    # Workaround for castxml (clang 18) + GCC 16 headers incompatibility.
+    # GCC 16 added [[__gnu__::__always_inline__]] to the friend template
+    # operator- in __normal_iterator with a trailing decltype return type.
+    # Clang 18 evaluates that decltype before the class body is complete,
+    # producing "member access into incomplete type" errors for every
+    # std::vector/std::string use deep inside the STL headers. Fix by
+    # placing a patched copy of bits/stl_iterator.h (with the offending
+    # attribute removed) first in the include search path.
+    if sys.platform != 'win32':
+        _candidates = sorted(glob.glob(
+            '/usr/lib/gcc/*/*/include/g++*/bits/stl_iterator.h'))
+        # Only apply when GCC 16 headers are present (the __always_inline__
+        # friend operator- regression was introduced in GCC 16).
+        _candidates = [p for p in _candidates
+                       if '/gcc/x86_64' in p.replace('\\', '/')
+                       and int(p.split('/gcc/')[1].split('/')[1].split('.')[0]) >= 16]
+        if _candidates:
+            _stl_iter_orig = _candidates[-1]  # newest GCC >= 16 version
+            _patch_dir = tempfile.mkdtemp(prefix='gimli_castxml_compat_')
+            _bits_dir = os.path.join(_patch_dir, 'bits')
+            os.makedirs(_bits_dir)
+            with open(_stl_iter_orig) as _f:
+                _content = _f.read()
+            # Replace the decltype trailing return type with explicit
+            # difference_type to avoid clang 18 evaluating __lhs.base()
+            # while __normal_iterator is still incomplete (GCC 16 regression).
+            import re
+            _content = re.sub(
+                r'\[\[__nodiscard__,\s*__gnu__::__always_inline__\]\]'
+                r'(\s+friend\s+// _GLIBCXX_RESOLVE_LIB_DEFECTS'
+                r'\s+// 685[^\n]+\s+constexpr\s+)auto'
+                r'(\s+operator-\([^)]+\)\s+noexcept)'
+                r'\s*\n\s*->\s*decltype\(__lhs\.base\(\)\s*-\s*__rhs\.base\(\)\)',
+                r'[[__nodiscard__]]\1difference_type\2',
+                _content)
+            with open(os.path.join(_bits_dir, 'stl_iterator.h'), 'w') as _f:
+                _f.write(_content)
+            settings.includesPaths.insert(0, _patch_dir)
+            logger.info("castxml compat: patched %s -> %s",
+                        _stl_iter_orig,
+                        os.path.join(_bits_dir, 'stl_iterator.h'))
 
     logger.info("caster_path=%s" % casterpath)
     logger.info("working_directory=%s" % settings.gimli_path)

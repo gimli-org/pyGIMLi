@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Tests for pygimli.meshtools.polytools."""
 import numpy as np
 import unittest
@@ -8,8 +7,10 @@ import pygimli.meshtools as mt
 
 
 class TestMisc(unittest.TestCase):
+    """Test miscellaneous functions."""
 
     def test_appendTriangleBoundary(self):
+        """Test appendTriangleBoundary."""
         geom = mt.createWorld(start=[-10, 0], end=[10, -10], layers=[-5, -10])
         mesh = mt.createMesh(geom, area=1)
 
@@ -24,6 +25,8 @@ class TestMisc(unittest.TestCase):
 
 
 class TestCreateRectangle(unittest.TestCase):
+    """Test createRectangle function."""
+
     def test_region_marker_position_basics(self):
         rect1 = mt.createRectangle(
             start=[0.0, 0.0],
@@ -159,7 +162,10 @@ class TestCreateCircle(unittest.TestCase):
 
 
 class TestCreatePolygon(unittest.TestCase):
+    """Test createPolygon function."""
+
     def test_default_create(self):
+        """Test default createPolygon function."""
         polygon = mt.createPolygon(
             [[-1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [1.0, -1]],
             isClosed=True,
@@ -170,7 +176,9 @@ class TestCreatePolygon(unittest.TestCase):
                    0.001) < 1e-8
         assert polygon.regionMarkers()[0].marker() == 1
 
+
     def test_default_create_different_center(self):
+        """Test createPolygon function with a different center."""
         polygon = mt.createPolygon(
             [[0.0, 0.0], [1.0, 0.0], [1.0, -1.0], [0.0, -1]],
             isClosed=True,
@@ -180,7 +188,10 @@ class TestCreatePolygon(unittest.TestCase):
                    0.001) < 1e-8
         assert polygon.regionMarkers()[0].marker() == 2
 
+
     def test_create_with_custom_markerPosition(self):
+        """Test createPolygon function with a custom marker position."""
+
         polygon = mt.createPolygon(
             [[0.0, 0.0], [1.0, 0.0], [1.0, -1.0], [0.0, -1]],
             isClosed=True,
@@ -194,10 +205,11 @@ class TestCreatePolygon(unittest.TestCase):
 
 
 class Test3DMerge(unittest.TestCase):
+    """Test 3D merge functions."""
 
     @pg.skipOnDefaultTest
     def test_PosTouchFace(self):
-        ### wildlife fail
+        """Test merging of two PLCs with one face in common and a node on the face."""
         m = pg.Mesh(dim=3, isGeometry=True)
         D = 0.1
         H1 = 2.
@@ -217,27 +229,27 @@ class Test3DMerge(unittest.TestCase):
         m.createNode(n)
         self.assertEqual(m.boundary(0).nodeCount(), 5)
 
-    def test_cubeBasics(self):
-        plc = mt.createCube()
-        for i, b in enumerate(plc.boundaries()):
-            b.setMarker(i+1)
 
-        mesh = mt.createMesh(plc)
+    def createMesh(self, plc):
+        try:
+            return mt.createMesh(plc, area=0.1)
+        except RuntimeError:
+            self.skipTest("Tet meshing failed, check if tetgen is available.")
+        except OSError:
+            self.skipTest("Tet meshing failed, pv-pytetgen is too old.")
 
-        for marker in pg.unique(pg.sort(plc.boundaryMarkers())):
-            b1 = plc.boundaries(plc.boundaryMarkers() == marker)[0]
-            b2 = mesh.boundaries(mesh.boundaryMarkers() == marker)[0]
 
-            np.testing.assert_array_equal(b1.norm(), b2.norm())
-
-    def test_cube_cube_same(self):
+    def testCubeCubeSame(self):
+        """Test merging two identical cubes."""
         c1 = mt.createCube()
         c2 = mt.createCube()
         m = mt.mergePLC3D([c1, c2])
         self.assertEqual(c1.nodeCount(), m.nodeCount())
         self.assertEqual(c1.boundaryCount(), m.boundaryCount())
 
-    def test_cube_cube_equalface(self):
+
+    def testCubeCubeEqualface(self):
+        """Test merging two cubes with one face in common."""
         w = mt.createCube(marker=1)
         c = mt.createCube(marker=2)
         c.translate([c.xMax()-w.xMin(), 0.0])
@@ -273,7 +285,9 @@ class Test3DMerge(unittest.TestCase):
         # w.exportPLC('t.poly')
         # pg.show(mt.createMesh(w))
 
+
     def test_cube_cube_coplanar_touchface(self):
+        """Test merging two cubes with one face in common."""
         w = mt.createCube(marker=1)
         w.scale([2.0, 2.0, 2.0])
 
@@ -305,9 +319,10 @@ class Test3DMerge(unittest.TestCase):
         # w.exportPLC('t.poly')
         # pg.show(mt.createMesh(w))
 
+
     def test_smallcube_in_bigcube(self):
-        """
-        A small cube in a bigger one, creating two subfaces.
+        """Test merging a small cube into a bigger one, creating two subfaces.
+
         author: @frodo4fingers
         """
         w = mt.createCube(marker=1)
@@ -329,7 +344,9 @@ class Test3DMerge(unittest.TestCase):
         # pg.show(w)
         # pg.show(mt.createMesh(w))
 
+
     def test_cyl_on_cyl(self):
+        """Test merging two cylinders with one face in common."""
         # merge only works if smaller face merged into larger on contact plane
         segs = 12
         c1 = mt.createCylinder(radius=2, marker=1,
@@ -346,7 +363,7 @@ class Test3DMerge(unittest.TestCase):
 
         # w.exportBoundaryVTU('w')
         # pg.show(w)
-        m = mt.createMesh(w)
+        m = self.createMesh(w)
         pg.show(m, m.cellMarkers())
         # pg.show(mt.createMesh(w))
 
@@ -377,7 +394,7 @@ class Test3DMerge(unittest.TestCase):
         # pg.show(w, markers=True, showMesh=True)
         # w.exportPLC('pad.poly')
 
-        mesh = mt.createMesh(w)
+        mesh = self.createMesh(w)
         # print(mesh)
         # mesh.exportBoundaryVTU('b.vtu')
         pg.show(mesh, markers=True, showMesh=True)
@@ -410,9 +427,10 @@ class Test3DMerge(unittest.TestCase):
         self.assertEqual(plc.nodeCount(), 14)
         self.assertEqual(plc.boundaryCount(), 11)
 
-        m = mt.createMesh(plc)
+        m = self.createMesh(plc)
         # m = mt.createMesh(plc, tetgen='tetgen-1.4.3')
         pg.show(m, m.cellMarkers())
+
 
     @pg.skipOnDefaultTest
     def test_cube_cube_thirdside(self):
@@ -438,9 +456,10 @@ class Test3DMerge(unittest.TestCase):
         self.assertEqual(plc.boundary(4).nodeCount(), 6)
         self.assertEqual(plc.boundary(5).nodeCount(), 6)
 
-        m = mt.createMesh(plc)
+        m = self.createMesh(plc)
         # m = mt.createMesh(plc, tetgen='tetgen-1.4.3')
         pg.show(m, m.cellMarkers())
+
 
     def test_cube_cut_cube(self):
         """Test cube cur from cube on two neighbour faces."""
@@ -473,14 +492,15 @@ class Test3DMerge(unittest.TestCase):
         # pg.show(plc)
 
         # m = mt.createMesh(plc, tetgen='tetgen-1.4.3')
-        m = mt.createMesh(plc)
-
+        m = self.createMesh(plc)
         pg.show(m, m.cellMarkers())
 
         # m.exportVTK('cubecut')
 
-    @pg.skipOnDefaultTest
+
+    #@pg.skipOnDefaultTest
     def test_cube_mult_cut1(self):
+        """Test cube cut from cube on two neighbour faces."""
         c = mt.createCube(marker=1)
         c.translate([0.5, 0.5, 0.5])
         c1 = mt.createCube(size=[0.1, 1, 0.1], marker=2)
@@ -498,12 +518,14 @@ class Test3DMerge(unittest.TestCase):
         c.exportPLC('c')
 
         # pg.show(c, showMesh=True)
-        m = mt.createMesh(c)
+        m = self.createMesh(c)
         self.assertEqual(m.nodeCount() > 0, True)
         # pg.show(m, m.cellMarkers())
 
-    @pg.skipOnDefaultTest
+
+    #@pg.skipOnDefaultTest
     def test_cube_mult_cut2(self):
+        """Test cube cut from cube on two neighbour faces."""
         c = mt.createCube(marker=1)
         c.translate([0.5, 0.5, 0.5])
         c1 = mt.createCube(size=[0.1, 1, 0.1], marker=2)
@@ -525,16 +547,18 @@ class Test3DMerge(unittest.TestCase):
         self.assertEqual(c.boundaryCount(), 15)
 
         # pg.show(c, showMesh=True)
-        m = mt.createMesh(c)
+        m = self.createMesh(c)
         pg.show(m, m.cellMarkers())
 
         c.exportPLC('c')
 
         # pg.show(c, showMesh=True)
-        m = mt.createMesh(c)
+        m = self.createMesh(c)
         self.assertEqual(m.nodeCount() > 0, True)
 
+
     def test_face_inCube(self):
+        """Test merging a face into a cube, creating two subfaces."""
         # plc = mt.createCube()
 
         # face = mt.createSurface(mt.createGrid(x=np.linspace(-0.5, 0.5, 2),
@@ -548,11 +572,18 @@ class Test3DMerge(unittest.TestCase):
         # incomplete!!! Fix me, tetgen segfaults
         pass
 
+
     def test_appendTetrahedron(self):
+        """Test appending a tetrahedron to a mesh."""
         grid = mt.createGrid(5, 5, 5)
         # pg.show(grid)
-        mesh = mt.appendBoundary(grid, xbound=5, ybound=5, zbound=5,
+        try:
+            mesh = mt.appendBoundary(grid, xbound=5, ybound=5, zbound=5,
                                  isSubSurface=False)
+        except RuntimeError:
+            self.skipTest("Tet meshing failed, check if tetgen is available.")
+        except OSError:
+            self.skipTest("Tet meshing failed, pv-pytetgen is too old.")
         # ax, _ = pg.show(mesh, mesh.cellMarkers(), hold=True, opacity=0.5)
 
         # try:
@@ -561,8 +592,10 @@ class Test3DMerge(unittest.TestCase):
         # except:
         #     pass
 
+
     @pg.skipOnDefaultTest
     def test_patch_on_facet(self):
+        """Test merging a patch on a facet, creating two subfaces."""
         world = mt.createWorld(start=[-1, -1, -1], end=[1, 1, 0])
 
         pad = mt.createFacet(mt.createCircle(pos=[0, 0, 0], radius=0.5, isHole=True))
@@ -573,7 +606,7 @@ class Test3DMerge(unittest.TestCase):
         #pad = mt.createFacet(mt.createCircle(pos=[0, 0, 0], radius=0.5, marker=2))
         #plc = world + pad
 
-        mesh = mt.createMesh(plc)
+        mesh = self.createMesh(plc)
         np.testing.assert_array_equal(np.unique(mesh.boundaryMarkers()),
                                      [-2, -1,  0, 2])
         #pg.show(mesh, markers=True, showMesh=True)

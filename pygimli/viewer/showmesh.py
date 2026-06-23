@@ -525,9 +525,13 @@ def showMesh(mesh, data=None, block=False, colorBar=None,
                     print("Data: ", data.shape)
                     print("Data: ", len(data), min(data), max(data),
                           pg.core.haveInfNaN(data))
+                    print(data)
+                    # print("Data: ", len(data), min(data), max(data),
+                    #       pg.core.haveInfNaN(data))
                     print("Mesh: ", mesh)
                     validData = False
                     drawMesh(ax, mesh)
+                    gci = None
 
                 return gci, validData
 

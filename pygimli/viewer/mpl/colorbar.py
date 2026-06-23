@@ -80,6 +80,7 @@ def cmapFromName(cmapname='jet', ncols=256, bad=None, **kwargs):
         cMap : str
             Name for the colormap
         cmap : str
+
             colormap name (old)
     Returns
     -------
@@ -128,8 +129,7 @@ def cmapFromName(cmapname='jet', ncols=256, bad=None, **kwargs):
         except BaseException as e:
             pg.warn("Could not retrieve colormap ", cMapName, e)
 
-
-    cMap.set_bad(bad)
+    cMap.with_extremes(bad=bad)
     return cMap
 
 
