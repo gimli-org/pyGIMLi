@@ -55,11 +55,12 @@ For plotting in 2D, the method `pygimli.viewer.showMesh()` is called, which crea
 As described in the [Fundamentals](fundamentals.md) section, `pygimli.viewer.show()` and `pygimli.viewer.showMesh()` utilize a variety of drawing functions, depending on the input data provided. In the following, we will take a look at how to manually access the necessary drawing functions to plot an empty mesh, as well as cell-based and node-based data.
 
 ```{code-cell}
-:tags: [hide-input]
 import numpy as np
 import matplotlib.pyplot as plt
 import pygimli as pg
-from pygimli.viewer import mpl
+from pygimli.viewer.mpl import (
+    drawMesh, drawModel, drawField, drawStreams, drawSensors,
+)
 import pygimli.meshtools as mt
 ```
 
@@ -69,7 +70,7 @@ To visualize a grid or a triangular mesh in 2D, we can simply make use of the `p
 n = np.linspace(1, 2, 10)
 mesh = pg.createGrid(x=n, y=n)
 fig, ax = plt.subplots()
-mpl.drawMesh(ax, mesh)
+drawMesh(ax, mesh)
 plt.show()
 ```
 
@@ -80,7 +81,7 @@ mx = pg.x(mesh.cellCenter())
 my = pg.y(mesh.cellCenter())
 data = np.cos(1.5 * mx) * np.sin(1.5 * my)
 fig, ax = plt.subplots()
-mpl.drawModel(ax, mesh, data)
+drawModel(ax, mesh, data)
 plt.show()
 ```
 
@@ -91,7 +92,7 @@ nx = pg.x(mesh.positions())
 ny = pg.y(mesh.positions())
 data = np.cos(1.5 * nx) * np.sin(1.5 * ny)
 fig, ax = plt.subplots()
-mpl.drawField(ax, mesh, data)
+drawField(ax, mesh, data)
 plt.show()
 ```
 
@@ -99,9 +100,9 @@ pyGIMLi also allows to plot vector field streamlines with `pygimli.viewer.mpl.dr
 
 ```{code-cell}
 fig, ax = plt.subplots()
-mpl.drawStreams(ax, mesh, data, color='red')
-mpl.drawStreams(ax, mesh, data, dropTol=0.9)
-mpl.drawStreams(ax, mesh, pg.solver.grad(mesh, data),
+drawStreams(ax, mesh, data, color='red')
+drawStreams(ax, mesh, data, dropTol=0.9)
+drawStreams(ax, mesh, pg.solver.grad(mesh, data),
             color='green', quiver=True)
 ax.set_aspect('equal')
 ```
@@ -111,7 +112,7 @@ A more specific case is the visualization of sensor positions, which is also cov
 ```{code-cell}
 sensors = np.random.rand(5, 2)
 fig, ax = pg.plt.subplots()
-mpl.drawSensors(ax, sensors, diam=0.02, coords=[0, 1])
+drawSensors(ax, sensors, diam=0.02, coords=[0, 1])
 ax.set_aspect('equal')
 ```
 
@@ -165,6 +166,91 @@ ax.show()
 ```
 
 If you want to take a look at more practical applications and examples that fully use the plotting capabilities of pyGIMLi, please refer to the [examples section](../_examples_auto/index.rst).
+
+## Publication-ready figures
+
+pyGIMLi's high-level `pg.show()` creates a single-panel figure with its own
+colorbar attached. For a publication we typically want several panels in one
+figure, a single shared colorbar and font sizes matching the surrounding text.
+The underlying draw functions (`pygimli.viewer.mpl.drawModel`,
+`drawField`, …) give us the required control: each of them draws into an
+existing axes and returns a Matplotlib graphics object (a `PolyCollection`)
+that we can hand to a shared colorbar. To arrange the panels themselves we use
+Matplotlib's [`ImageGrid`](https://matplotlib.org/stable/api/_as_gen/mpl_toolkits.axes_grid1.axes_grid.ImageGrid.html),
+which keeps all panels at equal aspect ratio and reserves a dedicated slot for
+the shared colorbar.
+
+Relevant Matplotlib building blocks are:
+
+- [`ImageGrid`](https://matplotlib.org/stable/api/_as_gen/mpl_toolkits.axes_grid1.axes_grid.ImageGrid.html) for a grid of equal-aspect axes with a single shared colorbar
+- [`Axes.set_title`](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_title.html) and [`Axes.set_xlabel`](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlabel.html) for panel and axis labels
+- [`matplotlib.rcParams`](https://matplotlib.org/stable/users/explain/customizing.html) to apply a consistent typography to *every* figure of a paper at once
+
+The example below draws a two-panel figure — a "true" and a "recovered" model
+on the same mesh — with one shared colorbar and "(a) / (b)" panel labels
+typical for geophysical publications. Rather than repeating `fontsize=…` on
+every call, a small [`rcParams`](https://matplotlib.org/stable/users/explain/customizing.html)
+block at the top of the cell sets the typography of the whole figure at once —
+put the same block at the top of your notebook and every subsequent figure of
+a paper will match:
+
+```{code-cell}
+from mpl_toolkits.axes_grid1 import ImageGrid
+
+# Some plot settings
+plt.rcParams.update({
+    "font.size": 9,        # base size (ticks, colorbar labels, …)
+    "axes.labelsize": 10,  # x/y axis labels
+    "axes.titlesize": 11,  # panel titles
+    "figure.dpi": 150,
+})
+
+
+# Create some dummy mesh and models
+rng = np.random.default_rng(0)
+n = np.linspace(-1, 1, 40)
+mesh = pg.createGrid(x=n, y=n)
+mx = pg.x(mesh.cellCenter())
+my = pg.y(mesh.cellCenter())
+true_model = np.exp(-(mx**2 + my**2) / 0.3)
+recovered = true_model + 0.05 * rng.standard_normal(mesh.cellCount())
+
+vmin, vmax, cmap = 0.0, 1.0, "turbo"
+
+# Two panels + one shared colorbar via ImageGrid
+fig = plt.figure(figsize=(7, 3.2))
+grid = ImageGrid(
+    fig, 111,
+    nrows_ncols=(1, 2),
+    axes_pad=0.3,
+    share_all=True,
+    cbar_mode="single",
+    cbar_location="right",
+    cbar_size="4%",
+    cbar_pad=0.15,
+)
+
+gci_a = drawModel(grid[0], mesh, true_model, cMin=vmin, cMax=vmax)
+gci_b = drawModel(grid[1], mesh, recovered,  cMin=vmin, cMax=vmax)
+for gci in (gci_a, gci_b):
+    gci.set_cmap(cmap)
+
+for ax, letter, label in zip(grid, "ab", ["True model", "Recovered model"]):
+    ax.set_title(f"({letter})", loc="left", fontdict={"fontweight": "bold"})
+    ax.set_title(label)
+    ax.set_xlabel("x (m)")
+grid[0].set_ylabel("y (m)")
+
+cbar = grid.cbar_axes[0].colorbar(gci_a)
+cbar.set_label(r"Resistivity ($\Omega$m)")
+plt.show()
+```
+
+Finally, export the figure in a vector format for publication-quality output:
+
+```python
+fig.savefig("figure.pdf", bbox_inches="tight")
+```
 
 ## External plotting
 
