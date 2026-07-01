@@ -203,46 +203,59 @@ plt.rcParams.update({
     "axes.labelsize": 10,  # x/y axis labels
     "axes.titlesize": 11,  # panel titles
     "figure.dpi": 150,
+    "font.family": "Arial",
 })
-
 
 # Create some dummy mesh and models
 rng = np.random.default_rng(0)
-n = np.linspace(-1, 1, 40)
+n = np.linspace(-1, 1, 15)
 mesh = pg.createGrid(x=n, y=n)
-mx = pg.x(mesh.cellCenter())
-my = pg.y(mesh.cellCenter())
+mx = pg.x(mesh.cellCenters())
+my = pg.y(mesh.cellCenters())
 true_model = np.exp(-(mx**2 + my**2) / 0.3)
 recovered = true_model + 0.05 * rng.standard_normal(mesh.cellCount())
 
 vmin, vmax, cmap = 0.0, 1.0, "turbo"
 
 # Two panels + one shared colorbar via ImageGrid
-fig = plt.figure(figsize=(7, 3.2))
+fig = plt.figure(figsize=(7, 7))
 grid = ImageGrid(
     fig, 111,
-    nrows_ncols=(1, 2),
+    nrows_ncols=(2, 2),
     axes_pad=0.3,
     share_all=True,
-    cbar_mode="single",
+    cbar_mode="edge",
     cbar_location="right",
-    cbar_size="4%",
+    cbar_size="5%",
     cbar_pad=0.15,
 )
 
-gci_a = drawModel(grid[0], mesh, true_model, cMin=vmin, cMax=vmax)
-gci_b = drawModel(grid[1], mesh, recovered,  cMin=vmin, cMax=vmax)
-for gci in (gci_a, gci_b):
+drawMesh(grid[0], mesh)
+
+for ax, model in zip(grid.axes_row[1], (true_model, recovered)):
+    gci = drawModel(ax, mesh, model, cMin=vmin, cMax=vmax)
     gci.set_cmap(cmap)
+    cbar = ax.cax.colorbar(gci)
+    cbar.set_label(r"Resistivity ($\Omega$m)")
 
-for ax, letter, label in zip(grid, "ab", ["True model", "Recovered model"]):
+for ax, letter, label in zip(grid, "a bc", ["Mesh", "", "True model", "Recovered model"]):
     ax.set_title(f"({letter})", loc="left", fontdict={"fontweight": "bold"})
-    ax.set_title(label)
-    ax.set_xlabel("x (m)")
-grid[0].set_ylabel("y (m)")
+    ax.set(xticks=(-1,0,1),
+           yticks=(-1,0,1),
+           xlim=(-1,1),
+           ylim=(-1,1),
+           title=label)
 
-cbar = grid.cbar_axes[0].colorbar(gci_a)
-cbar.set_label(r"Resistivity ($\Omega$m)")
+for ax in grid.axes_column[0]:
+    ax.set_ylabel("y (m)")
+    
+for ax in grid.axes_row[-1]:
+    ax.set_xlabel("x (m)")
+
+# Hide unused upper right
+grid[1].set_visible(False)
+grid[1].cax.set_visible(False)
+
 plt.show()
 ```
 
