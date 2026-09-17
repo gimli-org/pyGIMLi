@@ -61,6 +61,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+.venv/
 env/
 build/
 develop-eggs/
@@ -116,3 +117,7 @@ pygimli/core/_pygimli_.pyd.back
 pygimli/core/_pygimli_.so.dSYM/
 pygimli/VERSION
 synth.ves
+
+.github/*.md
+.venv/*
+.venv
