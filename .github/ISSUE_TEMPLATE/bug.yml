@@ -47,6 +47,7 @@ body:
       label: Which version of PyGIMLI are you using?
       description: Output of `print(pygimli.__version__)`
       options:
+        - 1.6.1
         - 1.6.0
         - 1.5.5
         - 1.5.4
