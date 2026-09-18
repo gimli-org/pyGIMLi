@@ -136,7 +136,7 @@ ab2 = np.logspace(0, 2.5, 21)
 synth = [10, 10, 100, 300, 30]
 data = ves.VESModelling(ab2=ab2).response(synth)
 data *= (np.random.randn(len(data))*0.03 + 1)
-thk = np.logspace(0, 1.8, 23)
+thk = np.logspace(-0.5, 2, 23)
 fop = ves.VESRhoModelling(ab2=ab2, thk=thk)
 ```
 
@@ -145,7 +145,7 @@ We set up a simple inversion instance
 ```{code-cell}
 inv = pg.Inversion(fop=fop)
 inv.dataTrans = 'log' # inv.modelTrans is 'log' by default
-m0 = inv.run(data, 0.02, startModel=100, maxIter=0, verbose=True)
+m0 = inv.run(data, 0.02, startModel=100, cType=2, maxIter=0, verbose=True)
 ```
 
 and obtain a homogeneous model vector of 100 Ohmm.
@@ -154,7 +154,7 @@ The data residual `inv.residual()` drives the inversion.
 Let's do a gradient inversion step by hand:
 
 ```{code-cell}
-dm0 = -inv.dataGradient() # equals -inv.gradient()
+dm0 = -inv.dataGradient()*3e-4 # equals -inv.gradient()
 inv.model = np.exp(dm0)*inv.model
 inv.response = fop(inv.model)
 print(inv.chi2())
@@ -164,6 +164,8 @@ pg.viewer.mpl.drawModel1D(ax, thk, inv.model)
 ax.invert_yaxis()
 ```
 
+The step length must be wisely chose as data and model have different units and
+possibly magnitudes. This is one of the biggest disadvantages of gradient methods.
 Note that usually `inv.model` and `inv.response` are updated by the minimization framework, but here we have to take the log-transformation into account.
 The model shows an increase in the upper part and a decrease in the lower part.
 The chi-square misfit has already reduced a fair amount.
@@ -172,8 +174,8 @@ Now we go one step further and compute another gradient, both for the data part 
 We assume a regularization strength balancing those two of $\lambda$=10.
 
 ```{code-cell}
-dg = -inv.dataGradient()
-lam = 3
+dg = -inv.dataGradient() * 3e-4
+lam = 30
 mg = -inv.modelGradient() * lam
 ax, _ = pg.viewer.mpl.showModel1D(thk, inv.model, plot='loglog', label="model")
 pg.viewer.mpl.drawModel1D(ax, model=synth, label="synth", color="black")

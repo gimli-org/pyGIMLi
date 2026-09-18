@@ -26,6 +26,12 @@ Software for estimation of electrical conductivity models using multi-coil rigid
 
 > Carrizo Mascarell, M., Werthmüller, D. & Slob, E. (2024). Estimation of electrical conductivity models using multi-coil rigid-boom electromagnetic induction measurements. *Computers & Geosciences*, 193, 105732. [DOI: 10.1016/j.cageo.2024.105732](https://doi.org/10.1016/j.cageo.2024.105732)
 
+## PyCKSTER <a href="https://gitlab.in2p3.fr/metis-geophysics/pyckster" title="GitLab Repository"><i class="fa-brands fa-gitlab"></i></a>
+
+An open-source PyQt5 GUI for processing and analysis of active near-surface seismic data, focused on interactive traveltime picking and surface-wave dispersion analysis. Reads and writes SEG2, SEGY and Seismic Unix formats and performs traveltime tomography directly through pyGIMLi.
+
+> Pasquet, S. (2026). PyCKSTER: An open-source Python tool for interactive processing and analysis of active near-surface seismic data. *EGU General Assembly 2026*, Vienna, Austria, EGU26-5021. [DOI: 10.5194/egusphere-egu26-5021](https://doi.org/10.5194/egusphere-egu26-5021)
+
 ## PyMERRY <a href="https://github.com/RodolpheCattin/PyMERRY" title="GitHub Repository"><i class="fa-brands fa-github"></i></a>
 
 A post-processing tool for electrical resistivity tomography (ERT) that computes a data-coverage mask and evaluates resistivity uncertainties to support the reliable interpretation of inverted ERT images. Designed to work with 2D models produced by pyGIMLi and other ERT codes.

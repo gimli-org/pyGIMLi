@@ -25,9 +25,9 @@ What is pyGIMLi suited for?
 
 What is pyGIMLi **NOT** suited for?
 
--   for people that expect a ready-made GUI for interpreting their data
+- for people that expect a ready-made GUI for interpreting their data
 
-[jupyter notebooks]: https://jupyter.org
+[Jupyter notebooks]: https://jupyter.org
 
 ##### Installation
 
@@ -36,29 +36,7 @@ What is pyGIMLi **NOT** suited for?
 [![Anaconda-Server Badge](https://anaconda.org/gimli/pygimli/badges/version.svg)](https://anaconda.org/gimli/pygimli)
 [![Anaconda-Server Badge](https://anaconda.org/gimli/pygimli/badges/latest_release_date.svg)](https://anaconda.org/gimli/pygimli)
 
-On all platforms, we recommend to install pyGIMLi via the conda package manager
-contained in the Anaconda distribution. For details on how to install Anaconda,
-we refer to: https://docs.anaconda.com/anaconda/install/
-
-Note that Anaconda comes with many (great) packages, many of which you likely
-will not use. If you want to save space, you can install the [light-weight
-version Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/).
-
-To avoid conflicts with other packages, we recommend to install pyGIMLi in a
-separate environment. Here we call this environment pg, but you can give it any
-name. Note that this environment has to be created only once.
-
-``` bash
-conda create -n pg -c gimli -c conda-forge "pygimli>=1.6.0"
-```
-
-If you are using Windows or Mac, a new environment named “pg” should be visible in the Anaconda Navigator. If you want to use pygimli from the command line, you have to activate the environment. You can put this line in your ~/.bashrc file so that it is activated automatically if you open a terminal.
-
-``` bash
-conda activate pg
-```
-
-See https://www.pygimli.org/installation.html for more information.
+pyGIMLi can be installed with many different package managers (e.g., pip, conda, uv, etc.). Please refer to [these instructions](https://www.pygimli.org/user-guide/getting-started/installation/) for more details.
 
 ##### Import convention
 
@@ -98,7 +76,7 @@ BibTeX code:
 pyGIMLi is distributed under the terms of the **Apache 2.0** license. Details on
 the license agreement can be found [here].
 
-[here]: https://www.pygimli.org/license.html
+[here]: https://www.pygimli.org/about/#license
 
 #### Credits
 
