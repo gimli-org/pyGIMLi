@@ -44,6 +44,7 @@ class InversionBase:
         self.cWeight = 1
         self.axs = None  # for showProgress only
         self.LSiter = 100
+        self.LStol = 1e-3
         self.maxIter = kwargs.pop('maxIter', 20)
         self.G = None
         self._jacobianOutdated = False
@@ -775,7 +776,7 @@ class GaussNewtonInversion(InversionBase):
             deltaG = (self.c - self.G * model) * sqrt(self.my)
             rhs = pg.cat(rhs, deltaG)
 
-        dM = lssolver(self.A, rhs, maxiter=self.LSiter, verbose=self.verbose)
+        dM = lssolver(self.A, rhs, maxiter=self.LSiter, tol=self.LStol, verbose=self.verbose)
         return dM
 
 
