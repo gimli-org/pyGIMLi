@@ -478,6 +478,18 @@ buildBOOST(){
                 # config on alamlinux docker container
                 echo "Setting extra include to pyconfig for manylinux_$PY_PLATFORM-$PY_PLATFORM"
                 export CPLUS_INCLUDE_PATH=$PY_CONFIG_DIR
+            else
+                # b2's own python auto-detection derives the include dir from
+                # PYTHONEXE's own path, which breaks when that's a PATH symlink
+                # into a differently-prefixed real install (e.g. a distro
+                # pythonX.Y symlinked from /usr/local/bin) -- it then guesses
+                # <symlink-prefix>/include/pythonX.Y instead of the real one,
+                # so ask the interpreter directly via sysconfig instead.
+                PY_REAL_INCLUDE_DIR=`"$PYTHONEXE" -c 'import sysconfig; print(sysconfig.get_paths()["include"])'`
+                if [ -f "$PY_REAL_INCLUDE_DIR/pyconfig.h" ]; then
+                    echo "Setting extra include to pyconfig: $PY_REAL_INCLUDE_DIR"
+                    export CPLUS_INCLUDE_PATH=$PY_REAL_INCLUDE_DIR
+                fi
             fi
             #python3.7-config --includes --libs
         fi
