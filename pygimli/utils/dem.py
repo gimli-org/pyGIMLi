@@ -47,6 +47,8 @@ class DEM:
                 self.loadASC(demfile)
             elif demfile[-4:].lower() == '.hgt':
                 self.loadHGT(demfile)
+            elif demfile[-4:].lower() == '.tif':
+                self.loadTIF(demfile)
             else:
                 self.loadTXT(demfile)
         elif x is not None and y is not None:
@@ -132,6 +134,20 @@ class DEM:
         self.z = zp
         self.x = x
         self.y = y
+        self.createGridInterpolator()
+
+    def loadTIF(self, tiffile):
+        """Load Geo-TIFF file."""
+        from osgeo import gdal
+        gdal.UseExceptions()
+        ds = gdal.Open(tiffile)
+        band = ds.GetRasterBand(1)
+        self.z = band.ReadAsArray()
+        self.z[self.z == band.GetNoDataValue()] = np.median(
+            self.z[self.z != band.GetNoDataValue()].ravel())
+        x0, dx, _, y0, _, dy = ds.GetGeoTransform()
+        self.x = np.arange(x0, x0 + dx * ds.RasterXSize, dx)
+        self.y = np.arange(y0, y0 + dy * ds.RasterYSize, dy)
         self.createGridInterpolator()
 
     def loadASC(self, ascfile):

@@ -8,6 +8,18 @@ An open-source Python toolkit for customizable 3D finite-element modeling of con
 
 > Rochlitz, R., Skibbe, N. & Günther, T. (2019). custEM: Customizable finite-element simulation of complex controlled-source electromagnetic data. *Geophysics*, 84(2), F17–F33. [DOI: 10.1190/geo2018-0208.1](https://doi.org/10.1190/geo2018-0208.1)
 
+## FDIP <a href="https://github.com/TUBAF-EM/FDIP" title="GitHub Repository"><i class="fa-brands fa-github"></i></a>
+
+Frequency-Domain Induced-Polarization data processing and inversion. Built on to of pyGIMLi's ERT module and the SIPSpectrum class, but designed for analysing spectral information from field SIP data. 
+
+> Günther, T. & Martin, T. (2016): Spectral two-dimensional inversion of frequency-domain induced polarisation data from a mining slag heap. *Journal of Applied Geophysics* 135, 436-448, [doi:10.1016/j.jappgeo.2016.01.008](https://doi.org/10.1016/j.jappgeo.2016.01.008).
+
+## TDIP <a href="https://github.com/TUBAF-EM/TDIP" title="GitHub Repository"><i class="fa-brands fa-github"></i></a>
+
+Time-Domain Induced-Polarization data processing and inversion. Built on to of pyGIMLi's ERT module, but designed for analysing spectral information from field time-domain IP data. 
+
+> Martin, T., Günther, T., Orozco, A.F. & Dahlin, T. (2020): Evaluation of spectral induced polarization field measurements in time and frequency domain, *J. Appl. Geophys.* 180, 104141, [doi:10.1016/j.jappgeo.2020.104141](https://doi.org/10.1016/j.jappgeo.2020.104141).
+
 ## formikoj <a href="https://github.com/geophilik/formikoj" title="GitHub Repository"><i class="fa-brands fa-github"></i></a>
 
 A flexible open-source library for managing and processing geophysical data in environmental and engineering investigations. Provides seismic waveform modeling and refraction processing capabilities, combining modeling and processing tasks in a single workflow with pyGIMLi integration for inversion.
