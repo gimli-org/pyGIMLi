@@ -9,7 +9,6 @@ also local for all platforms.
 Prepare workspace:
 
 ```bash
-mkdir -p gimli
 git clone https://github.com/gimli-org/pyGIMLi.git
 # optionally change to the development branch
 cd pyGIMLi && git checkout dev && cd ..
@@ -99,8 +98,7 @@ sudo apt-get install build-essential g++ subversion git cmake \
             python3-dev python3-matplotlib python3-numpy python3-pyqt5 \
             python3-scipy libboost-all-dev libedit-dev \
             libsuitesparse-dev libopenblas-openmp-dev libumfpack5 \
-            libomp-dev doxygen \
-            libcppunit-dev clang
+            libomp-dev doxygen libcppunit-dev clang
 ```
 
 Rest see above.

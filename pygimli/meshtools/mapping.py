@@ -727,6 +727,8 @@ def extract2dSlice(mesh, origin=None, normal=None, angle=0, dip=0, **kwargs):
         meshtmp.rotate(pg.Pos(0, np.deg2rad(-dip), 0))
 
     pvmesh = pgMesh2pvMesh(meshtmp)
+    if normal is None:
+        normal = [0, 1, 0]
 
     pvs = pvmesh.slice(normal=normal, origin=[0, 0, 0],
                        generate_triangles=True)
@@ -739,7 +741,7 @@ def extract2dSlice(mesh, origin=None, normal=None, angle=0, dip=0, **kwargs):
     for face in tri:
         mesh2d.createTriangle(*[mesh2d.node(p) for p in face])
 
-    if normal == [1, 0, 0]:
+    if np.all(normal == [1, 0, 0]):
         mesh2d.swapCoordinates(0, 1)
 
     for key in mesh.dataKeys():
