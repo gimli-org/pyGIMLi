@@ -10,21 +10,21 @@ Prepare workspace:
 
 ```bash
 mkdir -p gimli
-git clone https://github.com/gimli-org/gimli.git
+git clone https://github.com/gimli-org/pyGIMLi.git
 # optionally change to the development branch
-git checkout dev
+cd pyGIMLi && git checkout dev && cd ..
 ```
 
 Running workflow:
 
 ```bash
-bash gimli/.workflow.sh install
+bash pyGIMLi/.workflow.sh install
 ```
 
 The workflow have several targets which you might try:
 
 ```bash
-bash gimli/.workflow.sh help
+bash pyGIMLi/.workflow.sh help
 ```
 
 If something goes wrong you can try the manual compilation.
@@ -34,13 +34,11 @@ If something goes wrong you can try the manual compilation.
 If you don't want to use the conda environment we encourage the use of a virtual environment.
 Assuming you have a proper build toolchain and the required libraries (see Installation on Ubuntu below) installed.
 
-First we need to create a root directory for our installation,
-e.g., ``$HOME/src/gimli`` and get the source code:
+Assume we have a root directory for our installation,
+e.g., ``$HOME/src`` and get the source code:
 
 ```bash
-mkdir -p gimli
-cd gimli
-git clone https://github.com/gimli-org/gimli.git
+git clone https://github.com/gimli-org/pyGIMLi.git
 # optionally change to the development branch
 git checkout dev
 # create a virtual environment for pyGIMLi, this can be at any place with any name
@@ -52,7 +50,7 @@ source venv-build/bin/activate
 # update pip is always a good idea
 python -m pip install -U pip
 # install gimli as editable with its dependencies into to venv
-pip install -e ./gimli/[build]
+pip install -e ./pyGIMLi/[build]
 ```
 
 We need to compile the C++ part of pyGIMLi, which is currently done with cmake and not with the pip internal build system.
@@ -61,8 +59,8 @@ We recommend an out of source build:
 ```bash
 mkdir -p build
 cd build
-cmake ../gimli
-make -j 4 gimli
+cmake ../pyGIMLi
+make -j 4 pyGIMLi
 make pygimli J=4
 cd ..
 ```
@@ -113,25 +111,25 @@ You can rebuild and update all local generated third party software by setting
 the CLEAN environment variable:
 
 ```bash
-CLEAN=1 cmake ../gimli
+CLEAN=1 cmake ../pyGIMLi
 ```
 
 Use an alternative C++ compiler:
 
 ```bash
-CC=clang CXX=clang++ cmake ../gimli
+CC=clang CXX=clang++ cmake ../pyGIMLi
 ```
 
 Build the library with debug and profiling flags:
 
 ```bash
-cmake ../gimli -DCMAKE_BUILD_TYPE=Debug
+cmake ../pyGIMLi -DCMAKE_BUILD_TYPE=Debug
 ```
 
 Build the library with GCC address sanitizer check:
 
 ```bash
-cmake ../gimli -DCMAKE_BUILD_TYPE=Debug -DASAN=1
+cmake ../pyGIMLi -DCMAKE_BUILD_TYPE=Debug -DASAN=1
 ```
 
 ## Useful make commands
