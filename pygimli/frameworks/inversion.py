@@ -43,8 +43,8 @@ class InversionBase:
         self.dataTrans = kwargs.pop('dataTrans', pg.trans.TransLin())
         self.cWeight = 1
         self.axs = None  # for showProgress only
-        self.LSiter = 100
-        self.LStol = 1e-3
+        self.LSiter = kwargs.pop('LSiter', 100)
+        self.LStol = kwargs.pop('LStol', 1e-3)
         self.maxIter = kwargs.pop('maxIter', 20)
         self.G = None
         self._jacobianOutdated = False

@@ -563,11 +563,27 @@ class TimelapseERT():
         model = self.inv.run(dataVec, errorVec, **kwargs)
         self.models = np.reshape(model, [len(DATA), -1])
         self.responses = np.reshape(self.inv.response, [DATA[0].size(), -1])
-        misfits = np.log(self.responses) - np.log(self.DATA)
-        misfits /= np.reshape(self.data["err"], [-1, 1])
-        self.chi2s = np.mean(misfits**2, axis=0)
+        self.misfits = np.log(self.responses) - np.log(self.DATA)
+        self.misfits /= np.reshape(self.data["err"], [-1, 1])
+        self.chi2s = np.mean(self.misfits**2, axis=0)
         self.pd = fop.paraDomain
         return model
+
+    def generateMisfitPDF(self, **kwargs):
+        """Show misfits of all timesteps."""
+        kwargs.setdefault("cMap", "bwr")
+        kwargs.setdefault("cMin", -5)
+        kwargs.setdefault("cMax", 5)
+        from matplotlib.backends.backend_pdf import PdfPages
+
+        with PdfPages(self.name+'-misfits.pdf') as pdf:
+            fig = pg.plt.figure(figsize=kwargs.pop("figsize", [5, 5]))
+            for i in range(self.DATA.shape[1]):
+                ax = fig.subplots()
+                self.showData(self.misfits[:, i], ax=ax, **kwargs)
+                ax.set_title(str(i)+": "+ self.times[i].isoformat(" ", "minutes"))
+                fig.savefig(pdf, format='pdf')
+                fig.clf()
 
     def showFit(self, **kwargs):
         """Show data, model response and misfit."""
