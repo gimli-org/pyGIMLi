@@ -705,10 +705,13 @@ def extract2dSlice(mesh, origin=None, normal=None, angle=0, dip=0, **kwargs):
             normal = "x"
         else:
             normal = "y"
-
-    if origin == "center":
+    elif origin == "center":
         bb = mesh.boundingBox()
         origin = [(bb.xMin()+bb.xMax())/2, (bb.yMin()+bb.yMax())/2, 0]
+    else:
+        if normal is None and "endpoint" in kwargs:
+            endpoint = kwargs["endpoint"]
+            angle=np.atan2(endpoint[1] - origin[1], endpoint[0] - origin[0])*180/np.pi
 
     if origin is not None:
         meshtmp.translate(-pg.Pos(origin))
