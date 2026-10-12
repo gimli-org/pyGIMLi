@@ -480,12 +480,12 @@ def underlayBKGMap(ax, mode='MAP', utmzone=32, epsg=0, imsize=2500, uuid='',
     ax.imshow(im, extent=[bb[0], bb[2], bb[1], bb[3]],
               interpolation='nearest')
 
-def underlayImageFile(ax, imfile, start=3, end=-4, sep=",", **kwargs):
+def underlayImageFile(ax, imfile, extent=None, start=3, end=-4, sep=",", **kwargs):
     """Underlay image from given file.
 
     Avoids downloading an image fitting the axis limits and takees a
     predefined filename (typically downloaded before) - e.g. being offline.
-    
+
     Parameters
     ----------
     imfile : str
@@ -497,9 +497,14 @@ def underlayImageFile(ax, imfile, start=3, end=-4, sep=",", **kwargs):
     """
     import matplotlib.image as mpimg
     im = mpimg.imread(imfile)
-    rect = np.array(imfile[start:end].split(sep), dtype=float)
     xl = ax.get_xlim()
     yl = ax.get_ylim()
-    ax.imshow(im, extent=rect[[0, 2, 1, 3]], interpolation='nearest', **kwargs)
-    ax.set_xlim(xl)
-    ax.set_ylim(yl)
+    if extent is None:
+        rect = np.array(imfile[start:end].split(sep), dtype=float)
+        extent = rect[[0, 2, 1, 3]]
+
+    fitView = kwargs.pop("fitView", False)
+    ax.imshow(im, extent=extent, interpolation='nearest', **kwargs)
+    if not fitView:
+        ax.set_xlim(xl)
+        ax.set_ylim(yl)
