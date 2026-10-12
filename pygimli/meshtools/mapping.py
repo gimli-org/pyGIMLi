@@ -672,23 +672,38 @@ def extract2dSlice(mesh, origin=None, normal=None, angle=0, dip=0, **kwargs):
     mesh : pg.Mesh
         Input mesh
     origin : [float, float, float]
-        origin to be shifted [x, y, z]
+        origin to be shifted [x, y, z], + normal|angle|endpoint
     normal : [float, float, float] | str
         normal vector for extracting plane, or
         "x", "y", "z" equal to "yz", "xz", "yz", OR
     angle : float [0]
-        azimuth of plane in the xy plane (0=x, 90=y)
+        azimuth of plane in the xy plane (0=x, 90=y) OR
+    endpoint : [float, float, float]
+        any other point on the same line defining the angle
     dip : float [0]
         angle to be tilted into the x'z plane (0=vertical)
 
     Optional keywords
     -----------------
     x,y,z : float [None]
-        axis-parallel flices, determines normal and origin
+        axis-parallel slices, determines normal and origin
+        (x=x sets origin=[x,0,0] and normal="x" etc.)
 
     Returns
     -------
     2d triangular pygimli mesh with all data fields
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import pygimli.meshtools as mt
+    >>> grid = mt.createGrid(5, 4, 3)
+    >>> grid["val"] = np.arange(grid.cellCount())
+    >>> a, c = mt.extract2dSlice(grid, z=0.5).show("val")
+    >>> a, c = mt.extract2dSlice(grid, origin=[0, 0, 0],
+    ...                          endpoint=[4, 3, 2]).show("val")
+    >>> a, c = mt.extract2dSlice(grid, origin=[.8, 1, 0],
+    ...                          angle=45, dip=10).show("val")
     """
     from pygimli.viewer.pv import pgMesh2pvMesh
     # from pygimli.meshtools import convertPVPolyData  # to be written yet
@@ -724,10 +739,11 @@ def extract2dSlice(mesh, origin=None, normal=None, angle=0, dip=0, **kwargs):
         elif normal == "x" or normal == "yz":
             normal = [1, 0, 0]
 
+    if dip:
+        meshtmp.rotate(pg.Pos(0, 0, np.deg2rad(-dip)))
+
     if angle:
         meshtmp.rotate(pg.Pos(0, 0, np.deg2rad(-angle)))
-    if dip:
-        meshtmp.rotate(pg.Pos(0, np.deg2rad(-dip), 0))
 
     pvmesh = pgMesh2pvMesh(meshtmp)
     if normal is None:
@@ -751,7 +767,9 @@ def extract2dSlice(mesh, origin=None, normal=None, angle=0, dip=0, **kwargs):
         mesh2d[key] = pvs[key]
 
     mesh2d.setCellMarkers(pvs["Cell Marker"])
-    mesh2d.swapCoordinates(1, 2)
+    if not np.all(normal == [0, 0, 1]):
+        mesh2d.swapCoordinates(1, 2)
+
     return mesh2d
 
 
