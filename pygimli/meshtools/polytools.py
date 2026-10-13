@@ -1395,7 +1395,7 @@ def createParaMeshPLC3D(sensors, paraDX=0, paraDepth=-1, paraBoundary=None,
     return pdPLC
 
 
-def readPLC(filename:str, comment:str='#'):
+def readPLC(filename:str, comment:str='#', correctIdx=0):
     r"""Read in a piece-wise linear complex object (PLC) from .poly file.
 
     Read 2D :term:`Triangle` or 3D :term:`Tetgen` PLC files.
@@ -1504,7 +1504,7 @@ def readPLC(filename:str, comment:str='#'):
                 boundRow = content[2 + nVerts + i + segment_offset + 1]\
                     .split()
                 # nNodes = int(boundRow[0])
-                nodeIdx = [int(_b) for _b in boundRow[1:]]
+                nodeIdx = [int(_b)-correctIdx for _b in boundRow[1:]]
 
                 if k == 0:
                     face = poly.createPolygonFace(poly.nodes(nodeIdx),
