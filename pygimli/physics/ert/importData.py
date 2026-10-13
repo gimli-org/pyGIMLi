@@ -142,8 +142,8 @@ def importRes2dInv(filename, verbose=False, return_header=False):
     if typ == 9 or typ == 10:
         raise NotImplementedError("Don't know how to read:" + str(typ))
 
-    row = getNonEmptyRow(it, comment=';')
     if typ in [11, 12, 13]:  # mixed array
+        row = getNonEmptyRow(it, comment=';') # check what it is for
         res = pg.Vector(nData, 0.0)
         ip = pg.Vector(nData, 0.0)
         err = pg.Vector(nData, 0.0)
@@ -302,9 +302,9 @@ def importRes2dInv(filename, verbose=False, return_header=False):
 
             data.createFourPointData(i, eaID, ebID, emID, enID)
 
-        data.set('rhoa', dataBody[nn - hasIP - 1])
+        data['rhoa'] = dataBody[nn - hasIP - 1]
         if hasIP:
-            data.set('ip', dataBody[nn - 1])
+            data['ip'] = dataBody[nn - 1]
 
     try:
         row = getNonEmptyRow(it, comment=';')
@@ -326,7 +326,7 @@ def importRes2dInv(filename, verbose=False, return_header=False):
         header["foundTopo"] = 0
 
     data.sortSensorsX()
-    data.sortSensorsIndex()
+    # data.sortSensorsIndex()
     if return_header:
         return data, header
     else:
