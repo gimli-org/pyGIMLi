@@ -550,7 +550,8 @@ class TimelapseERT():
             self.createMesh()
 
         fop.setMesh(self.mesh)
-        print(fop.mesh())  # important to call mesh() function once!
+        pg.verbose(fop.mesh())  # important to call mesh() function once!
+        fop.setRegionProperties("*", zWeight=kwargs.pop("zWeight", 0.222))
         dataVec = np.concatenate([data["rhoa"] for data in DATA])
         errorVec = np.concatenate([data["err"] for data in DATA])
         startModel = fop.createStartModel(dataVec)
@@ -567,6 +568,7 @@ class TimelapseERT():
         self.misfits /= np.reshape(self.data["err"], [-1, 1])
         self.chi2s = np.mean(self.misfits**2, axis=0)
         self.pd = fop.paraDomain
+        self.fullfop = fop
         return model
 
     def generateMisfitPDF(self, **kwargs):

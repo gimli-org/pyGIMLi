@@ -84,8 +84,10 @@ class MultiFrameModelling(MeshModelling):
         if C is not None:
             self.C1 = C
         elif isinstance(super().createConstraints(), pg.SparseMapMatrix):
-            self.C1 = pg.SparseMapMatrix(self.constraintsRef())
             # make a copy because it will be overwritten
+            self.C1u = pg.SparseMapMatrix(self.constraintsRef())
+            self.C1 = pg.matrix.MultLeftMatrix(
+                self.C1u, self.regionManager().constraintWeights())
         else:
             self.C1 = self.constraints()
 
