@@ -144,7 +144,7 @@ print(tl.chi2s)
 # `pg.show(tl.pd, tl.models[i])`.
 #
 
-tl.showAllModels();
+ax = tl.showAllModels()
 for a in ax.flat:
     pg.viewer.mpl.drawPLC(a, geom, fillRegion=False, fitView=False)
 
