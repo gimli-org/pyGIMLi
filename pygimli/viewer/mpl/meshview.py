@@ -456,7 +456,7 @@ def drawSelectedMeshBoundaries(ax, boundaries, color=None, linewidth=1.0,
 
     if color is None:
         viewdata = [b.marker() for b in boundaries]
-        pg.viewer.mpl.setMappableValues(lineCollection, viewdata,
+        pg.viewer.mpl.setMappableData(lineCollection, viewdata,
                                         logScale=False)
     else:
         lineCollection.set_color(color)
@@ -641,6 +641,8 @@ def drawMeshBoundaries(ax, mesh, hideMesh=False, useColorMap=False,
     if fitView is True:
         ax.autoscale(enable=True, axis='both', tight=True)
 
+    xl = ax.get_xlim()
+    yl = ax.get_ylim()
     mesh.createNeighborInfos()
 
     if not hideMesh:
@@ -675,6 +677,9 @@ def drawMeshBoundaries(ax, mesh, hideMesh=False, useColorMap=False,
                                linewidth=lw or 1.5)
 
     updateAxes_(ax)
+    if not fitView:
+        ax.set_xlim(xl)
+        ax.set_ylim(yl)
 
 
 def drawPLC(ax, mesh, fillRegion=True, regionMarker=True,
@@ -721,6 +726,8 @@ def drawPLC(ax, mesh, fillRegion=True, regionMarker=True,
     """
     #    eCircles = []
     cbar = None
+    xl = ax.get_xlim()
+    yl = ax.get_ylim()
     if fillRegion and mesh.boundaryCount() > 2:
         tmpMesh = pg.meshtools.createMesh(mesh, quality=20, area=0)
         if tmpMesh.cellCount() == 0:
@@ -804,6 +811,9 @@ def drawPLC(ax, mesh, fillRegion=True, regionMarker=True,
     if fitView:
         ax.autoscale(enable=True, axis='both', tight=True)
         ax.set_aspect('equal')
+    else:
+        ax.set_xlim(xl)
+        ax.set_ylim(yl)
 
     updateAxes_(ax)
     # if cbar is None:
