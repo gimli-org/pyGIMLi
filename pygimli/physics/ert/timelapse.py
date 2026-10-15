@@ -563,7 +563,7 @@ class TimelapseERT():
         kwargs.setdefault("startModel", startModel)
         model = self.inv.run(dataVec, errorVec, **kwargs)
         self.models = np.reshape(model, [len(DATA), -1])
-        self.responses = np.reshape(self.inv.response, [-1, DATA[0].size()])
+        self.responses = np.reshape(self.inv.response, [-1, DATA[0].size()]).T
         self.misfits = np.log(self.responses) - np.log(self.DATA)
         self.misfits /= np.reshape(self.data["err"], [-1, 1])
         self.chi2s = np.mean(self.misfits**2, axis=0)
