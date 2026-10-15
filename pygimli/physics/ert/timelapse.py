@@ -551,7 +551,7 @@ class TimelapseERT():
 
         fop.setMesh(self.mesh)
         pg.verbose(fop.mesh())  # important to call mesh() function once!
-        fop.setRegionProperties("*", zWeight=kwargs.pop("zWeight", 0.222))
+        fop.setRegionProperties("*", zWeight=kwargs.pop("zWeight", 1.0))
         dataVec = np.concatenate([data["rhoa"] for data in DATA])
         errorVec = np.concatenate([data["err"] for data in DATA])
         startModel = fop.createStartModel(dataVec)

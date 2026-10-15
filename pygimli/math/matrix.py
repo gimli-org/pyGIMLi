@@ -717,8 +717,8 @@ class FrameConstraintMatrix(RepeatDMatrix):
         self.nm = A.cols()  # model parameter per frame
         self.nb = A.rows()  # boundaries per frame
         if isinstance(scale, float):
-            self.Iminus_ = pgcore.IdentityMatrix(self.nm, val=-scale)
-            self.Iplus_ = pgcore.IdentityMatrix(self.nm, val=scale)
+            self.Iminus_ = pgcore.IdentityMatrix(self.nm, val=-float(scale))
+            self.Iplus_ = pgcore.IdentityMatrix(self.nm, val=float(scale))
             self.Im = self.addMatrix(self.Iminus_)
             self.Ip = self.addMatrix(self.Iplus_)
             nc = self.rows()
