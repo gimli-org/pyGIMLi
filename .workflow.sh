@@ -672,10 +672,10 @@ fi
 PYVERSION=$($BASEPYTHON -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")')
 
 if [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
-    GIMLI_NUM_THREADS=$((`sysctl -n hw.ncpu` - 2))
+    GIMLI_NUM_THREADS=$((`sysctl -n hw.ncpu` - 4))
     alias realpath='grealpath'
 else
-    GIMLI_NUM_THREADS=$((`nproc --all` - 2))
+    GIMLI_NUM_THREADS=$((`nproc --all` - 4))
 fi
 
 OPENBLAS_CORETYPE="ARMV8"
