@@ -69,7 +69,7 @@ The underlying equation level allows to directly access the finite element (`pyg
     pygimli.physics.ves
 ```
 
-| method  | Forward | Inverse  |  Dimension  |
+| Method  | Forward | Inverse  |  Dimension  |
 | :---------------- | :------: |:--------:|:--------:|
 | {py:class}`em <pygimli.physics.em>`     | **✓** | **✓** | *1D* |
 | {py:class}`ert <pygimli.physics.ert>`   | **✓** | **✓** | *2D, 3D, 4D* |
