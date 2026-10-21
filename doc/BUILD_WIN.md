@@ -1,6 +1,41 @@
 (build_win)=
 # Building on Windows
 
+We recommend building with MSYS2 and the MinGW-w64 toolchain. 
+The following instructions are based on a 64bit Windows 10 installation.
+Make sure to have an updated msys2 environment. Run at least:
+
+.. code-block:: bash
+
+    pacman -Suy --noconfirm
+    
+to update your local package databases. See https://www.msys2.org/
+for further instructions.
+
+To get a complete working toolchain you need some packages installed.
+
+.. code-block:: bash
+
+    pacman -S make tar git subversion mercurial unzip wget patch
+
+.. code-block:: bash
+
+    pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran
+    pacman -S mingw-w64-x86_64-openblas mingw-w64-x86_64-suitesparse
+    pacman -S mingw-w64-x86_64-doxygen mingw-w64-x86_64-cppunit
+    pacman -S mingw-w64-x86_64-llvm mingw-w64-x86_64-clang
+    
+
+You also need a Python installation for Windows. 
+You can use the official Python distribution from the Microsoft store 
+https://apps.microsoft.com/detail/9nq7512cxl7t?hl=de-DE&gl=DE and then install the required python version with the neat `py` tool.
+
+The rest of the instructions are similar to the Linux installation and should hopefully go automatically:
+
+```bash
+BASEPYTHON=/c/Users/$USERNAME/AppData/Local/Python/bin/python3.14.exe bash gimli/.workflow.sh build
+```
+
 
 **This is heavily outdated, new version coming soon.**
 

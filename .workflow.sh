@@ -303,8 +303,8 @@ function install_WHL(){
 function build_post(){
     green "*** build_post (Testing build) ***"
 
-    PGCORE_WHL=$(ls $BUILD_DIR/dist/pgcore*.whl | head -n 1)
-    PG_WHL=$(ls $BUILD_DIR/dist/pygimli*.whl | head -n 1)
+    PGCORE_WHL=$(ls -t $BUILD_DIR/dist/pgcore*.whl | head -n 1)
+    PG_WHL=$(ls -t $BUILD_DIR/dist/pygimli*.whl | head -n 1)
 
     if [ -z $PGCORE_WHL ] || [ -z $PG_WHL ]; then
         yellow "pgcore or pygimli whl's not found in $BUILD_DIR/dist. Building now (build_whls)"
@@ -320,12 +320,14 @@ function build_post(){
 
         green "Copying built whl files to project dist: $PROJECT_DIST"
 
-        cp $BUILD_DIR/dist/pgcore*.whl $PROJECT_DIST/
-        cp $BUILD_DIR/dist/pygimli*.whl $PROJECT_DIST/
+        rm -f $PROJECT_DIST/*.whl
+        cp $PGCORE_WHL $PROJECT_DIST/
+        cp $PG_WHL $PROJECT_DIST/
 
         if [ -d $PROJECT_ROOT/dist-manylinux ]; then
             blue "Copying built whl files to manylinux dist: $PROJECT_ROOT/dist-manylinux"
-            cp $BUILD_DIR/dist/pgcore*.whl $PROJECT_ROOT/dist-manylinux/
+            cp $PGCORE_WHL $PROJECT_ROOT/dist-manylinux/
+            cp $PG_WHL $PROJECT_ROOT/dist-manylinux/
         fi
 
         # test editable whl install
@@ -509,7 +511,7 @@ function deploy(){
     echo "Do you wish to deploy ? (can't be undone)"
     select yn in "Yes" "No"; do
         case $yn in
-            Yes ) twine $TARGET_WHL; break;;
+            Yes ) python -m twine upload --verbose --repository pypi $TARGET_WHL; break;;
             No ) return;;
         esac
     done
