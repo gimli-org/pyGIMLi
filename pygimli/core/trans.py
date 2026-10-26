@@ -104,7 +104,7 @@ class TransSymLog(pgcore.RTrans):
 
     def deriv(self, x):
         """Return derivative of the transformation."""
-        return 1. / (np.abs(x) / self.tol + 1) / self.tol
+        return 1. / (np.abs(x) + self.tol)
 
 
 class TransArsinh(pgcore.RTrans):
@@ -142,7 +142,7 @@ def str2Trans(tr:str):
     logL-U : log with lower and upper bound
     cotL-U : cotangent with lower and upper bound
     symlogT : symlog with T as lin-threshold
-    srsinh : arsinh transformation
+    arsinh : arsinh transformation
     """
     low = tr.lower()
     if low.startswith("lin"):
@@ -163,5 +163,5 @@ def str2Trans(tr:str):
     elif low.startswith("arsinh"):
         return TransArsinh()
     else:  # check for LU values, e.g. "Log1-1000" or "Cot0-1"
-        raise KeyError("Transformation string unknown!")
+        raise KeyError("Transformation string unknown! "+low)
 
