@@ -111,8 +111,8 @@ resSmooth = fopDP(mgr.model)
 ax.semilogx(resSmooth, z, label="ERT")
 ax.set_xlabel(r"$\rho$ ($\Omega$m)")
 ax.set_ylabel("depth (m)")
-ax.grid(True)
 ax.legend()
+ax.grid(True)
 
 # %%%
 # As alternative to smoothness, we can use a geostatistic model. The vertical
@@ -137,8 +137,8 @@ ax.semilogx(resSmooth, z, label="ERT smooth")
 ax.semilogx(resGeo, z, label="ERT geostat")
 ax.set_xlabel(r"$\rho$ ($\Omega$m)")
 ax.set_ylabel("depth (m)")
-ax.grid()
 ax.legend()
+ax.grid(True)
 
 # %%%
 # The anisotropic regularization starts to see the good conductor, but only
@@ -260,8 +260,8 @@ ax.semilogx(r, z, label="borehole")
 # resMesh = pg.interpolate(srcMesh=para, inVec=inv.model, destPos=posVec)
 # ax.semilogx(resMesh, z, label="ERT+DP")
 ax.semilogx(respDP, z, label="response")
-ax.grid(True)
 ax.legend()
+ax.grid(True)
 
 # %%%
 # The model response can much better resemble the given data compared to
