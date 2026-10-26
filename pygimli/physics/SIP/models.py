@@ -420,7 +420,7 @@ class DebyePhi(pg.Modelling):
 
     def response(self, par):
         """amplitude/phase spectra as function of spectral chargeabilities."""
-        y = np.ones(self.nf_, dtype=np.complex)  # 1 -
+        y = np.ones(self.nf_, dtype=complex)
         for (tau, mk) in zip(self.t_, par, strict=False):
             y -= (1. - relaxationTerm(self.f_, tau)) * mk
 

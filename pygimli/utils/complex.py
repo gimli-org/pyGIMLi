@@ -27,7 +27,7 @@ def toComplex(amp, phi=None):
         Phases in neg radiant
     Returns
     -------
-    z: ndarray(dtype=np.complex)
+    z: ndarray(dtype=complex)
         Complex values
     """
     if phi is not None:

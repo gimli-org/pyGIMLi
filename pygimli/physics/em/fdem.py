@@ -112,7 +112,7 @@ class FDEM:
             print("Warning! Several coil spacings present in file!")
 
         self.coilSpacing = np.median(sep)
-        f = np.round_(f)
+        f = np.round(f)
         self.frequencies, mf, nf = np.unique(f, True, True)
         x, mx, nx = np.unique(xx, True, True)
         self.IP = np.ones((len(x), len(f))) * np.nan
