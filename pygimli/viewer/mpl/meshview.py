@@ -641,6 +641,8 @@ def drawMeshBoundaries(ax, mesh, hideMesh=False, useColorMap=False,
     if fitView is True:
         ax.autoscale(enable=True, axis='both', tight=True)
 
+    # only keep limits of axes that already show something
+    keepLimits = not fitView and ax.has_data()
     xl = ax.get_xlim()
     yl = ax.get_ylim()
     mesh.createNeighborInfos()
@@ -677,7 +679,7 @@ def drawMeshBoundaries(ax, mesh, hideMesh=False, useColorMap=False,
                                linewidth=lw or 1.5)
 
     updateAxes_(ax)
-    if not fitView:
+    if keepLimits:
         ax.set_xlim(xl)
         ax.set_ylim(yl)
 
@@ -726,6 +728,8 @@ def drawPLC(ax, mesh, fillRegion=True, regionMarker=True,
     """
     #    eCircles = []
     cbar = None
+    # only keep limits of axes that already show something
+    keepLimits = not fitView and ax.has_data()
     xl = ax.get_xlim()
     yl = ax.get_ylim()
     if fillRegion and mesh.boundaryCount() > 2:
@@ -811,7 +815,7 @@ def drawPLC(ax, mesh, fillRegion=True, regionMarker=True,
     if fitView:
         ax.autoscale(enable=True, axis='both', tight=True)
         ax.set_aspect('equal')
-    else:
+    elif keepLimits:
         ax.set_xlim(xl)
         ax.set_ylim(yl)
 
