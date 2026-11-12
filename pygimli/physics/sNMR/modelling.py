@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Modelling classes for magnetic resonance sounding."""
 
 # general modules to import according to standards
@@ -9,13 +8,13 @@ import numpy as np
 
 class MRS1dBlockQTModelling(pg.core.ModellingBase):
     """
-    MRS1dBlockQTModelling - pygimli modelling class for block-mono QT inversion
+    MRS1dBlockQTModelling - pygimli modelling class for block-mono QT inversion.
 
     f=MRS1dBlockQTModelling(lay, KR, KI, zvec, t, verbose = False )
     """
 
     def __init__(self, nlay, K, zvec, t, verbose=False):
-        """Constructor with number of layers, kernel, z and t vectors."""
+        """Set up with number of layers, kernel, z and t vectors."""
         mesh = pg.meshtools.createMesh1DBlock(nlay, 2)  # thk, wc, T2*
         pg.core.ModellingBase.__init__(self, mesh)
         self.K_ = K
@@ -28,9 +27,9 @@ class MRS1dBlockQTModelling(pg.core.ModellingBase):
     def response(self, par):
         """Yield model response cube as vector."""
         nl = self.nl_
-        thk = par[0:nl-1]  # (0, nl - 1)
-        wc = par[nl-1:2*nl-1]  # (nl - 1, 2 * nl - 1)
-        t2 = par[2*nl-1:3*nl-1]  # par(2 * nl - 1, 3 * nl - 1)
+        thk = par[0 : nl - 1]  # (0, nl - 1)
+        wc = par[nl - 1 : 2 * nl - 1]  # (nl - 1, 2 * nl - 1)
+        t2 = par[2 * nl - 1 : 3 * nl - 1]  # par(2 * nl - 1, 3 * nl - 1)
         zthk = np.cumsum(thk)
         zv = self.zv_
         lzv = len(zv)
@@ -46,7 +45,7 @@ class MRS1dBlockQTModelling(pg.core.ModellingBase):
         A = np.zeros((self.nq_, self.nt_), dtype=complex)
         for i in range(nl):
             wcvec = np.zeros(lzv - 1)
-            wcvec[izvec[i]:izvec[i + 1]] = wc[i]
+            wcvec[izvec[i] : izvec[i + 1]] = wc[i]
             if izvec[i + 1] < lzv:
                 wcvec[izvec[i + 1] - 1] = wc[i] * rzvec[i + 1]
             if izvec[i] > 0:
@@ -56,6 +55,7 @@ class MRS1dBlockQTModelling(pg.core.ModellingBase):
                 a += np.exp(-self.t_ / t2[i]) * amps[ii]
 
         return np.abs(A).ravel()  # formerly pg as vector
+
 
 if __name__ == "__main__":
     pass

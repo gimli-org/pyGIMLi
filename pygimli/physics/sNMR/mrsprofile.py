@@ -9,17 +9,18 @@ doi:10.1190/geo2015-0467.1.
 """
 
 import sys
-import os
-from glob import glob
+from pathlib import Path
 import numpy as np
 
 import pygimli as pg
 from pygimli.viewer.mpl import showStitchedModels
-from . mrs import MRS
-from . modelling import MRS1dBlockQTModelling
+from .mrs import MRS
+from .modelling import MRS1dBlockQTModelling
 
 
 class MultiFOP(pg.core.ModellingBase):  # classical joint FOP => frameworks
+    """Joint forward operator for several soundings."""
+
     def __init__(self, mrsAll, nlay=3):
         """Initialise a multi-sounding joint forward operator.
 
@@ -38,7 +39,7 @@ class MultiFOP(pg.core.ModellingBase):  # classical joint FOP => frameworks
             self.fAll.append(mrs.f)
 
     def response(self, model):
-        """compute response by concatenating individual responses."""
+        """Compute response by concatenating individual responses."""
         resp = pg.Vector()
         for f in self.fAll:
             resp = pg.cat(resp, f.response(model))
@@ -49,15 +50,14 @@ class JointMRSModelling(MRS1dBlockQTModelling):
     """MRS Laterally constrained modelling based on BlockMatrices."""
 
     def __init__(self, mrs, nlay=2, verbose=False):
-        """Parameters: FDEM data class and number of layers"""
-        super(JointMRSModelling, self).__init__(nlay, mrs[0].K, mrs[0].z,
-                                                mrs[0].t, verbose)
+        """Parameters: FDEM data class and number of layers."""
+        super().__init__(nlay, mrs[0].K, mrs[0].z, mrs[0].t, verbose)
         self.mrs = mrs
         for mrsi in mrs:
             mrsi.createFOP(nlay)
 
     def response(self, model):
-        """response function (all responses together)"""
+        """Response function (all responses together)."""
         response = pg.Vector()
         for mrs in self.mrs:
             response = pg.cat(response, mrs.f(model))
@@ -67,15 +67,17 @@ class MRSLCI(pg.core.ModellingBase):
     """MRS Laterally constrained modelling based on BlockMatrices."""
 
     def __init__(self, profile, nlay=2, verbose=False):
-        """Parameters: FDEM data class and number of layers"""
-        super(MRSLCI, self).__init__(verbose)
+        """Parameters: FDEM data class and number of layers."""
+        super().__init__(verbose)
         self.nlay = nlay
         self.nx = len(profile)
         self.np = 3 * nlay - 1
-#        self.mesh2d = pg.meshtools.createMesh2D(npar, self.nx)
-#        self.mesh2d = pg.meshtools.createMesh2D(self.nx, self.np)
-        self.mesh2d = pg.meshtools.createMesh2D(range(self.np+1), range(self.nx+1))
-        self.mesh2d.rotate(pg.RVector3(0, 0, -np.pi/2))
+        #        self.mesh2d = pg.meshtools.createMesh2D(npar, self.nx)
+        #        self.mesh2d = pg.meshtools.createMesh2D(self.nx, self.np)
+        self.mesh2d = pg.meshtools.createMesh2D(
+            range(self.np + 1), range(self.nx + 1)
+        )
+        self.mesh2d.rotate(pg.RVector3(0, 0, -np.pi / 2))
         self.setMesh(self.mesh2d)
         self.J = pg.matrix.BlockMatrix()
         self.FOP1d = []
@@ -92,9 +94,9 @@ class MRSLCI(pg.core.ModellingBase):
         self.setJacobian(self.J)
 
     def response(self, model):
-        """cut-together forward responses of all soundings"""
+        """cut-together forward responses of all soundings."""
         modA = np.asarray(model).reshape(self.nx, self.np)
-#        modA = np.reshape(model, (self.nx, self.np))
+        #        modA = np.reshape(model, (self.nx, self.np))
         resp = pg.Vector(0)
         for i, modi in enumerate(modA):
             resp = pg.cat(resp, self.FOP1d[i].response(modi))
@@ -102,14 +104,14 @@ class MRSLCI(pg.core.ModellingBase):
         return resp
 
     def createJacobian(self, model):
-        """ fill individual blocks of Block-Jacobian matrix """
+        """Fill individual blocks of Block-Jacobian matrix."""
         modA = np.asarray(model).reshape(self.nx, self.np)
-#        modA = np.reshape(model, (self.nx, self.np))
+        #        modA = np.reshape(model, (self.nx, self.np))
         for i in range(self.nx):
             self.FOP1d[i].createJacobian(modA[i])
 
 
-class MRSprofile():
+class MRSprofile:
     """Manager class for several MRS data along a profile for joint inversion.
 
     Attributes
@@ -160,17 +162,18 @@ class MRSprofile():
         self.TMOD = None
         self.RMSvec = None
         self.Chi2vec = None
-        if '*' in filename:  # a filename with asterisks
-            files = glob(filename)
-        elif os.path.isdir(filename):  # a directory with all files to take
-            files = glob(filename+'/*.mrsi')
+        pattern = Path(filename)
+        if "*" in filename:  # a filename with asterisks
+            files = [str(f) for f in pattern.parent.glob(pattern.name)]
+        elif pattern.is_dir():  # a directory with all files to take
+            files = [str(f) for f in pattern.glob("*.mrsi")]
             if len(files) == 0:
-                files = glob(filename+'/*.mrsd')
-        elif hasattr(filename, '__iter__'):  # already a list
+                files = [str(f) for f in pattern.glob("*.mrsd")]
+        elif hasattr(filename, "__iter__"):  # already a list
             files = filename
         else:
             if filename is not None:
-                print('Do not know what to do with filename')
+                print("Do not know what to do with filename")
             return
         self.load(files, **kwargs)
         if x is not None:
@@ -179,10 +182,11 @@ class MRSprofile():
             self.x = np.arange(len(self.mrs)) * dx + x0
 
     def __repr__(self):
-        return "MRS profile with "+str(len(self.mrs))+" soundings"
+        """Return a short description."""
+        return "MRS profile with " + str(len(self.mrs)) + " soundings"
 
     def setX(self, x=None, x0=0, dx=1):
-        """define positions for soundings and sort accordingly"""
+        """Define positions for soundings and sort accordingly."""
         if x is None:
             x = np.arange(len(self.mrs)) * dx + x0
             print(x)
@@ -191,45 +195,47 @@ class MRSprofile():
         self.x = np.sort(x)
 
     def load(self, filenames, **kwargs):
-        """ load mrs files in a list of (single) MRS handlers
-            filename can be a list of mrsi files or a directory to search
-            Additional parameters: usereal, mint, maxt (see MRS.load)
+        """Load MRS files into a list of single MRS handlers.
+
+        filename can be a list of mrsi files or a directory to search.
+        Additional parameters: usereal, mint, maxt (see MRS.load).
         """
         self.mrs = [MRS(filename, **kwargs) for filename in filenames]
 
     def loadKernel(self, kernelfile):
-        """ load one kernel file for all soundings """
+        """Load one kernel file for all soundings."""
         self.mrs[0].loadKernel(kernelfile)
         for mrsi in self.mrs:
             mrsi.z = self.mrs[0].z
             mrsi.K = self.mrs[0].K
 
     def showData(self, figsize=(15, 10), nc=0, nr=0, clim=None):
-        """show all data cubes in subplots"""
+        """Show all data cubes in subplots."""
         from math import sqrt, ceil
+
         nsond = len(self.mrs)
         if nc == 0:
-            nc = ceil(sqrt(nsond*3))
+            nc = ceil(sqrt(nsond * 3))
         if nr == 0:
-            nr = ceil(nsond/nc)
-        fig, ax = plt.subplots(nrows=int(nr), ncols=int(nc),
-                               figsize=figsize)
+            nr = ceil(nsond / nc)
+        fig, ax = pg.plt.subplots(nrows=int(nr), ncols=int(nc), figsize=figsize)
         for i, mrs in enumerate(self.mrs):
-            mrs.showCube(ax=ax.flat[i], vec=mrs.data*1e9, islog=False,
-                         clim=clim)
-        self.figs['data'] = fig
+            mrs.showCube(
+                ax=ax.flat[i], vec=mrs.data * 1e9, islog=False, clim=clim
+            )
+        self.figs["data"] = fig
         return fig, ax
 
     def showInitialValues(self):
-        """ show initial values of whole profile """
+        """Show initial values of whole profile."""
         IVI = np.zeros((len(self.mrs[0].q), len(self.mrs)))
         for i, mrs in enumerate(self.mrs):
             IVI[:, i] = mrs.dcube[:, 0]
 
-        fig, ax = plt.subplots(figsize=(15, 10))
-        im = ax.imshow(IVI*1e9, interpolation='nearest')
-        plt.colorbar(im, ax=ax, orientation='horizontal')
-        self.figs['ivi'] = fig
+        fig, ax = pg.plt.subplots(figsize=(15, 10))
+        im = ax.imshow(IVI * 1e9, interpolation="nearest")
+        pg.plt.colorbar(im, ax=ax, orientation="horizontal")
+        self.figs["ivi"] = fig
         return fig, ax
 
     def independentBlock1dInversion(self, nlay=2, lam=100, startModel=None):
@@ -247,28 +253,32 @@ class MRSprofile():
         self.WMOD, self.TMOD = [], []
         self.RMSvec, self.Chi2vec, self.nData = [], [], []
         for i, mrs in enumerate(self.mrs):
-            if hasattr(startModel[0], '__iter__'):
+            if hasattr(startModel[0], "__iter__"):
                 startvec = startModel[i]
             else:
                 startvec = startModel
             if startvec is not None:
-                nlay = (len(startvec)-1) // 2
+                nlay = (len(startvec) - 1) // 2
             mrs.run(nlay=nlay, startvec=startvec, lam=lam, verbose=False)
             mrs.INV.echoStatus()
             thk, wc, t2 = mrs.result()
             self.WMOD.append(np.hstack((thk, wc)))
             self.TMOD.append(np.hstack((thk, t2)))
-            self.RMSvec.append(mrs.INV.absrms()*1e9)  # in nV
+            self.RMSvec.append(mrs.INV.absrms() * 1e9)  # in nV
             self.Chi2vec.append(mrs.INV.chi2())
             self.nData.append(len(mrs.data))
 
-        self.totalChi2 = sum(np.array(self.Chi2vec)*np.array(self.nData)) / \
-            sum(self.nData)
-        self.totalRMS = np.sqrt(sum(np.array(self.RMSvec)**2 *
-                                    np.array(self.nData)) / sum(self.nData))
+        self.totalChi2 = sum(
+            np.array(self.Chi2vec) * np.array(self.nData)
+        ) / sum(self.nData)
+        self.totalRMS = np.sqrt(
+            sum(np.array(self.RMSvec) ** 2 * np.array(self.nData))
+            / sum(self.nData)
+        )
 
-    def block1dInversionOld(self, nlay=2, startModel=None, verbose=True,
-                            uncertainty=False, **kwargs):
+    def block1dInversionOld(
+        self, nlay=2, startModel=None, verbose=True, uncertainty=False, **kwargs
+    ):
         """Invert all data together by one 1D model (variant 1 - all equal)."""
         self.mrsall = MRS()
         self.mrsall.z = self.mrs[0].z
@@ -277,8 +287,9 @@ class MRSprofile():
         self.mrsall.K = np.zeros((0, self.mrs[0].K.shape[1]))
         for mrs in self.mrs:
             self.mrsall.data = np.hstack((self.mrsall.data, mrs.data))
-            self.mrsall.error = np.hstack((self.mrsall.error,
-                                           np.real(mrs.error)))
+            self.mrsall.error = np.hstack(
+                (self.mrsall.error, np.real(mrs.error))
+            )
             self.mrsall.q = np.hstack((self.mrsall.q, mrs.q))
             self.mrsall.K = np.vstack((self.mrsall.K, mrs.K))
 
@@ -287,25 +298,27 @@ class MRSprofile():
             self.mrsall.showResult()
         return self.mrsall.model
 
-    def block1dInversion(self, nlay=2, lam=100., show=False, verbose=True,
-                         uncertainty=False):
+    def block1dInversion(
+        self, nlay=2, lam=100.0, show=False, verbose=True, uncertainty=False
+    ):
         """Invert all data together by a 1D model (more general solution)."""
         data, error = pg.Vector(), pg.Vector()
         for mrs in self.mrs:
             data = pg.cat(data, mrs.data)
             error = pg.cat(error, np.real(mrs.error))
 
-#        f = JointMRSModelling(self.mrs, nlay)
+        #        f = JointMRSModelling(self.mrs, nlay)
         f = MultiFOP(self.mrs, nlay)
         mrsobj = self.mrs[0]
         for i in range(3):
-            f.region(i).setParameters(mrsobj.startval[i], mrsobj.lowerBound[i],
-                                      mrsobj.upperBound[i])
+            f.region(i).setParameters(
+                mrsobj.startval[i], mrsobj.lowerBound[i], mrsobj.upperBound[i]
+            )
 
         INV = pg.Inversion(data, f, verbose)
         INV.setLambda(lam)
         INV.setMarquardtScheme(0.8)
-#        INV.stopAtChi1(False)  # should be already in MarquardtScheme
+        #        INV.stopAtChi1(False)  # should be already in MarquardtScheme
         INV.setDeltaPhiAbortPercent(0.5)
         INV.setAbsoluteError(error)
         model = INV.run()
@@ -313,16 +326,18 @@ class MRSprofile():
         m0.model = np.asarray(model)
         if uncertainty:
             from pygimli.utils import iterateBounds
+
             m0.modelL, m0.modelU = iterateBounds(
-                INV, dchi2=INV.chi2() / 2, change=1.2)
+                INV, dchi2=INV.chi2() / 2, change=1.2
+            )
         if show:
             self.show1dModel()
         # %% fill up 2D model (for display only)
         self.WMOD, self.TMOD = [], []
-        thk = model[0:nlay-1]
-        wc = model[nlay-1:2*nlay-1]
-        t2 = model[2*nlay-1:3*nlay-1]
-        for i in range(len(self.mrs)):
+        thk = model[0 : nlay - 1]
+        wc = model[nlay - 1 : 2 * nlay - 1]
+        t2 = model[2 * nlay - 1 : 3 * nlay - 1]
+        for _i in range(len(self.mrs)):
             self.WMOD.append(np.hstack((thk, wc)))
             self.TMOD.append(np.hstack((thk, t2)))
 
@@ -330,7 +345,7 @@ class MRSprofile():
 
     def show1dModel(self):
         """Show 1D model (e.g. of joint block inversion)."""
-        self.figs['1dmodel'], ax = self.mrs[0].showResult()
+        self.figs["1dmodel"], ax = self.mrs[0].showResult()
 
     def blockLCInversion(self, nlay=2, startModel=None, **kwargs):
         """Laterally constrained (piece-wise 1D) block inversion."""
@@ -341,27 +356,30 @@ class MRSprofile():
             self.nData.append(len(mrs.data))
 
         fop = MRSLCI(self.mrs, nlay=nlay)
-        fop.region(0).setZWeight(kwargs.pop('zWeight', 0))
-        fop.region(0).setConstraintType(kwargs.pop('cType', 1))
-        transData, transMod = pg.trans.Trans(), pg.trans.TransLog()  # LU(1., 500.)
+        fop.region(0).setZWeight(kwargs.pop("zWeight", 0))
+        fop.region(0).setConstraintType(kwargs.pop("cType", 1))
+        transData, transMod = (
+            pg.trans.Trans(),
+            pg.trans.TransLog(),
+        )  # LU(1., 500.)
         if startModel is None:
             startModel = self.block1dInversion(nlay, verbose=False)
-        model = kwargs.pop('startvec', np.tile(startModel, len(self.mrs)))
+        model = kwargs.pop("startvec", np.tile(startModel, len(self.mrs)))
         INV = pg.Inversion(data, fop, transData, transMod, True, False)
         INV.setModel(model)
         INV.setReferenceModel(model)
         INV.setAbsoluteError(error)
-        INV.setLambda(kwargs.pop('lam', 100))
-        INV.setMaxIter(kwargs.pop('maxIter', 20))
-#        INV.stopAtChi1(False)
+        INV.setLambda(kwargs.pop("lam", 100))
+        INV.setMaxIter(kwargs.pop("maxIter", 20))
+        #        INV.stopAtChi1(False)
         INV.setLambdaFactor(0.9)
         INV.setDeltaPhiAbortPercent(0.1)
         model = INV.run()
         self.WMOD, self.TMOD = [], []
-        for par in np.reshape(model, (len(self.mrs), 3*nlay-1)):
-            thk = par[0:nlay-1]
-            self.WMOD.append(np.hstack((thk, par[nlay-1:2*nlay-1])))
-            self.TMOD.append(np.hstack((thk, par[2*nlay-1:3*nlay-1])))
+        for par in np.reshape(model, (len(self.mrs), 3 * nlay - 1)):
+            thk = par[0 : nlay - 1]
+            self.WMOD.append(np.hstack((thk, par[nlay - 1 : 2 * nlay - 1])))
+            self.TMOD.append(np.hstack((thk, par[2 * nlay - 1 : 3 * nlay - 1])))
 
         ind = np.hstack((0, np.cumsum(self.nData)))
         resp = INV.response()
@@ -369,11 +387,13 @@ class MRSprofile():
         emisfit = misfit / error
         misfit *= 1e9
         self.totalChi2 = INV.chi2()
-        self.totalRMS = INV.absrms()*1e9
+        self.totalRMS = INV.absrms() * 1e9
         self.RMSvec, self.Chi2vec = [], []
         for i in range(len(self.mrs)):
-            self.RMSvec.append(np.sqrt(np.mean(misfit[ind[i]:ind[i+1]]**2)))
-            self.Chi2vec.append(np.mean(emisfit[ind[i]:ind[i+1]]**2))
+            self.RMSvec.append(
+                np.sqrt(np.mean(misfit[ind[i] : ind[i + 1]] ** 2))
+            )
+            self.Chi2vec.append(np.mean(emisfit[ind[i] : ind[i + 1]] ** 2))
 
     def printFits(self):
         """Show single fits and total fit."""
@@ -382,58 +402,84 @@ class MRSprofile():
         print(np.array(self.RMSvec))
         print("Single Chi^2:")
         print(np.array(self.Chi2vec))
-        print('Total RMS/Chi^2 value:')
+        print("Total RMS/Chi^2 value:")
         print(np.round(self.totalRMS, 2), np.round(self.totalChi2, 2))
 
-    def showWC(self, wlim=(0, 0.5), ax=None, cmap='Spectral',
-               title=r'$\theta$ (-)'):
+    def showWC(
+        self, wlim=(0, 0.5), ax=None, cmap="Spectral", title=r"$\theta$ (-)"
+    ):
         """Show water content distribution as stitched model section."""
         fig = None
         if ax is None:
-            fig, ax = plt.subplots(figsize=(10, 5))
-            self.figs['wc'] = fig
+            fig, ax = pg.plt.subplots(figsize=(10, 5))
+            self.figs["wc"] = fig
 
-        showStitchedModels(self.WMOD, ax=ax, x=self.x, islog=False, cmap=cmap,
-                           title=title, cmin=wlim[0], cmax=wlim[1])
+        showStitchedModels(
+            self.WMOD,
+            ax=ax,
+            x=self.x,
+            islog=False,
+            cmap=cmap,
+            title=title,
+            cmin=wlim[0],
+            cmax=wlim[1],
+        )
         return fig, ax
 
-    def showT2(self, tlim=(0.05, 0.5), ax=None, cmap='Spectral',
-               title=r'$T_2^*$ (s)'):
+    def showT2(
+        self, tlim=(0.05, 0.5), ax=None, cmap="Spectral", title=r"$T_2^*$ (s)"
+    ):
         """Show relaxation time distribution as stitched model section."""
         fig = None
         if ax is None:
-            fig, ax = plt.subplots(figsize=(10, 5))
-            self.figs['t2'] = fig
+            fig, ax = pg.plt.subplots(figsize=(10, 5))
+            self.figs["t2"] = fig
 
-        showStitchedModels(self.TMOD, ax=ax, x=self.x, islog=True, cmap=cmap,
-                           cmin=tlim[0], cmax=tlim[1], title=title)
+        showStitchedModels(
+            self.TMOD,
+            ax=ax,
+            x=self.x,
+            islog=True,
+            cmap=cmap,
+            cmin=tlim[0],
+            cmax=tlim[1],
+            title=title,
+        )
         return fig, ax
 
     def showFits(self, ax=None):
         """Show chi-square and rms fits of individual soundings."""
         if ax is None:
-            fig, ax = plt.subplots(figsize=(10, 5))
-            self.figs['fits'] = fig
+            fig, ax = pg.plt.subplots(figsize=(10, 5))
+            self.figs["fits"] = fig
         axb = ax.twinx()
-        axb.set_ylabel('rms (nV)')
-        ax.plot(self.x, self.Chi2vec, 'rx', label=r'$\chi^2$')
-        axb.plot(self.x, self.RMSvec, 'bx', label='rms [nV]')
+        axb.set_ylabel("rms (nV)")
+        ax.plot(self.x, self.Chi2vec, "rx", label=r"$\chi^2$")
+        axb.plot(self.x, self.RMSvec, "bx", label="rms [nV]")
         ax.legend(numpoints=1, loc=2)
         axb.legend(numpoints=1, loc=1)
 
-    def showModel(self, showFit=0, cmap='Spectral', figsize=(13, 12),
-                  wlim=(0, 0.5), tlim=(0.05, 0.5)):
+    def showModel(
+        self,
+        showFit=0,
+        cmap="Spectral",
+        figsize=(13, 12),
+        wlim=(0, 0.5),
+        tlim=(0.05, 0.5),
+    ):
         """Show 2d model as stitched 1d models along with fit."""
-        fig, ax = plt.subplots(nrows=2+showFit, figsize=figsize, sharex=True)
+        fig, ax = pg.plt.subplots(
+            nrows=2 + showFit, figsize=figsize, sharex=True
+        )
         self.showWC(wlim, ax=ax[-2], cmap=cmap)
         self.showT2(tlim, ax=ax[-1], cmap=cmap)
         xl = ax[-1].get_xlim()
-        ax[0].set_xlabel('x (m)')
-        ax[0].xaxis.set_label_position('top')
+        ax[0].set_xlabel("x (m)")
+        ax[0].xaxis.set_label_position("top")
         ax[0].xaxis.tick_top()
-        ax[0].set_ylabel(r'$\chi^2$ (-)')
+        ax[0].set_ylabel(r"$\chi^2$ (-)")
         for axi in ax[-2:]:
-            axi.set_ylabel('z (m)')
+            axi.set_ylabel("z (m)")
         if showFit > 0:
             self.showFits(ax[0])
             ax[0].set_xlim(xl)
@@ -443,8 +489,10 @@ class MRSprofile():
     def saveFigs(self, basename="out", extension="pdf"):
         """Save all figures to (pdf) files."""
         for key in self.figs:
-            self.figs[key].savefig(basename+"-"+key+"."+extension,
-                                   bbox_inches='tight')
+            self.figs[key].savefig(
+                basename + "-" + key + "." + extension, bbox_inches="tight"
+            )
+
 
 if __name__ == "__main__":
     name = sys.argv[-1]
@@ -456,8 +504,8 @@ if __name__ == "__main__":
     prof.independentBlock1dInversion(nlay=2)  # each separately
     prof.printFits()
     figure, axes = prof.showModel(showFit=1)
-    figure.savefig(name+'-Ind-N'+str(numlay)+'.pdf', bbox_inches='tight')
+    figure.savefig(name + "-Ind-N" + str(numlay) + ".pdf", bbox_inches="tight")
     prof.blockLCInversion(nlay=numlay, lam=100, startModel=mymodel)
     prof.printFits()
     figure, axes = prof.showModel(showFit=1)
-    figure.savefig(name+'-LCI-N'+str(numlay)+'.pdf', bbox_inches='tight')
+    figure.savefig(name + "-LCI-N" + str(numlay) + ".pdf", bbox_inches="tight")

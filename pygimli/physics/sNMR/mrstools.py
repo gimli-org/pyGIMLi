@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 """Tools for magnetic resonance sounding (MRS)."""
 
 import numpy as np
 
-#import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 import pygimli as pg
 from pygimli.viewer.mpl import draw1dmodel
@@ -11,9 +10,9 @@ from pygimli.utils import rndig
 
 
 class MRS1dBlockQTModelling(pg.core.ModellingBase):
-    """
-    MRS1dBlockQTModelling - pygimli modelling class for block-mono QT inversion
-    f=MRS1dBlockQTModelling(lay, kr, ki, zvec, t, verbose = False )
+    """Modelling class for block-mono QT inversion.
+
+    f = MRS1dBlockQTModelling(lay, kr, ki, zvec, t, verbose=False)
     """
 
     def __init__(self, nlay, kr, ki, zvec, t, verbose=False):
@@ -61,7 +60,7 @@ class MRS1dBlockQTModelling(pg.core.ModellingBase):
 
         for i in range(nl):
             wcvec = np.zeros(lzv - 1)
-            wcvec[izvec[i]:izvec[i + 1]] = wc[i]
+            wcvec[izvec[i] : izvec[i + 1]] = wc[i]
             if izvec[i + 1] < lzv:
                 wcvec[izvec[i + 1] - 1] = wc[i] * rzvec[i + 1]
             if izvec[i] > 0:
@@ -76,20 +75,20 @@ class MRS1dBlockQTModelling(pg.core.ModellingBase):
 
 def loadmrsproject(mydir):
     """
-    load mrs project from given directory (zkernel.ve)
+    Load mrs project from given directory (zkernel.ve).
 
     (datacube.dat, KR/KI.bmat, zkernel.vec)
     """
     if mydir is None:
-        mydir = '.'
-    if mydir[-1] != '/':
-        mydir = mydir + '/'
+        mydir = "."
+    if mydir[-1] != "/":
+        mydir = mydir + "/"
     # load files from directory
-    zvec = pg.Vector(mydir + 'zkernel.vec')
-    KR = pg.Matrix(mydir + 'KR.bmat')
-    KI = pg.Matrix(mydir + 'KI.bmat')
+    zvec = pg.Vector(mydir + "zkernel.vec")
+    KR = pg.Matrix(mydir + "KR.bmat")
+    KI = pg.Matrix(mydir + "KI.bmat")
     A = pg.Matrix()
-    pg.loadMatrixCol(A, mydir + 'datacube.dat')
+    pg.loadMatrixCol(A, mydir + "datacube.dat")
     t = np.array(A[0])
     # data
     datvec = pg.Vector()
@@ -99,9 +98,10 @@ def loadmrsproject(mydir):
     return KR, KI, zvec, t, datvec
 
 
-def qtblockmodelling(mydir, nlay,
-                     startvec=None, lowerbound=None, upperbound=None):
-    """Loads data from dir, creates forward operator (old style)
+def qtblockmodelling(
+    mydir, nlay, startvec=None, lowerbound=None, upperbound=None
+):
+    """Load data from dir and create the forward operator (old style).
 
     Parameters
     ----------
@@ -127,18 +127,17 @@ def qtblockmodelling(mydir, nlay,
 
     Examples
     --------
-
     t,datvec,f = qtblockmodelling(mydir,nlay,startvec=(10,0.3,0.2),
                                   lowerbound=(0.1,0,0.02),
                                   upperbound(100.,0.45,,0.5))
     """
     KR, KI, zvec, t, datvec = loadmrsproject(mydir)
     if startvec is None:
-        startvec = [10., 0.3, 0.2]
+        startvec = [10.0, 0.3, 0.2]
     if lowerbound is None:
         lowerbound = [0.1, 0.0, 0.02]
     if upperbound is None:
-        upperbound = [100., 0.45, 0.5]
+        upperbound = [100.0, 0.45, 0.5]
     # modelling operator
     f = MRS1dBlockQTModelling(nlay, KR, KI, zvec, t)  # A[0])
     f.region(0).setStartValue(startvec[0])
@@ -154,8 +153,9 @@ def qtblockmodelling(mydir, nlay,
     return t, datvec, f
 
 
-def showqtresultfit(thk, wc, t2, datvec, resp, t,
-                    islog=True, clim=None, nu=3, nv=2):
+def showqtresultfit(
+    thk, wc, t2, datvec, resp, t, islog=True, clim=None, nu=3, nv=2
+):
     """Show mrs qt result and data fit.
 
     Parameters
@@ -183,7 +183,8 @@ def showqtresultfit(thk, wc, t2, datvec, resp, t,
 
     Examples
     --------
-    showqtresultfit(thk,wc,t2,datvec,resp,t,islog=True,clim=None,nu=3,nv=2)"""
+    showqtresultfit(thk,wc,t2,datvec,resp,t,islog=True,clim=None,nu=3,nv=2)
+    """
     if clim is None:
         cma = max(datvec)
         cmi = min(datvec)
@@ -196,38 +197,45 @@ def showqtresultfit(thk, wc, t2, datvec, resp, t,
     nq = len(datvec) / nt
     si = (nq, nt)
 
-    fig = plt.figure(1)
+    fig = pg.plt.figure(1)
     ax1 = fig.add_subplot(nu, nv, 1)
 
-    draw1dmodel(wc, thk, islog=False, xlab=r'$\theta$')
+    draw1dmodel(wc, thk, islog=False, xlab=r"$\theta$")
     ax3 = fig.add_subplot(nu, nv, 3)
-    draw1dmodel(t2, thk, xlab='T2* in ms')
+    draw1dmodel(t2, thk, xlab="T2* in ms")
     ax3.set_xticks([0.02, 0.05, 0.1, 0.2, 0.5])
-    ax3.set_xticklabels(('0.02', '0.05', '0.1', '0.2', '0.5'))
+    ax3.set_xticklabels(("0.02", "0.05", "0.1", "0.2", "0.5"))
     ax2 = fig.add_subplot(nu, nv, 2)
     if islog:
-        plt.imshow(np.log10(np.array(datvec).reshape(si)),
-                   interpolation='nearest', aspect='auto')
+        pg.plt.imshow(
+            np.log10(np.array(datvec).reshape(si)),
+            interpolation="nearest",
+            aspect="auto",
+        )
     else:
-        plt.imshow(np.array(datvec).reshape(si),
-                   interpolation='nearest', aspect='auto')
-    plt.clim(clim)
+        pg.plt.imshow(
+            np.array(datvec).reshape(si), interpolation="nearest", aspect="auto"
+        )
+    pg.plt.clim(clim)
     ax4 = fig.add_subplot(nu, nv, 4)
     if islog:
-        plt.imshow(np.log10(resp.reshape(si)),
-                   interpolation='nearest', aspect='auto')
+        pg.plt.imshow(
+            np.log10(resp.reshape(si)), interpolation="nearest", aspect="auto"
+        )
     else:
-        plt.imshow(resp.reshape(si),
-                   interpolation='nearest', aspect='auto')
+        pg.plt.imshow(resp.reshape(si), interpolation="nearest", aspect="auto")
     misfit = np.array(datvec - resp)
-    plt.clim(clim)
+    pg.plt.clim(clim)
     ax5 = fig.add_subplot(nu, nv, 5)
-    plt.hist(misfit, bins=30)
-    plt.axis('tight')
-    plt.grid(which='both')
-    plt.text(plt.xlim()[0], np.mean(plt.ylim()),
-             ' std=%g nV' % rndig(np.std(misfit), 3))
+    pg.plt.hist(misfit, bins=30)
+    pg.plt.axis("tight")
+    pg.plt.grid(which="both")
+    pg.plt.text(
+        pg.plt.xlim()[0],
+        np.mean(pg.plt.ylim()),
+        f" std={rndig(np.std(misfit), 3):g} nV",
+    )
     ax6 = fig.add_subplot(nu, nv, 6)
-    plt.imshow(misfit.reshape(si), interpolation='nearest', aspect='auto')
+    pg.plt.imshow(misfit.reshape(si), interpolation="nearest", aspect="auto")
     ax = [ax1, ax2, ax3, ax4, ax5, ax6]
     return ax

@@ -9,7 +9,6 @@ dependencies:
   - jupyter
   - sphinx >= 3.1
   - pytest
-  - pylint
   - numpy
   - scipy >= 1.14
   - pytest-cov

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Magnetic resonance sounding module."""
 
 # general modules to import according to standards
 import time
+from pathlib import Path
 import numpy as np
 
-#import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 import pygimli as pg
 from pygimli.utils import iterateBounds
@@ -18,7 +18,7 @@ from pygimli.physics.sNMR.modelling import MRS1dBlockQTModelling
 from pygimli.physics.sNMR.plotting import showErrorBars, showWC, showT2
 
 
-class MRS():
+class MRS:
     """Magnetic resonance sounding (MRS) manager class.
 
     Attributes
@@ -83,31 +83,30 @@ class MRS():
         self.nlay = 0
         self.model, self.modelL, self.modelU = None, None, None
         self.lowerBound = [1.0, 0.0, 0.02]  # d, theta, T2*
-        self.upperBound = [30., 0.45, 1.00]  # d, theta, T2*
-        self.startval = [10., 0.30, 0.20]  # d, theta, T2*
+        self.upperBound = [30.0, 0.45, 1.00]  # d, theta, T2*
+        self.startval = [10.0, 0.30, 0.20]  # d, theta, T2*
         self.logpar = False
-        self.basename = 'new'
+        self.basename = "new"
         self.figs = {}
         if name is not None:  # load data and kernel
             # check for mrsi/d/k
-            if name[-5:-1].lower() == '.mrs':  # mrsi or mrsd
+            if name[-5:-1].lower() == ".mrs":  # mrsi or mrsd
                 self.loadMRSI(name, **kwargs)
-                self.basename = name.rstrip('.mrsi')
-#            elif name[-5:].lower() == '.mrsd':
-#                self.loadMRSD(name, **kwargs)
-            elif name.lower().endswith('npz'):
+                self.basename = name.rstrip(".mrsi")
+            #            elif name[-5:].lower() == '.mrsd':
+            #                self.loadMRSD(name, **kwargs)
+            elif name.lower().endswith("npz"):
                 self.loadDataNPZ(name, **kwargs)
             else:
                 self.loadDir(name)
 
     def __repr__(self):  # for print function
-        """String representation."""
+        """Return the string representation."""
         out = ""
         if len(self.t) > 0 and len(self.q) > 0:
-            out = "<MRSdata: %d qs, %d times" % \
-                (len(self.q), len(self.t))
-        if hasattr(self.z, '__iter__') and len(self.z) > 0:
-            out += ", %d layers" % len(self.z)
+            out = f"<MRSdata: {len(self.q)} qs, {len(self.t)} times"
+        if hasattr(self.z, "__iter__") and len(self.z) > 0:
+            out += f", {len(self.z)} layers"
         return out + ">"
 
     def loadDataNPZ(self, filename, **kwargs):
@@ -115,22 +114,22 @@ class MRS():
 
         The npz file contains the fields: q, t, D, (E), z, K
         """
-        self.basename = filename.rstrip('.npz')
+        self.basename = filename.rstrip(".npz")
         DATA = np.load(filename)
-        self.q = DATA['q']
-        self.t = DATA['t']
-        self.z = np.absolute(DATA['z'])
-        self.K = DATA['K']
-        self.dcube = DATA['D']
+        self.q = DATA["q"]
+        self.t = DATA["t"]
+        self.z = np.absolute(DATA["z"])
+        self.K = DATA["K"]
+        self.dcube = DATA["D"]
         ndcubet = len(self.dcube[0])
         if len(self.dcube) == len(self.q) and ndcubet == len(self.t):
-            if kwargs.pop('usereal', False):
+            if kwargs.pop("usereal", False):
                 self.data = np.real(self.dcube.flat)
             else:
                 self.data = np.abs(self.dcube.flat)
 
-        if 'E' in DATA:
-            self.ecube = DATA['E']
+        if "E" in DATA:
+            self.ecube = DATA["E"]
         else:
             self.ecube = np.zeros_like(self.dcube)
 
@@ -141,14 +140,14 @@ class MRS():
 
         The npz file contains the fields: q, t, D, (E), z, K
         """
-        self.basename = filename.rstrip('.npz')
+        self.basename = filename.rstrip(".npz")
         DATA = np.load(filename)
-        self.q = DATA['pulseMoments']
-        self.z = np.absolute(DATA['zVector'])
-        self.K = DATA['kernel']
+        self.q = DATA["pulseMoments"]
+        self.z = np.absolute(DATA["zVector"])
+        self.K = DATA["kernel"]
 
     def loadMRSI(self, filename, **kwargs):
-        """Load data, error and kernel from mrsi or mrsd file
+        """Load data, error and kernel from mrsi or mrsd file.
 
         Parameters
         ----------
@@ -159,27 +158,29 @@ class MRS():
         """
         from scipy.io import loadmat  # loading Matlab mat files
 
-        if filename[-5:].lower() == '.mrsd':
+        if filename[-5:].lower() == ".mrsd":
             idata = None
-            pl = loadmat(filename, struct_as_record=False,
-                         squeeze_me=True)['proclog']
+            pl = loadmat(filename, struct_as_record=False, squeeze_me=True)[
+                "proclog"
+            ]
             self.q = np.array([q.q for q in pl.Q])
             self.t = pl.Q[0].rx.sig[0].t + pl.Q[0].timing.tau_dead1
             nq = len(pl.Q)
             nt = len(self.t)
             self.dcube = np.zeros((nq, nt))
             self.ecube = np.zeros((nq, nt))
-#            self.ecube = np.ones((nq, nt))*20e-9
+            #            self.ecube = np.ones((nq, nt))*20e-9
             for i in range(nq):
                 self.dcube[i, :] = pl.Q[i].rx.sig[1].V
                 self.ecube[i, :] = np.real(pl.Q[i].rx.sig[1].E)
         else:
-            idata = loadmat(filename, struct_as_record=False,
-                            squeeze_me=True)['idata']
+            idata = loadmat(filename, struct_as_record=False, squeeze_me=True)[
+                "idata"
+            ]
             self.t = idata.data.t + idata.data.effDead
             self.q = idata.data.q
             self.K = idata.kernel.K
-            self.z = np.hstack((0., idata.kernel.z))
+            self.z = np.hstack((0.0, idata.kernel.z))
             self.dcube = idata.data.dcube
             self.ecube = idata.data.ecube
 
@@ -187,24 +188,27 @@ class MRS():
         if self.ecube[0][0] == 0:
             self.ecube = np.ones_like(self.dcube) * defaultNoise
             if self.verbose:
-                print("no errors in file, assuming", defaultNoise*1e9, "nV")
+                print("no errors in file, assuming", defaultNoise * 1e9, "nV")
             self.ecube = np.ones((len(self.q), len(self.t))) * defaultNoise
             if idata is not None:
                 self.ecube /= np.sqrt(idata.data.gateL)
         self.checkData(**kwargs)
         # load model from matlab file (result of MRSQTInversion)
-        if filename[-5:].lower() == '.mrsi' and hasattr(idata, 'inv1Dqt'):
-            if hasattr(idata.inv1Dqt, 'blockMono'):
-                sol = idata.inv1Dqt.blockMono.solution[0]
-                self.model = np.hstack((sol.thk, sol.w, sol.T2))
-                self.nlay = len(sol.w)
+        if (
+            filename[-5:].lower() == ".mrsi"
+            and hasattr(idata, "inv1Dqt")
+            and hasattr(idata.inv1Dqt, "blockMono")
+        ):
+            sol = idata.inv1Dqt.blockMono.solution[0]
+            self.model = np.hstack((sol.thk, sol.w, sol.T2))
+            self.nlay = len(sol.w)
         if self.verbose:
             print("loaded file: " + filename)
 
     def checkData(self, **kwargs):
         """Check data and retrieve data and error vector."""
-        mint = kwargs.pop('mint', 0)
-        maxt = kwargs.pop('maxt', 1000)
+        mint = kwargs.pop("mint", 0)
+        maxt = kwargs.pop("maxt", 1000)
         good = (self.t <= maxt) & (self.t >= mint)
         self.t = self.t[good]
         self.dcube = self.dcube[:, good]
@@ -212,44 +216,45 @@ class MRS():
 
         ndcubet = len(self.dcube[0])
         if len(self.dcube) == len(self.q) and ndcubet == len(self.t):
-            if kwargs.pop('usereal', False):
+            if kwargs.pop("usereal", False):
                 self.data = np.real(self.dcube.flat)
             else:
                 self.data = np.abs(self.dcube.flat)
         else:
-            print('Dimensions do not match!')
+            print("Dimensions do not match!")
 
         necubet = len(self.dcube[0])
         if len(self.ecube) == len(self.q) and necubet == len(self.t):
             self.error = self.ecube.ravel()
 
-        if min(self.error) <= 0.:
+        if min(self.error) <= 0.0:
             print("Warning: negative errors present! Taking absolute value")
             self.error = np.absolute(self.error)
         defaultNoise = kwargs.pop("defaultNoise", 100e-9)
-        if min(self.error) == 0.:
+        if min(self.error) == 0.0:
             if self.verbose:
                 print("Warning: zero error, assuming", defaultNoise)
-            self.error[self.error == 0.] = defaultNoise
+            self.error[self.error == 0.0] = defaultNoise
         # clip data if desired (using vmin and vmax keywords)
         if "vmax" in kwargs:
-            vmax = kwargs['vmax']
-            self.error[self.data > vmax] = max(self.error)*3
+            vmax = kwargs["vmax"]
+            self.error[self.data > vmax] = max(self.error) * 3
             self.data[self.data > vmax] = vmax
         if "vmin" in kwargs:
-            vmin = kwargs['vmin']
-            self.error[self.data < vmin] = max(self.error)*3
+            vmin = kwargs["vmin"]
+            self.error[self.data < vmin] = max(self.error) * 3
             self.data[self.data < vmin] = vmin
         if self.verbose:
             print(self)
 
-    def loadMRSD(self, filename, usereal=False, mint=0., maxt=2.0):
+    def loadMRSD(self, filename, usereal=False, mint=0.0, maxt=2.0):
         """Load mrsd (MRS data) file: not really used as in MRSD."""
         from scipy.io import loadmat  # loading Matlab mat files
 
         print("Currently not using mint/maxt & usereal:", mint, maxt, usereal)
-        pl = loadmat(filename, struct_as_record=False,
-                     squeeze_me=True)['proclog']
+        pl = loadmat(filename, struct_as_record=False, squeeze_me=True)[
+            "proclog"
+        ]
         self.q = np.array([q.q for q in pl.Q])
         self.t = pl.Q[0].rx.sig[0].t + pl.Q[0].timing.tau_dead1
         nq = len(pl.Q)
@@ -257,16 +262,16 @@ class MRS():
         self.dcube = np.zeros((nq, nt))
         for i in range(nq):
             self.dcube[i, :] = np.abs(pl.Q[i].rx.sig[1].V)
-        self.ecube = np.ones((nq, nt))*20e-9
+        self.ecube = np.ones((nq, nt)) * 20e-9
 
-    def loadDataCube(self, filename='datacube.dat'):
-        """Load data cube from single ascii file (old stuff)"""
+    def loadDataCube(self, filename="datacube.dat"):
+        """Load data cube from single ascii file (old stuff)."""
         A = np.loadtxt(filename).T
         self.q = A[1:, 0]
         self.t = A[0, 1:]
         self.data = A[1:, 1:].ravel()
 
-    def loadErrorCube(self, filename='errorcube.dat'):
+    def loadErrorCube(self, filename="errorcube.dat"):
         """Load error cube from a single ascii file (old stuff)."""
         A = np.loadtxt(filename).T
         if len(A) == len(self.q) and len(A[0]) == len(self.t):
@@ -276,34 +281,35 @@ class MRS():
         else:
             self.error = np.ones(len(self.q) * len(self.t)) * 100e-9
 
-    def loadKernel(self, name=''):
+    def loadKernel(self, name=""):
         """Load kernel matrix from mrsk or two bmat files."""
         from scipy.io import loadmat  # loading Matlab mat files
 
-        if name[-5:].lower() == '.mrsk':
-            kdata = loadmat(name, struct_as_record=False,
-                            squeeze_me=True)['kdata']
+        if name[-5:].lower() == ".mrsk":
+            kdata = loadmat(name, struct_as_record=False, squeeze_me=True)[
+                "kdata"
+            ]
             self.K = kdata.K
-            self.z = np.hstack((0., kdata.model.z))
+            self.z = np.hstack((0.0, kdata.model.z))
         else:  # try load real/imag parts (backward compat.)
-            KR = pg.Matrix(name + 'KR.bmat')
-            KI = pg.Matrix(name + 'KI.bmat')
-            self.K = np.zeros((KR.rows(), KR.cols()), dtype='complex')
+            KR = pg.Matrix(name + "KR.bmat")
+            KI = pg.Matrix(name + "KI.bmat")
+            self.K = np.zeros((KR.rows(), KR.cols()), dtype="complex")
             for i in range(KR.rows()):
                 self.K[i] = np.array(KR[i]) + np.array(KI[i]) * 1j
 
-    def loadZVector(self, filename='zkernel.vec'):
+    def loadZVector(self, filename="zkernel.vec"):
         """Load the kernel vertical discretisation (z) vector."""
         self.z = pg.Vector(filename)
 
     def loadDir(self, dirname):
         """Load several standard files from dir (old Borkum stage)."""
-        if not dirname[-1] == '/':
-            dirname += '/'
-        self.loadDataCube(dirname + 'datacube.dat')
-        self.loadErrorCube(dirname + 'errorcube.dat')
+        if dirname[-1] != "/":
+            dirname += "/"
+        self.loadDataCube(dirname + "datacube.dat")
+        self.loadErrorCube(dirname + "errorcube.dat")
         self.loadKernel(dirname)
-        self.loadZVector(dirname + 'zkernel.vec')
+        self.loadZVector(dirname + "zkernel.vec")
         self.dirname = dirname  # to save results etc.
 
     def showCube(self, ax=None, vec=None, islog=None, clim=None, clab=None):
@@ -315,11 +321,11 @@ class MRS():
         if max(vec) < 1e-3:  # Volts
             mul = 1e9
         if ax is None:
-            _, ax = plt.subplots(1, 1)
+            _, ax = pg.plt.subplots(1, 1)
         if islog is None:
             print(len(vec))
-            islog = (min(vec) > 0.)
-        negative = (min(vec) < 0)
+            islog = min(vec) > 0.0
+        negative = min(vec) < 0
         if islog:
             vec = np.log10(np.abs(vec))
         if clim is None:
@@ -328,26 +334,23 @@ class MRS():
                 clim = (-cmax, cmax)
             else:
                 cmax = max(vec)
-                if islog:
-                    cmin = cmax - 1.5
-                else:
-                    cmin = 0.
+                cmin = cmax - 1.5 if islog else 0.0
                 clim = (cmin, cmax)
 
         xt = range(0, len(self.t), 10)
-        xtl = [str(ti) for ti in np.round(self.t[xt] * 1000.)]
+        xtl = [str(ti) for ti in np.round(self.t[xt] * 1000.0)]
         qt = range(0, len(self.q), 5)
-        qtl = [str(qi) for qi in np.round(np.asarray(self.q)[qt] * 10.) / 10.]
-        mat = np.array(vec).reshape((len(self.q), len(self.t)))*mul
-        im = ax.imshow(mat, interpolation='nearest', aspect='auto')
+        qtl = [str(qi) for qi in np.round(np.asarray(self.q)[qt] * 10.0) / 10.0]
+        mat = np.array(vec).reshape((len(self.q), len(self.t))) * mul
+        im = ax.imshow(mat, interpolation="nearest", aspect="auto")
         im.set_clim(clim)
         ax.set_xticks(xt)
         ax.set_xticklabels(xtl)
         ax.set_yticks(qt)
         ax.set_yticklabels(qtl)
-        ax.set_xlabel('$t$ [ms]')
-        ax.set_ylabel('$q$ [As]')
-        cb = plt.colorbar(im, ax=ax, orientation='horizontal')
+        ax.set_xlabel("$t$ [ms]")
+        ax.set_ylabel("$q$ [As]")
+        cb = pg.plt.colorbar(im, ax=ax, orientation="horizontal")
         if clab is not None:
             cb.ax.set_title(clab)
 
@@ -355,25 +358,25 @@ class MRS():
 
     def showDataAndError(self, figsize=(10, 8), show=False):
         """Show data cube along with error cube."""
-        fig, ax = plt.subplots(1, 2, figsize=figsize)
+        fig, ax = pg.plt.subplots(1, 2, figsize=figsize)
         self.showCube(ax[0], self.data * 1e9, islog=False)
         self.showCube(ax[1], self.error * 1e9, islog=True)
         if show:
-            plt.show()
-        self.figs['data+error'] = fig
+            pg.plt.show()
+        self.figs["data+error"] = fig
         return fig, ax
 
     def showKernel(self, ax=None):
         """Show the kernel as matrix (Q over z)."""
         if ax is None:
-            fig, ax = plt.subplots()
-            self.figs['kernel'] = fig
-#        ax.imshow(self.K.T, interpolation='nearest', aspect='auto')
-        ax.matshow(self.K.T, aspect='auto')
+            fig, ax = pg.plt.subplots()
+            self.figs["kernel"] = fig
+        #        ax.imshow(self.K.T, interpolation='nearest', aspect='auto')
+        ax.matshow(self.K.T, aspect="auto")
         yt = ax.get_yticks()
         maxzi = self.K.shape[1]
         yt = yt[(yt >= 0) & (yt < maxzi)]
-        if yt[-1] < maxzi-2:
+        if yt[-1] < maxzi - 2:
             yt = np.hstack((yt, maxzi))
         ytl = [str(self.z[int(yti)]) for yti in yt]
         zl = self.z[[int(yti) for yti in yt]]
@@ -398,21 +401,21 @@ class MRS():
     def setBoundaries(self):
         """Set parameter boundaries for inversion."""
         for i in range(3):
-            self.fop.region(i).setParameters(self.startval[i],
-                                             self.lowerBound[i],
-                                             self.upperBound[i], "log")
+            self.fop.region(i).setParameters(
+                self.startval[i], self.lowerBound[i], self.upperBound[i], "log"
+            )
 
-    def createInv(self, nlay=3, lam=100., verbose=True, **kwargs):
+    def createInv(self, nlay=3, lam=100.0, verbose=True, **kwargs):
         """Create inversion instance (and fop if necessary with nlay)."""
         self.fop = MRS.createFOP(nlay, self.K, self.z, self.t)
         self.setBoundaries()
         self.INV = pg.Inversion(self.data, self.fop, verbose)
         self.INV.setLambda(lam)
-        self.INV.setMarquardtScheme(kwargs.pop('lambdaFactor', 0.8))
+        self.INV.setMarquardtScheme(kwargs.pop("lambdaFactor", 0.8))
         self.INV.stopAtChi1(False)  # now in MarquardtScheme
         self.INV.setDeltaPhiAbortPercent(0.5)
         self.INV.setAbsoluteError(np.abs(self.error))
-        self.INV.setRobustData(kwargs.pop('robust', False))
+        self.INV.setRobustData(kwargs.pop("robust", False))
         return self.INV
 
     @staticmethod
@@ -422,8 +425,15 @@ class MRS():
         fop = MRS.createFOP(nlay, K, z, t)
         return fop.response(model)
 
-    def invert(self, nlay=3, lam=100., startvec=None,
-               verbose=True, uncertainty=False, **kwargs):
+    def invert(
+        self,
+        nlay=3,
+        lam=100.0,
+        startvec=None,
+        verbose=True,
+        uncertainty=False,
+        **kwargs,
+    ):
         """Easiest variant doing all (create fop and inv) in one call."""
         if self.INV is None or self.nlay != nlay:
             self.INV = self.createInv(nlay, lam, verbose, **kwargs)
@@ -442,7 +452,8 @@ class MRS():
             if verbose:
                 print("Computing uncertainty...")
             self.modelL, self.modelU = iterateBounds(
-                self.INV, dchi2=self.INV.chi2() / 2, change=1.2)
+                self.INV, dchi2=self.INV.chi2() / 2, change=1.2
+            )
             if verbose:
                 print("ready")
 
@@ -450,21 +461,21 @@ class MRS():
         """Split model vector into d, theta and T2*."""
         if model is None:
             model = self.model
-        nl = int(len(self.model)/3) + 1  # self.nlay
-        thk = model[:nl - 1]
-        wc = model[nl - 1:2 * nl - 1]
-        t2 = model[2 * nl - 1:3 * nl - 1]
+        nl = int(len(self.model) / 3) + 1  # self.nlay
+        thk = model[: nl - 1]
+        wc = model[nl - 1 : 2 * nl - 1]
+        t2 = model[2 * nl - 1 : 3 * nl - 1]
         return thk, wc, t2
 
     def result(self):
         """Return block model results (thk, wc and T2 vectors)."""
         return self.splitModel()
 
-    def showResult(self, figsize=(10, 8), save='', fig=None, ax=None):
+    def showResult(self, figsize=(10, 8), save="", fig=None, ax=None):
         """Show theta(z) and T2*(z) (+uncertainties if there)."""
         if ax is None:
-            fig, ax = plt.subplots(1, 2, sharey=True, figsize=figsize)
-            self.figs['result'] = fig
+            fig, ax = pg.plt.subplots(1, 2, sharey=True, figsize=figsize)
+            self.figs["result"] = fig
 
         thk, wc, t2 = self.splitModel()
         showWC(ax[0], thk, wc)
@@ -473,69 +484,76 @@ class MRS():
             thkL, wcL, t2L = self.splitModel(self.modelL)
             thkU, wcU, t2U = self.splitModel(self.modelU)
             showErrorBars(ax[0], thk, wc, thkL, thkU, wcL, wcU)
-            showErrorBars(ax[1], thk, t2*1e3, thkL, thkU, t2L*1e3, t2U*1e3)
+            showErrorBars(
+                ax[1], thk, t2 * 1e3, thkL, thkU, t2L * 1e3, t2U * 1e3
+            )
 
         if fig is not None:
             if save:
-                fig.savefig(save, bbox_inches='tight')
+                fig.savefig(save, bbox_inches="tight")
             return fig, ax
 
-    def showResultAndFit(self, figsize=(12, 10), save='', plotmisfit=False,
-                         maxdep=0, clim=None):
+    def showResultAndFit(
+        self, figsize=(12, 10), save="", plotmisfit=False, maxdep=0, clim=None
+    ):
         """Show ec(z), T2*(z), data and model response."""
-        fig, ax = plt.subplots(2, 2 + plotmisfit, figsize=figsize)
-        self.figs['result+fit'] = fig
+        fig, ax = pg.plt.subplots(2, 2 + plotmisfit, figsize=figsize)
+        self.figs["result+fit"] = fig
         thk, wc, t2 = self.splitModel()
         showWC(ax[0, 0], thk, wc, maxdep=maxdep)
         showT2(ax[0, 1], thk, t2, maxdep=maxdep)
-        ax[0, 0].set_title(r'MRS water content $\theta$')
-        ax[0, 1].set_title(r'MRS decay time $T_2^*$')
-        ax[0, 0].set_ylabel('$z$ [m]')
-        ax[0, 1].set_ylabel('$z$ [m]')
+        ax[0, 0].set_title(r"MRS water content $\theta$")
+        ax[0, 1].set_title(r"MRS decay time $T_2^*$")
+        ax[0, 0].set_ylabel("$z$ [m]")
+        ax[0, 1].set_ylabel("$z$ [m]")
         if self.modelL is not None and self.modelU is not None:
             thkL, wcL, t2L = self.splitModel(self.modelL)
             thkU, wcU, t2U = self.splitModel(self.modelU)
             showErrorBars(ax[0, 0], thk, wc, thkL, thkU, wcL, wcU)
-            showErrorBars(ax[0, 1], thk, t2*1e3, thkL, thkU, t2L*1e3, t2U*1e3)
+            showErrorBars(
+                ax[0, 1], thk, t2 * 1e3, thkL, thkU, t2L * 1e3, t2U * 1e3
+            )
 
-        if maxdep > 0.:
-            ax[0, 0].set_ylim([maxdep, 0.])
-            ax[0, 1].set_ylim([maxdep, 0.])
+        if maxdep > 0.0:
+            ax[0, 0].set_ylim([maxdep, 0.0])
+            ax[0, 1].set_ylim([maxdep, 0.0])
         clim = self.showCube(ax[1, 0], self.data * 1e9, islog=False, clim=clim)
-        ax[1, 0].set_title('measured data [nV]')  # log10
+        ax[1, 0].set_title("measured data [nV]")  # log10
         self.showCube(
-            ax[1, 1], self.INV.response() * 1e9, clim=clim, islog=False)
-        ax[1, 1].set_title('simulated data [nV]')  # log10
+            ax[1, 1], self.INV.response() * 1e9, clim=clim, islog=False
+        )
+        ax[1, 1].set_title("simulated data [nV]")  # log10
         if plotmisfit:
-            self.showCube(ax[0, 2], (self.data - self.INV.response()) * 1e9,
-                          islog=False)
-            ax[0, 2].set_title('misfit [nV]')  # log10
+            self.showCube(
+                ax[0, 2], (self.data - self.INV.response()) * 1e9, islog=False
+            )
+            ax[0, 2].set_title("misfit [nV]")  # log10
             ewmisfit = (self.data - self.INV.response()) / self.error
             self.showCube(ax[1, 2], ewmisfit, islog=False)
-            ax[1, 2].set_title('error-weighted misfit')
+            ax[1, 2].set_title("error-weighted misfit")
 
         if save:
             if not isinstance(save, str):
                 save = self.basename
 
-            fig.savefig(save, bbox_inches='tight')
+            fig.savefig(save, bbox_inches="tight")
         return fig, ax
 
     def saveResult(self, filename):
         """Save inversion result to column text file for later use."""
         thk, wc, t2 = self.splitModel()
-        z = np.hstack((0., np.cumsum(thk)))
+        z = np.hstack((0.0, np.cumsum(thk)))
         ALL = np.column_stack((z, wc, t2))
         if self.modelL is not None and self.modelU is not None:
             thkL, wcL, t2L = self.splitModel(self.modelL)
             thkU, wcU, t2U = self.splitModel(self.modelU)
             zL = z.copy()
-            zL[1:] += (thkL - thk)
+            zL[1:] += thkL - thk
             zU = z.copy()
-            zU[1:] += (thkU - thk)
+            zU[1:] += thkU - thk
             ALL = np.column_stack((z, wc, t2, zL, zU, wcL, wcU, t2L, t2U))
 
-        np.savetxt(filename, ALL, fmt='%.3f')
+        np.savetxt(filename, ALL, fmt="%.3f")
 
     def loadResult(self, filename):
         """Load inversion result from column file."""
@@ -560,9 +578,9 @@ class MRS():
         D = np.diag(1 / self.error)
         DJ = D.dot(J)
         JTJ = DJ.T.dot(DJ)
-        MCM = np.linalg.inv(JTJ)   # model covariance matrix
+        MCM = np.linalg.inv(JTJ)  # model covariance matrix
         var = np.sqrt(np.diag(MCM))  # standard deviations from main diagonal
-        di = (1. / var)  # variances as column vector
+        di = 1.0 / var  # variances as column vector
         # scaled model covariance (=correlation) matrix
         MCMs = di.reshape(len(di), 1) * MCM * di
         return var, MCMs
@@ -581,9 +599,17 @@ class MRS():
         else:
             return model
 
-    def runEA(self, nlay=None, eatype='GA', pop_size=100, num_gen=100,
-              runs=1, mp_num_cpus=8, **kwargs):
-        """Run evolutionary algorithm using the inspyred library
+    def runEA(
+        self,
+        nlay=None,
+        eatype="GA",
+        pop_size=100,
+        num_gen=100,
+        runs=1,
+        mp_num_cpus=8,
+        **kwargs,
+    ):
+        """Run evolutionary algorithm using the inspyred library.
 
         Parameters
         ----------
@@ -608,93 +634,114 @@ class MRS():
         import random
 
         def mygenerate(random, args):
-            """generate a random vector of model size"""
+            """Generate a random vector of model size."""
             return [random.random() for i in range(nlay * 3 - 1)]
 
         def my_observer(population, num_generations, num_evaluations, args):
-            """ print fitness over generation number """
+            """Print fitness over generation number."""
             best = min(population)
-            print('{0:6} -- {1}'.format(num_generations, best.fitness))
+            print(f"{num_generations:6} -- {best.fitness}")
 
         @inspyred.ec.evaluators.evaluator
         def datafit(individual, args):
-            """ error-weighted data misfit as basis for evaluating fitness """
-            misfit = (self.data -
-                      self.fop.response(self.genMod(individual))) / self.error
+            """error-weighted data misfit as basis for evaluating fitness."""
+            misfit = (
+                self.data - self.fop.response(self.genMod(individual))
+            ) / self.error
             return np.mean(misfit**2)
 
         # prepare forward operator
         if self.fop is None or (nlay is not None and nlay is not self.nlay):
             self.fop = MRS.createFOP(nlay)
 
-        lowerBound = pg.cat(pg.cat(pg.Vector(self.nlay - 1,
-                                              self.lowerBound[0]),
-                                   pg.Vector(self.nlay, self.lowerBound[1])),
-                            pg.Vector(self.nlay, self.lowerBound[2]))
-        upperBound = pg.cat(pg.cat(pg.Vector(self.nlay - 1,
-                                              self.upperBound[0]),
-                                   pg.Vector(self.nlay, self.upperBound[1])),
-                            pg.Vector(self.nlay, self.upperBound[2]))
+        lowerBound = pg.cat(
+            pg.cat(
+                pg.Vector(self.nlay - 1, self.lowerBound[0]),
+                pg.Vector(self.nlay, self.lowerBound[1]),
+            ),
+            pg.Vector(self.nlay, self.lowerBound[2]),
+        )
+        upperBound = pg.cat(
+            pg.cat(
+                pg.Vector(self.nlay - 1, self.upperBound[0]),
+                pg.Vector(self.nlay, self.upperBound[1]),
+            ),
+            pg.Vector(self.nlay, self.upperBound[2]),
+        )
         if self.logpar:
-            self.lLB, self.lUB = pg.log(lowerBound), pg.log(
-                upperBound)  # ready mapping functions
+            self.lLB, self.lUB = (
+                pg.log(lowerBound),
+                pg.log(upperBound),
+            )  # ready mapping functions
         else:
             self.lLB, self.lUB = lowerBound, upperBound
 
-#        self.f = MRS1dBlockQTModelling(nlay, self.K, self.z, self.t)
+        #        self.f = MRS1dBlockQTModelling(nlay, self.K, self.z, self.t)
         # setup random generator
-        rand = random.Random()
+        rand = random.Random()  # noqa: S311 - sampling, not crypto
         # choose among different evolution algorithms
-        if eatype == 'GA':
+        if eatype == "GA":
             ea = inspyred.ec.GA(rand)
             ea.variator = [
                 inspyred.ec.variators.blend_crossover,
-                inspyred.ec.variators.gaussian_mutation]
+                inspyred.ec.variators.gaussian_mutation,
+            ]
             ea.selector = inspyred.ec.selectors.tournament_selection
             ea.replacer = inspyred.ec.replacers.generational_replacement
-        if eatype == 'SA':
+        if eatype == "SA":
             ea = inspyred.ec.SA(rand)
-        if eatype == 'DEA':
+        if eatype == "DEA":
             ea = inspyred.ec.DEA(rand)
-        if eatype == 'PSO':
+        if eatype == "PSO":
             ea = inspyred.swarm.PSO(rand)
-        if eatype == 'ACS':
+        if eatype == "ACS":
             ea = inspyred.swarm.ACS(rand, [])
-        if eatype == 'ES':
+        if eatype == "ES":
             ea = inspyred.ec.ES(rand)
-            ea.terminator = [inspyred.ec.terminators.evaluation_termination,
-                             inspyred.ec.terminators.diversity_termination]
+            ea.terminator = [
+                inspyred.ec.terminators.evaluation_termination,
+                inspyred.ec.terminators.diversity_termination,
+            ]
         else:
             ea.terminator = inspyred.ec.terminators.evaluation_termination
 
-#        ea.observer = my_observer
+        #        ea.observer = my_observer
         ea.observer = [
             inspyred.ec.observers.stats_observer,
-            inspyred.ec.observers.file_observer]
-        tstr = '{0}'.format(time.strftime('%y%m%d-%H%M%S'))
-        self.EAstatfile = self.basename + '-' + eatype + 'stat' + tstr + '.csv'
-        with open(self.EAstatfile, 'w') as fid:
+            inspyred.ec.observers.file_observer,
+        ]
+        tstr = "{}".format(time.strftime("%y%m%d-%H%M%S"))
+        self.EAstatfile = self.basename + "-" + eatype + "stat" + tstr + ".csv"
+        with Path(self.EAstatfile).open("w") as fid:
             self.pop = []
-            for i in range(runs):
+            for _i in range(runs):
                 rand.seed(int(time.time()))
-                self.pop.extend(ea.evolve(
-                    evaluator=datafit, generator=mygenerate, maximize=False,
-                    pop_size=pop_size, max_evaluations=pop_size*num_gen,
-                    bounder=inspyred.ec.Bounder(0., 1.), num_elites=1,
-                    statistics_file=fid, **kwargs))
-#                self.pop.extend(ea.evolve(
-#                    generator=mygenerate, maximize=False,
-#                    evaluator=inspyred.ec.evaluators.parallel_evaluation_mp,
-#                    mp_evaluator=datafit, mp_num_cpus=mp_num_cpus,
-#                    pop_size=pop_size, max_evaluations=pop_size*num_gen,
-#                    bounder=inspyred.ec.Bounder(0., 1.), num_elites=1,
-#                    statistics_file=fid, **kwargs))
+                self.pop.extend(
+                    ea.evolve(
+                        evaluator=datafit,
+                        generator=mygenerate,
+                        maximize=False,
+                        pop_size=pop_size,
+                        max_evaluations=pop_size * num_gen,
+                        bounder=inspyred.ec.Bounder(0.0, 1.0),
+                        num_elites=1,
+                        statistics_file=fid,
+                        **kwargs,
+                    )
+                )
+        # self.pop.extend(ea.evolve(
+        #     generator=mygenerate, maximize=False,
+        #     evaluator=inspyred.ec.evaluators.parallel_evaluation_mp,
+        #     mp_evaluator=datafit, mp_num_cpus=mp_num_cpus,
+        #     pop_size=pop_size, max_evaluations=pop_size*num_gen,
+        #     bounder=inspyred.ec.Bounder(0., 1.), num_elites=1,
+        #     statistics_file=fid, **kwargs))
         self.pop.sort(reverse=True)
         self.fits = [ind.fitness for ind in self.pop]
-        print('minimum fitness of ' + str(min(self.fits)))
+        print("minimum fitness of " + str(min(self.fits)))
 
     def plotPopulation(self, maxfitness=None, fitratio=1.05, savefile=True):
-        """Plot fittest individuals (fitness<maxfitness) as 1d models
+        """Plot fittest individuals (fitness<maxfitness) as 1d models.
 
         Parameters
         ----------
@@ -705,26 +752,32 @@ class MRS():
         """
         if maxfitness is None:
             maxfitness = min(self.fits) * fitratio
-        fig, ax = plt.subplots(1, 2, sharey=True)
-        self.figs['population'] = fig
+        fig, ax = pg.plt.subplots(1, 2, sharey=True)
+        self.figs["population"] = fig
         maxz = 0
         for ind in self.pop:
             if ind.fitness < maxfitness:
                 model = np.asarray(self.genMod(ind.candidate))
-                thk = model[:self.nlay - 1]
-                wc = model[self.nlay - 1:self.nlay * 2 - 1]
-                t2 = model[self.nlay * 2 - 1:]
-                drawModel1D(ax[0], thk, wc * 100, color='grey')
-                drawModel1D(ax[1], thk, t2 * 1000, color='grey')
+                thk = model[: self.nlay - 1]
+                wc = model[self.nlay - 1 : self.nlay * 2 - 1]
+                t2 = model[self.nlay * 2 - 1 :]
+                drawModel1D(ax[0], thk, wc * 100, color="grey")
+                drawModel1D(ax[1], thk, t2 * 1000, color="grey")
                 maxz = max(maxz, sum(thk))
 
         model = np.asarray(self.genMod(self.pop[0].candidate))
-        thk = model[:self.nlay - 1]
-        wc = model[self.nlay - 1:self.nlay * 2 - 1]
-        t2 = model[self.nlay * 2 - 1:]
-        drawModel1D(ax[0], thk, wc * 100, color='black', linewidth=3)
-        drawModel1D(ax[1], thk, t2 * 1000, color='black', linewidth=3,
-                    plotfunction='semilogx')
+        thk = model[: self.nlay - 1]
+        wc = model[self.nlay - 1 : self.nlay * 2 - 1]
+        t2 = model[self.nlay * 2 - 1 :]
+        drawModel1D(ax[0], thk, wc * 100, color="black", linewidth=3)
+        drawModel1D(
+            ax[1],
+            thk,
+            t2 * 1000,
+            color="black",
+            linewidth=3,
+            plotfunction="semilogx",
+        )
 
         ax[0].set_xlim(self.lowerBound[1] * 100, self.upperBound[1] * 100)
         ax[0].set_ylim((maxz * 1.2, 0))
@@ -734,53 +787,57 @@ class MRS():
         ax[1].set_xticks(xt)
         ax[1].set_xticklabels([str(xti) for xti in xt])
         if savefile:
-            fig.savefig(self.EAstatfile.replace('.csv', '.pdf'),
-                        bbox_inches='tight')
+            fig.savefig(
+                self.EAstatfile.replace(".csv", ".pdf"), bbox_inches="tight"
+            )
 
-        plt.show()
+        pg.plt.show()
 
     def plotEAstatistics(self, fname=None):
         """Plot EA statistics (best, worst, ...) over time."""
         if fname is None:
             fname = self.EAstatfile
         gen, psize, worst, best, med, avg, std = np.genfromtxt(
-            fname, unpack=True, usecols=range(7), delimiter=',')
+            fname, unpack=True, usecols=range(7), delimiter=","
+        )
         stderr = std / np.sqrt(psize)
 
         data = [avg, med, best, worst]
-        colors = ['black', 'blue', 'green', 'red']
-        labels = ['average', 'median', 'best', 'worst']
+        colors = ["black", "blue", "green", "red"]
+        labels = ["average", "median", "best", "worst"]
 
-        fig, ax = plt.subplots()
-        self.figs['statistics'] = fig
+        fig, ax = pg.plt.subplots()
+        self.figs["statistics"] = fig
         ax.errorbar(gen, avg, stderr, color=colors[0], label=labels[0])
-        ax.set_yscale('log')
-        for d, col, lab in zip(data[1:], colors[1:], labels[1:]):
+        ax.set_yscale("log")
+        for d, col, lab in zip(data[1:], colors[1:], labels[1:], strict=False):
             ax.plot(gen, d, color=col, label=lab)
-        ax.fill_between(gen, data[2], data[3], color='#e6f2e6')
+        ax.fill_between(gen, data[2], data[3], color="#e6f2e6")
         ax.grid(True)
         ymin = min([min(d) for d in data])
         ymax = max([max(d) for d in data])
         yrange = ymax - ymin
-        ax.set_ylim((ymin - 0.1*yrange, ymax + 0.1*yrange))
-        ax.legend(loc='upper left')  # , prop=prop)
-        ax.set_xlabel('Generation')
-        ax.set_ylabel('Fitness')
+        ax.set_ylim((ymin - 0.1 * yrange, ymax + 0.1 * yrange))
+        ax.legend(loc="upper left")  # , prop=prop)
+        ax.set_xlabel("Generation")
+        ax.set_ylabel("Fitness")
 
     def saveFigs(self, basename=None, extension="pdf"):
         """Save all figures to (pdf) files."""
         if basename is None:
             basename = self.basename
         for key in self.figs:
-            self.figs[key].savefig(basename+"-"+key+"."+extension,
-                                   bbox_inches='tight')
+            self.figs[key].savefig(
+                basename + "-" + key + "." + extension, bbox_inches="tight"
+            )
+
 
 if __name__ == "__main__":
-    datafile = 'example.mrsi'
+    datafile = "example.mrsi"
     numlayers = 4
     mrs = MRS(datafile)
     mrs.run(numlayers, uncertainty=True)
     outThk, outWC, outT2 = mrs.result()
-    mrs.saveResult(mrs.basename+'.result')
-    mrs.showResultAndFit(save=mrs.basename+'.pdf')
-    plt.show()
+    mrs.saveResult(mrs.basename + ".result")
+    mrs.showResultAndFit(save=mrs.basename + ".pdf")
+    pg.plt.show()

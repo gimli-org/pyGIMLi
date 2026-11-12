@@ -180,19 +180,6 @@ else:
 #     setTestingMode(False)
 
 
-###############################################################################
-# Please leave this block here until the following issue is fixed:
-# https://github.com/ContinuumIO/anaconda-issues/issues/1068
-# if "conda" in __path__[0]:
-#     try:
-#         import PyQt5
-#         import matplotlib
-#         matplotlib.use("qt5agg", warn=False)
-#     except ImportError:
-#         pass
-###############################################################################
-
-
 def isNotebook():
     """Determine if run inside Jupyter notebook or Spyder."""
     import sys
@@ -529,7 +516,10 @@ def _plt():
     if __MPL_PLT__ is None:
         if rc["matplotlib"] is not None:
             try:
-                get_ipython().run_line_magic("matplotlib", rc["matplotlib"])
+                # get_ipython is injected by IPython, hence the NameError
+                get_ipython().run_line_magic(  # type: ignore[name-defined]
+                    "matplotlib", rc["matplotlib"]
+                )
                 debug("matplotlib notebook backend set to: ", rc["matplotlib"])
             except NameError:
                 pass
@@ -540,7 +530,7 @@ def _plt():
                     e,
                 )
         # tic()
-        import matplotlib.pyplot as plt
+        import matplotlib.pyplot as _plt
 
         # if isNotebook():
         #     pass
@@ -555,7 +545,7 @@ def _plt():
 
         registerShowPendingFigsAtExit()
 
-    return plt
+    return _plt
 
 
 def findVersion():

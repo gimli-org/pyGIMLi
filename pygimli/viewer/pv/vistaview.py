@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Plot 3D mesh using pyvista."""
+
 import pygimli as pg
 
 pyvista = pg.optImport("pyvista", requiredFor="properly visualize 3D data")
@@ -39,8 +40,8 @@ def showMesh3DFallback(mesh, data, **kwargs):
 
     if ax is None or not isinstance(ax, Axes3D):
         fig = plt.figure()
-        ax = fig.add_subplot(projection='3d', proj_type="persp")
-        #ax = fig.add_subplot(projection='3d', proj_type="ortho")
+        ax = fig.add_subplot(projection="3d", proj_type="persp")
+        # ax = fig.add_subplot(projection='3d', proj_type="ortho")
 
     if mesh.boundaryCount() > 0:
         x, y, tri, z, dataIndex = pg.viewer.mpl.createTriangles(mesh)
@@ -72,19 +73,12 @@ def showMesh3DVistaProcess(mesh, data=None, **kwargs):
     -------
     plotter: pyvista.Plotter
         The plotter from pyvista.
-    gui: Show3D [None]
-        The small gui based on pyvista. Note that this is returned as 'None'
-        if gui is passed as 'False'.
 
-    Note
-    ----
-    Not having PyQt5 installed results in displaying the first key
-    (and values) from the dictionary.
     """
     # for compatibility remove show kwargs that are not needed
     kwargs.pop("figsize", False)
 
-    backend = kwargs.pop("backend", None) # not sure if needed
+    kwargs.pop("backend", None)  # not sure if needed
 
     hold = kwargs.pop("hold", False)
     cMap = kwargs.pop("cMap", "viridis")
@@ -94,16 +88,14 @@ def showMesh3DVistaProcess(mesh, data=None, **kwargs):
     if not notebook and not pg.viewer.mpl.isInteractive():
         notebook = False
 
-    gui = kwargs.pop("gui", False)
-
-    # GUI tmp deactivated
-    if gui:
-        pg.error("pyqt show gui currently not maintained")
-        return None
-
-    plotter = drawModel(kwargs.pop("ax", None),
-                        mesh, data, notebook=notebook, cMap=cMap,
-                        **kwargs)
+    plotter = drawModel(
+        kwargs.pop("ax", None),
+        mesh,
+        data,
+        notebook=notebook,
+        cMap=cMap,
+        **kwargs,
+    )
 
     # seems top be broken on some machines
     if kwargs.get("aa", False):
@@ -115,30 +107,31 @@ def showMesh3DVistaProcess(mesh, data=None, **kwargs):
         if not hasattr(plotter, "__show"):
             pyvista.set_new_attribute(plotter, "__show", plotter.show)
         plotter.show = lambda *args, **kwargs: plotter.__show(
-            *args, jupyter_backend="trame", **kwargs)
+            *args, jupyter_backend="trame", **kwargs
+        )
 
     ### TODO: check if needed for pv sphinx target rendering
     elif 0 and pyvista.BUILDING_GALLERY:
         if not hasattr(plotter, "__show"):
             pyvista.set_new_attribute(plotter, "__show", plotter.show)
         plotter.show = lambda *args, **kwargs: plotter.__show(
-            *args, jupyter_backend="html", **kwargs)
+            *args, jupyter_backend="html", **kwargs
+        )
 
     if hold is False:
         plotter.show()
-        #__Plotter__.append(plotter)
+        # __Plotter__.append(plotter)
         pass
     else:
-        #TODO .. store them for a showOnExit()
+        # TODO .. store them for a showOnExit()
         pass
 
     # , None to keep compatibility
     return plotter, None
 
 
-from multiprocessing import Process
-
 __PV_windows__ = []
+
 
 def showMesh3DVista(*args, **kwargs):
     """Draw PV window in an own Process.
@@ -146,18 +139,19 @@ def showMesh3DVista(*args, **kwargs):
     Draw PV window in an own Process to allow multiple windows
     for terminal users.
     """
-    ctx = pg.core.__MP_context__(method='fork')
+    ctx = pg.core.__MP_context__(method="fork")
 
     if ctx is None or pg.isNotebook() or pg.isIPyTerminal():
         return showMesh3DVistaProcess(*args, **kwargs)
 
-    #pg.info(pg.viewer.mpl.isInteractive(), pg.isNotebook(), pg.isIPyTerminal())
+    # pg.info(pg.viewer.mpl.isInteractive(), pg.isNotebook(),
+    #         pg.isIPyTerminal())
 
-    if pg.viewer.mpl.isInteractive() and not kwargs.get('hold', False):
-
-        __PV_windows__.append(ctx.Process(target=showMesh3DVistaProcess,
-                                args=args, kwargs=kwargs))
-        ret = __PV_windows__[-1].start()
+    if pg.viewer.mpl.isInteractive() and not kwargs.get("hold", False):
+        __PV_windows__.append(
+            ctx.Process(target=showMesh3DVistaProcess, args=args, kwargs=kwargs)
+        )
+        __PV_windows__[-1].start()
 
         return None, None
     else:

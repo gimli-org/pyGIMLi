@@ -183,10 +183,11 @@ Run all tests:
 python -c "import pygimli; pygimli.test(show=True)"
 ```
 
-Run pylint from shell to check code:
+Run ruff from shell to check the code:
 
 ```bash
-pylint --rcfile $GIMLIROOT/.pylintrc file.py
+ruff check file.py
+ruff format --check file.py
 ```
 
 Run prospector to check code:
@@ -232,14 +233,13 @@ dict(img="jordi2018.jpg",
 
 (sec-coding-guidelines-1)=
 
-Use pylint or prospector to improve code quality.
+Use ruff to improve code quality (configured in `pyproject.toml`).
 
-We use: (exceptions in .landscape.yml and .pylintrc)
+We use:
 
-- pep8
-- pep257
-- pylint
-- pyflakes
+- ruff lint (`ruff check`)
+- ruff format (`ruff format`)
+- pydocstyle via ruff (numpy convention)
 
 Add two blank lines between classes and methods but never use two blank lines otherwise.
 

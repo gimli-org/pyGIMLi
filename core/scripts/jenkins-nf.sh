@@ -85,18 +85,6 @@ function test(){
     NCOL
     source $TEST_ENV/bin/activate
 }
-function pylint(){
-    source $TEST_ENV/bin/activate
-    rm -f pylint.log
-
-    python -m pylint --rcfile=$PROJECT_SRC/.pylintrc \
-            --output-format=parseable \
-            --msg-template='{path}:{line}: [{msg_id}, {obj}] {msg} ({symbol})' \
-            $PROJECT_SRC/$PROJECT | tee pylint.log
-
-    PYLINT_SCORE=$(grep "Your code has been rated at" pylint.log | tr -d -c '0-9/. ' | tr -s ' ' | cut -d '/' -f1 | tr -d "[:blank:]")
-    echo "Pylint score: $PYLINT_SCORE/10"
-}
 function docclean(){
     GREEN
     echo "************************************"
@@ -144,7 +132,6 @@ function help(){
 function all(){
     build
     test
-    pylint
     docclean
     doc
     deploy
@@ -231,8 +218,6 @@ do
         test;;
     doc)
         doc;;
-    pylint)
-        pylint;;
     docclean)
         docclean;;
     depclean)

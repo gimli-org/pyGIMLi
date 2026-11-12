@@ -1,20 +1,28 @@
 #!/usr/bin/env python3
-import os
-import environment_for_pygimli_build
+"""Hand made wrappers for the pygimli bindings generator."""
 
-class pygimli:
+import os
+
+
+class Pygimli:
+    """Namespace shim replacing the pygimli module during code gen."""
+
     def _g(self, *args):
         print(*args)
+
     def warn(self, *args):
+        """Print a warning."""
         print(*args)
+
     def error(self, *args):
+        """Print an error."""
         print(*args)
 
-pg = pygimli
+
+pg = Pygimli
 
 
-WRAPPER_DEFINITION_Pos =\
-    """
+WRAPPER_DEFINITION_Pos = """
 #include <numpy/arrayobject.h>
 
 PyObject * Pos_getArray(GIMLI::Pos & vec){
@@ -42,8 +50,7 @@ WRAPPER_REGISTRATION_Pos = [
        "PyGIMLI Helper Function: extract a numpy array object from a pg.core.Pos");""",
 ]
 
-WRAPPER_DEFINITION_RVector =\
-    """
+WRAPPER_DEFINITION_RVector = """
 #include <numpy/arrayobject.h>
 #include "numpy.hpp"
 
@@ -57,8 +64,7 @@ WRAPPER_REGISTRATION_RVector = [
        "PyGIMLI Helper Function: extract a numpy array object from a RVector");""",
 ]
 
-WRAPPER_DEFINITION_CVector =\
-    """
+WRAPPER_DEFINITION_CVector = """
 #include <numpy/arrayobject.h>
 #include "numpy.hpp"
 
@@ -73,8 +79,7 @@ WRAPPER_REGISTRATION_CVector = [
     """,
 ]
 
-WRAPPER_DEFINITION_BVector =\
-    """
+WRAPPER_DEFINITION_BVector = """
 #include <numpy/arrayobject.h>
 #include "numpy.hpp"
 
@@ -89,8 +94,7 @@ WRAPPER_REGISTRATION_BVector = [
     """,
 ]
 
-WRAPPER_DEFINITION_IndexArray =\
-    """
+WRAPPER_DEFINITION_IndexArray = """
 #include <numpy/arrayobject.h>
 #include <numpy.hpp>
 
@@ -100,8 +104,7 @@ PyObject * IndexArray_getArray(GIMLI::IndexArray & vec){
 
 """
 
-WRAPPER_DEFINITION_ByteBuffer =\
-    """
+WRAPPER_DEFINITION_ByteBuffer = """
 #include <numpy/arrayobject.h>
 #include <numpy.hpp>
 
@@ -109,8 +112,7 @@ PyObject * ByteBuffer_getArray(GIMLI::ByteBuffer & vec){
     return GIMLI::toNumpyArray(vec.buf());
 }
 """
-WRAPPER_DEFINITION_ByteBuffer_IN =\
-    """
+WRAPPER_DEFINITION_ByteBuffer_IN = """
 void ByteBuffer_setArray(GIMLI::ByteBuffer & vec, PyObject * arr){
     return GIMLI::fromNumpyArrayIntoBuffer(vec, arr);
 }
@@ -136,8 +138,7 @@ WRAPPER_REGISTRATION_StdVecI = [
        "PyGIMLI Helper Function: extract a numpy array object from a stdVectorInt ");""",
 ]
 
-WRAPPER_DEFINITION_StdVecI =\
-    """
+WRAPPER_DEFINITION_StdVecI = """
 #include <numpy/arrayobject.h>
 #include <numpy.hpp>
 
@@ -151,8 +152,7 @@ WRAPPER_REGISTRATION_IndexArray = [
        "PyGIMLI Helper Function: extract a numpy array object from a IndexArray ");""",
 ]
 
-WRAPPER_DEFINITION_R3Vector =\
-    """
+WRAPPER_DEFINITION_R3Vector = """
 #include <numpy/arrayobject.h>
 
 PyObject * R3Vector_getArray(GIMLI::R3Vector & vec){
@@ -183,8 +183,7 @@ WRAPPER_REGISTRATION_R3Vector = [
 ]
 
 
-WRAPPER_DEFINITION_General = \
-    """
+WRAPPER_DEFINITION_General = """
 bool checkDataWrapper()
 {
     std::cout << "checkDataWrapper() called\\n";
@@ -209,85 +208,96 @@ WRAPPER_REGISTRATION_General = [
 
 
 def iter_as_generator_vector(cls):
-    #print("ITER:", cls.name)
+    """Register a C++ vector iterator as Python generator."""
+    # print("ITER:", cls.name)
 
-    try:
-        code = os.linesep.join([
-            'typedef %(cls)s iter_type;', 'generators::generator_maker_vector< iter_type >::register_< %(call_policies)s >( %(exposer_name)s );'])
-        cls.add_registration_code(
-            code % {'cls': cls.decl_string, 'call_policies': cls.mem_fun('nextVal').call_policies.create_type(), 'exposer_name': cls.class_var_name}, works_on_instance=False)
-        cls.include_files.append('generators.h')
-        #print("OK")
-    except:
-        raise
-        #print("FAILED ")
+    code = os.linesep.join(
+        [
+            "typedef %(cls)s iter_type;",
+            "generators::generator_maker_vector< iter_type >::"
+            "register_< %(call_policies)s >( %(exposer_name)s );",
+        ]
+    )
+    cls.add_registration_code(
+        code
+        % {
+            "cls": cls.decl_string,
+            "call_policies": cls.mem_fun("nextVal").call_policies.create_type(),
+            "exposer_name": cls.class_var_name,
+        },
+        works_on_instance=False,
+    )
+    cls.include_files.append("generators.h")
+    # print("OK")
+
 
 ##########################################################################
 ##########################################################################
+
 
 def apply_reg(class_, code):
+    """Add registration code for a class."""
     for c in code:
         class_.add_registration_code(c)
 
+
 def apply(mb):
-    print('## apply Handmade wrappers ######################################')
+    """Apply all handmade wrappers to the module builder."""
+    print("## apply Handmade wrappers ######################################")
 
     print("Register 'Vector<double>' handmade wrapper")
-    rt = mb.class_('Vector<double>')
+    rt = mb.class_("Vector<double>")
     rt.add_declaration_code(WRAPPER_DEFINITION_RVector)
     apply_reg(rt, WRAPPER_REGISTRATION_RVector)
 
     print("Register 'Vector<Complex>' handmade wrapper")
-    rt = mb.class_('Vector< std::complex< double > >')
+    rt = mb.class_("Vector< std::complex< double > >")
     rt.add_declaration_code(WRAPPER_DEFINITION_CVector)
     apply_reg(rt, WRAPPER_REGISTRATION_CVector)
 
     print("Register 'Vector<bool>' handmade wrapper")
-    rt = mb.class_('Vector<bool>')
+    rt = mb.class_("Vector<bool>")
     rt.add_declaration_code(WRAPPER_DEFINITION_BVector)
     apply_reg(rt, WRAPPER_REGISTRATION_BVector)
 
     print("Register 'IndexArray' handmade wrapper")
     rt = None
     try:
-        rt = mb.class_('Vector<unsigned long>') # working for linux
+        rt = mb.class_("Vector<unsigned long>")  # working for linux
         rt.add_declaration_code(WRAPPER_DEFINITION_IndexArray)
         apply_reg(rt, WRAPPER_REGISTRATION_IndexArray)
-    except:
-        rt = mb.class_('Vector<unsigned long long>') # working for mingw
+    except Exception:
+        rt = mb.class_("Vector<unsigned long long>")  # working for mingw
         rt.add_declaration_code(WRAPPER_DEFINITION_IndexArray)
         apply_reg(rt, WRAPPER_REGISTRATION_IndexArray)
 
     print("Register 'StdVecI' handmade wrapper")
     try:
-        rt = mb.class_('vector<int, std::allocator<int> >')
-        rt = mb.class_('vector<int>')
+        rt = mb.class_("vector<int, std::allocator<int> >")
+        rt = mb.class_("vector<int>")
         rt.add_declaration_code(WRAPPER_DEFINITION_StdVecI)
         apply_reg(rt, WRAPPER_REGISTRATION_StdVecI)
-    except:
+    except Exception:
         try:
-            rt = mb.class_('vector<int>')
+            rt = mb.class_("vector<int>")
             rt.add_declaration_code(WRAPPER_DEFINITION_StdVecI)
             apply_reg(rt, WRAPPER_REGISTRATION_StdVecI)
-        except:
-
-        # for c in mb.classes():
-        #     if 'vector' in c.name:
-        #         try:
-        #             for mem in c.member_functions():
-        #                 if mem.decl_string.find('size') > -1:
-        #                     #print('class:', c.name, mem.decl_string)
-        #                     print('class:', c.name)
-        #                     print()
-        #         except:
-        #             pass
-
+        except Exception:
+            # for c in mb.classes():
+            #     if 'vector' in c.name:
+            #         try:
+            #             for mem in c.member_functions():
+            #                 if mem.decl_string.find('size') > -1:
+            #                     #print('class:', c.name, mem.decl_string)
+            #                     print('class:', c.name)
+            #                     print()
+            #         except:
+            #             pass
 
             pg.critical("can't find 'vector<int, std::allocator<int> >'")
 
-
     print("Register 'ByteBuffer' handmade wrapper")
-    rt = mb.class_('ByteBuffer')
+    rt = mb.class_("ByteBuffer")
     rt.add_declaration_code(WRAPPER_DEFINITION_ByteBuffer)
     apply_reg(rt, WRAPPER_REGISTRATION_ByteBuffer)
     rt.add_declaration_code(WRAPPER_DEFINITION_ByteBuffer_IN)
@@ -305,41 +315,40 @@ def apply(mb):
     #         except:
     #             pass
 
-        #exit()
+    # exit()
     # print("Register 'IndexArray' handmade wrapper")
     # rt = mb.class_('Vector<GIMLI::Index>')
     # rt.add_declaration_code(WRAPPER_DEFINITION_IndexArray)
     # apply_reg(rt, WRAPPER_REGISTRATION_IndexArray)
 
-
     print("Register 'PosList' handmade wrapper")
-    rt = mb.class_('Vector< GIMLI::Pos >')
+    rt = mb.class_("Vector< GIMLI::Pos >")
     rt.add_declaration_code(WRAPPER_DEFINITION_R3Vector)
     apply_reg(rt, WRAPPER_REGISTRATION_R3Vector)
 
     try:
         print("Register 'Pos' handmade wrapper")
-        rt = mb.class_('Pos')
-        rt.add_declaration_code(WRAPPER_DEFINITION_RVector3)
-        apply_reg(rt, WRAPPER_REGISTRATION_RVector3)
-        #rt.add_registration_code ("""def(bp::init< PyObject * >((bp::arg("value"))))""")
+        rt = mb.class_("Pos")
+        rt.add_declaration_code(WRAPPER_DEFINITION_Pos)
+        apply_reg(rt, WRAPPER_REGISTRATION_Pos)
+        # rt.add_registration_code ("""def(bp::init< PyObject * >((bp::arg("value"))))""")
 
         mb.add_declaration_code(WRAPPER_DEFINITION_General)
         apply_reg(mb, WRAPPER_REGISTRATION_General)
     except Exception as e:
-        pg.warn('Skipping', e)
+        pg.warn("Skipping", e)
 
         pass
 
     try:
-        #vec_iterators = mb.classes(lambda cls: cls.name.startswith('R'))
+        # vec_iterators = mb.classes(lambda cls: cls.name.startswith('R'))
 
         vec_iterators = mb.classes(
-            lambda cls: cls.name.startswith('VectorIterator'))
+            lambda cls: cls.name.startswith("VectorIterator")
+        )
         for cls in vec_iterators:
             iter_as_generator_vector(cls)
     except Exception as e:
-
-        pg.warn('Skipping VectorIterator generators', e)
+        pg.warn("Skipping VectorIterator generators", e)
 
         pass

@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 """Utility methods to read GPS data and convert them via pyproj."""
 
 import sys
-import os
+
+from pathlib import Path
 
 from math import floor
 
@@ -30,11 +30,11 @@ def findUTMZone(lon, lat):
     zone = int((int(lon) + 180) / 6) + 1
 
     if lat > 0:
-        return str(zone) + 'N'
-    return str(zone) + 'S'
+        return str(zone) + "N"
+    return str(zone) + "S"
 
 
-def getUTMProjection(zone, ellps='WGS84'):
+def getUTMProjection(zone, ellps="WGS84"):
     """Create and return the current coordinate projection.
 
     This is a proxy for pyproj.
@@ -52,28 +52,30 @@ def getUTMProjection(zone, ellps='WGS84'):
     Pyproj Projection
 
     """
-    pyproj = pg.optImport('pyproj', 'Coordinate transformations.')
+    pyproj = pg.optImport("pyproj", "Coordinate transformations.")
 
-    return pyproj.Proj(proj='utm', zone=zone, ellps=ellps)
+    return pyproj.Proj(proj="utm", zone=zone, ellps=ellps)
+
 
 def getProjection(name, ref=None, **kwargs):
     """Syntactic sugar to get some default Projections."""
-    pyproj = pg.optImport('pyproj', 'Coordinate transformations.')
+    pyproj = pg.optImport("pyproj", "Coordinate transformations.")
 
-    if name == 'utm':
+    if name == "utm":
         return getUTMProjection(**kwargs)
-    elif name == 'RD83':
+    elif name == "RD83":
         return pyproj.Proj(init="epsg:4745")
-    elif name == 'gk2':
+    elif name == "gk2":
         return pyproj.Proj(init="epsg:31466")
-    elif name == 'gk3':
+    elif name == "gk3":
         return pyproj.Proj(init="epsg:31467")
-    elif name == 'gk4':
+    elif name == "gk4":
         return pyproj.Proj(init="epsg:31468")
-    elif name == 'gk5':
+    elif name == "gk5":
         return pyproj.Proj(init="epsg:31469")
-    elif name == 'Soldner':
+    elif name == "Soldner":
         return pyproj.Proj(init="epsg:3068")
+
 
 def _getXMLData(ele, name, default):
     """Extract a named text value from an XML DOM element.
@@ -98,27 +100,29 @@ def _getXMLData(ele, name, default):
 
     return ret
 
+
 def _extractWPTS(wpts):
-    """Handler for Waypoints in gpx xml-dom."""
+    """Handle waypoints in gpx xml-dom."""
     w = dict()
 
     for wpt in wpts:
-        if wpt.hasAttribute('lat'):
-            lat = float(wpt.getAttribute('lat'))
+        if wpt.hasAttribute("lat"):
+            lat = float(wpt.getAttribute("lat"))
         else:
             continue
-        if wpt.hasAttribute('lon'):
-            lon = float(wpt.getAttribute('lon'))
+        if wpt.hasAttribute("lon"):
+            lon = float(wpt.getAttribute("lon"))
         else:
             continue
 
-        name = _getXMLData(wpt, 'name', 'WP ' + str(len(w.keys())))
+        name = _getXMLData(wpt, "name", "WP " + str(len(w.keys())))
 
-        w[name] = {'lat': lat,
-                   'lon': lon,
-                   'time': _getXMLData(wpt, 'time', 0),
-                   'desc': _getXMLData(wpt, 'desc', None),
-                   }
+        w[name] = {
+            "lat": lat,
+            "lon": lon,
+            "time": _getXMLData(wpt, "time", 0),
+            "desc": _getXMLData(wpt, "desc", None),
+        }
     return w
 
 
@@ -143,13 +147,13 @@ def readGPX(fileName):
     """
     from xml.dom.minidom import parse
 
-    dom = parse(fileName)
+    dom = parse(fileName)  # noqa: S318 - local gpx files
 
     name = fileName
 
     meta = dom.getElementsByTagName("metadata")
     if len(meta) > 0:
-        name = _getXMLData(meta[0], 'name', fileName)
+        name = _getXMLData(meta[0], "name", fileName)
 
     wpts = dom.getElementsByTagName("wpt")
 
@@ -173,46 +177,48 @@ def readSimpleLatLon(filename, verbose=False):
     list: []
         lon lat name time
     """
+
     def conv_(deg):
         """Convert degree into floating vpoint."""
         ret = 0.0
-        if 'd' in deg:
+        if "d" in deg:
             # 10d???
-            d = deg.split('d')
+            d = deg.split("d")
             ret = float(d[0])
 
             if "'" in d[1]:
                 # 10d23'2323.44''
                 m = d[1].split("'")
                 if len(m) > 1:
-                    ret += float(m[0]) / 60.
-                    ret += float(m[1]) / 3600.
+                    ret += float(m[0]) / 60.0
+                    ret += float(m[1]) / 3600.0
             else:
                 # 10d23.2323
-                ret += float(d[1]) / 60.
+                ret += float(d[1]) / 60.0
         else:
             # 10.4432323
             ret = float(deg)
 
         return ret
+
     # def conv_(...):
 
     w = []
 
-    with open(filename, 'r') as fi:
+    with Path(filename).open() as fi:
         content = fi.readlines()
 
     for line in content:
-        if line[0] == '#':
+        if line[0] == "#":
             continue
 
         vals = line.split()
 
         if len(vals) == 2:  # lon lat
-            w.append((conv_(vals[1]), conv_(vals[0]), '', 'time'))
+            w.append((conv_(vals[1]), conv_(vals[0]), "", "time"))
         if len(vals) == 3:
             # marker lat lon
-            w.append((conv_(vals[2]), conv_(vals[1]), vals[0], 'time'))
+            w.append((conv_(vals[2]), conv_(vals[1]), vals[0], "time"))
 
         if verbose:
             print(w[-1])
@@ -234,6 +240,7 @@ def GK4toUTM(ea, no=None, zone=32):
     """Transform Gauss-Krueger zone 4 into UTM (for backward compatibility)."""
     return GKtoUTM(ea, no, zone, gkzone=4)
 
+
 def GK5toUTM(ea, no=None, zone=32):
     """Transform Gauss-Krueger zone 5 into UTM (for backward compatibility)."""
     return GKtoUTM(ea, no, zone, gkzone=5)
@@ -245,24 +252,21 @@ def GKtoUTM(ea, no=None, zone=32, gk=None, gkzone=None):
         if no is None:
             rr = ea[0][0]
         else:
-            if isinstance(ea, list) or isinstance(ea, tuple):
-                rr = ea[0]
-            else:
-                rr = ea
+            rr = ea[0] if isinstance(ea, (list, tuple)) else ea
 
         gkzone = int(floor(rr * 1e-6))
 
         if gkzone <= 0 or gkzone >= 5:
             print("cannot detect valid GK zone")
 
-    pyproj = pg.optImport('pyproj', 'coordinate transformations')
+    pyproj = pg.optImport("pyproj", "coordinate transformations")
     if pyproj is None:
         return None
 
-    gk = pyproj.Proj(init="epsg:"+str(31464+gkzone))
+    gk = pyproj.Proj(init="epsg:" + str(31464 + gkzone))
     wgs84 = pyproj.Proj(init="epsg:4326")  # pure ellipsoid to double transform
 
-    utm = getUTMProjection(zone=zone, ellps='WGS84')  # UTM
+    utm = getUTMProjection(zone=zone, ellps="WGS84")  # UTM
 
     if no is None:  # two-column matrix
         lon, lat = pyproj.transform(gk, wgs84, ea[0], ea[1])
@@ -274,9 +278,9 @@ def GKtoUTM(ea, no=None, zone=32, gk=None, gkzone=None):
 
 def convddmm(num):
     """Convert numeric position into degree and minute."""
-    dd = np.floor(num / 100.)
-    r1 = num - dd * 100.
-    return dd + r1 / 60.
+    dd = np.floor(num / 100.0)
+    r1 = num - dd * 100.0
+    return dd + r1 / 60.0
 
 
 def readGeoRefTIF(file_name):
@@ -294,14 +298,14 @@ def readGeoRefTIF(file_name):
     geotr = dataset.GetGeoTransform()
     projection = dataset.GetProjection()
 
-    im = np.flipud(mpimg.imread(file_name))
+    im = np.flipud(pg.plt.imread(file_name))
 
     tifx, tify, dx = geotr[0], geotr[3], geotr[1]
 
-    bbox = [[tifx, tifx + im.shape[1] * dx],
-            [tify - im.shape[0] * dx, tify]]
+    bbox = [[tifx, tifx + im.shape[1] * dx], [tify - im.shape[0] * dx, tify]]
 
     return im, bbox, projection
+
 
 def readCoordsFromKML(xmlfile, zone=32, ellps="WGS84"):
     """Read coordinates from KML file and return UTM coordinates.
@@ -321,7 +325,7 @@ def readCoordsFromKML(xmlfile, zone=32, ellps="WGS84"):
     import utm
     import xml.etree.ElementTree as ET
 
-    tree = ET.parse(xmlfile)
+    tree = ET.parse(xmlfile)  # noqa: S314 - local gpx files
     root = tree.getroot()
     X, Y, Z = [], [], []
     for line in root.iter("*"):

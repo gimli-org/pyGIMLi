@@ -78,7 +78,6 @@ test = [
     "pytest>=6.0",
     "pytest-cov",
     "pytest-html",
-    "pylint",
 ]
 doc = [
     "pygimli[test]",
@@ -172,6 +171,9 @@ exclude = [
     ".venv-py311",
     ".venv-py312",
     ".venv-py313",
+    # generated/vendored files, not maintained here (was `ignore` in .pylintrc)
+    "_version.py",
+    "versioneer.py",
 ]
 
 line-length = 80
@@ -265,6 +267,31 @@ convention = "numpy"
     "S102",  # use of "exec"
     "S106",  # possible hardcoded password.
     "PGH001",  # use of "eval"
+]
+"pygimli/core/matrix.py" = [
+    # public API hub: names are re-exported for pygimli.core and friends
+    "F401",  # re-export of core classes (RVector, MatrixBase, ...)
+    "N807",  # __mul__ and friends are monkey patches of core classes
+]
+"core/python/hand_made_wrappers.py" = [
+    "E501",  # embedded C++ code strings are not wrapped
+]
+"doc/conf.py" = [
+    # Sphinx configuration: imports must follow the sys.path setup and the
+    # generated conf_environment is star-imported
+    "B018",  # useless expression (latex preamble probe)
+    "D103",  # missing docstring
+    "E402",  # imports not at top of file
+    "E501",  # long option strings
+    "F401",  # feature probes via import
+    "F403",  # star import of generated config
+    "F405",  # names from star import
+    "PTH100",  # os.path.abspath
+    "PTH110",  # os.path.exists
+    "PTH118",  # os.path.join
+    "PTH123",  # open
+    "S603",  # subprocess call for the doxygen build
+    "SIM115",  # open without context manager
 ]
 
 [tool.ruff.lint.pep8-naming]
