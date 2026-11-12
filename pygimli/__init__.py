@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""pyGIMLi - an open-source library for geophysical modelling and inversion."""
+"""pyGIMLi - open-source library for modelling and inversion in geophysics."""
 
 import sys
 import locale

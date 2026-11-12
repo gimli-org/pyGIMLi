@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Imports and extensions of the C++ bindings."""
 
 import sys
