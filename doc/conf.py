@@ -472,10 +472,7 @@ except ImportError:
 ################################################################################
 
 intersphinx_mapping = {
-    "python": (
-        f"https://docs.python.org/{sys.version_info.major}",
-        None,
-    ),
+    "python": (f"https://docs.python.org/{sys.version_info.major}", None),
     "sphinx": ("https://www.sphinx-doc.org/en/master", None),
     "numpy": ("https://numpy.org/doc/stable", None),
     "scipy": ("https://docs.scipy.org/doc/scipy", None),
@@ -852,7 +849,15 @@ html_context = {
 
 def setup(app: Sphinx):
     """Add functions to the Sphinx setup."""
-    from myst_parser._docs import MystExampleDirective, MystLexer
+    from myst_parser._docs import MystLexer
 
-    app.add_directive("myst-example", MystExampleDirective)
+    try:  # myst-parser >= 5
+        from myst_parser._docs import SyntaxExampleDocsDirective
+    except ImportError:  # myst-parser < 5
+        from myst_parser._docs import MystExampleDirective
+
+        exampleDirective = MystExampleDirective
+    else:
+        exampleDirective = SyntaxExampleDocsDirective
+    app.add_directive("myst-example", exampleDirective)
     app.add_lexer("myst", MystLexer)

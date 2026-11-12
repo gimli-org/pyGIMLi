@@ -94,6 +94,7 @@ doc = [
     "sphinx-gallery",
     "sphinx_design",
     "sphinx-copybutton",
+    "sphinx-syntax-example",
 ]
 dev = [
     "pygimli[build, opt, test, doc]",
