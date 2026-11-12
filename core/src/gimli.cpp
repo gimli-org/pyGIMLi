@@ -51,26 +51,22 @@ static int __GIMLI_NO_CBLAS__ = false;
 
 
 Index __setTC__(){
-    // to close to number of cpu can bring significent shedular overhead
+    const int def = min(8, numberOfCPU() - 2);
+
     int omp = getEnvironment("OMP_NUM_THREADS", -1, false);
-    // __MS("environment OMP_NUM_THREADS set")
-    if (omp == -1){
-        setOMPThreadCount(min(8, numberOfCPU()-2));
-    }
-
     int obl = getEnvironment("OPENBLAS_NUM_THREADS", -1, false);
-    // __MS("environment OPENBLAS_NUM_THREADS set")
-    if (obl == -1){
-        setBLASThreadCount(min(8, numberOfCPU()-2));
-    }
-
     int tc = getEnvironment("GIMLI_NUM_THREADS", -1, false);
 
-// __MS(tc)
-    tc = Index(min(8, numberOfCPU()-2));
-// __MS(Index(tc))
+    if (tc == -1) tc = def;
+    if (omp == -1) setOMPThreadCount(tc);
+    if (obl == -1) setBLASThreadCount(tc);
+
+    // setThreadCount() calls openblas_set_num_threads() unconditionally,
+    // so hand over the OpenBLAS variable if it is set
+    tc = (obl == -1) ? tc : obl;
     setThreadCount(Index(tc));
     return Index(tc);
+
 }
 
 static Index __GIMLI_THREADCOUNT__ = __setTC__();
@@ -496,4 +492,3 @@ void log(LogType type, const std::string & msg){
 }
 
 } // namespace GIMLI
-

@@ -1,37 +1,107 @@
 #!/usr/bin/env python3
-"""pyGIMLi - An open-source library for modelling and inversion in geophysics."""
+"""pyGIMLi - an open-source library for geophysical modelling and inversion."""
+
 import sys
 import locale
+from pathlib import Path
 
-from .core.decorators import (renamed, singleton, moduleProperty,
-                              skipOnDefaultTest, deprecate,
-                              )
+from . import core
+from .core.decorators import (
+    renamed,
+    singleton,
+    moduleProperty,
+    skipOnDefaultTest,
+    deprecate,
+)
 
 # Import everything that should be accessible through main namespace.
-from .core import (BVector, CVector, IVector, RVector, Vector)
+from .core import BVector, CVector, IVector, RVector, Vector
 
-from .core import (DataContainer, DataContainerERT,
-                   Line, Mesh, Plane, Pos, PosList, PosVector,
-                   Stopwatch, Swatches,
-                   abs, cat, center, exp, find, interpolate,
-                   log, log10, logDropTol, max, mean, median, min,
-                   search, setThreadCount, sort, sum,
-                   trans, unique, versionStr, x, y, z, zero)
+from .core import (
+    DataContainer,
+    DataContainerERT,
+    Line,
+    Mesh,
+    Plane,
+    Pos,
+    PosList,
+    PosVector,
+    Stopwatch,
+    Swatches,
+    abs,
+    cat,
+    center,
+    exp,
+    find,
+    log,
+    log10,
+    logDropTol,
+    max,
+    mean,
+    median,
+    min,
+    search,
+    sort,
+    sum,
+    trans,
+    versionStr,
+    x,
+    y,
+    z,
+    zero,
+)
 
-from .core import (isInt, isScalar, isIterable, isArray, isPos,
-                   isR3Array, isPosList, isVecField, isComplex, isMatrix,
-                   )
+from .core import (
+    isInt,
+    isScalar,
+    isIterable,
+    isArray,
+    isPos,
+    isR3Array,
+    isPosList,
+    isVecField,
+    isComplex,
+    isMatrix,
+)
 
 from .core.base import isSquareMatrix
 
-from .core import math # alias all from .core.math.* to pg.math.*
-# from .core import matrix # alias all from .core.matrix.* to pg.matrix.*
-from .core.matrix import (BlockMatrix, Matrix, SparseMapMatrix, SparseMatrix)
+from .core.threads import (
+    setThreadCount,
+    threadsInfo,
+    getOMPThreadCount,
+    getBLASThreadCount,
+    setOMPThreadCount,
+    setBLASThreadCount,
+)
 
-from .core.logger import (_, _d, _g, _r, _y, _b, critical, d, debug,
-                          deprecated, renameKwarg, renameArg,
-                          error, info, debug, setDebug, setLogLevel,
-                          setVerbose, v, verbose, warn)
+from .core import math  # alias all from .core.math.* to pg.math.*
+
+# from .core import matrix # alias all from .core.matrix.* to pg.matrix.*
+from .core.matrix import BlockMatrix, Matrix, SparseMapMatrix, SparseMatrix
+
+from .core.logger import (
+    _,
+    _d,
+    _g,
+    _r,
+    _y,
+    _b,
+    critical,
+    d,
+    deprecated,
+    renameKwarg,
+    renameArg,
+    error,
+    info,
+    debug,
+    setDebug,
+    setLogLevel,
+    setVerbose,
+    v,
+    verbose,
+    warn,
+)
 
 warning = warn  # conveniance
 
@@ -42,34 +112,42 @@ from .solver import solve
 from .utils import boxprint, cache, cut, unique, unit, cmap, randn
 from .utils import prettify as pf
 from .utils.utils import Report, Table
-def ppf(v): print(pf(v))
+
+
+def ppf(value):
+    """Print *value* with the pretty formatter."""
+    print(pf(value))
+
 
 from .viewer import show, wait, noShow, hold
 
 from .frameworks import fit
 from .frameworks import Modelling
 from .frameworks import Inversion
-from .testing import test  #, setTestingMode, testingMode
+from .testing import test  # , setTestingMode, testingMode
 
 from .math import matrix  # alias all from .core.matrix.* to pg.matrix.*
-from .core.load import (load, optImport, getCachePath,
-                        getExampleFile, getExampleData)
+from .core.load import (
+    load,
+    optImport,
+    getCachePath,
+    getExampleFile,
+    getExampleData,
+)
 
 
-
-def checkAndFixLocaleDecimal_point(verbose=False):  # verbose overwritten
-    """
-    """
-    if locale.localeconv()['decimal_point'] == ',':
-        if verbose:
-            print("Found locale decimal_point ',' "
-                  "and change it to: decimal point '.'")
+def checkAndFixLocaleDecimal_point(verbose=False):  # noqa: F811
+    """Switch the numeric locale to a decimal point if required."""
+    if locale.localeconv()["decimal_point"] == "," and verbose:
+        print(
+            "Found locale decimal_point ',' and change it to: decimal point '.'"
+        )
     try:
-        locale.localeconv()['decimal_point']
-        locale.setlocale(locale.LC_NUMERIC, 'C')
+        locale.localeconv()["decimal_point"]
+        locale.setlocale(locale.LC_NUMERIC, "C")
     except Exception as e:
         print(e)
-        print('cannot set locale to decimal point')
+        print("cannot set locale to decimal point")
 
     # LC_CTYPE should be something with UTF-8
     # export LC_CTYPE="de_DE.UTF-8"
@@ -87,12 +165,12 @@ checkAndFixLocaleDecimal_point(verbose=True)
 #    print('cannot set locale to decimal point')
 
 
-if '--debug' in sys.argv or '-d' in sys.argv:
+if "--debug" in sys.argv or "-d" in sys.argv:
     setDebug(True)
 else:
     setDebug(False)
 
-if '--verbose' in sys.argv or '-v' in sys.argv:
+if "--verbose" in sys.argv or "-v" in sys.argv:
     setVerbose(True)
 else:
     setVerbose(False)
@@ -119,44 +197,45 @@ else:
 def isNotebook():
     """Determine if run inside Jupyter notebook or Spyder."""
     import sys
-    return 'ipykernel_launcher.py' in sys.argv[0] or 'ipykernel' in sys.modules
+
+    return "ipykernel_launcher.py" in sys.argv[0] or "ipykernel" in sys.modules
 
 
 def isIPyTerminal():
     """Determine if run inside ipython terminal, e.g., sphinx-gallery."""
     import sys
-    return 'IPython' in sys.modules
+
+    return "IPython" in sys.modules
 
 
 class SWatches:
     """Singleton class to access Stopwatch instances."""
 
     @staticmethod
-    def __getitem__(key:str):
+    def __getitem__(key: str):
         """Return Stopwatch with specific key name."""
-        if '*' in key:
+        if "*" in key:
             allKeys = SWatches().keys()
             import fnmatch
+
             matches = fnmatch.filter(allKeys, key)
             if len(matches) == 0:
-                raise KeyError(f'No stopwatch found for: {key}')
+                raise KeyError(f"No stopwatch found for: {key}")
             elif len(matches) > 1:
                 return [SWatches()[k] for k in matches]
             else:
                 key = matches[0]
 
-        #return SWatches()['/'+key]
+        # return SWatches()['/'+key]
         return Swatches.instance()[key]
-
 
     @staticmethod
     def keys():
         """Return list of all stopwatch keys."""
         return list(Swatches.instance().keys())
 
-
     @staticmethod
-    def remove(key:str, recursive:bool=False) -> None:
+    def remove(key: str, recursive: bool = False) -> None:
         """Remove and delete the stopwatch with the given key.
 
         Arguments
@@ -169,7 +248,7 @@ class SWatches:
         return Swatches.instance().remove(key, recursive)
 
 
-def tic(msg=None, key=''):
+def tic(msg=None, key=""):
     """Start global timer. Print elapsed time with `toc()`.
 
     You can start multiple stopwatches with optional identifier.
@@ -184,10 +263,10 @@ def tic(msg=None, key=''):
     if msg:
         print(msg)
 
-    SWatches()['/' + key].start()
+    SWatches()["/" + key].start()
 
 
-def toc(msg=None, box=False, stop=False, reset=False, key=''):
+def toc(msg=None, box=False, stop=False, reset=False, key=""):
     """Print elapsed time since global timer was started with `tic()`.
 
     Arguments
@@ -208,7 +287,7 @@ def toc(msg=None, box=False, stop=False, reset=False, key=''):
         if box is True:
             boxprint(msg)
         else:
-            print(msg, end=' ')
+            print(msg, end=" ")
 
     seconds = dur(key, stop=stop, reset=reset)
 
@@ -219,22 +298,22 @@ def toc(msg=None, box=False, stop=False, reset=False, key=''):
         time = pf(s)
     elif h <= 0:
         if m == 1.0:
-            time = "%d minute and %.2f" % (m, s)
+            time = f"{int(m)} minute and {s:.2f}"
         else:
-            time = "%d minutes and %.2f" % (m, s)
+            time = f"{int(m)} minutes and {s:.2f}"
     elif h == 1.0:
-        time = "%d hour, %d minutes and %.2f" % (h, m, s)
+        time = f"{int(h)} hour, {int(m)} minutes and {s:.2f}"
     else:
-        time = "%d hours, %d minutes and %.2f" % (h, m, s)
+        time = f"{int(h)} hours, {int(m)} minutes and {s:.2f}"
     p = print if not box else boxprint
 
-    if len(SWatches().keys()) and key != '':
-        p("Elapsed time ({0}) is {1} seconds.".format(key, time))
+    if len(SWatches().keys()) and key != "":
+        p(f"Elapsed time ({key}) is {time} seconds.")
     else:
         p(f"Elapsed time is {time} seconds.")
 
 
-def dur(key='', stop=False, reset=False):
+def dur(key="", stop=False, reset=False):
     """Return time in seconds since global timer was started with `tic()`.
 
     Arguments
@@ -250,12 +329,12 @@ def dur(key='', stop=False, reset=False):
         key = stop
 
     if stop is True:
-        SWatches()['/'+key].stop()
-    return SWatches()['/'+key].duration(restart=reset)
+        SWatches()["/" + key].stop()
+    return SWatches()["/" + key].duration(restart=reset)
 
 
-def store(key='', stop=True):
-    """Store current time in seconds since global timer was started with `tic()`.
+def store(key="", stop=True):
+    """Store the current time since the global timer was started.
 
     Arguments
     ---------
@@ -265,23 +344,21 @@ def store(key='', stop=True):
         Identifier for your Stopwatch.
     """
     if stop is True:
-        SWatches()['/'+key].stop()
+        SWatches()["/" + key].stop()
 
-    return SWatches()['/'+key].store()
+    return SWatches()["/" + key].store()
 
 
-class tictoc(object):
+class tictoc:
     """Context manager for timing code blocks."""
 
     def __init__(self, key: str):
         """Initialize the tictoc context manager."""
         self._tt = core.TicToc(key)
 
-
     def __enter__(self):
         """Start the timer when entering the context."""
         return self
-
 
     def __exit__(self, type, value, traceback):
         """Stop the timer when exiting the context."""
@@ -302,14 +379,15 @@ def swatch(key):
     -------
     Stopwatch instance or list of Stopwatch instances if multiple matches found.
     """
-    if key.startswith('/'):
+    if key.startswith("/"):
         key = key[1:]
-    return SWatches()['/'+key]
+    return SWatches()["/" + key]
 
 
-def timings(name='/'):
+def timings(name="/"):
     """Return table of timings for a given root swatch key name."""
     import numpy as np
+
     class TTree:
         def __init__(self, parent=None):
             self.parent = parent
@@ -318,25 +396,25 @@ def timings(name='/'):
             self.data = None
 
         def __getitem__(self, k):
-            names = k.split('/')
+            names = k.split("/")
 
             if self.name is None:
                 self.name = names[0]
             else:
                 if names[0] != self.name:
-                    error(f'Wrong tree({self.name}) for {k}')
+                    error(f"Wrong tree({self.name}) for {k}")
 
             if len(names) > 1:
                 if names[1] not in self.childs:
                     self.childs[names[1]] = TTree(parent=self)
 
-                return self.childs[names[1]]['/'.join(names[1:])]
+                return self.childs[names[1]]["/".join(names[1:])]
 
             return self
 
         @property
         def fullname(self):
-            ps = '' if self.name is None else self.name
+            ps = "" if self.name is None else self.name
 
             p = self.parent
             while 1:
@@ -350,13 +428,13 @@ def timings(name='/'):
 
         def __str__(self):
             s = self.fullname + "\n"
-            for n, t in self.childs.items():
+            for _n, t in self.childs.items():
                 s += str(t)
 
             return s
 
     tree = TTree()
-    header = ['', 'single', 'count', 'sum', 'rel.(%)', 'uncov.(%)']
+    header = ["", "single", "count", "sum", "rel.(%)", "uncov.(%)"]
     table = []
 
     # if len(SWatches().items()) == 0:
@@ -364,34 +442,40 @@ def timings(name='/'):
     # _g(SWatches().keys())
     maxTime = 0
 
-    if not name.startswith('/'):
-        name = '/' + name
+    if not name.startswith("/"):
+        name = "/" + name
 
     for k in list(SWatches().keys()):
         s = SWatches()[k]
 
         if isinstance(k, str) and k.startswith(name):
-
             ts = s.stored()
             if ts is None:
-                print('no swatch for: ', k)
-                table.append([k, 0.0, 0, 0.0, '', None])
+                print("no swatch for: ", k)
+                table.append([k, 0.0, 0, 0.0, "", None])
             elif len(ts) == 0:
-                print('no stored times for: ', s.duration(), k)
-                table.append([k, s.duration(), 1, s.duration(), '', None])
+                print("no stored times for: ", s.duration(), k)
+                table.append([k, s.duration(), 1, s.duration(), "", None])
             else:
                 #     sts = sum(ts)
                 maxTime = max(float(maxTime), sum(ts))
 
                 perc = 0
                 try:
-                    perc = int(sum(ts)/maxTime*100)
+                    perc = int(sum(ts) / maxTime * 100)
                 except ZeroDivisionError:
                     pass
 
-                table.append([k, np.mean(ts), len(ts), sum(ts),
-                    str(perc).rjust(3, '-').rjust(3*(k.count('/')),'-'),
-                            None])
+                table.append(
+                    [
+                        k,
+                        np.mean(ts),
+                        len(ts),
+                        sum(ts),
+                        str(perc).rjust(3, "-").rjust(3 * (k.count("/")), "-"),
+                        None,
+                    ]
+                )
 
                 tree[k].data = sum(ts)
 
@@ -399,28 +483,26 @@ def timings(name='/'):
 
     for row in table:
         if len(list(tree[row[0]].childs.keys())) > 0:
-
             row[-1] = row[-3]
             for n, tc in tree[row[0]].childs.items():
                 try:
                     if tc.data is not None:
                         row[-1] -= tc.data
                 except BaseException as e:
-                    print('error for: ', n, tc.fullname, tc.data)
+                    print("error for: ", n, tc.fullname, tc.data)
                     print(e)
                     pass
 
-            #row[-1] = f'{pf(row[-1])} {str(int(row[-1]/maxTime*100)).rjust(2)}'
-            row[-1] = f'{pf(row[-1]/maxTime*100)}'
+            row[-1] = f"{pf(row[-1] / maxTime * 100)}"
 
     if len(table) == 0:
-        error(f'No timings for: {name}')
+        error(f"No timings for: {name}")
         return
 
-    return Table(table, header, align='lrcrlr', transpose=False)
+    return Table(table, header, align="lrcrlr", transpose=False)
 
 
-def removeTimings(name:str, recursive:bool=False) -> None:
+def removeTimings(name: str, recursive: bool = False) -> None:
     """Remove all timings for a given root swatch key name.
 
     Arguments
@@ -430,30 +512,34 @@ def removeTimings(name:str, recursive:bool=False) -> None:
     recursive: bool [False]
         If True, remove all timings for subkeys as well.
     """
-    if not name.startswith('/'):
+    if not name.startswith("/"):
         name = "/" + name
     SWatches().remove(name, recursive=recursive)
-
 
 
 # special shortcut pg.plt with lazy evaluation
 __MPL_PLT__ = None
 
+
 @moduleProperty
 def _plt():
-    #import time
-    #t0 = time.time()
+    # import time
+    # t0 = time.time()
     global __MPL_PLT__, rc
 
     if __MPL_PLT__ is None:
-        if rc['matplotlib'] is not None:
+        if rc["matplotlib"] is not None:
             try:
-                get_ipython().run_line_magic('matplotlib', rc['matplotlib'])
-                debug('matplotlib notebook backend set to: ', rc['matplotlib'])
-            except NameError as e:
+                get_ipython().run_line_magic("matplotlib", rc["matplotlib"])
+                debug("matplotlib notebook backend set to: ", rc["matplotlib"])
+            except NameError:
                 pass
             except BaseException as e:
-                info(f"matplotlib notebook backend set to {rc['matplotlib']} failed: ", e)
+                info(
+                    "matplotlib notebook backend set to "
+                    f"{rc['matplotlib']} failed: ",
+                    e,
+                )
         # tic()
         import matplotlib.pyplot as plt
 
@@ -467,6 +553,7 @@ def _plt():
         #     print('############### backend:', plt.get_backend())
 
         from .viewer.mpl import registerShowPendingFigsAtExit, hold
+
         registerShowPendingFigsAtExit()
 
     return plt
@@ -474,35 +561,46 @@ def _plt():
 
 def findVersion():
     """Find current version generated by versioneer."""
-    import os
-
     # setDebug(False)
-    root = os.path.abspath(os.path.join(__file__, "../"))
-    gitPath = os.path.join(root, '.git')
+    root = Path(__file__).resolve().parent
+    gitPath = root / ".git"
 
-    debug('Fetching version info.')
+    debug("Fetching version info.")
     from ._version import get_versions
+
     _versions = get_versions()
 
-    if 'error' in _versions and _versions['error'] is not None:
+    if "error" in _versions and _versions["error"] is not None:
         from importlib.metadata import version
-        return version('pygimli')
 
-    _version = _versions['version']
+        return version("pygimli")
+
+    _version = _versions["version"]
 
     def _get_branch():
         """Get current git branch."""
-        from os.path import exists
+        from shutil import which
+        from subprocess import check_output
 
-        if exists(gitPath):
-            from subprocess import check_output
-            out = check_output(["git", "--git-dir", gitPath, "rev-parse",
-                                "--abbrev-ref", "HEAD"]).decode("utf8")
+        if not gitPath.exists():
+            return None
+        git = which("git")
+        if git is None:
+            return None
+        out = check_output(  # noqa: S603 - path resolved via shutil.which
+            [
+                git,
+                "--git-dir",
+                str(gitPath),
+                "rev-parse",
+                "--abbrev-ref",
+                "HEAD",
+            ]
+        ).decode("utf8")
 
-            branch = out.split("\n")[0]
-            if "HEAD" not in branch:
-                return branch
-
+        branch = out.split("\n")[0]
+        if "HEAD" not in branch:
+            return branch
         return None
 
     # def _get_latest_tag():
@@ -523,11 +621,11 @@ def findVersion():
         _version = _version.replace(".dirty", " (with local changes")
 
         if _branch:
-            _version += " on %s branch)" % _branch
+            _version += f" on {_branch} branch)"
         else:
             _version += ")"
     elif _branch and "+" in _version:
-        _version += " (%s)" % _branch
+        _version += f" ({_branch})"
 
     return _version
 
@@ -535,13 +633,17 @@ def findVersion():
 def version():
     """Shortcut to show and return current version."""
     pg = sys.modules[__name__]
-    v = pg.__version__  # triggers lazy evaluation
-    info('Version: ' + v + " core:" + versionStr())
-    return v
+    vers = pg.__version__  # triggers lazy evaluation
+    info("Version: " + vers + " core:" + versionStr())
+    return vers
 
 
 # call once to get version from cache, setup or _version.py
 # patch __version__ into the main module class for lazy evaluation
 class pygimli(sys.modules[__name__].__class__):
+    """Module class with a lazily evaluated ``__version__``."""
+
     __version__ = property(lambda self: self.findVersion())
+
+
 sys.modules[__name__].__class__ = pygimli

@@ -220,6 +220,7 @@ ignore = [
     "N802",  # Allow "as" name should be lowercase
     "N803",  # Allow name should be lowercase
     "N806",  # Allow name should be lowercase
+    "N816",  # Allow mixedCase module level variables
     "N999",  # Allow "wrong" modulname
     "Q000",  # Allow single quotes in docstrings
     "Q001",  # Allow double quotes in docstrings
@@ -242,6 +243,15 @@ extend-immutable-calls = [
 convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+    # package entry points are re-export hubs
+    "E402",  # imports after code on purpose
+    "F401",  # re-export of names
+    "F403",  # from x import *
+    "F405",  # name may be defined from star import
+    "N801",  # legacy public class names (tictoc, pygimli, ...)
+    "N807",  # __RVector_str and friends are monkey patches
+]
 "tests/*.py" = [
     # "D100",
     # "D101",
