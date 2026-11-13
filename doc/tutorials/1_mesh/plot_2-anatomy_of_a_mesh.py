@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
 
 """
 The anatomy of a pyGIMLi mesh
@@ -22,6 +21,7 @@ from matplotlib.patches import Circle
 from matplotlib.patheffects import withStroke
 
 def circle(x, y, text=None, radius=0.15, c="blue"):
+    """Draw a marker with a label at the given position."""
     circle = Circle((x, y), radius, clip_on=False, zorder=10, linewidth=1,
                     edgecolor='black', facecolor=(0, 0, 0, .0125),
                     path_effects=[withStroke(linewidth=5, foreground='w')])
@@ -33,7 +33,7 @@ def circle(x, y, text=None, radius=0.15, c="blue"):
 ################################################################################
 # We now import pygimli and create a simple grid/mesh with 3x3 cells.
 
-import pygimli as pg
+import pygimli as pg  # noqa: E402  # part of the tutorial narrative
 m = pg.createGrid(4,4)
 
 ################################################################################
@@ -50,7 +50,7 @@ pg.show(m, ax=ax)
 # Number all cells
 for cell in m.cells():
     node = cell.allNodes()[2]
-    ax.text(node.x() - 0.5, node.y() - .05, "m.cell(%d)" % cell.id(),
+    ax.text(node.x() - 0.5, node.y() - .05, f"m.cell({cell.id()})",
             fontsize=11, ha="center", va="top", color="grey")
 
 # Mark horizontal and vertical extent
@@ -62,14 +62,14 @@ circle(m.xmax(), m.ymax(), "m.xmax(),\nm.ymax() ", c="grey")
 # Mark center of a cell
 cid = 2
 circle(m.cell(cid).center().x(), m.cell(cid).center().y(),
-       "m.cell(%d).center()" % cid)
+       f"m.cell({cid}).center()")
 
 # Mark node
 circle(m.node(1).x(), m.node(1).y(), "m.node(1).pos()", c="green")
 
 # Find cell in which point p lies
 p = [0.8, 0.8]
-circle(p[0], p[1], "p = %s" % p, radius=0.01, c="black")
+circle(p[0], p[1], f"p = {p}", radius=0.01, c="black")
 
 cell = m.findCell(p)
 circle(cell.center().x(), cell.center().y(), "m.findCell(p).center()",
@@ -90,7 +90,7 @@ ax.annotate('nid = m.findNearestNode(p)\nm.node(nid).pos()', xy=(n.x(), n.y()),
 bid = 15
 boundary_center = m.boundary(bid).center()
 circle(boundary_center.x(), boundary_center.y(),
-       "m.boundary(%d).center()" % bid, c="red")
+       f"m.boundary({bid}).center()", c="red")
 
 # Mark boundary together with left and right cell
 bid = 17
@@ -98,7 +98,7 @@ b = m.boundaries()[bid] # equivalent to mesh.boundary(17)
 n1 = b.allNodes()[0]
 n2 = b.allNodes()[1]
 ax.plot([n1.x(), n2.x()], [n1.y(), n2.y()], "r-", lw=3, zorder=10)
-ax.annotate('b = mesh.boundary(%d)' % bid, xy=(b.center().x(), b.center().y()),
+ax.annotate(f'b = mesh.boundary({bid})', xy=(b.center().x(), b.center().y()),
             xycoords='data', xytext=(8, 40), textcoords='offset points',
             weight='bold', color="red",
             arrowprops=dict(arrowstyle='->',

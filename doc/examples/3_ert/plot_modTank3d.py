@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 3D modelling in a closed geometry
 =================================
@@ -14,6 +13,7 @@ Each 24 electrodes are located at two opposite sides of the tank.
 We use the pygimli meshtools to create a PLC of the tank and an inhomogeneity.
 The needed mesh is created by calling tetgen.
 """
+
 import numpy as np
 
 import pygimli as pg
@@ -73,7 +73,7 @@ for s in plc.positions(pg.find(plc.nodeMarkers() == -99)):
 
 # Also refine the reference node
 plc.createNode([0.5, 0.5, -0.5 - 1e-3])
-#pg.show(plc, markers=True, showMesh=True)
+# pg.show(plc, markers=True, showMesh=True)
 
 ###############################################################################
 # Create the tetrahedron mesh (calling the tetgen mesh generator)
@@ -103,10 +103,11 @@ pg.show(mesh, markers=True, showMesh=True)
 # 'sr=False' omits the singularity removal technique (default) which not
 # applicable in absence of (analytic) primary potential.
 
-hom = ert.simulate(mesh, res=1.0, scheme=shm, sr=False,
-                   calcOnly=True, verbose=True)
+hom = ert.simulate(
+    mesh, res=1.0, scheme=shm, sr=False, calcOnly=True, verbose=True
+)
 
-hom.save('homogeneous.ohm', 'a b m n u')
+hom.save("homogeneous.ohm", "a b m n u")
 
 ###############################################################################
 # We now create an inhomogeneity (cube) and merge it with the above PLC.
@@ -119,14 +120,20 @@ pg.show(plc, alpha=0.3)
 mesh = mt.createMesh(plc)
 
 ###############################################################################
-# Also its advisable to control the geometry in a 3D viewer. 
-# We recommend Paraview https://www.paraview.org/ and 
+# Also its advisable to control the geometry in a 3D viewer.
+# We recommend Paraview https://www.paraview.org/ and
 # will export the geometry and in the vtk file format.
 
 # plc.exportVTK('plc')
 # mesh.exportVTK('mesh')
-pg.show(mesh, mesh.cellMarkers(), showMesh=True, 
-        filter={'clip':{'origin':(0.7, 0, 0.0)},})
+pg.show(
+    mesh,
+    mesh.cellMarkers(),
+    showMesh=True,
+    filter={
+        "clip": {"origin": (0.7, 0, 0.0)},
+    },
+)
 
 ###############################################################################
 # Now that we have a mesh with different regions and cell markers, we can define
@@ -135,8 +142,9 @@ pg.show(mesh, mesh.cellMarkers(), showMesh=True,
 # accurate primary potentials which can also only be calculated numerically.
 
 res = [[1, 10.0], [2, 100.0]]  # map markers 1 and 2 to 10 and 100 Ohmm, resp.
-het = ert.simulate(mesh, res=res, scheme=shm, sr=False,
-                   calcOnly=True, verbose=True)
+het = ert.simulate(
+    mesh, res=res, scheme=shm, sr=False, calcOnly=True, verbose=True
+)
 
 ###############################################################################
 # The apparent resistivity for a homogeneous model of 1 Ohmm should be 1 Ohmm.
@@ -144,12 +152,12 @@ het = ert.simulate(mesh, res=res, scheme=shm, sr=False,
 # homogeneous model and use it as geometric factors to find the apparent
 # resistivities for the inhomogeneous model.
 
-het['k'] = 1.0/ (hom['u'] / hom['i'])
-het['rhoa'] = het['k'] * het['u'] / het['i']
+het["k"] = 1.0 / (hom["u"] / hom["i"])
+het["rhoa"] = het["k"] * het["u"] / het["i"]
 
-het.save('simulated.dat', 'a b m n rhoa k u i')
+het.save("simulated.dat", "a b m n rhoa k u i")
 
-np.testing.assert_approx_equal(het['rhoa'][0], 9.5, 1)
+np.testing.assert_approx_equal(het["rhoa"][0], 9.5, 1)
 
 # np.testing.assert_approx_equal(het('k')[0], 0.820615269548)
 

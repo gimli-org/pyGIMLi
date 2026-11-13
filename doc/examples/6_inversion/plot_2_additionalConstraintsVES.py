@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
 r"""
 Incorporating additional constraints as equations
 =================================================
@@ -30,15 +29,15 @@ from pygimli.viewer.mpl import drawModel1D
 #
 
 nlay = 4  # number of layers
-lam = 200.  # (initial) regularization parameter
-errPerc = 3.  # relative error of 3 percent
+lam = 200.0  # (initial) regularization parameter
+errPerc = 3.0  # relative error of 3 percent
 ab2 = np.logspace(-0.5, 2.5, 50)  # AB/2 distance (current electrodes)
-mn2 = ab2 / 3.  # MN/2 distance (potential electrodes)
+mn2 = ab2 / 3.0  # MN/2 distance (potential electrodes)
 f = VESModelling(ab2=ab2, mn2=mn2, nLayers=nlay)
-synres = [100., 500., 20., 800.]  # synthetic resistivity
-synthk = [0.5, 3.5, 6.]  # synthetic thickness (nlay-th layer is infinite)
-rhoa = f(synthk+synres)
-rhoa = rhoa * (pg.randn(len(rhoa)) * errPerc / 100. + 1.)
+synres = [100.0, 500.0, 20.0, 800.0]  # synthetic resistivity
+synthk = [0.5, 3.5, 6.0]  # synthetic thickness (nlay-th layer is infinite)
+rhoa = f(synthk + synres)
+rhoa = rhoa * (pg.randn(len(rhoa)) * errPerc / 100.0 + 1.0)
 fig, ax = plt.subplots()
 ax.loglog(rhoa, ab2, "x-")
 ax.invert_yaxis()
@@ -50,11 +49,11 @@ ax.grid(True)
 #
 
 inv = LSQRInversion(fop=f, verbose=True)
-inv.dataTrans = 'log'
-inv.modelTrans = 'log'
-startModel = [7.0] * (nlay-1) + [pg.median(rhoa)] * nlay
+inv.dataTrans = "log"
+inv.modelTrans = "log"
+startModel = [7.0] * (nlay - 1) + [pg.median(rhoa)] * nlay
 inv.inv.setMarquardtScheme()
-model1 = inv.run(rhoa, errPerc/100, lam=lam, startModel=startModel)
+model1 = inv.run(rhoa, errPerc / 100, lam=lam, startModel=startModel)
 
 # %%%
 # To formulate the constraints, we need to set up a matrix for the left side
@@ -73,7 +72,7 @@ for i in range(3):
 
 c = pg.Vector(1, pg.sum(synthk))
 inv.setParameterConstraints(G, c, 100)
-model2 = inv.run(rhoa, errPerc/100, lam=lam, startModel=startModel)
+model2 = inv.run(rhoa, errPerc / 100, lam=lam, startModel=startModel)
 
 # %%%
 # All three models are plotted together and are equivalently fitting the data.

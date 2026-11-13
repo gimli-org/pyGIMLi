@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Raypaths in layered and gradient models
 =======================================
@@ -39,10 +38,7 @@ mesh_layered = mt.createGrid(
 
 vel_layered = np.zeros(mesh_layered.cellCount())
 for cell in mesh_layered.cells():
-    if cell.center().y() < -25:
-        vel = 3000.0
-    else:
-        vel = 1000.0
+    vel = 3000.0 if cell.center().y() < -25 else 1000.0
     vel_layered[cell.id()] = vel
 
 ax, cb = pg.show(mesh_layered, vel_layered, label="Velocity (m/s)")
@@ -107,7 +103,8 @@ fig, ax = plt.subplots(3, 2, figsize=(10, 10), sharex=True)
 
 for j, (case, mesh, vel) in enumerate(zip(["layered", "gradient"],
                                           [mesh_layered, mesh_gradient],
-                                          [vel_layered, vel_gradient])):
+                                          [vel_layered, vel_gradient],
+                                          strict=False)):
     pg.boxprint(case)
     if case == "gradient":
         ana = analyticalSolutionGradient
@@ -163,16 +160,14 @@ for j, (case, mesh, vel) in enumerate(zip(["layered", "gradient"],
         res = mgr.simulate(vel=vel, scheme=data, mesh=mesh, secNodes=n)
         # We need to copy res['t'] here because res['t'] is a reference to
         # an array in res, and res will be removed in the next iteration.
-        # Unfortunately, we don't have any reverence counting for core objects yet.
+        # Unfortunately, we don't have any reference counting for core
+        # objects yet.
         t_all.append(res['t'].array())
         durations.append(pg.dur())
-        pg.toc("Raytracing with %d secondary nodes:" % n)
+        pg.toc(f"Raytracing with {n} secondary nodes:")
 
         for r, p in enumerate(recs):
-            if r == 0:
-                lab = "Raypath with %d sec nodes" % n
-            else:
-                lab = None
+            lab = f"Raypath with {n} sec nodes" if r == 0 else None
 
             recNode = mgr.fop.mesh().findNearestNode([sensors[p], 0.0])
             sourceNode = mgr.fop.mesh().findNearestNode([0.0, 0.0])
@@ -188,11 +183,11 @@ for j, (case, mesh, vel) in enumerate(zip(["layered", "gradient"],
 
     for i, n in enumerate(sec_nodes):
         ax[1, j].plot(px, t_all[i] * 1000,
-                      label="Dijkstra (%d sec nodes, %.2f s)" % (n, durations[i]))
+                      label=f"Dijkstra ({n} sec nodes, {durations[i]:.2f} s)")
 
-    ax[2, j].plot(px, np.zeros_like(px), label="Zero line")  # to keep color cycle
+    ax[2, j].plot(px, np.zeros_like(px), label="Zero line")  # keep colors
 
-    for i, n in enumerate(sec_nodes):
+    for i, _ in enumerate(sec_nodes):
         ax[2, j].plot(px, np.abs(t_all[i] - t_ana) * 1000)
 
     ax[1, j].legend()

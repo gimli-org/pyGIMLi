@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Plotting functions for magnetic resonance data."""
 
 import numpy as np
@@ -47,34 +46,34 @@ def showErrorBars(ax, thk, val, thkL, thkU, valL, valU, *args, **kwargs):
     valm = (val[:-1] + val[1:]) / 2
     xerr = [val - valL, valU - val]
     yerr = [thk - thkL, thkU - thk]
-    ax.errorbar(val, zm, fmt='.', xerr=xerr, ecolor='r', **kwargs)
-    ax.errorbar(valm, zb, fmt='.', yerr=yerr, ecolor='g', **kwargs)
+    ax.errorbar(val, zm, fmt=".", xerr=xerr, ecolor="r", **kwargs)
+    ax.errorbar(valm, zb, fmt=".", yerr=yerr, ecolor="g", **kwargs)
     ax.set_ylim(bottom=zm[-1] * 1.02, top=0)
 
 
-def showWC(ax, thk, wc, wmin=0., wmax=0.45, maxdep=0., dw=0.05, **kwargs):
+def showWC(ax, thk, wc, wmin=0.0, wmax=0.45, maxdep=0.0, dw=0.05, **kwargs):
     """Show water content function nicely."""
-    drawModel1D(ax, thk, wc, xlabel=r'$\theta$')
-    ax.set_xlim(0., 0.45)
-    if maxdep > 0.:
-        ax.set_ylim(maxdep, 0.)
+    drawModel1D(ax, thk, wc, xlabel=r"$\theta$")
+    ax.set_xlim(0.0, 0.45)
+    if maxdep > 0.0:
+        ax.set_ylim(maxdep, 0.0)
     wt = np.arange(wmin, wmax, dw)
     ax.set_xticks(wt)
     ax.set_xticklabels([str(wi) for wi in wt])
 
 
-def showT2(ax, thk, t2, maxdep=0., **kwargs):
+def showT2(ax, thk, t2, maxdep=0.0, **kwargs):
     """Show T2 function nicely."""
-    drawModel1D(ax, thk, t2*1e3, xlabel=r'$T_2^*$ [ms]',
-                plot='semilogx')
+    drawModel1D(ax, thk, t2 * 1e3, xlabel=r"$T_2^*$ [ms]", plot="semilogx")
     tmin = min(20, min(t2) * 0.9e3)
     tmax = max(500, max(t2) * 1.1e3)
     ax.set_xlim(tmin, tmax)
-    if maxdep > 0.:
-        ax.set_ylim(maxdep, 0.)
+    if maxdep > 0.0:
+        ax.set_ylim(maxdep, 0.0)
     xt = [20, 50, 100, 200, 500]
     ax.set_xticks(xt)
     ax.set_xticklabels([str(ai) for ai in xt])
+
 
 if __name__ == "__main__":
     pass

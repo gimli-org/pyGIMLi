@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Generic matrix visualization tools."""
 
 # import matplotlib as mpl
@@ -36,7 +35,7 @@ def showMatrix(mat, ax=None, **kwargs):
         from scipy.sparse import spmatrix
 
         if isinstance(mat, spmatrix):
-            kwargs.setdefault('markersize', 1)
+            kwargs.setdefault("markersize", 1)
             gci = drawSparseMatrix(ax, mat, **kwargs)
             return ax, None
     except ImportError:
@@ -53,19 +52,25 @@ def showMatrix(mat, ax=None, **kwargs):
             cMap = cmapFromName("Set3", ncols=len(uniqueIDs))
             sm = pg.plt.cm.ScalarMappable(cmap=cMap)
 
-            cBar = createColorBar(sm, ax=ax, label="Matrix ID",
-                                  cMin=-0.5, cMax=len(uniqueIDs)-0.5)
+            cBar = createColorBar(
+                sm,
+                ax=ax,
+                label="Matrix ID",
+                cMin=-0.5,
+                cMax=len(uniqueIDs) - 0.5,
+            )
             ticks = np.arange(len(uniqueIDs))
             cBar.set_ticks(ticks)
 
             labels = []
             for ID in uniqueIDs:
-                label = "{:d}".format(ID)
+                label = f"{ID:d}"
                 labels.append(label)
             cBar.set_ticklabels(labels)
 
     elif isinstance(mat, pg.matrix.Matrix):
         from pygimli.utils import gmat2numpy
+
         gci = ax.matshow(gmat2numpy(mat))
         cBar = ax.figure.colorbar(gci)
 
@@ -73,8 +78,7 @@ def showMatrix(mat, ax=None, **kwargs):
         gci = ax.matshow(mat.M)
         cBar = ax.figure.colorbar(gci)
 
-    elif isinstance(mat, (pg.matrix.IdentityMatrix,
-                          pg.matrix.DiagonalMatrix)):
+    elif isinstance(mat, (pg.matrix.IdentityMatrix, pg.matrix.DiagonalMatrix)):
         x = [0, mat.cols()]
         ax.plot(x, x)
         ax.set_ylim(x[::-1])
@@ -82,7 +86,7 @@ def showMatrix(mat, ax=None, **kwargs):
     else:
         nC = mat.cols()
         nR = mat.rows()
-        ax.fill([0, nC, nC, 0, 0], [0, 0, nR, nR, 0], hatch='/')
+        ax.fill([0, nC, nC, 0, 0], [0, 0, nR, nR, 0], hatch="/")
         ax.set_ylim(nR, 0)
 
     return ax, cBar

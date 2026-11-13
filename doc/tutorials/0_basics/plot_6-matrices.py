@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 Matrices
 ========
@@ -31,7 +30,7 @@ A[2, 2] = -1
 A[1] = np.arange(4)
 print(A)
 x = np.arange(4) + 5
-A*x
+A * x
 
 # %%%
 # Exists also as complex matrix under ``pg.matrix.CMatrix``.
@@ -81,7 +80,7 @@ ax, _ = pg.show(A)
 
 A = pg.matrix.IdentityMatrix(3)  # , 2.0)
 x = [10, 11, 12]
-A*x
+A * x
 
 # %%%
 # Weighted matrices
@@ -99,8 +98,8 @@ A += 1
 w = [2, 3, -1]
 B = pg.matrix.MultLeftMatrix(A, w)
 x = np.arange(4)
-print(A*x)
-print(B*x)
+print(A * x)
+print(B * x)
 
 # %%%
 # Combinations of matrices

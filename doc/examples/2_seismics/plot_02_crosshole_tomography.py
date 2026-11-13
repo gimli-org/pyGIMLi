@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
 """
 Crosshole traveltime tomography
 ===============================
@@ -22,7 +21,7 @@ import pygimli as pg
 import pygimli.meshtools as mt
 import pygimli.physics.traveltime as tt
 
-pg.utils.units.quants['vel']['cMap'] = 'inferno_r'
+pg.utils.units.quants["vel"]["cMap"] = "inferno_r"
 ###############################################################################
 # Geometry setup
 # --------------
@@ -33,13 +32,14 @@ bh_spacing = 20.0
 bh_length = 25.0
 sensor_spacing = 2.5
 
-world = mt.createRectangle(start=[0, -(bh_length + 3)], end=[bh_spacing, 0.0],
-                           marker=0)
+world = mt.createRectangle(
+    start=[0, -(bh_length + 3)], end=[bh_spacing, 0.0], marker=0
+)
 
 depth = -np.arange(sensor_spacing, bh_length + sensor_spacing, sensor_spacing)
 
 sensors = np.zeros((len(depth) * 2, 2))  # two boreholes
-sensors[len(depth):, 0] = bh_spacing  # x
+sensors[len(depth) :, 0] = bh_spacing  # x
 sensors[:, 1] = np.hstack([depth] * 2)  # y
 
 ###############################################################################
@@ -55,9 +55,15 @@ for sen in sensors:
     geom.createNode(sen)
 
 mesh_fwd = mt.createMesh(geom, quality=34, area=0.25)
-model = np.array([2000., 2300, 1700])[mesh_fwd.cellMarkers()]
-ax, cb = pg.show(mesh_fwd, model, logScale=False,
-                 label=pg.unit('vel'), cMap=pg.cmap('vel'), nLevs=3)
+model = np.array([2000.0, 2300, 1700])[mesh_fwd.cellMarkers()]
+ax, cb = pg.show(
+    mesh_fwd,
+    model,
+    logScale=False,
+    label=pg.unit("vel"),
+    cMap=pg.cmap("vel"),
+    nLevs=3,
+)
 
 ###############################################################################
 # Synthetic data generation
@@ -78,8 +84,15 @@ scheme = tt.createCrossholeData(sensors)
 # <https://doi.org/10.1016/j.cageo.2012.12.005>`_ to learn more about it.
 
 mgr = tt.TravelTimeManager()
-data = tt.simulate(mesh=mesh_fwd, scheme=scheme, slowness=1./model,
-                   secNodes=4, noiseLevel=0.001, noiseAbs=1e-5, seed=1337)
+data = tt.simulate(
+    mesh=mesh_fwd,
+    scheme=scheme,
+    slowness=1.0 / model,
+    secNodes=4,
+    noiseLevel=0.001,
+    noiseAbs=1e-5,
+    seed=1337,
+)
 
 ax, cb = tt.showVA(data, usePos=False)
 
@@ -95,9 +108,16 @@ mesh = pg.meshtools.createGrid(x, y)
 ax, _ = pg.show(mesh, hold=True)
 ax.plot(sensors[:, 0], sensors[:, 1], "ro")
 
-invmodel = mgr.invert(data, mesh=mesh, secNodes=3, lam=1000, zWeight=1.0,
-                      useGradient=False, verbose=True)
-print("chi^2 = {:.2f}".format(mgr.inv.chi2()))  # Look at the data fit
+invmodel = mgr.invert(
+    data,
+    mesh=mesh,
+    secNodes=3,
+    lam=1000,
+    zWeight=1.0,
+    useGradient=False,
+    verbose=True,
+)
+print(f"chi^2 = {mgr.inv.chi2():.2f}")  # Look at the data fit
 
 ###############################################################################
 # Finally, we visualize the true model and the inversion result next to each
@@ -107,8 +127,15 @@ fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 7), sharex=True, sharey=True)
 ax1.set_title("True model")
 ax2.set_title("Inversion result")
 
-ax, cb = pg.show(mesh_fwd, model, ax=ax1, showMesh=True,
-                 label=pg.unit('vel'), cMap=pg.cmap('vel'), nLevs=3)
+ax, cb = pg.show(
+    mesh_fwd,
+    model,
+    ax=ax1,
+    showMesh=True,
+    label=pg.unit("vel"),
+    cMap=pg.cmap("vel"),
+    nLevs=3,
+)
 
 for ax in (ax1, ax2):
     ax.plot(sensors[:, 0], sensors[:, 1], "wo")

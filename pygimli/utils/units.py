@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Collection of frequently used physical quantities with units and
-there abbreviations."""
+"""Collection of physical quantities with units and abbreviations."""
 
 import pygimli as pg
 from ..core.config import rc
@@ -104,7 +102,7 @@ def quantity(name):
     quantity = None
 
     if name.lower() not in quants:
-        for k, v in quants.items():
+        for _k, v in quants.items():
             if v['name'].lower() == name.lower():
                 quantity = v
                 break
@@ -123,7 +121,7 @@ def cmap(name):
 
 
 def unit(name, unit='auto'):
-    """ Return the name of a physical quantity with its unit.
+    """Return the name of a physical quantity with its unit.
 
     TODO
     ----
@@ -132,6 +130,15 @@ def unit(name, unit='auto'):
 
     Parameters
     ----------
+    name : str
+        Name or abbreviation of the physical quantity.
+    unit : str ['auto']
+        Unit to use, 'auto' for the default unit of the quantity.
+
+    Returns
+    -------
+    str
+        Quantity name including its unit.
     """
     q = quantity(name)
 
@@ -151,12 +158,12 @@ def unit(name, unit='auto'):
             unit = q['unit']
 
     if unit is None:
-        return '{0}'.format(name)
+        return f'{name}'
 
     if rc['unitStyle'] == 1 or rc['lang'] == 'german' or \
             rc['lang'] == 'de' or rc['lang'] == 'ger':
-        return '{0} in {1}'.format(name, unit)
+        return f'{name} in {unit}'
     elif rc['unitStyle'] == 2:
-        return '{0} ({1})'.format(name, unit)
+        return f'{name} ({unit})'
     elif rc['unitStyle'] == 3:
-        return '{0} [{1}]'.format(name, unit)
+        return f'{name} [{unit}]'

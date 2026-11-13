@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 .. _ex:koenigsee:
 
@@ -50,8 +49,14 @@ ax, cbar = mgr.showData()
 # Finally, we call the `invert` method and plot the result.The mesh is created
 # based on the sensor positions on-the-fly.
 
-mgr.invert(secNodes=3, paraMaxCellSize=5.0,
-           zWeight=0.2, vTop=500, vBottom=5000, verbose=1)
+mgr.invert(
+    secNodes=3,
+    paraMaxCellSize=5.0,
+    zWeight=0.2,
+    vTop=500,
+    vBottom=5000,
+    verbose=1,
+)
 
 ###############################################################################
 # Look at the fit between measured (crosses) and modelled (lines) traveltimes.
@@ -61,8 +66,13 @@ mgr.showFit(firstPicks=True)
 ###############################################################################
 # You can plot only the model and customize with a bunch of keywords
 
-ax, cbar = mgr.showResult(logScale=False, cMin=500, cMax=3000, cMap="plasma_r",
-                          coverage=mgr.standardizedCoverage())
+ax, cbar = mgr.showResult(
+    logScale=False,
+    cMin=500,
+    cMax=3000,
+    cMap="plasma_r",
+    coverage=mgr.standardizedCoverage(),
+)
 rays = mgr.drawRayPaths(ax=ax, color="k", lw=0.3, alpha=0.5)
 
 # mgr.coverage() yields the ray coverage in m and standardizedCoverage as 0/1

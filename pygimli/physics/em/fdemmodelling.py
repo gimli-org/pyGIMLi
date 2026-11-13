@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 """Frequency Domain Electromagnetics (FDEM) functions and class."""
 
-from pathlib import Path
 import numpy as np
 
 import pygimli as pg
-from .hemmodelling import HEMmodelling
+
 
 class FDEM2dFOPold(pg.core.ModellingBase):
     """Old variant of 2D FOP (to be deleted)."""
@@ -51,8 +50,11 @@ class FDEM2dFOP(pg.core.ModellingBase):
         self.J = pg.matrix.BlockMatrix()
         self.FOP1d = []
         for i in range(self.nx):
-            self.FOP1d.append(pg.core.FDEM1dModelling(
-                nlay, data.freq(), data.coilSpacing, -data.height))
+            self.FOP1d.append(
+                pg.core.FDEM1dModelling(
+                    nlay, data.freq(), data.coilSpacing, -data.height
+                )
+            )
             n = self.J.addMatrix(self.FOP1d[-1].jacobian())
             self.J.addMatrixEntry(n, self.nf * 2 * i, npar * i)
 
@@ -82,8 +84,9 @@ class HEM1dWithElevation(pg.core.ModellingBase):
         """Set up class by frequencies and geometries."""
         pg.core.ModellingBase.__init__(self, verbose)
         self.nlay_ = nlay  # real layers (actually one more!)
-        self.FOP_ = pg.core.FDEM1dModelling(nlay + 1, frequencies,
-                                            coilspacing, self.height)
+        self.FOP_ = pg.core.FDEM1dModelling(
+            nlay + 1, frequencies, coilspacing, self.height
+        )
         self.mesh_ = pg.meshtools.createMesh1D(nlay, 2)
         # thicknesses & res
         self.mesh_.cell(0).setMarker(2)
@@ -93,5 +96,5 @@ class HEM1dWithElevation(pg.core.ModellingBase):
         """Return forward response for a given model."""
         thk = model(0, self.nlay)  # thicknesses including height
         res = model(self.nlay - 1, self.nlay * 2)
-        res[0] = 10000.
+        res[0] = 10000.0
         return self.FOP_.response(pg.cat(thk, res))

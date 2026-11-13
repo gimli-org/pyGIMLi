@@ -274,6 +274,24 @@ convention = "numpy"
     "F401",  # re-export of core classes (RVector, MatrixBase, ...)
     "N807",  # __mul__ and friends are monkey patches of core classes
 ]
+"pygimli/core/math.py" = [
+    # public API hub: re-exported as pygimli.math.* (see pygimli/__init__.py)
+    "F401",  # re-export of math functions from pygimli.core
+]
+"pygimli/core/datacontainer.py" = [
+    # dataMap() is a C++ std::map: iterating yields (key, value) tuples, so
+    # .keys() cannot be dropped
+    "SIM118",
+]
+"pygimli/core/mesh.py" = [
+    # dataMap() is a C++ std::map: iterating yields (key, value) tuples, so
+    # .keys() cannot be dropped
+    "SIM118",
+]
+"pygimli/math/matrix.py" = [
+    # public API hub: re-exported as pygimli.matrix.* (see pygimli/__init__.py)
+    "F401",  # re-export of matrix helpers from pygimli.core.matrix
+]
 "core/python/hand_made_wrappers.py" = [
     "E501",  # embedded C++ code strings are not wrapped
 ]

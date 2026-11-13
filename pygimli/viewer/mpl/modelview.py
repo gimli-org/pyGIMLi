@@ -180,12 +180,12 @@ def draw1DColumn(ax, x, val, thk, width=30, ztopo=0, cMin=1, cMax=1000,
 
 
 def showmymatrix(mat, x, y, dx=2, dy=1, xlab=None, ylab=None, cbar=None):
-    """What is this good for?."""
+    """Show a matrix as image (debug helper)."""
     pg.critical('who use this?')
     plt = pg.plt
     plt.imshow(mat, interpolation='nearest')
-    plt.xticks(np.arange(0, len(x), dx), ["%g" % rndig(xi, 2) for xi in x])
-    plt.yticks(np.arange(0, len(y), dy), ["%g" % rndig(yi, 2) for yi in y])
+    plt.xticks(np.arange(0, len(x), dx), [f"{rndig(xi, 2):g}" for xi in x])
+    plt.yticks(np.arange(0, len(y), dy), [f"{rndig(yi, 2):g}" for yi in y])
     plt.ylim((len(y) - 0.5, -0.5))
 
     if xlab is not None:
@@ -351,7 +351,7 @@ def showStitchedModels(models, ax=None, x=None, cMin=None, cMax=None, thk=None,
 
 
 def draw1dmodel(x, thk=None, xlab=None, zlab="z in m", islog=True, z0=0):
-    """DEPRECATED."""
+    """Forward to show1dmodel (deprecated)."""
     pg.critical("STYLE_WARNING!!!!!!! don't use this call. "
           "WHO use this anymore?? Use show1dmodel or drawModel1D instead.")
     show1dmodel(x, thk, xlab, zlab, islog, z0)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 2D ERT modelling and inversion
 ==============================
@@ -83,7 +82,8 @@ pg.info('Simulated data', data)
 pg.info('The data contains:', data.dataMap().keys())
 
 pg.info('Simulated rhoa (min/max)', min(data['rhoa']), max(data['rhoa']))
-pg.info('Selected data noise %(min/max)', min(data['err'])*100, max(data['err'])*100)
+pg.info('Selected data noise %(min/max)',
+        min(data['err'])*100, max(data['err'])*100)
 
 ###############################################################################
 # Optional: you can filter all values and tokens in the data container.
@@ -122,7 +122,8 @@ meshPD = pg.Mesh(mgr.paraDomain) # Save copy of para mesh for plotting later
 # to be numbered counter-clockwise and the boundary normal directions need to
 # point outside.
 inversionDomain = pg.createGrid(x=np.linspace(start=-18, stop=18, num=33),
-                                y=-pg.cat([0], pg.utils.grange(0.5, 8, n=5))[::-1],
+                                y=-pg.cat([0],
+                                          pg.utils.grange(0.5, 8, n=5))[::-1],
                                 marker=2)
 
 ###############################################################################
@@ -155,9 +156,10 @@ modelPD = mgr.paraModel(model)  # do the mapping
 pg.show(mgr.paraDomain, modelPD, label='Model', cMap='Spectral_r',
         logScale=True, cMin=25, cMax=150)
 
-pg.info('Inversion stopped with chi² = {0:.3}'.format(mgr.fw.chi2()))
+pg.info(f'Inversion stopped with chi² = {mgr.fw.chi2():.3}')
 
-fig, (ax1, ax2, ax3) = plt.subplots(3,1, sharex=True, sharey=True, figsize=(8,7))
+fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, sharey=True,
+                                   figsize=(8, 7))
 
 pg.show(mesh, rhomap, ax=ax1, hold=True, cMap="Spectral_r", logScale=True,
         orientation="vertical", cMin=25, cMax=150)
@@ -166,7 +168,7 @@ pg.show(meshPD, inv, ax=ax2, hold=True, cMap="Spectral_r", logScale=True,
 mgr.showResult(ax=ax3, cMin=25, cMax=150, orientation="vertical")
 
 labels = ["True model", "Inversion unstructured mesh", "Inversion regular grid"]
-for ax, label in zip([ax1, ax2, ax3], labels):
+for ax, label in zip([ax1, ax2, ax3], labels, strict=False):
     ax.set_xlim(mgr.paraDomain.xmin(), mgr.paraDomain.xmax())
     ax.set_ylim(mgr.paraDomain.ymin(), mgr.paraDomain.ymax())
     ax.set_title(label)

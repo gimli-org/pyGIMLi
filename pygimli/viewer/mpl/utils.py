@@ -6,7 +6,7 @@ import time
 import numpy as np
 
 import pygimli as pg
-from pygimli.utils import prettyFloat, prettyTime
+from pygimli.utils import prettyFloat
 
 __holdAxes__ = True
 __lastBackend__ = None
@@ -85,7 +85,8 @@ def registerShowPendingFigsAtExit():
 
         #pg._y('register wait on exit')
         ## first  call one empty show to initial QtManager before register
-        # onExit to avoid RuntimeError: wrapped C/C++ object MainWindow been deleted
+        # onExit to avoid RuntimeError: wrapped C/C++ object MainWindow
+        # has been deleted
         if 'matplotlib.pyplot' in sys.modules:
             import matplotlib.pyplot as plt
             #pg._g('empty show')
@@ -93,7 +94,7 @@ def registerShowPendingFigsAtExit():
 
         @atexit.register
         def waitOnExit():
-            """Call on script end to ensure to open all remaining mpl figures."""
+            """Open all remaining mpl figures when the script ends."""
             #pg._g('waitonexit')
             # only call it if mpl has been used
 
@@ -104,20 +105,22 @@ def registerShowPendingFigsAtExit():
                 #backend = plt.get_backend()
                 #print('backend', backend)
 
-                if 'inline' not in backend \
-                    and ('qt' in backend.lower()
-                          or 'wx' in backend.lower()
-                          or 'tk' in backend.lower()
-                          or 'gtk' in backend.lower()):
-
-                    if len(plt.get_fignums()) > 0:
-                        pg.info(f'Showing pending widgets ({backend}) on exit. '
-                                 'Close all figures or Ctrl-C to quit the ' \
-                                 'program')
-                        try:
-                            pg.wait()
-                        except Exception as e:
-                            pg.debug(f'pg.wait() failed on exit: {e}')
+                if len(plt.get_fignums()) > 0 and (
+                    'inline' not in backend
+                    and (
+                        'qt' in backend.lower()
+                        or 'wx' in backend.lower()
+                        or 'tk' in backend.lower()
+                        or 'gtk' in backend.lower()
+                    )
+                ):
+                    pg.info(f'Showing pending widgets ({backend}) on exit. '
+                            'Close all figures or Ctrl-C to quit the '
+                            'program')
+                    try:
+                        pg.wait()
+                    except Exception as e:
+                        pg.debug(f'pg.wait() failed on exit: {e}')
 
     __registeredShowPendingFigsAtExit__ = True
 
@@ -131,8 +134,8 @@ def saveFigure(fig, filename, pdfTrim=False):
     if pdfTrim:
         try:
             print("trying pdf2pdfS ... ")
-            os.system('pdf2pdfBB ' + filename + '.pdf')
-            os.system('pdf2pdfS ' + filename + '.pdf')
+            os.system('pdf2pdfBB ' + filename + '.pdf')  # noqa: S605
+            os.system('pdf2pdfS ' + filename + '.pdf')  # noqa: S605
         except BaseException as _:
             print("fail local convert. Should be no problem.")
 
@@ -158,7 +161,8 @@ def insertUnitAtNextLastTick(ax, unit, xlabel=True, position=-2):
         ax.set_yticklabels(labels)
 
 
-def adjustWorldAxes(ax, useDepth:bool=True, xl:str='$x$ in m', yl:str='Depth in m'):
+def adjustWorldAxes(ax, useDepth:bool=True, xl:str='$x$ in m',
+                    yl:str='Depth in m'):
     """Set some common default properties for an axe."""
     if useDepth is True:
         renameDepthTicks(ax)
@@ -195,7 +199,7 @@ def setPrettyTimeTicks(ax):
 
 
 def setPrettyTimeAxis(axis, unit=None):
-
+    """Format a time axis with pretty (time-step aware) tick labels."""
     from matplotlib import ticker
 
     class MyLogFormatterMathtext(ticker.LogFormatterMathtext):
@@ -232,18 +236,15 @@ def setPrettyTimeAxis(axis, unit=None):
                 return ''
 
             # use string formatting of the base if it is not an integer
-            if b % 1 == 0.0:
-                base = '%d' % b
-            else:
-                base = '%s' % b
+            base = f'{int(b)}' if b % 1 == 0.0 else f'{b}'
 
             if abs(fx) < min_exp:
 
-                return r'$\mathdefault{%s%g}$' % (sign_string, x)
+                return rf'$\mathdefault{{{sign_string}{x:g}}}$'
             elif not is_x_decade:
                 return self._non_decade_format(sign_string, base, fx, usetex)
             else:
-                return r'$\mathdefault{%s%s^{%d}}$' % (sign_string, base, fx)
+                return rf'$\mathdefault{{{sign_string}{base}^{{{int(fx)}}}}}$'
 
 
     @ticker.FuncFormatter
@@ -382,8 +383,9 @@ def createAnimation(fig, animate, nFrames, dpi, out):
               extra_anim=None, savefig_kwargs=None)
     try:
         print("Create frames ... ")
-        os.system('mkdir -p anim-' + out)
-        os.system('ffmpeg -i ' + out + '.mp4 anim-' + out + '/movie%d.jpg')
+        os.system('mkdir -p anim-' + out)  # noqa: S605
+        os.system('ffmpeg -i ' + out + '.mp4 anim-' + out  # noqa: S605
+                  + '/movie%d.jpg')
     except BaseException as _:
         pass
 

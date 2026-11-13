@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 """
-Full wave form seismics utilities and simulations
+Full wave form seismics utilities and simulations.
 
 (for traveltime problems see traveltime module)
 
@@ -9,5 +8,5 @@ Full wave form seismics utilities and simulations
 * drawSeismogram - draw seismogram
 * drawWiggle - draw a single wiggle
 """
-from . seismics import (ricker, solvePressureWave,
-                        drawSeismogram, drawWiggle)
+
+from .seismics import ricker, solvePressureWave, drawSeismogram, drawWiggle

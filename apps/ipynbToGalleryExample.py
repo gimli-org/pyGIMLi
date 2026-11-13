@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""Convert jupyter notebook to sphinx gallery notebook styled examples.
 
 Modified from here:https://gist.github.com/chsasank/7218ca16f8d022e02a9c0deb94a310fe#file-ipynb_to_gallery-py
@@ -11,13 +10,15 @@ pypandoc: install using `pip install pypandoc`
 """
 import pypandoc as pdoc
 import json
+from pathlib import Path
 
 
 def fixRST(rst):
+    """Convert ipynb flavour reST into flat reST for sphinx-gallery."""
     #rst = rst.replace('\n', '') # only for windows
     rst = rst.replace('\r', '\n')
     rst = rst.replace(r":raw-latex:`\begin{align}", "\n.. math::\n\t")
-    rst = rst.replace("\end{align}`", "")
+    rst = rst.replace(r"\end{align}`", "")
 
     # some spocky encoding problems with '
     rst = rst.replace('’', "'")
@@ -33,13 +34,14 @@ def fixRST(rst):
 
 
 def convert_ipynb_to_gallery(fileName):
+    """Write the cells of an ipynb file as sphinx-gallery python script."""
     outFileName = fileName.replace('.ipynb', '.py')
-    print("Converting {0} -> {1}".format(fileName, outFileName))
+    print(f"Converting {fileName} -> {outFileName}")
 
     header = "#!/usr/bin/env python\n" +\
              "# -*- coding: utf-8 -*-\n"
 
-    with open(fileName, encoding="utf-8") as fi:
+    with Path(fileName).open(encoding="utf-8") as fi:
         nb_dict = json.load(fi)
 
     cells = nb_dict['cells']
@@ -49,10 +51,10 @@ def convert_ipynb_to_gallery(fileName):
         try:
             if cell['source'][0].startswith('%'):
                 continue
-        except:
+        except (IndexError, KeyError):
             pass
 
-        if first == True:
+        if first:
             if cell['cell_type'] != 'markdown':
                 continue
             first = False
@@ -78,7 +80,7 @@ def convert_ipynb_to_gallery(fileName):
                 python_file = python_file + '\n\n# %%%\n' + source
 
     python_file = python_file.replace("\n%", "\n# %")
-    open(outFileName, 'w', encoding="utf-8").write(python_file)
+    Path(outFileName).write_text(python_file, encoding="utf-8")
 
 
 if __name__ == '__main__':

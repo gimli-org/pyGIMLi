@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# encoding: utf-8
 """
 3D crosshole ERT inversion
 ==========================
@@ -69,9 +68,10 @@ for elpos in elPosXY:
 #
 
 bnd = 5
-rectMesh = mt.createMesh(rect, quality=34.3, area=.4)
+rectMesh = mt.createMesh(rect, quality=34.3, area=0.4)
 mesh2d = mt.appendTriangleBoundary(
-    rectMesh, boundary=bnd, isSubSurface=False, marker=1)
+    rectMesh, boundary=bnd, isSubSurface=False, marker=1
+)
 ax, cb = pg.show(mesh2d, markers=True, showMesh=True)
 _ = ax.plot(*elPosXY.T, "mx")
 
@@ -83,7 +83,7 @@ dTop, dBot = 4.1, 10.1
 dzIn, dzOut = 0.4, 0.8
 zTop = np.arange(0, dTop, dzOut)  # the upper layer
 zMid = np.arange(zTop[-1], dBot, dzIn)  # the middle
-zBot = np.arange(zMid[-1], dBot+bnd+.1, dzOut)  # the lower layer
+zBot = np.arange(zMid[-1], dBot + bnd + 0.1, dzOut)  # the lower layer
 zVec = -np.concatenate([zTop, zMid[1:], zBot[1:]])  # all vectors together
 print(zVec)
 
@@ -94,8 +94,12 @@ print(zVec)
 # 56k cells, of which most are background and less than 20k cells are inverted.
 #
 
-mesh = mt.createMesh3D(mesh2d, zVec, pg.core.MARKER_BOUND_HOMOGEN_NEUMANN,
-                       pg.core.MARKER_BOUND_MIXED)
+mesh = mt.createMesh3D(
+    mesh2d,
+    zVec,
+    pg.core.MARKER_BOUND_HOMOGEN_NEUMANN,
+    pg.core.MARKER_BOUND_MIXED,
+)
 print(mesh)
 for c in mesh.cells():
     cd = -c.center().z()  # center depth
@@ -127,8 +131,14 @@ mgr.invert(mesh=mesh, zWeight=0.3, verbose=True)
 
 pd = mgr.paraDomain
 pd["res"] = mgr.model
-pl, _ = pg.show(pd, label="res", style="surface", cMap="Spectral_r", hold=True,
-                filter={"clip": dict(normal=[1, 1, 0], origin=[2, 2, -6])})
+pl, _ = pg.show(
+    pd,
+    label="res",
+    style="surface",
+    cMap="Spectral_r",
+    hold=True,
+    filter={"clip": dict(normal=[1, 1, 0], origin=[2, 2, -6])},
+)
 pl.add_points(data.sensors().array(), color="magenta")
 pl.camera_position = "yz"
 pl.camera.azimuth = 20

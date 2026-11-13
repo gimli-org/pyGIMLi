@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# encoding: utf-8
 """
 3D surface ERT inversion
 ========================
@@ -33,8 +32,9 @@ print(data)
 # boxes for inversion region and background and mesh it then.
 #
 
-plc = mt.createParaMeshPLC3D(data, paraDepth=12, paraMaxCellSize=3,
-                             surfaceMeshQuality=34)
+plc = mt.createParaMeshPLC3D(
+    data, paraDepth=12, paraMaxCellSize=3, surfaceMeshQuality=34
+)
 mesh = mt.createMesh(plc, quality=1.3)
 print(mesh)
 
@@ -53,10 +53,22 @@ mgr.invert(mesh=mesh, verbose=True)
 
 pd = mgr.paraDomain
 pd["res"] = mgr.model
-pl, _ = pg.show(pd, label="res", style="surface", cMap="Spectral_r", hold=True,
-                filter={"threshold": dict(value=500, scalars="res")})
-pv.drawMesh(pl, pd, label="res", style="surface", cMap="Spectral_r",
-            filter={"slice": dict(normal=[-1, 0, 0], origin=[5, 15, -2])})
+pl, _ = pg.show(
+    pd,
+    label="res",
+    style="surface",
+    cMap="Spectral_r",
+    hold=True,
+    filter={"threshold": dict(value=500, scalars="res")},
+)
+pv.drawMesh(
+    pl,
+    pd,
+    label="res",
+    style="surface",
+    cMap="Spectral_r",
+    filter={"slice": dict(normal=[-1, 0, 0], origin=[5, 15, -2])},
+)
 pl.camera_position = "yz"
 pl.camera.azimuth = 20
 pl.camera.elevation = 20

@@ -188,17 +188,15 @@ class ERTModelling(ERTModellingBase):
     def flipImagPart(self, v):
         """Flip imaginary port (convention)."""
         z = pg.utils.toComplex(v)
-        pg.warn('pre min/max={} / {} im: {} / {}'.format(
-            pf(min(z.real)), pf(max(z.real)),
-            pf(min(z.imag)), pf(max(z.imag))))
+        pg.warn(f'pre min/max={pf(min(z.real))} / {pf(max(z.real))} '
+                f'im: {pf(min(z.imag))} / {pf(max(z.imag))}')
 
         v = pg.utils.squeezeComplex(pg.utils.toComplex(v),
                                     conj=self._conjImag)
 
         z = pg.utils.toComplex(v)
-        pg.warn('pos min/max={} / {} im: {} / {}'.format(
-            pf(min(z.real)), pf(max(z.real)),
-            pf(min(z.imag)), pf(max(z.imag))))
+        pg.warn(f'pos min/max={pf(min(z.real))} / {pf(max(z.real))} '
+                f'im: {pf(min(z.imag))} / {pf(max(z.imag))}')
         return v
 
     def response(self, mod):
@@ -339,8 +337,8 @@ class ERTModellingReference(ERTModellingBase):
         self.lastResponse = r * self.data['k']
 
         if self.verbose:
-            print("Resp min/max: {} {} {}s".format(
-                min(self.lastResponse), max(self.lastResponse), pg.dur()))
+            print(f"Resp min/max: {min(self.lastResponse)} "
+                  f"{max(self.lastResponse)} {pg.dur()}s")
 
         return self.lastResponse
 

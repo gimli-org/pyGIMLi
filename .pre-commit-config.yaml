@@ -19,5 +19,6 @@ repos:
       # out of `git blame`); this hook keeps it that way going forward.
       #
       # deactivated for now, as it is too aggressive and breaks
-      # the code style in some cases.
-      - id: ruff-format
+      # the code style in some cases (it reformats every touched file,
+      # which turns small fixes into whole-file diffs).
+      # - id: ruff-format
