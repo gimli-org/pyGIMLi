@@ -2,6 +2,7 @@
 # Python standard taken from https://github.com/github/gitignore/blob/master/Python.gitignore
 #
 
+tmp/*
 # Documentation
 _build/
 doc/_tutorials_auto/

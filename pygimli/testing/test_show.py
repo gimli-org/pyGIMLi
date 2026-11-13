@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Tests for pygimli.show."""
 
-import sys
 import unittest
 
 import numpy as np
@@ -16,15 +15,22 @@ class TestShow(unittest.TestCase):
     def test_ShowVariants(self):
         """Test pygimli.show variants."""
         # Create geometry definition for the modelling domain
-        world = mt.createWorld(start=[-10, 0], end=[10, -16],
-                            layers=[-8], worldMarker=False)
+        world = mt.createWorld(
+            start=[-10, 0], end=[10, -16], layers=[-8], worldMarkers=False
+        )
 
         # Create a heterogeneous block
-        block = mt.createRectangle(start=[-6, -3.5], end=[6, -6.0],
-                                marker=4, boundaryMarker=10, area=0.1)
+        block = mt.createRectangle(
+            start=[-6, -3.5],
+            end=[6, -6.0],
+            marker=4,
+            boundaryMarker=10,
+            area=0.1,
+        )
 
-        circ = mt.createCircle(pos=[0, -11], radius=2, boundaryMarker=11,
-                            isHole=True)
+        circ = mt.createCircle(
+            pos=[0, -11], radius=2, boundaryMarker=11, isHole=True
+        )
 
         # Merge geometrical entities
         geom = world + block + circ
@@ -33,105 +39,194 @@ class TestShow(unittest.TestCase):
         fig, axs = plt.subplots(3, 5)
 
         pg.show(geom, ax=axs[0][0])
-        axs[0][0].set_title('plc, (default)')
-        pg.show(geom, fillRegion=False, ax=axs[0][1])
-        axs[0][1].set_title('plc, fillRegion=False')
+        axs[0][0].set_title("plc, (default)")
+        pg.show(geom, regions=False, ax=axs[0][1])
+        axs[0][1].set_title("plc, regions=False")
         pg.show(geom, showBoundary=False, ax=axs[0][2])
-        axs[0][2].set_title('plc, showBoundary=False')
+        axs[0][2].set_title("plc, showBoundary=False")
         pg.show(geom, markers=True, ax=axs[0][3])
-        axs[0][3].set_title('plc, markers=True')
+        axs[0][3].set_title("plc, markers=True")
         pg.show(mesh, ax=axs[0][4], showBoundary=False)
-        axs[0][4].set_title('mesh, showBoundary=False')
+        axs[0][4].set_title("mesh, showBoundary=False")
 
         pg.show(mesh, ax=axs[1][0])
-        axs[1][0].set_title('mesh, (default)')
-        pg.show(mesh, mesh.cellMarkers(), label='Cell markers', ax=axs[1][1])
-        axs[1][1].set_title('mesh, cells, (default)')
+        axs[1][0].set_title("mesh, (default)")
+        pg.show(mesh, mesh.cellMarkers(), label="Cell markers", ax=axs[1][1])
+        axs[1][1].set_title("mesh, cells, (default)")
         pg.show(mesh, markers=True, ax=axs[1][2])
-        axs[1][2].set_title('mesh, cells, markers=True')
-        pg.show(mesh, mesh.cellMarkers(), label='Cell markers', showMesh=True,
-                ax=axs[1][3])
-        axs[1][3].set_title('mesh, cells, showMesh=True')
-        pg.show(mesh, mesh.cellMarkers(), label='Cell markers', showBoundary=False,
-                ax=axs[1][4])
-        axs[1][4].set_title('mesh, cells, showBoundary=False')
+        axs[1][2].set_title("mesh, cells, markers=True")
+        pg.show(
+            mesh,
+            mesh.cellMarkers(),
+            label="Cell markers",
+            showMesh=True,
+            ax=axs[1][3],
+        )
+        axs[1][3].set_title("mesh, cells, showMesh=True")
+        pg.show(
+            mesh,
+            mesh.cellMarkers(),
+            label="Cell markers",
+            showBoundary=False,
+            ax=axs[1][4],
+        )
+        axs[1][4].set_title("mesh, cells, showBoundary=False")
 
-        pg.show(mesh, pg.x(mesh), label='Nodes (x)', ax=axs[2][0])
-        axs[2][0].set_title('mesh, nodes, (default)')
-        pg.show(mesh, pg.x(mesh), label='Nodes (x)', showMesh=True, ax=axs[2][1])
-        axs[2][1].set_title('mesh, nodes, showMesh=True')
-        pg.show(mesh, pg.x(mesh), label='Nodes (x)', showBoundary=True,
-                ax=axs[2][2])
-        axs[2][2].set_title('mesh, nodes, showBoundary=True')
-        pg.show(mesh, pg.y(mesh.cellCenters()), label='Cell center (y)',
-                tri=True, shading='flat', ax=axs[2][3])
-        axs[2][3].set_title('mesh, cells, tri=True, shading=flat')
-        pg.show(mesh, pg.y(mesh.cellCenters()), label='Cell center (y)',
-                tri=True, shading='gouraud', ax=axs[2][4])
-        axs[2][4].set_title('mesh, cells, tri=True, shading=gouraud')
+        pg.show(mesh, pg.x(mesh), label="Nodes (x)", ax=axs[2][0])
+        axs[2][0].set_title("mesh, nodes, (default)")
+        pg.show(
+            mesh, pg.x(mesh), label="Nodes (x)", showMesh=True, ax=axs[2][1]
+        )
+        axs[2][1].set_title("mesh, nodes, showMesh=True")
+        pg.show(
+            mesh, pg.x(mesh), label="Nodes (x)", showBoundary=True, ax=axs[2][2]
+        )
+        axs[2][2].set_title("mesh, nodes, showBoundary=True")
+        pg.show(
+            mesh,
+            pg.y(mesh.cellCenters()),
+            label="Cell center (y)",
+            tri=True,
+            shading="flat",
+            ax=axs[2][3],
+        )
+        axs[2][3].set_title("mesh, cells, tri=True, shading=flat")
+        pg.show(
+            mesh,
+            pg.y(mesh.cellCenters()),
+            label="Cell center (y)",
+            tri=True,
+            shading="gouraud",
+            ax=axs[2][4],
+        )
+        axs[2][4].set_title("mesh, cells, tri=True, shading=gouraud")
         # pg.show(mesh, mesh.cellMarker(), label(markers), axs[1][1])
         axs[2][4].figure.tight_layout()
         fig.tight_layout()
 
-
     def test_Colorbar(self):
         """Test colorbar handling for pygimli.show."""
-        grid = pg.createGrid(x=np.linspace(10., 110., 11)-5,
-                            y=np.linspace(0., 20, 2))
+        grid = pg.createGrid(
+            x=np.linspace(10.0, 110.0, 11) - 5, y=np.linspace(0.0, 20, 2)
+        )
 
         fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(10, 6))
-        ax, cbar = pg.show(grid, data=pg.x(grid.cellCenter()),
-                        label='log x', ax=axs[0][0], showMesh=True,
-                        cMap='Paired', logScale=True)
-        ax, cbar = pg.show(grid, data=pg.x(grid.cellCenter())+5.,
-                        label='log x', ax=axs[1][0], showMesh=True,
-                        cMap='Paired', logScale=True)
+        ax, cbar = pg.show(
+            grid,
+            data=pg.x(grid.cellCenter()),
+            label="log x",
+            ax=axs[0][0],
+            showMesh=True,
+            cMap="Paired",
+            logScale=True,
+        )
+        ax, cbar = pg.show(
+            grid,
+            data=pg.x(grid.cellCenter()) + 5.0,
+            label="log x",
+            ax=axs[1][0],
+            showMesh=True,
+            cMap="Paired",
+            logScale=True,
+        )
 
         pg.viewer.mpl.setMappableData(cbar.mappable, pg.x(grid.cellCenter()))
 
-        ax, cbar = pg.show(grid, data=pg.x(grid.cellCenter()), logScale=True,
-                        ax=axs[2][0], showMesh=True, cMap='Paired')
+        ax, cbar = pg.show(
+            grid,
+            data=pg.x(grid.cellCenter()),
+            logScale=True,
+            ax=axs[2][0],
+            showMesh=True,
+            cMap="Paired",
+        )
         ###########################################################################
-        ax, cbar = pg.show(grid, data=pg.x(grid.cellCenter()),
-                        label='lin x, cMap=Paired',
-                        ax=axs[0][1], logScale=False, cMap='Paired')
-        ax, cbar = pg.show(grid, data=pg.x(grid.cellCenter())+5,
-                        label='lin x, cMap=Paired (same like above)',
-                        ax=axs[1][1], logScale=False, cMap='Paired')
+        ax, cbar = pg.show(
+            grid,
+            data=pg.x(grid.cellCenter()),
+            label="lin x, cMap=Paired",
+            ax=axs[0][1],
+            logScale=False,
+            cMap="Paired",
+        )
+        ax, cbar = pg.show(
+            grid,
+            data=pg.x(grid.cellCenter()) + 5,
+            label="lin x, cMap=Paired (same like above)",
+            ax=axs[1][1],
+            logScale=False,
+            cMap="Paired",
+        )
 
         ##!!// thisfails and changes cmap
         pg.viewer.mpl.setMappableData(cbar.mappable, pg.x(grid.cellCenter()))
 
         ###########################################################################
-        grid = pg.createGrid(x=np.linspace(10., 110., 11)-25,
-                            y=np.linspace(0., 20, 2))
-        ax, cbar = pg.show(grid, data=pg.x(grid.cellCenter()),
-                        label='log with neg. x', ax=axs[0][2], showMesh=True,
-                        cMap='Paired', logScale=True)
-        ax, cbar = pg.show(grid, data=pg.x(grid.cellCenter())-45,
-                        label='log with neg. x', ax=axs[1][2], showMesh=True,
-                        cMap='Paired', logScale=True)
+        grid = pg.createGrid(
+            x=np.linspace(10.0, 110.0, 11) - 25, y=np.linspace(0.0, 20, 2)
+        )
+        ax, cbar = pg.show(
+            grid,
+            data=pg.x(grid.cellCenter()),
+            label="log with neg. x",
+            ax=axs[0][2],
+            showMesh=True,
+            cMap="Paired",
+            logScale=True,
+        )
+        ax, cbar = pg.show(
+            grid,
+            data=pg.x(grid.cellCenter()) - 45,
+            label="log with neg. x",
+            ax=axs[1][2],
+            showMesh=True,
+            cMap="Paired",
+            logScale=True,
+        )
         pg.viewer.mpl.setMappableData(cbar.mappable, pg.x(grid.cellCenter()))
         ax.figure.tight_layout()
 
-        pg.show(grid, pg.x(grid.cellCenter()), tri=True, shading='gouraud',
-                cMap='Spectral_r', logScale=False, cMin=0.01, cMax=10,
-                levels=[10, 55, 100],
-                orientation="vertical",
-                colorBar=True)
+        pg.show(
+            grid,
+            pg.x(grid.cellCenter()),
+            tri=True,
+            shading="gouraud",
+            cMap="Spectral_r",
+            logScale=False,
+            cMin=0.01,
+            cMax=10,
+            levels=[10, 55, 100],
+            orientation="vertical",
+            colorBar=True,
+        )
 
-        pg.show(grid, pg.x(grid.cellCenter()), tri=True, shading='gouraud',
-                cMap='Spectral_r', logScale=True, cMin=0.01, cMax=10,
-                levels=[10, 55, 100],
-                orientation="vertical",
-                colorBar=True)
+        pg.show(
+            grid,
+            pg.x(grid.cellCenter()),
+            tri=True,
+            shading="gouraud",
+            cMap="Spectral_r",
+            logScale=True,
+            cMin=0.01,
+            cMax=10,
+            levels=[10, 55, 100],
+            orientation="vertical",
+            colorBar=True,
+        )
 
-        pg.show(grid, pg.x(grid.cellCenter()), tri=True, shading='gouraud',
-                cMap='Spectral_r', logScale=False, cMin=0.01, cMax=10,
-                levels=[10, 55, 100],
-                orientation="horizontal",
-                colorBar=True)
-
+        pg.show(
+            grid,
+            pg.x(grid.cellCenter()),
+            tri=True,
+            shading="gouraud",
+            cMap="Spectral_r",
+            logScale=False,
+            cMin=0.01,
+            cMax=10,
+            levels=[10, 55, 100],
+            orientation="horizontal",
+            colorBar=True,
+        )
 
     def test_ColRange(self):
         """Test color range handling for pygimli.show."""
@@ -142,23 +237,46 @@ class TestShow(unittest.TestCase):
 
         ax[0][0].set_title("pyGIMLi (CellData)")
         data = np.arange(mesh.cellCount())
-        pg.show(mesh, data, ax=ax[0][0], label='default (nLevs=5, nCols=256)')
-        pg.show(mesh, data, ax=ax[1][0], nCols=4, nLevs=5,
-                label="nLevs=5 nCols=4, \n(aka. poor man's contour)")
+        pg.show(mesh, data, ax=ax[0][0], label="default (nLevs=5, nCols=256)")
+        pg.show(
+            mesh,
+            data,
+            ax=ax[1][0],
+            nCols=4,
+            nLevs=5,
+            label="nLevs=5 nCols=4, \n(aka. poor man's contour)",
+        )
 
         ax[0][1].set_title("pyGIMLi (CellData) shading='gouraud'")
         data = np.arange(mesh.cellCount())
-        pg.show(mesh, data, ax=ax[0][1], shading='gouraud',
-                label='default (nLevs=5, nCols=256)')
-        pg.show(mesh, data, ax=ax[1][1], shading='gouraud', nCols=4, nLevs=5,
-                label="nLevs=5 nCols=4, \n(aka. poor man's contour)")
+        pg.show(
+            mesh,
+            data,
+            ax=ax[0][1],
+            shading="gouraud",
+            label="default (nLevs=5, nCols=256)",
+        )
+        pg.show(
+            mesh,
+            data,
+            ax=ax[1][1],
+            shading="gouraud",
+            nCols=4,
+            nLevs=5,
+            label="nLevs=5 nCols=4, \n(aka. poor man's contour)",
+        )
 
         ax[0][2].set_title("pyGIMLi (NodeData)")
         data = np.arange(mesh.nodeCount())
-        pg.show(mesh, data, ax=ax[0][2],
-                label='default (nLevs=5, nCols=4)')
-        pg.show(mesh, data, ax=ax[1][2], nCols=12, nLevs=4,
-                label='nLevs=4, nCols=12')
+        pg.show(mesh, data, ax=ax[0][2], label="default (nLevs=5, nCols=4)")
+        pg.show(
+            mesh,
+            data,
+            ax=ax[1][2],
+            nCols=12,
+            nLevs=4,
+            label="nLevs=4, nCols=12",
+        )
 
         for a in ax.flatten():
             a.yaxis.set_visible(False)
@@ -166,23 +284,23 @@ class TestShow(unittest.TestCase):
 
         fig.tight_layout()
 
-
     def test_CBarLevels(self):
         """Test colorbar levels with pygimli.show.
 
         Expectations:
 
         axs[0, 0]: show regions with plc
-            Show needs to deliver the regions with Set3 colormap. Each tick on the
-            colobar should be in the middle of the related color section.
+            Show needs to deliver the regions with Set3 colormap. Each tick
+            on the colobar should be in the middle of the related color
+            section.
 
         axs[1, 0]: show regions with mesh
             really the same thing as on axs[0, 0] but with mesh.
 
         ax[0, 1]: show mesh with cell data
             if nLevs is given i would expect that the colormap then is levelled.
-            currently that is not the fact. but at least its the full range. labels
-            need to be at begin/end of each color section.
+            currently that is not the fact. but at least its the full range.
+            labels need to be at begin/end of each color section.
 
         ax[1, 1]: show mesh with node data
             the colorbar range misses parts of its full range. labels need to be
@@ -190,12 +308,20 @@ class TestShow(unittest.TestCase):
         """
         # create a geometry
         world = mt.createWorld(
-            start=[-10, 0], end=[10, -16], layers=[-8], worldMarker=False)
+            start=[-10, 0], end=[10, -16], layers=[-8], worldMarkers=False
+        )
 
         block = mt.createRectangle(
-            start=[-6, -3.5], end=[6, -6.0], marker=4, boundaryMarker=10, area=0.1)
+            start=[-6, -3.5],
+            end=[6, -6.0],
+            marker=4,
+            boundaryMarker=10,
+            area=0.1,
+        )
 
-        circ = mt.createCircle(pos=[0, -11], marker=5, radius=2, boundaryMarker=11)
+        circ = mt.createCircle(
+            pos=[0, -11], marker=5, radius=2, boundaryMarker=11
+        )
 
         poly = mt.mergePLC([world, block, circ])
         mesh = mt.createMesh(poly, quality=34)
@@ -217,10 +343,10 @@ class TestShow(unittest.TestCase):
 
         pg.show(mesh, node_data, ax=axs[1, 1], colorBar=True, nLevs=7)
 
-
     def test_ColorBarFalse(self):
         """Test colorbar handling for pygimli.show with colorBar=False."""
         from pygimli.physics import ert
+
         data = ert.createData(6, "dd")
 
         rho = np.arange(data.size())
@@ -229,14 +355,59 @@ class TestShow(unittest.TestCase):
         mesh = pg.createGrid(3, 2)
         pg.show(mesh, rho, ax=ax[0][0], colorBar=True, cMap="plasma")
         pg.show(mesh, rho, ax=ax[0][1], colorBar=False, cMap="plasma")
-        pg.show(mesh, rho, ax=ax[0][2], colorBar=False, cMap="plasma",
-                cMin=1, cMax=2)
+        pg.show(
+            mesh,
+            rho,
+            ax=ax[0][2],
+            colorBar=False,
+            cMap="plasma",
+            cMin=1,
+            cMax=2,
+        )
 
         ert.show(data, rho, ax=ax[1][0], colorBar=True, cMap="plasma")
         ert.show(data, rho, ax=ax[1][1], colorBar=False, cMap="plasma")
-        ert.show(data, rho, ax=ax[1][2], colorBar=False, cMap="plasma",
-                cMin=1, cMax=2)
+        ert.show(
+            data,
+            rho,
+            ax=ax[1][2],
+            colorBar=False,
+            cMap="plasma",
+            cMin=1,
+            cMax=2,
+        )
 
+    def test_ShowPVGalleryKwargs(self):
+        """Check that pygimli options do not reach pv.Plotter.
+
+        Regression: in gallery mode (pyvista.BUILDING_GALLERY is True) the
+        background color 'bc' was not popped from the keyword arguments, so
+        pv.Plotter(bc=...) raised a TypeError. The half-initialized Plotter
+        then failed in its destructor with
+        "AttributeError: 'Plotter' object has no attribute '_initialized'".
+        """
+        import pyvista as pv
+
+        oldGallery = pv.BUILDING_GALLERY
+        oldOffScreen = pv.OFF_SCREEN
+        oldView = pg.rc["view3D"]
+        pv.BUILDING_GALLERY = True
+        pv.OFF_SCREEN = True
+        pg.rc["view3D"] = "pyvista"
+        try:
+            res = pg.show(
+                mt.createCube(), bc="#DDDDFF", cMin=1, cMax=2, alpha=0.5
+            )
+        except (RuntimeError, OSError) as err:
+            self.skipTest(f"pyvista cannot create a plotter: {err}")
+        finally:
+            pv.BUILDING_GALLERY = oldGallery
+            pv.OFF_SCREEN = oldOffScreen
+            pg.rc["view3D"] = oldView
+
+        ax = res[0] if isinstance(res, tuple) else res
+        self.assertIsNotNone(ax)
+        ax.close()
 
     def test_ShowPV(self):
         """Test pyvista backend for pygimli.show.
@@ -253,59 +424,73 @@ class TestShow(unittest.TestCase):
         m2 = mt.createCube(boundaryMarker=8)
         m2.scale(0.5)
 
-        pg.rc['view3D'] = 'pyvista'
-        print('Show Boundary:', m1)
-        pg.show(m1+m2, bc='#DDDDFF', alpha=0.5)
+        pg.rc["view3D"] = "pyvista"
+        print("Show Boundary:", m1)
+        pg.show(m1 + m2, bc="#DDDDFF", alpha=0.5)
         try:
-            m1 = mt.createMesh(m1+m2, area=0.1)
+            m1 = mt.createMesh(m1 + m2, area=0.1)
         except RuntimeError:
             self.skipTest("Tet meshing failed, check if tetgen is available.")
         except OSError:
             self.skipTest("Tet meshing failed, pv-pytetgen is too old.")
 
-        print('Show Cells:', m1)
+        print("Show Cells:", m1)
         m1.setCellMarkers(range(m1.cellCount()))
         pg.show(m1, showMesh=True)
 
-        print('Show Markers with vtk filters:', m1)
-        ax, _ = pg.show(m1, markers=True, filter={'clip': {'origin': (0, 0, 0)}})
+        print("Show Markers with vtk filters:", m1)
+        ax, _ = pg.show(
+            m1, markers=True, filter={"clip": {"origin": (0, 0, 0)}}
+        )
 
-        print('Show Field (x)')
-        pg.show(m1, data=pg.x(m1), label='x', cMap='Spectral_r')
+        print("Show Field (x)")
+        pg.show(m1, data=pg.x(m1), label="x", cMap="Spectral_r")
 
-        print('Show threshold and slice')
+        print("Show threshold and slice")
         m2 = mt.createGrid(4, 4, 4)
         m2["m"] = pg.utils.grange(1, m2.cellCount(), 1)
         ax, _ = pg.show(m2, style="wireframe", hold=True)
-        pg.viewer.pv.drawMesh(ax, m2, label="m", filter={
-            "threshold": dict(value=14, scalars="m", invert=True)})
-        pg.viewer.pv.drawMesh(ax, m2, label="m", filter={
-            "slice": dict(origin=[1, 1, 1], normal=[1, 1, 0])})
+        pg.viewer.pv.drawMesh(
+            ax,
+            m2,
+            label="m",
+            filter={"threshold": dict(value=14, scalars="m", invert=True)},
+        )
+        pg.viewer.pv.drawMesh(
+            ax,
+            m2,
+            label="m",
+            filter={"slice": dict(origin=[1, 1, 1], normal=[1, 1, 0])},
+        )
         ax.show()
 
-        print('Show TetP2 Field (x)')
+        print("Show TetP2 Field (x)")
         m2 = mt.refineHex2Tet(m2)
         m2 = m2.createP2()
-        pg.show(m2, data=pg.z(m2), showMesh=True, label='x', cMap='Spectral_r')
+        pg.show(m2, data=pg.z(m2), showMesh=True, label="x", cMap="Spectral_r")
 
-        print('Show Streams (x)')
+        print("Show Streams (x)")
         u = pg.x(m1)
         vel = -pg.solver.grad(m1, u)
 
-        ax, _ = pg.show(m1, data=u, label='x', alpha=0.2, hold=True)
-        pg.viewer.pv.drawStreamLines(ax, m1, vel, radius=0.01,
-                                    source_radius=0.5,
-                                    source_center=[-.5, -0., -0.])
-        pg.viewer.pv.drawSlice(ax, m1, data=u, label='x', normal=[0, 1, 0])
+        ax, _ = pg.show(m1, data=u, label="x", alpha=0.2, hold=True)
+        pg.viewer.pv.drawStreamLines(
+            ax,
+            m1,
+            vel,
+            radius=0.01,
+            source_radius=0.5,
+            source_center=[-0.5, -0.0, -0.0],
+        )
+        pg.viewer.pv.drawSlice(ax, m1, data=u, label="x", normal=[0, 1, 0])
         ax.show()
 
-
     def testShowPV2(self):
-        print('Show HexP2 Mesh (x)')
+        """Show a HexP2 mesh with the pyvista backend."""
+        print("Show HexP2 Mesh (x)")
         h1 = mt.createGrid(2, 2, 2)
         h1 = h1.createP2()
         h1.show(pg.x(h1))
-
 
     def test_Coverage(self):
         """Test coverage handling for pygimli.show."""
@@ -315,17 +500,16 @@ class TestShow(unittest.TestCase):
         data = pg.Vector(grid.cellCount(), 1.0)
         pg.show(grid, data, coverage=cov)
 
-
     def test_Animations(self):
         """Test animation handling for pygimli.show."""
-        mesh = pg.createGrid(20,20)
+        mesh = pg.createGrid(20, 20)
         data = np.random.randn(10, mesh.cellCount())
-        #pg.show(mesh, data, cMin=0, cMax=1)
+        self.assertEqual(data.shape, (10, mesh.cellCount()))
+        # pg.show(mesh, data, cMin=0, cMax=1)
 
         # data = np.random.randn(10, mesh.nodeCount())
         # pg.show(mesh, data)
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     unittest.main()

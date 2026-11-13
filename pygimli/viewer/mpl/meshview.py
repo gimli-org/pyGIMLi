@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Draw mesh/model/fields with matplotlib."""
 
 import textwrap
@@ -11,11 +10,14 @@ from .colorbar import autolevel, createColorBar, updateColorBar, cmapFromName
 from .utils import updateAxes as updateAxes_
 
 
-class CellBrowserCacheSingleton(object):
+class CellBrowserCacheSingleton:
+    """Singleton cache for the cell browser annotations."""
+
     __instance = None
-    cbCache_ = []
+    _cache = []
 
     def __new__(cls):
+        """Return the singleton instance."""
         if CellBrowserCacheSingleton.__instance is None:
             CellBrowserCacheSingleton.__instance = object.__new__(cls)
         return CellBrowserCacheSingleton.__instance
@@ -28,7 +30,7 @@ class CellBrowserCacheSingleton(object):
         c : CellBrowser
             Instance to register.
         """
-        self.cbCache_.append(c)
+        self._cache.append(c)
 
     def remove(self, c):
         """Remove a CellBrowser instance from the cache.
@@ -38,14 +40,14 @@ class CellBrowserCacheSingleton(object):
         c : CellBrowser
             Instance to deregister.
         """
-        self.cbCache_.remove(c)
+        self._cache.remove(c)
 
 
 # We only want one instance of this global cache so its a singleton class
 __CBCache__ = CellBrowserCacheSingleton()
 
 
-class CellBrowser(object):
+class CellBrowser:
     """Interactive cell browser on current or specified ax for a given mesh.
 
     Cell information can be displayed by mouse picking. Arrow keys up and down
@@ -108,9 +110,10 @@ class CellBrowser(object):
     def connect(self):
         """Connect to matplotlib figure canvas."""
         if not self._connected:
-            self.pid = self.fig.canvas.mpl_connect('pick_event', self.onPick)
-            self.kid = self.fig.canvas.mpl_connect('key_press_event',
-                                                   self.onPress)
+            self.pid = self.fig.canvas.mpl_connect("pick_event", self.onPick)
+            self.kid = self.fig.canvas.mpl_connect(
+                "key_press_event", self.onPress
+            )
             __CBCache__.add(self)
             self._connected = True
 
@@ -125,12 +128,20 @@ class CellBrowser(object):
     def initText(self):
         """Initialize hint text properties."""
         import matplotlib as mpl
-        bbox = dict(boxstyle='round, pad=0.5', fc='w', alpha=0.5)
-        arrowprops = dict(arrowstyle='->', connectionstyle='arc3,rad=0.5')
-        kwargs = dict(fontproperties='monospace', visible=False,
-                      fontsize=mpl.rcParams['font.size'] - 2, weight='bold',
-                      xytext=(50, 20), arrowprops=arrowprops,
-                      textcoords='offset points', bbox=bbox, va='center')
+
+        bbox = dict(boxstyle="round, pad=0.5", fc="w", alpha=0.5)
+        arrowprops = dict(arrowstyle="->", connectionstyle="arc3,rad=0.5")
+        kwargs = dict(
+            fontproperties="monospace",
+            visible=False,
+            fontsize=mpl.rcParams["font.size"] - 2,
+            weight="bold",
+            xytext=(50, 20),
+            arrowprops=arrowprops,
+            textcoords="offset points",
+            bbox=bbox,
+            va="center",
+        )
 
         self.text = self.ax.annotate(None, xy=(0, 0), **kwargs)
 
@@ -147,9 +158,13 @@ class CellBrowser(object):
             elif len(data) == self.mesh.nodeCount():
                 self.data = pg.meshtools.nodeDataToCellData(self.mesh, data)
             else:
-                pg.warn('Data length mismatch mesh.cellCount(): ' +
-                        str(len(data)) + "!=" + str(self.mesh.cellCount()) +
-                        ". Mapping data to cellMarkers().")
+                pg.warn(
+                    "Data length mismatch mesh.cellCount(): "
+                    + str(len(data))
+                    + "!="
+                    + str(self.mesh.cellCount())
+                    + ". Mapping data to cellMarkers()."
+                )
                 self.data = data[self.mesh.cellMarkers()]
 
     def hide(self):
@@ -173,10 +188,12 @@ class CellBrowser(object):
     def highlightCell(self, cell):
         """Highlight selected cell."""
         import matplotlib as mpl
+
         self.removeHighlightCell()
         self.highLight = mpl.collections.PolyCollection(
-            [_createCellPolygon(cell)])
-        self.highLight.set_edgecolor('0')
+            [_createCellPolygon(cell)]
+        )
+        self.highLight.set_edgecolor("0")
         self.highLight.set_linewidth(1.5)
         self.highLight.set_facecolor([0.9, 0.9, 0.9, 0.4])
         self.ax.add_collection(self.highLight)
@@ -190,14 +207,17 @@ class CellBrowser(object):
             self.data = self.artist.get_array()
             # self.edgeColors = self.artist.get_edgecolors()
 
-        if 'mouseevent' in event.__dict__.keys():
+        if "mouseevent" in event.__dict__:
             # print(event.__dict__.keys())
             # print(event.mouseevent)
-            if (event.mouseevent.xdata is not None and
-                    event.mouseevent.ydata is not None and
-                    event.mouseevent.button == 1):
-                c = self.mesh.findCell((event.mouseevent.xdata,
-                                        event.mouseevent.ydata))
+            if (
+                event.mouseevent.xdata is not None
+                and event.mouseevent.ydata is not None
+                and event.mouseevent.button == 1
+            ):
+                c = self.mesh.findCell(
+                    (event.mouseevent.xdata, event.mouseevent.ydata)
+                )
                 if c and self.cellID != c.id():
                     self.cellID = c.id()
                 else:
@@ -212,12 +232,12 @@ class CellBrowser(object):
         # print(event, event.key)
         if self.data is None:
             return
-        if event.key not in ('up', 'down', 'escape'):
+        if event.key not in ("up", "down", "escape"):
             return
-        if event.key == 'up':
+        if event.key == "up":
             if self.cellID is not None:
                 self.cellID += 1
-        elif event.key == 'down':
+        elif event.key == "down":
             if self.cellID is not None:
                 self.cellID -= 1
         else:
@@ -225,8 +245,9 @@ class CellBrowser(object):
             return
 
         if self.cellID is not None:
-            self.cellID = int(np.clip(self.cellID, 0,
-                                      self.mesh.cellCount() - 1))
+            self.cellID = int(
+                np.clip(self.cellID, 0, self.mesh.cellCount() - 1)
+            )
             self.update()
 
     def update(self):
@@ -241,7 +262,7 @@ class CellBrowser(object):
                 x, y = center.x(), center.y()
                 marker = cell.marker()
                 data = self.data[self.cellID]
-                header = "Cell %d:\n" % self.cellID
+                header = f"Cell {self.cellID}:\n"
                 header += "-" * (len(header) - 1)
                 istr = "\nx: {:.2f}\n y: {:.2f}\n data: {:.2e}\n marker: {:d}"
                 info = istr.format(x, y, data, marker)
@@ -303,16 +324,27 @@ def drawMesh(ax, mesh, fitView=True, **kwargs):
         pg.viewer.mpl.drawMeshBoundaries(ax, mesh, **kwargs)
 
     if fitView is True:
-        ax.autoscale(enable=True, axis='both', tight=True)
-        ax.set_aspect('equal')
+        ax.autoscale(enable=True, axis="both", tight=True)
+        ax.set_aspect("equal")
 
     updateAxes_(ax)
 
 
-def drawModel(ax, mesh, data=None, tri=False, rasterized=False,
-              cMin=None, cMax=None, logScale=False,
-              xlabel=None, ylabel=None, fitView=True, verbose=False,
-              **kwargs):
+def drawModel(
+    ax,
+    mesh,
+    data=None,
+    tri=False,
+    rasterized=False,
+    cMin=None,
+    cMax=None,
+    logScale=False,
+    xlabel=None,
+    ylabel=None,
+    fitView=True,
+    verbose=False,
+    **kwargs,
+):
     """Draw a 2d mesh and color the cell by the data.
 
     Parameters
@@ -358,36 +390,41 @@ def drawModel(ax, mesh, data=None, tri=False, rasterized=False,
     <matplotlib.collections.PolyCollection object at ...>
     """
     # deprecated .. remove me
-    if 'cMap' in kwargs or 'cmap' in kwargs:
-        pg.warn('cMap|cmap argument is deprecated for draw functions. ' +
-                'Please use show or customize a colorbar.')
+    if "cMap" in kwargs or "cmap" in kwargs:
+        pg.warn(
+            "cMap|cmap argument is deprecated for draw functions. "
+            + "Please use show or customize a colorbar."
+        )
     # deprecated .. remove me
 
     if mesh.nodeCount() == 0:
         pg.error("drawModel: The mesh is empty.", mesh)
 
-    if tri or 'shading' in kwargs:
-        gci = drawField(ax, mesh, data,
-                        cMin=cMin, cMax=cMax, logScale=logScale,
-                        **kwargs)
+    if tri or "shading" in kwargs:
+        gci = drawField(
+            ax, mesh, data, cMin=cMin, cMax=cMax, logScale=logScale, **kwargs
+        )
     else:
-        gci = pg.viewer.mpl.createMeshPatches(ax, mesh, rasterized=rasterized,
-                                              verbose=verbose)
+        gci = pg.viewer.mpl.createMeshPatches(
+            ax, mesh, rasterized=rasterized, verbose=verbose
+        )
         ax.add_collection(gci)
 
         if data is None:
             data = pg.Vector(mesh.cellCount())
 
         if len(data) != mesh.cellCount():
-            pg.info("drawModel have wrong data length .. " +
-                    " indexing data from cellMarkers()")
+            pg.info(
+                "drawModel have wrong data length .. "
+                + " indexing data from cellMarkers()"
+            )
             viewdata = data[mesh.cellMarkers()]
         else:
             viewdata = data
 
-        pg.viewer.mpl.setMappableData(gci, viewdata,
-                                      cMin=cMin, cMax=cMax, logScale=logScale,
-                                      **kwargs)
+        pg.viewer.mpl.setMappableData(
+            gci, viewdata, cMin=cMin, cMax=cMax, logScale=logScale, **kwargs
+        )
 
     gci.set_antialiased(True)
     gci.set_linewidths(0.1)
@@ -400,15 +437,16 @@ def drawModel(ax, mesh, data=None, tri=False, rasterized=False,
         ax.set_ylabel(ylabel)
 
     if fitView is True:
-        ax.autoscale(enable=True, axis='both', tight=True)
-        ax.set_aspect('equal')
+        ax.autoscale(enable=True, axis="both", tight=True)
+        ax.set_aspect("equal")
 
     updateAxes_(ax)
     return gci
 
 
-def drawSelectedMeshBoundaries(ax, boundaries, color=None, linewidth=1.0,
-                               linestyle="-", **kwargs):
+def drawSelectedMeshBoundaries(
+    ax, boundaries, color=None, linewidth=1.0, linestyle="-", **kwargs
+):
     """Draw mesh boundaries into a given axes.
 
     Parameters
@@ -428,28 +466,36 @@ def drawSelectedMeshBoundaries(ax, boundaries, color=None, linewidth=1.0,
     lco: matplotlib line collection object
     """
     import matplotlib as mpl
+
     drawAA = True
     lines = []
 
-    linewidth = kwargs.pop('lw', linewidth)
-    linestyle = kwargs.pop('ls', linestyle)
+    linewidth = kwargs.pop("lw", linewidth)
+    linestyle = kwargs.pop("ls", linestyle)
 
-    if hasattr(boundaries, '__len__'):
-        if len(boundaries) == 0:
-            return
+    if hasattr(boundaries, "__len__") and len(boundaries) == 0:
+        return
 
     for bound in boundaries:
-        lines.append(list(zip([bound.node(0).x(), bound.node(1).x()],
-                              [bound.node(0).y(), bound.node(1).y()])))
+        lines.append(
+            list(
+                zip(
+                    [bound.node(0).x(), bound.node(1).x()],
+                    [bound.node(0).y(), bound.node(1).y()],
+                    strict=True,
+                )
+            )
+        )
 
-    lineCollection = mpl.collections.LineCollection(lines,
-                                                    antialiaseds=drawAA,
-                                                    **kwargs)
+    lineCollection = mpl.collections.LineCollection(
+        lines, antialiaseds=drawAA, **kwargs
+    )
 
     if color is None:
         viewdata = [b.marker() for b in boundaries]
-        pg.viewer.mpl.setMappableValues(lineCollection, viewdata,
-                                        logScale=False)
+        pg.viewer.mpl.setMappableValues(
+            lineCollection, viewdata, logScale=False
+        )
     else:
         lineCollection.set_color(color)
 
@@ -462,8 +508,9 @@ def drawSelectedMeshBoundaries(ax, boundaries, color=None, linewidth=1.0,
     return lineCollection
 
 
-def drawSelectedMeshBoundariesShadow(ax, boundaries, first='x', second='y',
-                                     color=(0.3, 0.3, 0.3, 1.0)):
+def drawSelectedMeshBoundariesShadow(
+    ax, boundaries, first="x", second="y", color=(0.3, 0.3, 0.3, 1.0)
+):
     """Draw mesh boundaries as shadows into a given axes.
 
     Attributes
@@ -486,15 +533,27 @@ def drawSelectedMeshBoundariesShadow(ax, boundaries, first='x', second='y',
     lco: matplotlib line collection object
     """
     import matplotlib as mpl
+
     polys = []
 
     for cell in boundaries:
-        polys.append(list(zip([getattr(cell.node(0), first)(),
-                               getattr(cell.node(1), first)(),
-                               getattr(cell.node(2), first)()],
-                              [getattr(cell.node(0), second)(),
-                               getattr(cell.node(1), second)(),
-                               getattr(cell.node(2), second)()])))
+        polys.append(
+            list(
+                zip(
+                    [
+                        getattr(cell.node(0), first)(),
+                        getattr(cell.node(1), first)(),
+                        getattr(cell.node(2), first)(),
+                    ],
+                    [
+                        getattr(cell.node(0), second)(),
+                        getattr(cell.node(1), second)(),
+                        getattr(cell.node(2), second)(),
+                    ],
+                    strict=True,
+                )
+            )
+        )
 
     collection = mpl.collections.PolyCollection(polys, antialiaseds=True)
 
@@ -528,30 +587,36 @@ def drawBoundaryMarkers(ax, mesh, clipBoundaryMarkers=False, **kwargs):
     >>> import pygimli as pg
     >>> import pygimli.meshtools as mt
     >>> c0 = mt.createCircle(pos=(0.0, 0.0), radius=1, nSegments=4)
-    >>> l0 = mt.createPolygon([[-0.5, 0.0], [.5, 0.0]], boundaryMarker=2)
-    >>> l1 = mt.createPolygon([[-0.25, -0.25], [0.0, -0.5], [0.25, -0.25]],
-    ...                       interpolate='spline', addNodes=4,
-    ...                       boundaryMarker=3)
-    >>> l2 = mt.createPolygon([[-0.25, 0.25], [0.0, 0.5], [0.25, 0.25]],
-    ...                       interpolate='spline', addNodes=4,
-    ...                       isClosed=True, boundaryMarker=3)
+    >>> l0 = mt.createPolygon([[-0.5, 0.0], [0.5, 0.0]], boundaryMarker=2)
+    >>> l1 = mt.createPolygon(
+    ...     [[-0.25, -0.25], [0.0, -0.5], [0.25, -0.25]],
+    ...     interpolate="spline",
+    ...     addNodes=4,
+    ...     boundaryMarker=3,
+    ... )
+    >>> l2 = mt.createPolygon(
+    ...     [[-0.25, 0.25], [0.0, 0.5], [0.25, 0.25]],
+    ...     interpolate="spline",
+    ...     addNodes=4,
+    ...     isClosed=True,
+    ...     boundaryMarker=3,
+    ... )
     >>> mesh = mt.createMesh([c0, l0, l1, l2], area=0.01)
     >>> ax, _ = pg.show(mesh)
     >>> pg.viewer.mpl.drawBoundaryMarkers(ax, mesh)
     """
-    ms = pg.unique(pg.sort(mesh.boundaryMarkers()[mesh.boundaryMarkers()!=0]))
-    bc = kwargs.pop('bc', None)
+    ms = pg.unique(pg.sort(mesh.boundaryMarkers()[mesh.boundaryMarkers() != 0]))
+    bc = kwargs.pop("bc", None)
 
-    #cMap = plt.cm.get_cmap("Set3", len(ms))
-    kwargs['lw'] = kwargs.pop('lw', 4)
+    # cMap = plt.cm.get_cmap("Set3", len(ms))
+    kwargs["lw"] = kwargs.pop("lw", 4)
 
     for i, m in enumerate(ms):
         bs = mesh.findBoundaryByMarker(m)
         paths = mesh.findPaths(bs)
-        col = 'C' + str(i)
+        col = "C" + str(i)
 
         for p in paths:
-
             xs = pg.x(mesh.nodes(p))
             ys = pg.y(mesh.nodes(p))
             path = np.array([xs, ys]).T
@@ -559,21 +624,31 @@ def drawBoundaryMarkers(ax, mesh, clipBoundaryMarkers=False, **kwargs):
             ax.plot(xs, ys, color=col, **kwargs)
 
             center = pg.meshtools.interpolateAlongCurve(
-                path, [pg.utils.cumDist(path)[-1]/2])[0]
+                path, [pg.utils.cumDist(path)[-1] / 2]
+            )[0]
 
             x = center[0]
             y = center[1]
             bbox_props = dict(boxstyle="circle,pad=0.2", fc="w", ec=col)
-            txt = ax.text(x, y, str(m), color=col, va="center", ha="center",
-                          zorder=20, bbox=bbox_props, fontsize=9,
-                          fontdict={'weight': 'bold'})
+            txt = ax.text(
+                x,
+                y,
+                str(m),
+                color=col,
+                va="center",
+                ha="center",
+                zorder=20,
+                bbox=bbox_props,
+                fontsize=9,
+                fontdict={"weight": "bold"},
+            )
 
             # clipping avoid visuablity outside axes.
             # Needed if the axes limits do not match mesh size.
             txt.set_clip_on(clipBoundaryMarkers)
 
-            ax.plot(xs[0], ys[0], 'o', color='k')
-            ax.plot(xs[-1], ys[-1], 'o', color='k')
+            ax.plot(xs[0], ys[0], "o", color="k")
+            ax.plot(xs[-1], ys[-1], "o", color="k")
 
     if bc is not None:
         pg._r(bc)
@@ -582,19 +657,22 @@ def drawBoundaryMarkers(ax, mesh, clipBoundaryMarkers=False, **kwargs):
         # print(pos)
         # print(pos.height)
         # bca = ax.figure.add_axes([0.8, 0.75, 0.1, pos.height])
-        bcstr = 'BC\n'
-        bcstr += '1: $p=1$\n'
-        bcstr += '2: $p=0$\n'
-        bcstr += '3: $v=$no-flow\n'
-        bcstr += '4: $v=$no-flow\n'
+        bcstr = "BC\n"
+        bcstr += "1: $p=1$\n"
+        bcstr += "2: $p=0$\n"
+        bcstr += "3: $v=$no-flow\n"
+        bcstr += "4: $v=$no-flow\n"
 
-        ax.text(1.02, 0.0, bcstr,
-                 #transform=ax.figure.transFigure,
-                #  bbox=dict(boxstyle="square",
-                #    ec=(1., 0.5, 0.5),
-                #    fc=(1., 0.8, 0.8),
-                #    )
-                 )
+        ax.text(
+            1.02,
+            0.0,
+            bcstr,
+            # transform=ax.figure.transFigure,
+            #  bbox=dict(boxstyle="square",
+            #    ec=(1., 0.5, 0.5),
+            #    fc=(1., 0.8, 0.8),
+            #    )
+        )
 
     # for b in mesh.boundaries():
     #     if b.marker() != 0:
@@ -605,8 +683,16 @@ def drawBoundaryMarkers(ax, mesh, clipBoundaryMarkers=False, **kwargs):
     #                 ha="center", zorder=20, bbox=bbox_props, fontsize=9)
 
 
-def drawMeshBoundaries(ax, mesh, hideMesh=False, useColorMap=False,
-                       fitView=True, lw=None, color=None, **kwargs):
+def drawMeshBoundaries(
+    ax,
+    mesh,
+    hideMesh=False,
+    useColorMap=False,
+    fitView=True,
+    lw=None,
+    color=None,
+    **kwargs,
+):
     """Draw mesh on ax with boundary conditions colorized.
 
     Parameters
@@ -649,47 +735,53 @@ def drawMeshBoundaries(ax, mesh, hideMesh=False, useColorMap=False,
         raise ValueError("No 2d mesh: dim = ", mesh.dimension())
 
     if mesh.nodeCount() < 2:
-        raise ValueError("drawMeshBoundaries(ax, mesh): too  few nodes",
-                        mesh.nodeCount())
+        raise ValueError(
+            "drawMeshBoundaries(ax, mesh): too  few nodes", mesh.nodeCount()
+        )
 
     if fitView is True:
-        ax.autoscale(enable=True, axis='both', tight=True)
+        ax.autoscale(enable=True, axis="both", tight=True)
 
     mesh.createNeighborInfos()
 
     lwd = lambda l, d: l if l is not None else d
 
-    if not hideMesh and lwd(lw,0) > 0:
-        drawSelectedMeshBoundaries(ax,
-                                   mesh.findBoundaryByMarker(0),
-                                   color=color or (0.0, 0.0, 0.0, 1.0),
-                                   linewidth=lwd(lw, 0.3))
+    if not hideMesh and lwd(lw, 0) > 0:
+        drawSelectedMeshBoundaries(
+            ax,
+            mesh.findBoundaryByMarker(0),
+            color=color or (0.0, 0.0, 0.0, 1.0),
+            linewidth=lwd(lw, 0.3),
+        )
 
     drawSelectedMeshBoundaries(
-        ax, mesh.findBoundaryByMarker(pg.core.MARKER_BOUND_HOMOGEN_NEUMANN),
-                                      color=(0.0, 1.0, 0.0, 1.0),
-                                      linewidth=lwd(lw, 1.0))
+        ax,
+        mesh.findBoundaryByMarker(pg.core.MARKER_BOUND_HOMOGEN_NEUMANN),
+        color=(0.0, 1.0, 0.0, 1.0),
+        linewidth=lwd(lw, 1.0),
+    )
     drawSelectedMeshBoundaries(
-        ax, mesh.findBoundaryByMarker(pg.core.MARKER_BOUND_MIXED),
-                                      color=(1.0, 0.0, 0.0, 1.0),
-                                      linewidth=lwd(lw, 1.0))
+        ax,
+        mesh.findBoundaryByMarker(pg.core.MARKER_BOUND_MIXED),
+        color=(1.0, 0.0, 0.0, 1.0),
+        linewidth=lwd(lw, 1.0),
+    )
 
     col = color
 
     b0 = [b for b in mesh.boundaries() if b.marker() > 0]
 
     if useColorMap:
-        drawSelectedMeshBoundaries(ax, b0, color=None,
-                                   linewidth=lwd(lw, 1.5))
+        drawSelectedMeshBoundaries(ax, b0, color=None, linewidth=lwd(lw, 1.5))
     else:
-        drawSelectedMeshBoundaries(ax, b0,
-                                   color=col or (0.0, 0.0, 0.0, 1.0),
-                                   linewidth=lwd(lw, 1.5))
+        drawSelectedMeshBoundaries(
+            ax, b0, color=col or (0.0, 0.0, 0.0, 1.0), linewidth=lwd(lw, 1.5)
+        )
 
     b4 = [b for b in mesh.boundaries() if b.marker() < -4]
-    drawSelectedMeshBoundaries(ax, b4,
-                               color=col or (0.0, 0.0, 0.0, 1.0),
-                               linewidth=lwd(lw, 1.5))
+    drawSelectedMeshBoundaries(
+        ax, b4, color=col or (0.0, 0.0, 0.0, 1.0), linewidth=lwd(lw, 1.5)
+    )
     updateAxes_(ax)
 
 
@@ -702,7 +794,7 @@ def drawPLC(ax, mesh, fitView=True, **kwargs):
 
     mesh : :gimliapi:`GIMLI::Mesh`
 
-    regionMarker: bool [True]
+    regionMarkers: bool [True]
         Show region marker.
     fitView : bool [True]
         Adjust ax limits to mesh bounding box.
@@ -729,27 +821,33 @@ def drawPLC(ax, mesh, fitView=True, **kwargs):
     >>> import pygimli as pg
     >>> import pygimli.meshtools as mt
     >>> # Create geometry definition for the modelling domain
-    >>> world = mt.createWorld(start=[-20, 0], end=[20, -16],
-    ...                        layers=[-2, -8], worldMarkers=False)
+    >>> world = mt.createWorld(
+    ...     start=[-20, 0], end=[20, -16], layers=[-2, -8], worldMarkers=False
+    ... )
     >>> # Create a heterogeneous block
-    >>> block = mt.createRectangle(start=[-6, -3.5], end=[6, -6.0],
-    ...                            marker=10,  boundaryMarker=10, area=0.1)
+    >>> block = mt.createRectangle(
+    ...     start=[-6, -3.5],
+    ...     end=[6, -6.0],
+    ...     marker=10,
+    ...     boundaryMarker=10,
+    ...     area=0.1,
+    ... )
     >>> fig, ax = plt.subplots()
     >>> geom = world + block
     >>> _ = pg.viewer.mpl.drawPLC(ax, geom)
     """
-    pg.renameKwarg('fillRegion', 'regions', kwargs, '2.1')
-    fillRegions = kwargs.pop('regions', True)
-    pg.renameKwarg('showNodes', 'nodes', kwargs, '2.1')
-    showNodes = kwargs.pop('nodes', False)
-    pg.renameKwarg('showBoundary', 'boundaries', kwargs, '2.1')
-    showBoundary = kwargs.pop('boundaries', True)
-    pg.renameKwarg('showBoundaryMarkers', 'boundaryMarkers', kwargs, '2.1')
-    showBoundaryMarkers = kwargs.pop('boundaryMarkers', False)
-    pg.renameKwarg('regionMarker', 'regionMarkers', kwargs, '2.1')
-    showRegionMarkers = kwargs.pop('regionMarkers', True)
+    pg.renameKwarg("fillRegion", "regions", kwargs, "2.1")
+    fillRegions = kwargs.pop("regions", True)
+    pg.renameKwarg("showNodes", "nodes", kwargs, "2.1")
+    showNodes = kwargs.pop("nodes", False)
+    pg.renameKwarg("showBoundary", "boundaries", kwargs, "2.1")
+    showBoundary = kwargs.pop("boundaries", True)
+    pg.renameKwarg("showBoundaryMarkers", "boundaryMarkers", kwargs, "2.1")
+    showBoundaryMarkers = kwargs.pop("boundaryMarkers", False)
+    pg.renameKwarg("regionMarker", "regionMarkers", kwargs, "2.1")
+    showRegionMarkers = kwargs.pop("regionMarkers", True)
 
-    orientation = kwargs.pop('orientation', 'horizontal')
+    orientation = kwargs.pop("orientation", "horizontal")
 
     cbar = None
     if fillRegions is True and mesh.boundaryCount() > 2:
@@ -759,23 +857,26 @@ def drawPLC(ax, mesh, fitView=True, **kwargs):
         else:
             markers = np.array(tmpMesh.cellMarkers())
             uniquemarkers, uniqueidx = np.unique(markers, return_inverse=True)
-            gci = drawModel(ax=ax,
-                            data=np.arange(len(uniquemarkers))[uniqueidx],
-                            mesh=tmpMesh,
-                            alpha=1,
-                            linewidth=0.0,
-                            tri=True,
-                            snap=True,
-                            )
+            gci = drawModel(
+                ax=ax,
+                data=np.arange(len(uniquemarkers))[uniqueidx],
+                mesh=tmpMesh,
+                alpha=1,
+                linewidth=0.0,
+                tri=True,
+                snap=True,
+            )
 
-            cbar = createColorBar(gci, orientation=orientation,
-                                    label="Region markers")
+            cbar = createColorBar(
+                gci, orientation=orientation, label="Region markers"
+            )
 
-            updateColorBar(cbar,
-                            cMap=cmapFromName("Set3",
-                                                ncols=len(uniquemarkers)),
-                            cMin=-0.5,
-                            cMax=len(uniquemarkers) - 0.5)
+            updateColorBar(
+                cbar,
+                cMap=cmapFromName("Set3", ncols=len(uniquemarkers)),
+                cMin=-0.5,
+                cMax=len(uniquemarkers) - 0.5,
+            )
             ticks = np.arange(len(uniquemarkers))
 
             cbar.set_ticks(ticks)
@@ -785,9 +886,9 @@ def drawPLC(ax, mesh, fitView=True, **kwargs):
 
             labels = []
             for marker in uniquemarkers:
-                label = "{:d}".format(marker)
+                label = f"{marker:d}"
                 if marker in areas and areas[marker] > 0:
-                    label += "\n$A$={:g}".format(areas[marker])
+                    label += f"\n$A$={areas[marker]:g}"
                     # label += "\n(area: %s)" % areas[marker]
                 labels.append(label)
             cbar.set_ticklabels(labels)
@@ -800,8 +901,14 @@ def drawPLC(ax, mesh, fitView=True, **kwargs):
     if showRegionMarkers is True:
         for reg in mesh.regionMarkers():
             ax.plot(reg.x(), reg.y(), "mx", alpha=0.5)
-            ax.text(reg.x(), reg.y(), str(reg.marker()),
-                    color="m", ha="center", va="center")
+            ax.text(
+                reg.x(),
+                reg.y(),
+                str(reg.marker()),
+                color="m",
+                ha="center",
+                va="center",
+            )
 
     if showNodes is True:
         for n in mesh.nodes():
@@ -811,9 +918,7 @@ def drawPLC(ax, mesh, fitView=True, **kwargs):
                 col = (0.0, 0.0, 0.0, 1.0)
 
             # ms = kwargs.pop('markersize', 5)
-            ax.plot(n.pos()[0], n.pos()[1], 'o',
-                    color=col, zorder=10, **kwargs)
-
+            ax.plot(n.pos()[0], n.pos()[1], "o", color=col, zorder=10, **kwargs)
 
     if showBoundaryMarkers is True:
         drawBoundaryMarkers(ax, mesh, **kwargs)
@@ -826,12 +931,13 @@ def drawPLC(ax, mesh, fitView=True, **kwargs):
 
     if showRegionMarkers is True:
         for hole in mesh.holeMarker():
-            ax.text(hole[0], hole[1], 'H', color='black',
-                    va="center", ha="center")
+            ax.text(
+                hole[0], hole[1], "H", color="black", va="center", ha="center"
+            )
 
     if fitView is True:
-        ax.autoscale(enable=True, axis='both', tight=True)
-        ax.set_aspect('equal')
+        ax.autoscale(enable=True, axis="both", tight=True)
+        ax.set_aspect("equal")
 
     updateAxes_(ax)
     # if cbar is None:
@@ -840,24 +946,41 @@ def drawPLC(ax, mesh, fitView=True, **kwargs):
 
 
 def _createCellPolygon(cell):
-    """Utility function to polygon for cell shape to be used by MPL."""
+    """Create a polygon for a cell shape to be used by MPL."""
     if cell.shape().nodeCount() == 3:
-        return list(zip([cell.node(0).x(), cell.node(1).x(),
-                         cell.node(2).x()],
-                        [cell.node(0).y(), cell.node(1).y(),
-                         cell.node(2).y()]))
+        return list(
+            zip(
+                [cell.node(0).x(), cell.node(1).x(), cell.node(2).x()],
+                [cell.node(0).y(), cell.node(1).y(), cell.node(2).y()],
+                strict=True,
+            )
+        )
     elif cell.shape().nodeCount() == 4:
-        return list(zip([cell.node(0).x(), cell.node(1).x(),
-                         cell.node(2).x(), cell.node(3).x()],
-                        [cell.node(0).y(), cell.node(1).y(),
-                         cell.node(2).y(), cell.node(3).y()]))
+        return list(
+            zip(
+                [
+                    cell.node(0).x(),
+                    cell.node(1).x(),
+                    cell.node(2).x(),
+                    cell.node(3).x(),
+                ],
+                [
+                    cell.node(0).y(),
+                    cell.node(1).y(),
+                    cell.node(2).y(),
+                    cell.node(3).y(),
+                ],
+                strict=True,
+            )
+        )
 
     pg.warn("Unknown shape to patch: ", cell)
 
 
 def createMeshPatches(ax, mesh, rasterized=False, verbose=True):
-    """Utility function to create 2d mesh patches within a given ax."""
+    """Create 2d mesh patches within a given axes."""
     import matplotlib as mpl
+
     if not mesh:
         pg.error("drawMeshBoundaries(ax, mesh): invalid mesh:", mesh)
         return
@@ -869,8 +992,9 @@ def createMeshPatches(ax, mesh, rasterized=False, verbose=True):
     pg.tic()
     polys = [_createCellPolygon(c) for c in mesh.cells()]
 
-    patches = mpl.collections.PolyCollection(polys, picker=True,
-                                             rasterized=rasterized)
+    patches = mpl.collections.PolyCollection(
+        polys, picker=True, rasterized=rasterized
+    )
 
     if verbose:
         pg.info("Creation of mesh patches took = ", pg.toc())
@@ -903,9 +1027,8 @@ def createTriangles(mesh):
     dataIdx : list of int
         List of indices for a data array
     """
-    if hasattr(mesh, '_triData'):
-        if hash(mesh) == mesh._triData[0]:
-            return mesh._triData[1:]
+    if hasattr(mesh, "_triData") and hash(mesh) == mesh._triData[0]:
+        return mesh._triData[1:]
 
     x = pg.x(mesh)
     y = pg.y(mesh)
@@ -937,9 +1060,19 @@ def createTriangles(mesh):
     return x, y, triangles, z, dataIdx
 
 
-def drawField(ax, mesh, data=None, levels=None, nLevs=5,
-              cMin=None, cMax=None, nCols=None, logScale=False, fitView=True,
-              **kwargs):
+def drawField(
+    ax,
+    mesh,
+    data=None,
+    levels=None,
+    nLevs=5,
+    cMin=None,
+    cMax=None,
+    nCols=None,
+    logScale=False,
+    fitView=True,
+    **kwargs,
+):
     """Draw mesh with scalar field data.
 
     Draw scalar field into MPL axes using matplotlib triplot.
@@ -1003,42 +1136,43 @@ def drawField(ax, mesh, data=None, levels=None, nLevs=5,
     >>> tri = drawField(ax, mesh, data)
     """
     x, y, triangles, _, dataIndex = createTriangles(mesh)
-    if len(data) == mesh.cellCount():
-        z = data[dataIndex]
-    else:
-        z = data
+    z = data[dataIndex] if len(data) == mesh.cellCount() else data
 
     gci = None
 
     if levels is None:
-        levels = autolevel(data, nLevs,
-                           zMin=cMin, zMax=cMax, logScale=logScale,
-                           symLevels=kwargs.pop('symLevels', False))
+        levels = autolevel(
+            data,
+            nLevs,
+            zMin=cMin,
+            zMax=cMax,
+            logScale=logScale,
+            symLevels=kwargs.pop("symLevels", False),
+        )
     else:
-        nCols = len(levels)-1
+        nCols = len(levels) - 1
 
     if len(z) == len(triangles) and len(data) != mesh.nodeCount():
-        shading = kwargs.pop('shading', 'flat')
+        shading = kwargs.pop("shading", "flat")
 
         # bounds = np.linspace(levels[0], levels[-1], nLevs)
         # norm = colors.BoundaryNorm(boundaries=bounds, ncolors=256)
-        if shading == 'gouraud':
+        if shading == "gouraud":
             z = pg.meshtools.cellDataToNodeData(mesh, data)
-            gci = ax.tripcolor(x, y, triangles, z,
-                               shading=shading, **kwargs)
+            gci = ax.tripcolor(x, y, triangles, z, shading=shading, **kwargs)
         else:
-            gci = ax.tripcolor(x, y, triangles, facecolors=z,
-                               shading=shading, **kwargs)
+            gci = ax.tripcolor(
+                x, y, triangles, facecolors=z, shading=shading, **kwargs
+            )
 
     elif len(z) == mesh.nodeCount():
-        shading = kwargs.pop('shading', None)
+        shading = kwargs.pop("shading", None)
 
         if shading is not None:
             gci = ax.tripcolor(x, y, triangles, z, shading=shading, **kwargs)
         else:
-
-            fillContour = kwargs.pop('fillContour', True)
-            contourLines = kwargs.pop('contourLines', True)
+            fillContour = kwargs.pop("fillContour", True)
+            contourLines = kwargs.pop("contourLines", True)
 
             if fillContour is True:
                 # add outer climits to fill lower and upper too
@@ -1052,32 +1186,47 @@ def drawField(ax, mesh, data=None, levels=None, nLevs=5,
 
                 if nCols is not None:
                     if logScale:
-                        levs = np.geomspace(min(levels), max(levels), nCols+1)
+                        levs = np.geomspace(min(levels), max(levels), nCols + 1)
                     else:
-                        levs = np.linspace(min(levels), max(levels), nCols+1)
+                        levs = np.linspace(min(levels), max(levels), nCols + 1)
 
-                gci = ax.tricontourf(x, y, triangles, z,
-                                     # antialiased=True, # not always nice
-                                     levels=levs, **kwargs)
+                gci = ax.tricontourf(
+                    x,
+                    y,
+                    triangles,
+                    z,
+                    # antialiased=True, # not always nice
+                    levels=levs,
+                    **kwargs,
+                )
 
             if contourLines is True:
-                ax.tricontour(x, y, triangles, z, levels=levels,
-                              colors=kwargs.pop('colors', ['0.5']),
-                              alpha=kwargs.pop('alpha', 0.5),
-                              linewidths=kwargs.pop('lw', 1.0),
-                              **kwargs)
+                ax.tricontour(
+                    x,
+                    y,
+                    triangles,
+                    z,
+                    levels=levels,
+                    colors=kwargs.pop("colors", ["0.5"]),
+                    alpha=kwargs.pop("alpha", 0.5),
+                    linewidths=kwargs.pop("lw", 1.0),
+                    **kwargs,
+                )
     else:
         gci = None
-        raise Exception("Data size does not fit mesh size: ", len(z),
-                        mesh.cellCount(), mesh.nodeCount())
+        raise ValueError(
+            "Data size does not fit mesh size: "
+            f"{len(z)} values, {mesh.cellCount()} cells, "
+            f"{mesh.nodeCount()} nodes"
+        )
 
     # we should ne adapt cols here at all -- test remove
     # if gci and cMin and cMax:
     #     gci.set_clim(cMin, cMax)
 
     if fitView is True:
-        ax.autoscale(enable=True, axis='both', tight=True)
-        ax.set_aspect('equal')
+        ax.autoscale(enable=True, axis="both", tight=True)
+        ax.set_aspect("equal")
 
     updateAxes_(ax)
     return gci
@@ -1106,7 +1255,8 @@ def drawStreamLines(ax, mesh, u, nx=25, ny=25, **kwargs):
     """
     X, Y = np.meshgrid(
         np.linspace(mesh.xmin(), mesh.xmax(), nx),
-        np.linspace(mesh.ymin(), mesh.ymax(), ny))
+        np.linspace(mesh.ymin(), mesh.ymax(), ny),
+    )
 
     U = X.copy()
     V = X.copy()
@@ -1128,8 +1278,9 @@ def drawStreamLines(ax, mesh, u, nx=25, ny=25, **kwargs):
     return gci
 
 
-def drawStreamLine(ax, mesh, c, data, dataMesh=None, linewidth=1.0,
-                    dropTol=0.0, **kwargs):
+def drawStreamLine(
+    ax, mesh, c, data, dataMesh=None, linewidth=1.0, dropTol=0.0, **kwargs
+):
     """Draw a single streamline.
 
     Draw a single streamline into a given mesh for given data stating at
@@ -1171,15 +1322,23 @@ def drawStreamLine(ax, mesh, c, data, dataMesh=None, linewidth=1.0,
         Additional kwargs are forwarded to mpl.LineCollection, mpl.Polygon
     """
     import matplotlib as mpl
-    x, y, v = streamline(mesh, data, startCoord=c.center(), dLengthSteps=5,
-                         dataMesh=dataMesh, maxSteps=10000, verbose=False,
-                         coords=[0, 1])
 
-    if 'color' not in kwargs:
-        kwargs['color'] = 'black'
+    x, y, v = streamline(
+        mesh,
+        data,
+        startCoord=c.center(),
+        dLengthSteps=5,
+        dataMesh=dataMesh,
+        maxSteps=10000,
+        verbose=False,
+        coords=[0, 1],
+    )
 
-    arrowSize = kwargs.pop('arrowSize', 12)
-    arrowColor = kwargs.pop('arrowColor', kwargs.get('color'))
+    if "color" not in kwargs:
+        kwargs["color"] = "black"
+
+    arrowSize = kwargs.pop("arrowSize", 12)
+    arrowColor = kwargs.pop("arrowColor", kwargs.get("color"))
 
     lines = None
 
@@ -1188,11 +1347,12 @@ def drawStreamLine(ax, mesh, c, data, dataMesh=None, linewidth=1.0,
 
         segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
-        lwidths = pg.Vector(len(v), kwargs.pop('lw', linewidth))
+        lwidths = pg.Vector(len(v), kwargs.pop("lw", linewidth))
         lwidths[pg.find(pg.Vector(v) < dropTol)] = 0.0
 
-        lines = mpl.collections.LineCollection(segments,
-                                               linewidths=lwidths, **kwargs)
+        lines = mpl.collections.LineCollection(
+            segments, linewidths=lwidths, **kwargs
+        )
         ax.add_collection(lines)
 
         # probably the limits are wrong without plot call
@@ -1207,20 +1367,29 @@ def drawStreamLine(ax, mesh, c, data, dataMesh=None, linewidth=1.0,
         c = mesh.findCell([x[xmid], y[ymid]])
 
         if v[xmid] > dropTol:
-
             absArrowSize = True
             if absArrowSize:
-                ax.annotate('', xytext=(x[xmid]-dx, y[ymid]-dy),
-                            xy=(x[xmid], y[ymid]),
-                            arrowprops=dict(arrowstyle="-|>",
-                                            color=arrowColor, lw=0),
-                            size=arrowSize, **kwargs)
+                ax.annotate(
+                    "",
+                    xytext=(x[xmid] - dx, y[ymid] - dy),
+                    xy=(x[xmid], y[ymid]),
+                    arrowprops=dict(arrowstyle="-|>", color=arrowColor, lw=0),
+                    size=arrowSize,
+                    **kwargs,
+                )
             else:
-                ax.arrow(x[xmid], y[ymid], dx, dy,
-                         shape='full', lw=0,
-                         length_includes_head=True,
-                         fc=arrowColor,
-                         head_width=.35, **kwargs)
+                ax.arrow(
+                    x[xmid],
+                    y[ymid],
+                    dx,
+                    dy,
+                    shape="full",
+                    lw=0,
+                    length_includes_head=True,
+                    fc=arrowColor,
+                    head_width=0.35,
+                    **kwargs,
+                )
 
             # dx90 = -dy
             # dy90 = dx
@@ -1238,8 +1407,16 @@ def drawStreamLine(ax, mesh, c, data, dataMesh=None, linewidth=1.0,
     return lines
 
 
-def drawStreams(ax, mesh, data, startStream=3, coarseMesh=None, quiver=False,
-                fitView=True, **kwargs):
+def drawStreams(
+    ax,
+    mesh,
+    data,
+    startStream=3,
+    coarseMesh=None,
+    quiver=False,
+    fitView=True,
+    **kwargs,
+):
     """Draw streamlines based on an unstructured mesh.
 
     Every cell contains only one streamline and every new stream line
@@ -1282,11 +1459,12 @@ def drawStreams(ax, mesh, data, startStream=3, coarseMesh=None, quiver=False,
     >>> ny = pg.y(mesh.positions())
     >>> data = np.cos(1.5 * nx) * np.sin(1.5 * ny)
     >>> fig, ax = plt.subplots()
-    >>> drawStreams(ax, mesh, data, color='red')
+    >>> drawStreams(ax, mesh, data, color="red")
     >>> drawStreams(ax, mesh, data, dropTol=0.9)
-    >>> drawStreams(ax, mesh, pg.solver.grad(mesh, data),
-    ...             color='green', quiver=True)
-    >>> ax.set_aspect('equal')
+    >>> drawStreams(
+    ...     ax, mesh, pg.solver.grad(mesh, data), color="green", quiver=True
+    ... )
+    >>> ax.set_aspect("equal")
     >>> pg.wait()
     """
     viewMesh = None
@@ -1298,7 +1476,6 @@ def drawStreams(ax, mesh, data, startStream=3, coarseMesh=None, quiver=False,
         data = data.T
 
     if quiver:
-
         x = None
         y = None
         u = None
@@ -1323,10 +1500,11 @@ def drawStreams(ax, mesh, data, startStream=3, coarseMesh=None, quiver=False,
 
         q = ax.quiver(x, y, u, v, **kwargs)
 
-        label = kwargs.pop('label', None)
+        label = kwargs.pop("label", None)
         if label is not None:
-            ax.quiverkey(q, 0.05, -0.1, 0.1, label, labelpos='E',
-                         coordinates='axes')
+            ax.quiverkey(
+                q, 0.05, -0.1, 0.1, label, labelpos="E", coordinates="axes"
+            )
 
         updateAxes_(ax)
         return
@@ -1347,19 +1525,19 @@ def drawStreams(ax, mesh, data, startStream=3, coarseMesh=None, quiver=False,
         # start a stream from each boundary cell
         for y in np.linspace(viewMesh.ymin(), viewMesh.ymax(), 100):
             c = viewMesh.findCell(
-                [(viewMesh.xmax() - viewMesh.xmax()) / 2.0, y])
-            if c is not None:
-                if c.valid():
-                    drawStreamLine(ax, viewMesh, c, data, dataMesh, **kwargs)
+                [(viewMesh.xmax() - viewMesh.xmax()) / 2.0, y]
+            )
+            if c is not None and c.valid():
+                drawStreamLine(ax, viewMesh, c, data, dataMesh, **kwargs)
 
     elif startStream == 2:
         # start a stream from each boundary cell
         for x in np.linspace(viewMesh.xmin(), viewMesh.xmax(), 100):
             c = viewMesh.findCell(
-                [x, (viewMesh.ymax() - viewMesh.ymax()) / 2.0])
-            if c is not None:
-                if c.valid():
-                    drawStreamLine(ax, viewMesh, c, data, dataMesh, **kwargs)
+                [x, (viewMesh.ymax() - viewMesh.ymax()) / 2.0]
+            )
+            if c is not None and c.valid():
+                drawStreamLine(ax, viewMesh, c, data, dataMesh, **kwargs)
 
     elif startStream == 3:
         # start a stream from each boundary cell
@@ -1379,36 +1557,42 @@ def drawStreams(ax, mesh, data, startStream=3, coarseMesh=None, quiver=False,
     for c in viewMesh.cells():
         c.setValid(True)
 
-    label = kwargs.pop('label', None)
+    label = kwargs.pop("label", None)
 
     if label is not None:
-        from matplotlib.lines import Line2D
-        if 'color' not in kwargs:
-            kwargs['color'] = 'black'
-        arrowSize = kwargs.pop('arrowSize', 12)
-        arrowColor = kwargs.pop('arrowColor', kwargs.get('color'))
+        if "color" not in kwargs:
+            kwargs["color"] = "black"
+        arrowSize = kwargs.pop("arrowSize", 12)
+        arrowColor = kwargs.pop("arrowColor", kwargs.get("color"))
 
         yOff = -26
         ## streamline
-        ax.annotate('', xy=(3, yOff), xycoords='axes points',
-                    xytext=(25, yOff),
-                    arrowprops=dict(arrowstyle="->",
-                                    color=arrowColor,
-                                    lw=1),
-                    size=0 )
+        ax.annotate(
+            "",
+            xy=(3, yOff),
+            xycoords="axes points",
+            xytext=(25, yOff),
+            arrowprops=dict(arrowstyle="->", color=arrowColor, lw=1),
+            size=0,
+        )
 
         ## arrow head
-        ax.annotate('', xy=(4, yOff), xycoords='axes points',
-                    xytext=(20, yOff),
-                    arrowprops=dict(arrowstyle="<|-",
-                                    color=arrowColor,
-                                    lw=0),
-                    size=arrowSize )
+        ax.annotate(
+            "",
+            xy=(4, yOff),
+            xycoords="axes points",
+            xytext=(20, yOff),
+            arrowprops=dict(arrowstyle="<|-", color=arrowColor, lw=0),
+            size=arrowSize,
+        )
         ## text
-        ax.annotate(label, xy=(30, yOff),
-                    xycoords='axes points',
-                    horizontalalignment='left',
-                    verticalalignment='center')
+        ax.annotate(
+            label,
+            xy=(30, yOff),
+            xycoords="axes points",
+            horizontalalignment="left",
+            verticalalignment="center",
+        )
 
     updateAxes_(ax)
 
@@ -1444,69 +1628,76 @@ def drawSensors(ax, sensors, diam=None, coords=None, **kwargs):
     >>> sensors = np.random.rand(5, 2)
     >>> fig, ax = pg.plt.subplots()
     >>> drawSensors(ax, sensors, diam=0.02, coords=[0, 1])
-    >>> ax.set_aspect('equal')
+    >>> ax.set_aspect("equal")
     >>> pg.wait()
     """
     import matplotlib as mpl
+
     if coords is None:
         coords = [0, 2]
 
-        if len(sensors[0]) == 2 or \
-                not pg.core.zVari(sensors) and sensors[0][2] == 0.0:
+        if (
+            len(sensors[0]) == 2
+            or not pg.core.zVari(sensors)
+            and sensors[0][2] == 0.0
+        ):
             coords = [0, 1]
-
 
     if diam is None:
         eSpacing = pg.Pos(sensors[0]).distance(sensors[1])
         diam = eSpacing / 2.5
 
     eSensors = []
-    sm = kwargs.pop('sm', kwargs.pop('sensorMarker', 'o'))
+    sm = kwargs.pop("sm", kwargs.pop("sensorMarker", "o"))
     for e in sensors:
         x = e[coords[0]]
         y = e[coords[1]]
-        if sm == 'o':
-            eSensors.append(mpl.patches.Circle((x,y), diam/2,
-                                               **kwargs))
+        if sm == "o":
+            eSensors.append(mpl.patches.Circle((x, y), diam / 2, **kwargs))
         else:
-            eSensors.append(mpl.patches.Polygon(([x, y],
-                                                 [x+diam/1.5/1.4, y+diam/1.5],
-                                                 [x-diam/1.5/1.4, y+diam/1.5]
-                                                 ),
-                                                closed=True,
-                                                **kwargs))
+            eSensors.append(
+                mpl.patches.Polygon(
+                    (
+                        [x, y],
+                        [x + diam / 1.5 / 1.4, y + diam / 1.5],
+                        [x - diam / 1.5 / 1.4, y + diam / 1.5],
+                    ),
+                    closed=True,
+                    **kwargs,
+                )
+            )
 
     p = mpl.collections.PatchCollection(eSensors, clip_on=False, **kwargs)
     p.set_zorder(100)
     ax.add_collection(p)
 
     updateAxes_(ax)
-    #ax.set(ylim=[None, y+diam])
+    # ax.set(ylim=[None, y+diam])
 
 
 def _createParameterContraintsLines(mesh, cMat, cWeights=None):
-    """Create line segments representing constrains.
-    """
+    """Create line segments representing constrains."""
     C = None
 
     if isinstance(cMat, pg.matrix.SparseMapMatrix):
         # TODO super hackish .. clean me up!!
 
-        tmp = pg.optImport('tempfile')
-        _, tmpFile = tmp.mkstemp(suffix='.matrix')
+        tmp = pg.optImport("tempfile")
+        _, tmpFile = tmp.mkstemp(suffix=".matrix")
         C = pg.Matrix()
         cMat.save(tmpFile)
         pg.core.loadMatrixCol(C, tmpFile)
 
         try:
-            import os
-            os.remove(tmpFile)
+            from pathlib import Path
+
+            Path(tmpFile).unlink()
         except Exception as e:
             pg.error(e)
             print("can't remove:", tmpFile)
 
     else:
-        pg.critical('implementme')
+        pg.critical("implementme")
         C = cMat
 
     cellList = dict()
@@ -1539,18 +1730,17 @@ def _createParameterContraintsLines(mesh, cMat, cWeights=None):
         a = C[1][i]
         b = None
 
-        if i < C[0].size()-1:
-            if C[0][i+1] == cID:
-                b = C[1][i+1]
-                i += 1
+        if i < C[0].size() - 1 and C[0][i + 1] == cID:
+            b = C[1][i + 1]
+            i += 1
         if b is not None:
             if cWeights[cID] > 0:
                 p1 = paraCenter[a]
                 p2 = paraCenter[b]
 
                 if cWeights is not None:
-                    pa = pg.Pos(p1 + (p2 - p1)/2. * (1. - cWeights[cID]))
-                    pb = pg.Pos(p2 + (p1 - p2)/2. * (1. - cWeights[cID]))
+                    pa = pg.Pos(p1 + (p2 - p1) / 2.0 * (1.0 - cWeights[cID]))
+                    pb = pg.Pos(p2 + (p1 - p2) / 2.0 * (1.0 - cWeights[cID]))
                 else:
                     pa = p1
                     pb = p2
@@ -1581,6 +1771,7 @@ def drawParameterConstraints(ax, mesh, cMat, cWeights=None):
         Weights for all constraints. Need to have a lengths == cMat.rows()
     """
     import matplotlib as mpl
+
     start, end = _createParameterContraintsLines(mesh, cMat, cWeights)
 
     lines = []
@@ -1589,10 +1780,17 @@ def drawParameterConstraints(ax, mesh, cMat, cWeights=None):
     col = (0.0, 0.0, 1.0, 1.0)
     for i, _ in enumerate(start):
         if start[i] == end[i]:
-            ax.plot(start[i].x(), end[i].y(), '.', color=col, markersize=2)
+            ax.plot(start[i].x(), end[i].y(), ".", color=col, markersize=2)
         else:
-            lines.append(list(zip([start[i].x(), end[i].x()],
-                                  [start[i].y(), end[i].y()], strict=False)))
+            lines.append(
+                list(
+                    zip(
+                        [start[i].x(), end[i].x()],
+                        [start[i].y(), end[i].y()],
+                        strict=False,
+                    )
+                )
+            )
 
             linewidths.append(0.5)
         colors.append(col)
@@ -1605,8 +1803,18 @@ def drawParameterConstraints(ax, mesh, cMat, cWeights=None):
     updateAxes_(ax)
 
 
-def drawCWeight(ax, mesh, cweight, lmin=0, lmax=0.8, cmin=0.1, cmax=1,
-                min_plot=0.02, color='black', cell_indices=None):
+def drawCWeight(
+    ax,
+    mesh,
+    cweight,
+    lmin=0,
+    lmax=0.8,
+    cmin=0.1,
+    cmax=1,
+    min_plot=0.02,
+    color="black",
+    cell_indices=None,
+):
     """Draw given cweights defined for given mesh on given ax.
 
     Parameters
@@ -1636,14 +1844,15 @@ def drawCWeight(ax, mesh, cweight, lmin=0, lmax=0.8, cmin=0.1, cmax=1,
     f(cweight) -> linewidth:
         (cmin, cmax) -> (lmax, lmin) if cmin < cweight < cmax
     """
+
     def lineWidthFromC(cw, cmin=0.1, cmax=1, lmin=0, lmax=0.8):
-        """Compute linewidth from given c value given cmin/cmax and lmin/lmax."""
-        linew = (1 - (cw - cmin) / (cmax - cmin))*(lmax - lmin) + lmin
+        """Compute the linewidth for a given weight and its bounds."""
+        linew = (1 - (cw - cmin) / (cmax - cmin)) * (lmax - lmin) + lmin
         linew = np.max([np.min([linew, lmax]), lmin])
         return linew
 
-
     from matplotlib.collections import LineCollection
+
     mesh.createNeighbourInfos()
 
     lines = []
@@ -1660,8 +1869,9 @@ def drawCWeight(ax, mesh, cweight, lmin=0, lmax=0.8, cmin=0.1, cmax=1,
             if bound.rightCell() is not None:
                 pos0 = np.array(bound.node(0).pos())[:2].tolist()
                 pos1 = np.array(bound.node(1).pos())[:2].tolist()
-                linew = lineWidthFromC(cweight[bi], cmin=cmin, cmax=cmax,
-                                       lmin=lmin, lmax=lmax)
+                linew = lineWidthFromC(
+                    cweight[bi], cmin=cmin, cmax=cmax, lmin=lmin, lmax=lmax
+                )
 
                 if linew >= min_plot:
                     lines.append([pos0, pos1])
@@ -1672,8 +1882,10 @@ def drawCWeight(ax, mesh, cweight, lmin=0, lmax=0.8, cmin=0.1, cmax=1,
     else:
         # case 2/2: node indices are given, which means we plot each entry of
         # cweight between the nodes with the ids given in node_indices.
-        assert len(cweight) == len(cell_indices[0])
-        assert len(cweight) == len(cell_indices[1])
+        if len(cweight) != len(cell_indices[0]) or len(cweight) != len(
+            cell_indices[1]
+        ):
+            raise ValueError("cweight and cell_indices must have equal length.")
         cells = mesh.cells()
         boundary_ids = []
         for ci in range(len(cweight)):
@@ -1681,20 +1893,32 @@ def drawCWeight(ax, mesh, cweight, lmin=0, lmax=0.8, cmin=0.1, cmax=1,
             cell1 = cells[cell_indices[1][ci]]
             try:
                 boundary_ids.append(
-                    np.intersect1d([cell0.boundary(0).id(),
-                                    cell0.boundary(1).id(),
-                                    cell0.boundary(2).id()],
-                                   [cell1.boundary(0).id(),
-                                    cell1.boundary(1).id(),
-                                    cell1.boundary(2).id()]
-                                   )[0])
+                    np.intersect1d(
+                        [
+                            cell0.boundary(0).id(),
+                            cell0.boundary(1).id(),
+                            cell0.boundary(2).id(),
+                        ],
+                        [
+                            cell1.boundary(0).id(),
+                            cell1.boundary(1).id(),
+                            cell1.boundary(2).id(),
+                        ],
+                    )[0]
+                )
             except IndexError:
-                print([cell0.boundary(0).id(),
-                       cell0.boundary(1).id(),
-                       cell0.boundary(2).id()],
-                      [cell1.boundary(0).id(),
-                       cell1.boundary(1).id(),
-                       cell1.boundary(2).id()])
+                print(
+                    [
+                        cell0.boundary(0).id(),
+                        cell0.boundary(1).id(),
+                        cell0.boundary(2).id(),
+                    ],
+                    [
+                        cell1.boundary(0).id(),
+                        cell1.boundary(1).id(),
+                        cell1.boundary(2).id(),
+                    ],
+                )
 
         print(boundary_ids)
 
@@ -1705,12 +1929,11 @@ def drawCWeight(ax, mesh, cweight, lmin=0, lmax=0.8, cmin=0.1, cmax=1,
             if bound.rightCell() is not None:
                 pos0 = np.array(bound.node(0).pos())[:2].tolist()
                 pos1 = np.array(bound.node(1).pos())[:2].tolist()
-                linew = lineWidthFromC(cweight[ci], cmin=cmin, cmax=cmax,
-                                       lmin=lmin, lmax=lmax)
+                linew = lineWidthFromC(
+                    cweight[ci], cmin=cmin, cmax=cmax, lmin=lmin, lmax=lmax
+                )
                 if linew >= min_plot:
                     lines.append([pos0, pos1])
                     linewidths.append(linew)
 
-    ax.add_collection(
-        LineCollection(lines, linewidths=linewidths,
-                       color=color))
+    ax.add_collection(LineCollection(lines, linewidths=linewidths, color=color))

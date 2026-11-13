@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# encoding: utf-8
 """
 2D Refraction modelling and inversion
 =====================================
 
 This example shows how to use the TravelTime manager to generate the response
-of a three-layered sloping model and to invert the synthetic noisified data."""
+of a three-layered sloping model and to invert the synthetic noisified data.
+"""
 
 # sphinx_gallery_thumbnail_number = 2
 import numpy as np
@@ -19,12 +19,22 @@ import pygimli.physics.traveltime as tt
 # -----------
 # We start by creating a three-layered slope (The model is taken from the BSc
 # thesis of Constanze Reinken conducted at the University of Bonn).
-layer1 = mt.createPolygon([[0.0, 137], [117.5, 164], [117.5, 162], [0.0, 135]],
-                          isClosed=True, marker=1, area=1)
-layer2 = mt.createPolygon([[0.0, 126], [0.0, 135], [117.5, 162], [117.5, 153]],
-                          isClosed=True, marker=2)
-layer3 = mt.createPolygon([[0.0, 110], [0.0, 126], [117.5, 153], [117.5, 110]],
-                          isClosed=True, marker=3)
+layer1 = mt.createPolygon(
+    [[0.0, 137], [117.5, 164], [117.5, 162], [0.0, 135]],
+    isClosed=True,
+    marker=1,
+    area=1,
+)
+layer2 = mt.createPolygon(
+    [[0.0, 126], [0.0, 135], [117.5, 162], [117.5, 153]],
+    isClosed=True,
+    marker=2,
+)
+layer3 = mt.createPolygon(
+    [[0.0, 110], [0.0, 126], [117.5, 153], [117.5, 110]],
+    isClosed=True,
+    marker=3,
+)
 
 geom = layer1 + layer2 + layer3
 
@@ -42,7 +52,7 @@ ax, _ = pg.show(mesh)
 # Next we define geophone positions and a measurement scheme, which consists of
 # shot and receiver indices.
 numberGeophones = 48
-sensors = np.linspace(0., 117.5, numberGeophones)
+sensors = np.linspace(0.0, 117.5, numberGeophones)
 scheme = tt.createRAData(sensors, shotDistance=3)
 
 # Adapt sensor positions to slope
@@ -68,17 +78,25 @@ vp[vp == 1] = 250
 vp[vp == 2] = 500
 vp[vp == 3] = 1300
 
-ax, _ = pg.show(mesh, vp, colorBar=True, logScale=False, label='v in m/s')
-pg.viewer.mpl.drawSensors(ax, scheme.sensors(), diam=1.0,
-                         facecolor='white', edgecolor='black')
+ax, _ = pg.show(mesh, vp, colorBar=True, logScale=False, label="v in m/s")
+pg.viewer.mpl.drawSensors(
+    ax, scheme.sensors(), diam=1.0, facecolor="white", edgecolor="black"
+)
 
 ###############################################################################
 # We use this model to create noisified synthetic data and look at the
 # traveltime data matrix. Note, we force a specific noise seed as we want
 # reproducible results for testing purposes.
 
-data = tt.simulate(slowness=1.0 / vp, scheme=scheme, mesh=mesh,
-                   noiseLevel=0.001, noiseAbs=0.001, seed=1337, verbose=True)
+data = tt.simulate(
+    slowness=1.0 / vp,
+    scheme=scheme,
+    mesh=mesh,
+    noiseLevel=0.001,
+    noiseAbs=0.001,
+    seed=1337,
+    verbose=True,
+)
 tt.show(data)
 
 ###############################################################################
@@ -90,8 +108,7 @@ tt.show(data)
 # tune the maximum cell size in the parametric domain to 15m²
 
 mgr = tt.TravelTimeManager(data)
-vest = mgr.invert(secNodes=2, paraMaxCellSize=15.0,
-                  maxIter=10, verbose=True)
+vest = mgr.invert(secNodes=2, paraMaxCellSize=15.0, maxIter=10, verbose=True)
 np.testing.assert_array_less(mgr.inv.inv.chi2(), 1.1)
 
 ###############################################################################
@@ -100,7 +117,7 @@ np.testing.assert_array_less(mgr.inv.inv.chi2(), 1.1)
 # For comparison we plot the geometry on top.
 
 ax, _ = mgr.showResult(cMin=min(vp), cMax=max(vp), logScale=False)
-ax, _ = pg.show(geom, ax=ax, fillRegion=False, regionMarker=False)
+ax, _ = pg.show(geom, ax=ax, regions=False, regionMarkers=False)
 
 ###############################################################################
 # Note that internally the following is called

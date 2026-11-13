@@ -45,9 +45,36 @@ pip install pygimli=2
 
 * Renamed:
     *  `RVector3` -> `Pos`
-    * some keyword arguments has been renamed with an appropriate warning if the old ones are used. Idea is to improve code readability, e.g.,
-    `pg.show(geo, fillRegion=True, showNodes=True, showBoundaryMarkers=True)` become now:
-    `geo.show(regions=False, nodes=True, boundaryMarkers=True)`
+    *  keyword arguments, see below
+
+* Deprecated keyword arguments: some keyword arguments have been renamed to
+  improve code readability and consistency. The old names are still accepted
+  but emit a warning; they will be removed in v2.1. All internal usages,
+  examples, tutorials and tests have been migrated to the new names.
+
+    | old name               | new name          | used in                       |
+    | ---------------------- | ----------------- | ----------------------------- |
+    | `fillRegion`           | `regions`         | `drawPLC`, `drawMesh`, `show` |
+    | `showNodes`            | `nodes`           | `drawPLC`, `drawMesh`, `show` |
+    | `showBoundary`         | `boundaries`      | `drawPLC`, `drawMesh`         |
+    | `showBoundaryMarkers`  | `boundaryMarkers` | `drawPLC`, `drawMesh`, `show` |
+    | `regionMarker`         | `regionMarkers`   | `drawPLC`, `drawMesh`, `show` |
+    | `markerPosition`       | `markerPos`       | geometry primitives           |
+    | `worldMarker`          | `worldMarkers`    | `createWorld`                 |
+    | `worldBoundaryMarker`  | `worldMarkers`    | `createGrid`                  |
+    | `cmap`                 | `cMap`            | `showMesh`, `drawColorBar`    |
+
+    `markerPos` replaces `markerPosition` in all geometry primitives, i.e.
+    `createCircle`, `createPolygon`, `createRectangle` and
+    `setPolyRegionMarker`.
+
+    e.g.
+    `pg.show(geo, fillRegion=True, showNodes=True, showBoundaryMarkers=True)`
+    becomes
+    `geo.show(regions=True, nodes=True, boundaryMarkers=True)`.
+
+    Note that `showBoundary` is only renamed on the PLC-drawing level
+    (`drawPLC`/`drawMesh`); `showMesh` keeps its own `showBoundary` argument.
 
 * ...
 

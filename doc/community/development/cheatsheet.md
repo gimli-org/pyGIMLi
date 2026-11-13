@@ -53,6 +53,8 @@ Some custom latex macros inspired by [physics latex package](https://ctan.org/):
 | `\dd x`         | $\dd x$         |
 
 
+### Admonitions
+
 Some **text-like stuff**!
 
 ::::{myst-example}
@@ -63,21 +65,6 @@ Here's my admonition content.
 
 :::
 ::::
-
-## Custom latex macros
-
-Some custom latex macros inspired by [physics latex package](https://ctan.org/):
-
-| Macro       | Output         |
-|-------------|----------------|
-| \order{h^{2}} | $\order{h^{2}}$ |
-| \vb{v}        | $\vb{v}$        |
-| \grad{u}    | $\grad{u}$    |
-| \div{\vb{v}}  | $\div{\vb{v}}$  |
-| \curl{\vb{v}}        | $\curl{\vb{v}}$ |
-| \laplacian{u}   | $\laplacian{u}$   |
-| \sin(x)        | $\sin(x)$        |
-| \dd x         | $\dd x$         |
 
 
 ### Tables
@@ -120,13 +107,11 @@ This is not part of the footnote.
 
 ::::{myst-example}
 :::{card} Card Title
-Header
-^^^
+:header: Header
+
 Card content
 
-+++
-
-Footer
+:footer: Footer
 :::
 ::::
 

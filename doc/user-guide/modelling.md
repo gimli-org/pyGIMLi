@@ -237,7 +237,7 @@ There are so-called world boundaries that define the surface and bottom of the m
 
 ```{code-cell}
 world = mt.createWorld(start=[-50, 0], end=[50, -30],
-                       layers=[-10, -30], worldMarker=True)
+                       layers=[-10, -30], worldMarkers=True)
 _ = world.show(markers=True, boundaryMarkers=True)
 ```
 

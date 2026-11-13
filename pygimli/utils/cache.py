@@ -6,18 +6,17 @@ with the `.hash()` method.
 Output supports everything that's pickle-able.
 Drop a ticket if some `pg` types need hash or pickle support.
 
-To use just add the decorator.
+To use just add the decorator::
 
-```
-@pg.cache
-def myLongRunningStuff(*args, **kwargs):
-    #...
-    return results
-```
+    @pg.cache
+    def myLongRunningStuff(*args, **kwargs):
+        # ...
+        return results
 
 To use the cache without the decorator, you can call it also like this:
 `pg.cache(myLongRunningStuff)(*args, **kwargs)`
 """
+
 import sys
 import os
 from pathlib import Path
@@ -38,28 +37,25 @@ class CacheUseSettings:
     __NO_CACHE__ = False
 
     @classmethod
-    def setNoCache(cls, c:bool=True):
+    def setNoCache(cls, c: bool = True):
         """Set the caching to noCache mode.
 
         This will disable the caching mechanism and all decorated functions.
         """
         cls.__NO_CACHE__ = c
 
-
     @classmethod
     def isNoCache(cls):
         """Check if caching is disabled."""
         return cls.__NO_CACHE__
-
 
     @classmethod
     def reset(cls):
         """Reset the caching settings to default."""
         cls.__NO_CACHE__ = False
 
-
     @classmethod
-    def inUse(cls, sysArgs:list, manualSkip:bool=False):
+    def inUse(cls, sysArgs: list, manualSkip: bool = False):
         """Check if caching is in use.
 
         Or disabled by command line arguments, prior global setting using
@@ -76,12 +72,16 @@ class CacheUseSettings:
             If True, the cache will be skipped regardless of command line
             arguments.
         """
-        return not any(('--noCache' in sysArgs,
-                        '--skipCache' in sysArgs,
-                        '-N' in sysArgs,
-                        os.getenv('SKIP_CACHE'),
-                        manualSkip is True,
-                        cls.__NO_CACHE__))
+        return not any(
+            (
+                "--noCache" in sysArgs,
+                "--skipCache" in sysArgs,
+                "-N" in sysArgs,
+                os.getenv("SKIP_CACHE"),
+                manualSkip is True,
+                cls.__NO_CACHE__,
+            )
+        )
 
 
 def strHash(s: str) -> int:
@@ -102,7 +102,7 @@ def strHash(s: str) -> int:
     return int(hashlib.sha224(s.encode()).hexdigest()[:16], 16)
 
 
-def valHash(a:any, verbose:bool=False)-> int:
+def valHash(a: any, verbose: bool = False) -> int:
     """Create a hash value for the given value.
 
     Arguments
@@ -127,24 +127,25 @@ def valHash(a:any, verbose:bool=False)-> int:
             return hash(pg.Vector(a))
         elif a.ndim == 2:
             # convert to RVector to use mem copy
-            return hash(pg.Vector(a.reshape((1,a.shape[0]*a.shape[1]))[0]))
+            return hash(pg.Vector(a.reshape((1, a.shape[0] * a.shape[1]))[0]))
         else:
             print(a)
-            pg.error('no hash for numpy array')
+            pg.error("no hash for numpy array")
 
     if isinstance(a, list | tuple):
-        _PRIME = 1000003 # polynomial rolling hash prime
+        _PRIME = 1000003  # polynomial rolling hash prime
         hsh = 0
         for i, item in enumerate(a):
-            if hasattr(item, '__hash__') \
-                and not isinstance(item, list|np.ndarray):
-
+            if hasattr(item, "__hash__") and not isinstance(
+                item, list | np.ndarray
+            ):
                 if verbose is True:
                     pg._g(i, type(item))
                 h = valHash(str(i)) ^ hash(item)
             else:
-                h = valHash(str(i)+str(item), verbose=verbose)\
-                  ^ valHash(item, verbose=verbose)
+                h = valHash(str(i) + str(item), verbose=verbose) ^ valHash(
+                    item, verbose=verbose
+                )
                 if verbose is True:
                     pg._y(i, type(item), h)
             hsh = hsh * _PRIME + h
@@ -177,18 +178,18 @@ def valHash(a:any, verbose:bool=False)-> int:
             return hash(pg.Vector(a))
         elif a.ndim == 2:
             # convert to RVector to use mem copy
-            return hash(pg.Vector(a.reshape((1,a.shape[0]*a.shape[1]))[0]))
+            return hash(pg.Vector(a.reshape((1, a.shape[0] * a.shape[1]))[0]))
         else:
             print(a)
-            pg.error('no hash for numpy array')
-    elif hasattr(a, '__hash__'):
+            pg.error("no hash for numpy array")
+    elif hasattr(a, "__hash__"):
         return hash(a)
     elif isinstance(a, pg.DataContainer):
         # not used
         return hash(a)
     elif callable(a):
         try:
-            if hasattr(a, '_func'):
+            if hasattr(a, "_func"):
                 ## FEAFunctions or any other wrapper containing lambda as _func
                 # pg._g(inspect.getsource(a._func))
                 return strHash(inspect.getsource(a._func))
@@ -199,7 +200,7 @@ def valHash(a:any, verbose:bool=False)-> int:
         except BaseException:
             return valHash(str(a))
 
-    pg.critical('cannot find hash for:', a)
+    pg.critical("cannot find hash for:", a)
     return hash(a)
 
 
@@ -209,7 +210,7 @@ class Cache:
     This class is used to store and restore data in a cache.
     """
 
-    def __init__(self, hashValue:int):
+    def __init__(self, hashValue: int):
         """Initialize the cache with a hash value.
 
         Arguments
@@ -223,7 +224,6 @@ class Cache:
         self._info = None
         self.restore()
 
-
     @property
     def info(self):
         """Return the cache info dictionary.
@@ -232,18 +232,18 @@ class Cache:
         date, duration, restored count, code info, version, args and kwargs.
         """
         if self._info is None:
-            self._info = {'type': '',
-                          'file': '',
-                          'date': 0,
-                          'dur': 0.0,
-                          'restored': 0,
-                          'codeinfo': '',
-                          'version': '',
-                          'args': '',
-                          'kwargs': {},
-                          }
+            self._info = {
+                "type": "",
+                "file": "",
+                "date": 0,
+                "dur": 0.0,
+                "restored": 0,
+                "codeinfo": "",
+                "version": "",
+                "args": "",
+                "kwargs": {},
+            }
         return self._info
-
 
     @info.setter
     def info(self, i):
@@ -256,12 +256,10 @@ class Cache:
         """
         self._info = i
 
-
     @property
     def value(self):
         """Return the cached value."""
         return self._value
-
 
     @value.setter
     def value(self, v):
@@ -274,98 +272,110 @@ class Cache:
             ndarray or any other object with either a save method or can be
             pickled.
         """
-        self.info['type'] = str(type(v).__name__)
+        self.info["type"] = str(type(v).__name__)
 
         # if len(self.info['type']) != 1:
         #     pg.error('only single return caches supported for now.')
         #     return
 
-        self.info['file'] = self._name
+        self.info["file"] = self._name
 
         # pg._r(self.info)
 
-        if self.info['type'] == 'Mesh':
-            pg.info('Save Mesh binary')
+        if self.info["type"] == "Mesh":
+            pg.info("Save Mesh binary")
             v.save(self._name)
-        elif self.info['type'] == 'RVector':
-            pg.info('Save RVector binary')
+        elif self.info["type"] == "RVector":
+            pg.info("Save RVector binary")
             v.save(self._name, format=pg.core.Binary)
-        elif self.info['type'] == 'ndarray':
-            pg.info('Save ndarray')
+        elif self.info["type"] == "ndarray":
+            pg.info("Save ndarray")
             np.save(self._name, v, allow_pickle=True)
-        elif hasattr(v, 'save') and hasattr(v, 'load'):
+        elif hasattr(v, "save") and hasattr(v, "load"):
             v.save(self._name)
         else:
-            self.info['type'] = 'pickle'
-            with Path(self._name + '.pkl').open('wb') as f:
+            self.info["type"] = "pickle"
+            with Path(self._name + ".pkl").open("wb") as f:
                 pickle.dump(v, f)
 
         self.updateCacheInfo()
         self._value = v
-        pg.info('Cache stored:', self._name)
-
+        pg.info("Cache stored:", self._name)
 
     def updateCacheInfo(self):
         """Update the cache info dictionary and save it to a json file."""
-        with Path(self._name).with_suffix('.json').open('w',
-                                                        encoding='utf-8') as of:
-            json.dump(self.info, of, sort_keys=False,
-                      indent=4, separators=(',', ': '))
+        with (
+            Path(self._name)
+            .with_suffix(".json")
+            .open("w", encoding="utf-8") as of
+        ):
+            json.dump(
+                self.info, of, sort_keys=False, indent=4, separators=(",", ": ")
+            )
 
     def restore(self):
         """Restore cache from json infos."""
-        if Path(self._name).with_suffix('.json').exists():
+        if Path(self._name).with_suffix(".json").exists():
             # mpl kills locale setting to system default .. this went
             # horrible wrong for german 'decimal_point': ','
             pg.checkAndFixLocaleDecimal_point(verbose=False)
 
             try:
-                with Path(self._name).with_suffix('.json').open(
-                                                    encoding='utf-8') as file:
+                with (
+                    Path(self._name)
+                    .with_suffix(".json")
+                    .open(encoding="utf-8") as file
+                ):
                     self.info = json.load(file)
 
-                if self.info['type'] == 'DataContainerERT':
-                    self._value = pg.DataContainerERT(self.info['file'],
-                                                      removeInvalid=False)
+                if self.info["type"] == "DataContainerERT":
+                    self._value = pg.DataContainerERT(
+                        self.info["file"], removeInvalid=False
+                    )
                     # print(self._value)
-                elif self.info['type'] == 'RVector':
+                elif self.info["type"] == "RVector":
                     self._value = pg.Vector()
-                    self._value.load(self.info['file'], format=pg.core.Binary)
-                elif self.info['type'] == 'Mesh':
+                    self._value.load(self.info["file"], format=pg.core.Binary)
+                elif self.info["type"] == "Mesh":
                     self._value = pg.Mesh()
-                    self._value.load(self.info['file'] + '.bms')
+                    self._value.load(self.info["file"] + ".bms")
                     pg.debug("Restoring cache took:", pg.dur(), "s")
-                elif self.info['type'] == 'ndarray':
-                    self._value = np.load(self.info['file'] + '.npy',
-                                          allow_pickle=True)
-                elif self.info['type'] == 'Cm05Matrix':
-                    self._value = pg.matrix.Cm05Matrix(self.info['file'])
-                elif self.info['type'] == 'GeostatisticConstraintsMatrix':
+                elif self.info["type"] == "ndarray":
+                    self._value = np.load(
+                        self.info["file"] + ".npy", allow_pickle=True
+                    )
+                elif self.info["type"] == "Cm05Matrix":
+                    self._value = pg.matrix.Cm05Matrix(self.info["file"])
+                elif self.info["type"] == "GeostatisticConstraintsMatrix":
                     self._value = pg.matrix.GeostatisticConstraintsMatrix(
-                                                            self.info['file'])
+                        self.info["file"]
+                    )
                 else:
-                    with Path(self.info['file'] + '.pkl').open('rb') as f:
+                    with Path(self.info["file"] + ".pkl").open("rb") as f:
                         self._value = pickle.load(f)
 
                 if self.value is not None:
-                    self.info['restored'] = self.info['restored'] + 1
+                    self.info["restored"] = self.info["restored"] + 1
                     self.updateCacheInfo()
-                    pg.info(f'Cache {self.info["codeinfo"]} restored '
-                            f'({round(self.info["dur"], 1)}s x '
-                            f'{self.info["restored"]}): {self._name}')
+                    pg.info(
+                        f"Cache {self.info['codeinfo']} restored "
+                        f"({round(self.info['dur'], 1)}s x "
+                        f"{self.info['restored']}): {self._name}"
+                    )
                 else:
                     # default try numpy
-                    pg.warn('Could not restore cache of type '
-                            f'{self.info["type"]}.')
+                    pg.warn(
+                        f"Could not restore cache of type {self.info['type']}."
+                    )
 
                 pg.debug("Restoring cache took:", pg.dur(), "s")
             except BaseException as e:
                 traceback.print_exc(file=sys.stdout)
                 print(self.info)
-                pg.error('Cache restoring failed:', e)
+                pg.error("Cache restoring failed:", e)
 
 
-#TODO unify singleton handling
+# TODO unify singleton handling
 class CacheManager:
     """Cache manager to handle caching of functions and data.
 
@@ -387,21 +397,18 @@ class CacheManager:
             cls.__instance = object.__new__(cls)
         return cls.__instance
 
-
     def __init__(self):
         """Initialize the CacheManager just once."""
         if not self.__has_init:
             self._caches = {}
             self.__has_init = True
 
-
     @classmethod
     def instance(cls):
         """Get the singleton instance of the CacheManager."""
         return cls.__instance__
 
-
-    def cachingPath(self, fName:str):
+    def cachingPath(self, fName: str):
         """Create a full path name for the cache.
 
         Arguments
@@ -421,7 +428,6 @@ class CacheManager:
 
         return Path(path) / fName
 
-
     def funcInfo(self, func):
         """Return unique info string about the called function.
 
@@ -437,7 +443,6 @@ class CacheManager:
             function.
         """
         return func.__code__.co_filename + ":" + func.__qualname__
-
 
     def hash(self, func, *args, **kwargs):
         """Create a hash value.
@@ -456,18 +461,17 @@ class CacheManager:
         hash: int
             A unique hash value for the function and its arguments.
         """
-        with pg.tictoc('hash'):
+        with pg.tictoc("hash"):
             funcInfo = self.funcInfo(func)
             funcHash = strHash(funcInfo)
             versionHash = strHash(pg.versionStr())
             codeHash = strHash(inspect.getsource(func))
 
-            #pg._b('fun:', funcHash, 'ver:', versionHash, 'code:', codeHash)
+            # pg._b('fun:', funcHash, 'ver:', versionHash, 'code:', codeHash)
             argHash = valHash(args, verbose=False)
             kwargHash = valHash(kwargs, verbose=False)
-            #pg._b('argHash:', argHash, kwargHash)
+            # pg._b('argHash:', argHash, kwargHash)
         return funcHash ^ versionHash ^ codeHash ^ argHash ^ kwargHash
-
 
     def cache(self, func, *args, **kwargs):
         """Create a unique cache.
@@ -492,15 +496,15 @@ class CacheManager:
         hashVal = self.hash(func, *args, **kwargs)
 
         c = Cache(hashVal)
-        c.info['codeinfo'] = self.funcInfo(func)
-        c.info['version'] = pg.versionStr()
-        c.info['args'] = str(args)
+        c.info["codeinfo"] = self.funcInfo(func)
+        c.info["version"] = pg.versionStr()
+        c.info["args"] = str(args)
 
         kw = dict(kwargs)
         for k, v in kw.items():
             if isinstance(v, np.ndarray):
-                kw[k] = 'ndarray'
-        c.info['kwargs'] = str(kw)
+                kw[k] = "ndarray"
+        c.info["kwargs"] = str(kw)
 
         return c
 
@@ -527,22 +531,17 @@ def cache(func):
     wrapper: function
         A wrapper function that caches the return value of the function.
     """
+
     def wrapper(*args, **kwargs):
-        r"""Handle caching.
+        """Handle caching.
 
-        Arguments
-        ---------
-        \*args: any
-            The positional arguments of the function.
-
-        Keyword Args
-        ------------
-        kwargs: any
-            The keyword arguments of the function.
+        Positional arguments ``*args`` and keyword arguments ``**kwargs`` are
+        forwarded to the cached function. The keyword argument ``skipCache``
+        bypasses the cache for this call.
         """
-        if not CacheUseSettings.inUse(sys.argv,
-                                    manualSkip=kwargs.pop('skipCache', False)):
-
+        if not CacheUseSettings.inUse(
+            sys.argv, manualSkip=kwargs.pop("skipCache", False)
+        ):
             return func(*args, **kwargs)
 
         c = CacheManager().cache(func, *args, **kwargs)
@@ -551,8 +550,8 @@ def cache(func):
 
         sw = pg.Stopwatch(True)
         rv = func(*args, **kwargs)
-        c.info['date'] = time.time()
-        c.info['dur'] = sw.duration()
+        c.info["date"] = time.time()
+        c.info["dur"] = sw.duration()
         try:
             c.value = rv
         except Exception as e:

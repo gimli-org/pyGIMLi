@@ -2,22 +2,29 @@
 """Utility functions for downloading, caching, and importing."""
 
 import sys
-import os.path
+import time
+from pathlib import Path
 
 from importlib import import_module
 import contextlib
 
 import numpy as np
 import pygimli as pg
-from pygimli.meshtools import (readFenicsHDF5Mesh, readGmsh, readPLC, readSTL,
-                               readMeshIO)
+from pygimli.meshtools import (
+    readFenicsHDF5Mesh,
+    readGmsh,
+    readPLC,
+    readSTL,
+    readMeshIO,
+)
 from pygimli.utils import readGPX
+
 # from pygimli.utils import cache  # not used yet
-from pygimli.physics.traveltime import load as loadTT
+from pygimli.physics.traveltime import load as loadTT  # noqa: N812 (camelCase)
 
 
-__gimliExampleDataRepo__ = 'gimli-org/example-data/'
-__gimliExampleDataBase__ = 'example-data'
+__gimliExampleDataRepo__ = "gimli-org/example-data/"
+__gimliExampleDataBase__ = "example-data"
 
 
 def optImport(module, requiredFor="use the full functionality"):
@@ -56,19 +63,25 @@ def optImport(module, requiredFor="use the full functionality"):
     try:
         mod = import_module(module)
     except ImportError:
-        msg = (f"No module named '{module}'.\nYou need to install this optional "
-               f"dependency to {requiredFor}.")
+        msg = (
+            f"No module named '{module}'.\n"
+            f"You need to install this optional "
+            f"dependency to {requiredFor}."
+        )
         print(msg)
         # exception would be better her but then the test fails
         # raise Exception(msg % (module, requiredFor))
-    except TypeError as e:
+    except TypeError:
         import traceback
         import scipy as sp
-        msg = (f"Failed to import '{module}' due to a compatibility error.\n"
-               f"You may need to update this optional dependency to "
-               f"{requiredFor}.\n"
-               f"np: {np.__version__}, scipy: {sp.__version__}\n\n"
-               f"{traceback.format_exc()}")
+
+        msg = (
+            f"Failed to import '{module}' due to a compatibility error.\n"
+            f"You may need to update this optional dependency to "
+            f"{requiredFor}.\n"
+            f"np: {np.__version__}, scipy: {sp.__version__}\n\n"
+            f"{traceback.format_exc()}"
+        )
         print(msg)
 
     return mod
@@ -94,7 +107,7 @@ def getCachePath():
     system = sys.platform
     configpath = pg.core.config.getConfigPath()
     if system == "win32":
-        path = os.path.join(configpath, "Cache")
+        path = str(Path(configpath) / "Cache")
     elif system == "darwin":
         path = configpath.replace("Preferences", "Caches")
     else:
@@ -169,25 +182,24 @@ def load(fname, verbose=False, testAll=True, realName=None):
         ".npz": np.load,  #
     }
 
-    if fname.startswith('https://') or fname.startswith('http://'):
+    if fname.startswith("https://") or fname.startswith("http://"):
         return getExampleData(fname)
 
-    if not os.path.exists(fname):
-        raise Exception("File or directory named %s does not exist." % (fname))
+    if not Path(fname).exists():
+        raise ValueError(f"File or directory named {fname} does not exist.")
 
     # recursive function call if fname is a folder of files
-    if os.path.isdir(fname):
-        files = os.listdir(fname)
+    if Path(fname).is_dir():
+        files = [entry.name for entry in Path(fname).iterdir()]
         if verbose:
-            print("Reading %s with %d files..." % (fname, len(files)))
+            print(f"Reading {fname} with {len(files)} files...")
 
-        return [load(os.path.join(fname, f)) for f in files]
+        return [load(str(Path(fname) / f)) for f in files]
 
-    suffix = None
     if realName is not None:
-        suffix = os.path.splitext(realName)[1]
+        suffix = Path(realName).suffix
     else:
-        suffix = os.path.splitext(fname)[1]
+        suffix = Path(fname).suffix
 
     if suffix in ImportFilter:
         importTrys = ImportFilter[suffix]
@@ -197,21 +209,23 @@ def load(fname, verbose=False, testAll=True, realName=None):
         for importer in importTrys:
             try:
                 if verbose:
-                    pg.info("Reading {0} ({1})".format(fname, importer))
+                    pg.info(f"Reading {fname} ({importer})")
                 return importer(fname)
             except Exception as e:
                 if verbose or pg.core.debug():
                     import sys
                     import traceback
+
                     traceback.print_exc(file=sys.stdout)
                     pg.warn(e)
         if verbose:
-            pg.warn("File extension %s seems to be not correct. "
-                    "Trying auto-detect." % suffix)
+            pg.warn(
+                f"File extension {suffix} seems to be not correct. "
+                "Trying auto-detect."
+            )
     else:
         if verbose:
-            print("File extension {0} is unknown. Trying auto-detect.".format(
-                suffix))
+            print(f"File extension {suffix} is unknown. Trying auto-detect.")
 
     if testAll:
         for routine in ImportFilter.values():
@@ -221,32 +235,65 @@ def load(fname, verbose=False, testAll=True, realName=None):
                 # print(e)
                 pass
 
-    raise Exception("File type of {0} is unknown or file does not exist "
-                    "and could not be imported.".format(suffix))
+    raise ValueError(
+        f"File type of {suffix} is unknown or file does not "
+        "exist and could not be imported."
+    )
 
 
 def getMD5(fileName):
     """Return md5 checksum for given fileName."""
     import hashlib
-    md5 = hashlib.md5()
 
-    with open(fileName, "rb") as fi:
+    md5 = hashlib.md5()  # noqa: S324 (checksum only, no security purpose)
+
+    with Path(fileName).open("rb") as fi:
         content = fi.read()
         md5.update(content)
 
     return md5.hexdigest()
 
 
-def getUrlFile(url, fileName, timeout=10, verbose=False):
-    """Write file from url. Path will be created."""
-    from urllib.request import urlopen
-    import hashlib
-    md5_hash = hashlib.md5()
+def getUrlFile(url, fileName, timeout=30, retries=3, verbose=False):
+    """Write file from url. Path will be created.
 
-    with contextlib.closing(urlopen(url, timeout=timeout)) as fp:
+    The download is retried a few times because connections to the data
+    repository occasionally fail (e.g. a slow TLS handshake).
+    """
+    from urllib.error import URLError
+
+    lastError = None
+    for attempt in range(1, retries + 1):
+        try:
+            _writeUrlFile(url, fileName, timeout=timeout, verbose=verbose)
+        except (URLError, TimeoutError, OSError) as err:
+            lastError = err
+            if attempt < retries:
+                pg.warn(
+                    f"Download failed ({attempt}/{retries}), "
+                    f"retrying in {2 * attempt} s:",
+                    err,
+                )
+                time.sleep(2 * attempt)
+        else:
+            return
+
+    raise URLError(f"Cannot download {url}: {lastError}")
+
+
+def _writeUrlFile(url, fileName, timeout=30, verbose=False):
+    """Download url into fileName (single attempt)."""
+    from urllib.request import urlopen  # noqa: S310 (fixed https url)
+    import hashlib
+
+    md5_hash = hashlib.md5()  # noqa: S324 (checksum only, no security)
+
+    with contextlib.closing(
+        urlopen(url, timeout=timeout)  # noqa: S310 (fixed https url)
+    ) as fp:
         header = dict(fp.getheaders())
         # print(pg.pf(header))
-        length = int(header['Content-Length'])
+        length = int(header["Content-Length"])
 
         if verbose:
             p = pg.utils.ProgressBar(length)
@@ -255,10 +302,13 @@ def getUrlFile(url, fileName, timeout=10, verbose=False):
         block = fp.read(blockSize)
         blockCounter = 1
         if block:
-            os.makedirs(os.path.dirname(fileName), exist_ok=True)
-            with open(fileName, 'wb') as outFile:
+            Path(fileName).parent.mkdir(parents=True, exist_ok=True)
+            # write to a temporary file first, so that an interrupted
+            # download never leaves a truncated file in the cache
+            tmpName = Path(str(fileName) + ".part")
+            with tmpName.open("wb") as outFile:
                 if verbose:
-                    p(min(length-1, blockCounter*blockSize))
+                    p(min(length - 1, blockCounter * blockSize))
 
                 md5_hash.update(block)
                 outFile.write(block)
@@ -268,14 +318,15 @@ def getUrlFile(url, fileName, timeout=10, verbose=False):
                     if not block:
                         break
                     if verbose:
-                        p(min(length-1, blockCounter*blockSize))
+                        p(min(length - 1, blockCounter * blockSize))
                     md5_hash.update(block)
                     outFile.write(block)
+            tmpName.replace(fileName)
         else:
-            pg.critical('File or connection error:', url, fileName)
+            pg.critical("File or connection error:", url, fileName)
     if verbose:
         digest = md5_hash.hexdigest()
-        print('md5:', digest)
+        print("md5:", digest)
         # print('md5:', getMD5(fileName))
 
 
@@ -310,32 +361,44 @@ def getExampleFile(path, load=False, force=False, verbose=False, **kwargs):
     data: obj
         Content of the file if 'load' is set True.
     """
-    repo = kwargs.pop('githubRepo', __gimliExampleDataRepo__)
-    branch = kwargs.pop('branch', 'master')
+    repo = kwargs.pop("githubRepo", __gimliExampleDataRepo__)
+    branch = kwargs.pop("branch", "master").strip("/")
 
-    fileName = ''
-    if not path.startswith('http://'):
-        url = '/'.join(('https://raw.githubusercontent.com/',  # RAW files
-                        repo, branch, path))
+    fileName = ""
+    if not path.startswith("http://"):
+        # avoid double slashes: github answers them with a redirect, which
+        # costs an extra TLS handshake and is prone to timeouts
+        repo = repo.strip("/")
+        url = "/".join(
+            (
+                "https://raw.githubusercontent.com",  # RAW files
+                repo,
+                branch,
+                path.lstrip("/"),
+            )
+        )
 
-        pg.info(f'Looking for {path} in {repo}')
+        pg.info(f"Looking for {path} in {repo}")
 
-        fileName = os.path.join(getCachePath(),
-                                __gimliExampleDataBase__,
-                                repo, branch, path)
+        fileName = str(
+            Path(getCachePath(), __gimliExampleDataBase__, repo, branch, path)
+        )
     else:
         url = path
-        fileName = os.path.join(getCachePath(),
-                                __gimliExampleDataBase__,
-                                *url.split('http://')[1].split('/'),
-                                )
+        fileName = str(
+            Path(
+                getCachePath(),
+                __gimliExampleDataBase__,
+                *url.split("http://")[1].split("/"),
+            )
+        )
 
         if verbose is True:
-            pg.info(f'Looking for {url}')
+            pg.info(f"Looking for {url}")
 
-    if not os.path.exists(fileName) or force is True:
+    if not Path(fileName).exists() or force is True:
         if verbose:
-            pg.info(f'Getting: {fileName} from {url}')
+            pg.info(f"Getting: {fileName} from {url}")
 
         getUrlFile(url, fileName, verbose=verbose)
     else:

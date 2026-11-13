@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 Synthetic TDIP modelling and inversion
 ======================================
@@ -31,15 +30,17 @@ import pygimli.meshtools as mt
 # depth. Additionally, we add a circle into the middle layer.
 #
 
-world = mt.createWorld(start=[-50, 0], end=[50, -50],
-                       layers=[-1, -5], worldMarkers=True)
-scheme = ert.createData(elecs=pg.utils.grange(start=-10, end=10, n=21),
-                        schemeName='dd')
+world = mt.createWorld(
+    start=[-50, 0], end=[50, -50], layers=[-1, -5], worldMarkers=True
+)
+scheme = ert.createData(
+    elecs=pg.utils.grange(start=-10, end=10, n=21), schemeName="dd"
+)
 circle = mt.createCircle(pos=[0, -3], radius=1, marker=4)
 world += circle
 for pos in scheme.sensorPositions():
-    _= world.createNode(pos)
-    _= world.createNode(pos + [0.0, -0.1])
+    _ = world.createNode(pos)
+    _ = world.createNode(pos + [0.0, -0.1])
 mesh = mt.createMesh(world, quality=34.4)
 ax, cb = pg.show(mesh, markers=True, showMesh=True, boundaryMarkers=False)
 ax.plot(pg.x(scheme), pg.y(scheme), "mo")
@@ -55,10 +56,7 @@ _ = ax.set_xlim(-15, 15)
 # First we create an FD data set for comparison using the normal simulate.
 #
 
-rhomap = [[1, 100. + 0j],
-          [2, 50. + 0j],
-          [3, 10.+ 0j],
-          [4, 50.+ 1j]]
+rhomap = [[1, 100.0 + 0j], [2, 50.0 + 0j], [3, 10.0 + 0j], [4, 50.0 + 1j]]
 
 dataFD = ert.simulate(mesh, res=rhomap, scheme=scheme, verbose=True)
 ax, cb = dataFD.show("phia", label="-apparent phase (mrad)")
@@ -73,7 +71,7 @@ ax, cb = dataFD.show("phia", label="-apparent phase (mrad)")
 # The results are stored in the rhoa and ma/ip data fields.
 #
 
-res = np.array([0, 100, 50, 10, 50.])
+res = np.array([0, 100, 50, 10, 50.0])
 m = np.array([0, 0, 0, 0, 0.1])
 mgr = ert.ERTIPManager()
 dataTD = mgr.simulate(mesh=mesh, scheme=scheme, res=res, m=m)
@@ -93,5 +91,6 @@ mgr = ert.ERTIPManager(dataTD)
 mgr.invert(zWeight=0.2, quality=34.4, verbose=True)
 mgr.showResult()
 ax, cb = mgr.showIPModel()
-_ = pg.viewer.mpl.drawPLC(ax, circle, fitView=False,
-                          fillRegion=False, color="white")
+_ = pg.viewer.mpl.drawPLC(
+    ax, circle, fitView=False, regions=False, color="white"
+)

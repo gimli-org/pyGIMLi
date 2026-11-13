@@ -1,15 +1,14 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Pygimli base functions to handle complex arrays"""
+"""Pygimli base functions to handle complex arrays."""
 
 from math import pi
-from pygimli.core.base import isComplex
 
 import numpy as np
 import pygimli as pg
 
 
 isComplex = pg.isComplex
+
 
 def toComplex(amp, phi=None):
     """Convert real values into complex (z = a + ib) valued array.
@@ -25,25 +24,29 @@ def toComplex(amp, phi=None):
         Amplitudes or real unsqueezed real valued array.
     phi: iterable (float)
         Phases in neg radiant
+
     Returns
     -------
-    z: ndarray(dtype=np.complex)
-        Complex values
+    z: ndarray
+        Squeezed complex values
     """
     if phi is not None:
-        return np.array(amp) * (np.cos(phi) + 1j *np.sin(phi))
+        return np.array(amp) * (np.cos(phi) + 1j * np.sin(phi))
     N = len(amp) // 2
     return np.array(amp[0:N]) + 1j * np.array(amp[N:])
-    #return np.array(pg.math.toComplex(amp[0:N], amps[N:]))
+    # return np.array(pg.math.toComplex(amp[0:N], amps[N:]))
+
 
 def toPolar(z):
-    """Convert complex (z = a + ib) values array into amplitude and phase in radiant
+    """Convert complex values into amplitude and phase in radian.
 
+    Complex is assumed to be in the form a + ib, where a is the real part
+    and b is the imaginary part.
     If z is real valued we assume its squeezed.
 
     Parameters
     ----------
-    z: iterable (floats, complex)
+    z: iterable
         If z contains of floats and squeezedComplex is assumed [real, imag]
 
     Returns
@@ -53,19 +56,25 @@ def toPolar(z):
 
     """
     if pg.isPos(z):
-        return toPolar(z[0] + 1j *z[1])
+        return toPolar(z[0] + 1j * z[1])
     if pg.isPosList(z):
-        return toPolar(pg.x(z).array() + 1j *pg.y(z).array())
+        return toPolar(pg.x(z).array() + 1j * pg.y(z).array())
     if isComplex(z):
         return np.abs(z), np.angle(z)
     else:
         return toPolar(toComplex(z))
 
+
 def squeezeComplex(z, polar=False, conj=False):
-    """Squeeze complex valued array into [real, imag] or [amp, phase(rad)]"""
-    if isinstance(z, (pg.matrix.CSparseMapMatrix,
-                      pg.matrix.CSparseMatrix,
-                      pg.matrix.CMatrix)):
+    """Squeeze complex valued array into [real, imag] or [amp, phase(rad)]."""
+    if isinstance(
+        z,
+        (
+            pg.matrix.CSparseMapMatrix,
+            pg.matrix.CSparseMatrix,
+            pg.matrix.CMatrix,
+        ),
+    ):
         return toRealMatrix(z, conj=conj)
 
     if isComplex(z):
@@ -80,8 +89,9 @@ def squeezeComplex(z, polar=False, conj=False):
         return vals
     return z
 
+
 def toRealMatrix(C, conj=False):
-    """Convert complex valued matrix into a real valued Blockmatrix
+    """Convert complex valued matrix into a real valued Blockmatrix.
 
     Parameters
     ----------
@@ -103,16 +113,17 @@ def toRealMatrix(C, conj=False):
     iId = R.addMatrix(Ci)
     # we store the mats in R to keep the GC happy after leaving the scope
 
-    R.addMatrixEntry(rId, 0,         0,         scale=1.0)
+    R.addMatrixEntry(rId, 0, 0, scale=1.0)
     R.addMatrixEntry(rId, Cr.rows(), Cr.cols(), scale=1.0)
-    if conj == True:
-        pg.warn('Squeeze conjugate complex matrix.')
-        R.addMatrixEntry(iId, 0,         Cr.cols(), scale=1.0)
-        R.addMatrixEntry(iId, Cr.rows(), 0,         scale=-1.0)
+    if conj:
+        pg.warn("Squeeze conjugate complex matrix.")
+        R.addMatrixEntry(iId, 0, Cr.cols(), scale=1.0)
+        R.addMatrixEntry(iId, Cr.rows(), 0, scale=-1.0)
     else:
-        R.addMatrixEntry(iId, 0,         Cr.cols(), scale=-1.0)
-        R.addMatrixEntry(iId, Cr.rows(), 0,         scale=1.0)
+        R.addMatrixEntry(iId, 0, Cr.cols(), scale=-1.0)
+        R.addMatrixEntry(iId, Cr.rows(), 0, scale=1.0)
     return R
+
 
 def KramersKronig(f, re, im, usezero=False):
     """Return real/imaginary parts retrieved by Kramers-Kronig relations.
@@ -121,7 +132,7 @@ def KramersKronig(f, re, im, usezero=False):
     """
     from scipy.integrate import simpson
 
-    x = 2. * pi * f  # omega
+    x = 2.0 * pi * f  # omega
     im2 = np.zeros(im.shape)
     re2 = np.zeros(im.shape)
     drdx = np.diff(re) / np.diff(x)  # d Re/d omega
@@ -134,15 +145,14 @@ def KramersKronig(f, re, im, usezero=False):
 
         fun1 = (re - re[num]) / x2w2
         fun1[num] = dRedx[num] / 2 / w
-        im2[num] = -2./pi * w * simpson(fun1, x=x)
+        im2[num] = -2.0 / pi * w * simpson(fun1, x=x)
 
         if usezero:
             fun2 = (im * w / x - im[num]) / x2w2
-            re2[num] = 2./pi * w * simpson(fun2, x=x)  + re[0]
+            re2[num] = 2.0 / pi * w * simpson(fun2, x=x) + re[0]
         else:
             fun2 = (im * x - im[num] * w) / x2w2
             fun2[num] = (im[num] / w + dImdx[num]) / 2
-            re2[num] = 2./pi * simpson(fun2, x=x) + re[-1]
+            re2[num] = 2.0 / pi * simpson(fun2, x=x) + re[-1]
 
     return re2, im2
-

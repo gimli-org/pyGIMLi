@@ -145,7 +145,7 @@ ax2.set_title("Unstructured mesh", fontweight="bold")
 
 # Create geometry
 world = plc.createWorld(start=[-10, 0], end=[10, -10], marker=1,
-                        worldMarker=False)
+                        worldMarkers=False)
 
 # Structured mesh
 xmin, xmax = -10, 10.0
@@ -236,7 +236,7 @@ world = mt.createWorld(
     start=[left, 0],
     end=[right, -depth],
     layers=[-5],
-    worldMarker=False,
+    worldMarkers=False,
 )
 print(world)
 _ = pg.show(world)
@@ -352,12 +352,12 @@ for nr, marker in enumerate(world.regionMarkers()):
     ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color="k")
 ```
 
-By default, pyGIMLi assigns unique markers to every region of the PLC, starting from 1. A marker value of 0 is assigned to a region if no region marker is found - but even if this happens, we could still manually add a marker to the specific region. For now, we want to add a polygon to the already existing 2-layer PLC. This is done using the `createPolygon()` function. Within this function, we have two adjusting variables for the region markers - *marker* and *markerPosition*. The first variable specifies the marker number and the second the position of the marker. Note, that the **position** of a region marker has to lie **within its region** to work! In this case, we specify the newly defined region to have the marker 3. The marker position is set to *[-10, -10]*.
+By default, pyGIMLi assigns unique markers to every region of the PLC, starting from 1. A marker value of 0 is assigned to a region if no region marker is found - but even if this happens, we could still manually add a marker to the specific region. For now, we want to add a polygon to the already existing 2-layer PLC. This is done using the `createPolygon()` function. Within this function, we have two adjusting variables for the region markers - *marker* and *markerPos*. The first variable specifies the marker number and the second the position of the marker. Note, that the **position** of a region marker has to lie **within its region** to work! In this case, we specify the newly defined region to have the marker 3. The marker position is set to *[-10, -10]*.
 
 ```{code-cell}
 poly = mt.createPolygon(
     [[left, -20], [right, -15], [right, -5], [left, -5]],
-    isClosed=True, marker=3, markerPosition=[-10, -10],
+    isClosed=True, marker=3, markerPos=[-10, -10],
 )
 geometry = world + poly
 
@@ -381,25 +381,25 @@ If we talk about markers in a PLC, one often forgets about the boundary markers.
 
 If we assume a simple rectangular world without additional layers, we have two different options on how to enumerate the boundaries:
 
-1) Set `createWorld(worldMarker=False)`, which leads to enumerated boundaries (*1 = left, 2=right, 3=bottom, 4=top, 5=front and 6=back*).
+1) Set `createWorld(worldMarkers=False)`, which leads to enumerated boundaries (*1 = left, 2=right, 3=bottom, 4=top, 5=front and 6=back*).
 
-2) Set `createWorld(worldMarker=True)`, which leads to the top holding the boundary marker -1 and other outer boundaries -2.
+2) Set `createWorld(worldMarkers=True)`, which leads to the top holding the boundary marker -1 and other outer boundaries -2.
 
 ```{code-cell}
 start = [left, 0]
 end = [right, -depth]
-world1 = mt.createWorld(start=start, end=end, worldMarker=False)
-world2 = mt.createWorld(start=start, end=end, worldMarker=True)
+world1 = mt.createWorld(start=start, end=end, worldMarkers=False)
+world2 = mt.createWorld(start=start, end=end, worldMarkers=True)
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 12), dpi=90)
-ax1.set_title("worldMarker = False", fontweight="bold")
-ax2.set_title("worldMarker = True", fontweight="bold")
+ax1.set_title("worldMarkers = False", fontweight="bold")
+ax2.set_title("worldMarkers = True", fontweight="bold")
 
 pg.show(world1, markers=True, ax=ax1)
 pg.show(world2, markers=True, ax=ax2)
 ```
 
-Let's assume that we want to add an additional feature to our PLC, such as a rectangle. Doing so, the circle is automatically assigned a boundary marker - in this case 1. However, assuming the case where we set `worldMarker=False`, this marker is already assigned to the left boundary of the PLC (which could cause problems in any modelling application later on). So we need to adapt the boundary marker of the circle, which is simply done as follows:
+Let's assume that we want to add an additional feature to our PLC, such as a rectangle. Doing so, the circle is automatically assigned a boundary marker - in this case 1. However, assuming the case where we set `worldMarkers=False`, this marker is already assigned to the left boundary of the PLC (which could cause problems in any modelling application later on). So we need to adapt the boundary marker of the circle, which is simply done as follows:
 
 ```{code-cell}
 c1 = plc.createRectangle(start=[-10, -5], end=[10, -10], marker=2)
@@ -491,7 +491,7 @@ plc = mt.createWorld(
     start=[left, 0],
     end=[right, -depth],
     layers=[-5],
-    worldMarker=False,
+    worldMarkers=False,
 )
 for x in xreg[1:-1]:
     plc.createNode([x, -depth])

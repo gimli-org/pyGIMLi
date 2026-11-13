@@ -1,15 +1,33 @@
 #!/usr/bin/env python
+"""Drawing functions for the pyvista viewer backend."""
 
-import os
+import inspect
+
 import numpy as np
-import matplotlib
 import pygimli as pg
 from .utils import pgMesh2pvMesh
 
 from pygimli.viewer.mpl.colorbar import cmapFromName
 
 
-pv = pg.optImport('pyvista', requiredFor="properly visualize 3D data")
+pv = pg.optImport("pyvista", requiredFor="properly visualize 3D data")
+
+
+def plotterKwargs(kwargs):
+    """Return only keyword arguments accepted by pv.Plotter.__init__.
+
+    Passing anything else makes the Plotter constructor fail half way, which
+    leaves a broken object behind that raises in its destructor.
+    """
+    valid = inspect.signature(pv.Plotter.__init__).parameters
+    unused = sorted(set(kwargs) - set(valid))
+    if unused:
+        pg.warn(
+            "Unused keyword argument(s) for pyvista.Plotter:", ", ".join(unused)
+        )
+
+    return {key: val for key, val in kwargs.items() if key in valid}
+
 
 def drawMesh(ax, mesh, notebook=False, **kwargs):
     """Draw a mesh into a given plotter.
@@ -37,27 +55,30 @@ def drawMesh(ax, mesh, notebook=False, **kwargs):
         The plotter
     """
     # sort out a few kwargs to not confuse the plotter initialization
-    opacity = kwargs.pop('alpha', kwargs.pop('opacity', 1))
-    cMap = kwargs.pop('cMap', None)
-    color = kwargs.pop('color', None)
-    style = kwargs.pop('style', 'surface')
-    returnActor = kwargs.pop('returnActor', False)
-    showMesh = kwargs.pop('showMesh', False)
-    grid = kwargs.pop('grid', False)
-    colorBar = kwargs.pop('colorBar', style!='wireframe')
+    opacity = kwargs.pop("alpha", kwargs.pop("opacity", 1))
+    cMap = kwargs.pop("cMap", None)
+    color = kwargs.pop("color", None)
+    style = kwargs.pop("style", "surface")
+    returnActor = kwargs.pop("returnActor", False)
+    showMesh = kwargs.pop("showMesh", False)
+    grid = kwargs.pop("grid", False)
+    colorBar = kwargs.pop("colorBar", style != "wireframe")
 
+    # pygimli option, must never be passed to pv.Plotter
+    bc = kwargs.pop("bc", "#EEEEEE")  # background color
     if pv.BUILDING_GALLERY:
         bc = "#ffffff"
-    else:
-        bc = kwargs.pop('bc', '#EEEEEE')  # background color
 
-    lw = kwargs.pop('line_width', 0.1)
-    filt = kwargs.pop('filter', {})
+    lw = kwargs.pop("line_width", 0.1)
+    filt = kwargs.pop("filter", {})
     log_scale = kwargs.pop("logScale", False)
     clim = None
 
-    if "cMin" in kwargs and "cMax" in kwargs:
-        clim = [kwargs.pop("cMin"), kwargs.pop("cMax")]
+    if "cMin" in kwargs or "cMax" in kwargs:
+        cMin = kwargs.pop("cMin", None)
+        cMax = kwargs.pop("cMax", None)
+        if cMin is not None and cMax is not None:
+            clim = [cMin, cMax]
 
     # show_edges = kwargs.pop('show_edges', True)  # not used
     # name = kwargs.pop('name', 'Mesh')  # not used
@@ -65,22 +86,22 @@ def drawMesh(ax, mesh, notebook=False, **kwargs):
     if isinstance(mesh, pg.Mesh):
         mesh = pgMesh2pvMesh(mesh)
 
-    dataName = kwargs.pop('label', list(mesh.cell_data.keys())[0])
+    dataName = kwargs.pop("label", list(mesh.cell_data.keys())[0])
 
     try:
         theme = pv.themes.Theme()
-    except:  # older pv versions
+    except Exception:  # older pv versions
         theme = pv.themes.DefaultTheme()
 
     theme.background = bc
     # seems to be broken .. results on pure black screens on some machines
     # theme.antialiasing = True
 
-    theme.font.color = 'k'
+    theme.font.color = "k"
 
-    #pg._y(ax)
+    # pg._y(ax)
     if ax is None:
-        ax = pv.Plotter(notebook=notebook, theme=theme, **kwargs)
+        ax = pv.Plotter(notebook=notebook, theme=theme, **plotterKwargs(kwargs))
         ax.show_bounds(all_edges=True, minor_ticks=True)
         ax.add_axes()
 
@@ -88,31 +109,32 @@ def drawMesh(ax, mesh, notebook=False, **kwargs):
         pass  # implementme
 
     for k, fi in filt.items():
-        if k.lower() == 'clip':
+        if k.lower() == "clip":
             if isinstance(mesh, pv.core.pointset.UnstructuredGrid):
-                fi.setdefault('crinkle', True)
+                fi.setdefault("crinkle", True)
 
             mesh = mesh.clip(**fi)
-        elif k.lower() == 'threshold':
+        elif k.lower() == "threshold":
             mesh = mesh.threshold(**fi)
-        elif k.lower() == 'slice':
+        elif k.lower() == "slice":
             mesh = mesh.slice(**fi)
         else:
-            pg.error('filter:', k, 'not yet implemented')
+            pg.error("filter:", k, "not yet implemented")
 
-    _actor = ax.add_mesh(mesh,  # type: pv.UnstructuredGrid
-                         scalars=dataName,
-                         cmap=cMap,
-                         color=color,
-                         style=style,
-                         show_edges=showMesh,
-                         line_width=lw,
-                         # edge_color='white',
-                         show_scalar_bar=colorBar,
-                         opacity=opacity,
-                         clim=clim,
-                         log_scale=log_scale
-                         )
+    _actor = ax.add_mesh(
+        mesh,  # type: pv.UnstructuredGrid
+        scalars=dataName,
+        cmap=cMap,
+        color=color,
+        style=style,
+        show_edges=showMesh,
+        line_width=lw,
+        # edge_color='white',
+        show_scalar_bar=colorBar,
+        opacity=opacity,
+        clim=clim,
+        log_scale=log_scale,
+    )
 
     if returnActor:
         return ax, _actor
@@ -137,39 +159,38 @@ def drawModel(ax=None, mesh=None, data=None, **kwargs):
     ax: pyvista.Plotter [optional]
         The plotter
     """
-    defaultCMap = kwargs.pop('cMap', 'viridis')
-    dataName = kwargs.pop('label', None)
+    defaultCMap = kwargs.pop("cMap", "viridis")
+    dataName = kwargs.pop("label", None)
 
     if all(v is None for v in [ax, mesh, data]):
         pg.critical("At least mesh or data should not be None")
         return None
 
-    if kwargs.pop('markers', False) is True:
+    if kwargs.pop("markers", False) is True:
         # show boundary mesh with markers
         data = mesh.boundaryMarkers()
         defaultCMap = cmapFromName("Set3", ncols=max(1, len(pg.unique(data))))
-        dataName = 'Boundary Marker'
+        dataName = "Boundary Marker"
         mesh = pgMesh2pvMesh(mesh, data, dataName, boundaries=True)
     else:
-
         if data is not None or len(mesh.dataMap()) != 0:
-            kwargs.setdefault('style', 'surface')
-            kwargs['color'] = None
+            kwargs.setdefault("style", "surface")
+            kwargs["color"] = None
         if dataName is None and data is not None:
             if len(data) == mesh.cellCount():
-                dataName = 'Cell data'
+                dataName = "Cell data"
             elif len(data) == mesh.nodeCount():
-                dataName = 'Node data'
+                dataName = "Node data"
 
         mesh = pgMesh2pvMesh(mesh, data, dataName)
 
-    kwargs['cMap'] = defaultCMap
-    kwargs['label'] = dataName
+    kwargs["cMap"] = defaultCMap
+    kwargs["label"] = dataName
 
     return drawMesh(ax, mesh, **kwargs)
 
 
-def drawSensors(ax, sensors, diam=0.01, color='grey', **kwargs):
+def drawSensors(ax, sensors, diam=0.01, color="grey", **kwargs):
     """
     Draw the sensor positions to given mesh or the the one in given plotter.
 
@@ -196,7 +217,7 @@ def drawSensors(ax, sensors, diam=0.01, color='grey', **kwargs):
     return ax
 
 
-def drawSlice(ax, mesh, normal=[1, 0, 0], **kwargs):
+def drawSlice(ax, mesh, normal=None, **kwargs):
     """Draw a slice in a 3D mesh for given pygimli mesh.
 
     Parameters
@@ -238,20 +259,26 @@ def drawSlice(ax, mesh, normal=[1, 0, 0], **kwargs):
     More information at
     https://docs.pyvista.org/api/core/_autosummary/pyvista.CompositeFilters.slice.html
     """
-    label = kwargs.pop('label', None)
-    data = kwargs.pop('data', None)
-    origin = kwargs.pop('origin', None)
-    generate_triangles = kwargs.pop('generate_triangles', False)
-    contour = kwargs.pop('contour', False)
-    kwargs.setdefault('cmap', kwargs.pop('cMap', None))
-    kwargs.setdefault('log_scale', kwargs.pop('logScale', False))
-    if 'cMin' in kwargs and 'cMax' in kwargs:
-        kwargs.setdefault('clim', [kwargs.pop('cMin'), kwargs.pop('cMax')])
+    label = kwargs.pop("label", None)
+    data = kwargs.pop("data", None)
+    origin = kwargs.pop("origin", None)
+    generate_triangles = kwargs.pop("generate_triangles", False)
+    contour = kwargs.pop("contour", False)
+    if normal is None:
+        normal = [1, 0, 0]
+    kwargs.setdefault("cmap", kwargs.pop("cMap", None))
+    kwargs.setdefault("log_scale", kwargs.pop("logScale", False))
+    if "cMin" in kwargs and "cMax" in kwargs:
+        kwargs.setdefault("clim", [kwargs.pop("cMin"), kwargs.pop("cMax")])
     pvmesh = pgMesh2pvMesh(mesh, data, label)
 
     try:
-        single_slice = pvmesh.slice(normal, origin=origin, contour=contour,
-                                    generate_triangles=generate_triangles)
+        single_slice = pvmesh.slice(
+            normal,
+            origin=origin,
+            contour=contour,
+            generate_triangles=generate_triangles,
+        )
     except AssertionError as e:
         # 'contour' kwarg only works with point data and breaks execution
         pg.error(e)
@@ -290,15 +317,15 @@ def drawStreamLines(ax, mesh, data, label=None, radius=0.01, **kwargs):
     https://docs.pyvista.org/api/core/_autosummary/pyvista.DataSetFilters.streamlines.html
     """
     if label is None:
-        label = 'grad'
+        label = "grad"
 
     if isinstance(mesh, pg.Mesh):
-
         # create gradient of cell data if not provided
-        if np.ndim(data) == 1:
-            grad = pg.solver.grad(mesh, data)  # should be -grad
-        else:
-            grad = data
+        grad = (
+            pg.solver.grad(mesh, data)  # should be -grad
+            if np.ndim(data) == 1
+            else data
+        )
 
         # ensure that it's point/node data in the mesh
         if len(grad) == mesh.cellCount():
@@ -307,9 +334,11 @@ def drawStreamLines(ax, mesh, data, label=None, radius=0.01, **kwargs):
         # add data to the mesh and convert to pyvista grid
         mesh = pgMesh2pvMesh(mesh, grad.T, label)
 
-    elif isinstance(mesh, pv.UnstructuredGrid):
-        if label not in mesh.point_arrays:  # conversion needed
-            mesh.cell_data_to_point_data()
+    elif (
+        isinstance(mesh, pv.UnstructuredGrid) and label not in mesh.point_arrays
+    ):
+        # conversion needed
+        mesh.cell_data_to_point_data()
 
     if label is None:
         label = list(mesh.point_arrays.keys())[0]

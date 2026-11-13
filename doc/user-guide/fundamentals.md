@@ -133,7 +133,7 @@ An empty show call creates an empty ax window:
 import pygimli as pg
 import pygimli.meshtools as mt
 world = mt.createWorld(start=[-10, 0], end=[10, -10],
-                       layers=[-3, -7], worldMarker=True)
+                       layers=[-3, -7], worldMarkers=True)
 mesh = mt.createMesh(world, quality=32, area=0.2, smooth=[1, 10])
 
 res = [[1,10],[2,100],[3,999]]

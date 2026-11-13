@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# encoding: utf-8
 r"""
 Region markers
 ==============
@@ -35,7 +34,8 @@ circle_inner = mt.createCircle(
     radius=1.0,
     # area=.3,
     boundaryMarker=0,
-    marker=2)
+    marker=2,
+)
 
 plc = circle_outer + circle_inner
 
@@ -50,28 +50,32 @@ ax, cb = pg.show(plc, markers=True)
 
 fig = ax.get_figure()
 for nr, marker in enumerate(plc.regionMarkers()):
-    print('Position marker number {}:'.format(nr + 1), marker.x(), marker.y(),
-          marker.z())
-    ax.scatter(marker.x(), marker.y(), s=(2 - nr) * 30, color='k')
-ax.set_title('marker positions - non-working example')
+    print(
+        f"Position marker number {nr + 1}:",
+        marker.x(),
+        marker.y(),
+        marker.z(),
+    )
+    ax.scatter(marker.x(), marker.y(), s=(2 - nr) * 30, color="k")
+ax.set_title("marker positions - non-working example")
 fig.show()
 
 ###############################################################################
 # Let us fix this issue by assigning region marker positions that are not
 # overwritten by other objects when the geometries are merged (using the
-# **markerPosition** parameter):
+# **markerPos** parameter):
 circle_outer = mt.createCircle(
     pos=[0.0, 0.0],
     radius=3.0,
     marker=1,
-    markerPosition=[2.95, 0.0],
+    markerPos=[2.95, 0.0],
 )
 
 circle_inner = mt.createCircle(
     pos=[0.0, 0.0],
     radius=1.0,
     marker=2,
-    markerPosition=[0.95, 0.0],
+    markerPos=[0.95, 0.0],
 )
 
 plc = circle_outer + circle_inner
@@ -80,10 +84,14 @@ ax, cb = pg.show(plc, markers=True)
 
 fig = ax.get_figure()
 for nr, marker in enumerate(plc.regionMarkers()):
-    print('Position marker number {}:'.format(nr + 1), marker.x(), marker.y(),
-          marker.z())
-    ax.scatter(marker.x(), marker.y(), s=(2 - nr) * 30, color='k')
-ax.set_title('marker positions - working example')
+    print(
+        f"Position marker number {nr + 1}:",
+        marker.x(),
+        marker.y(),
+        marker.z(),
+    )
+    ax.scatter(marker.x(), marker.y(), s=(2 - nr) * 30, color="k")
+ax.set_title("marker positions - working example")
 fig.show()
 
 ###############################################################################
@@ -107,19 +115,23 @@ ax, cb = pg.show(plc, markers=True)
 
 fig = ax.get_figure()
 for nr, marker in enumerate(plc.regionMarkers()):
-    print('Position marker number {}:'.format(nr + 1), marker.x(), marker.y(),
-          marker.z())
-    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color='k')
-ax.set_title('marker positions - non-working example')
+    print(
+        f"Position marker number {nr + 1}:",
+        marker.x(),
+        marker.y(),
+        marker.z(),
+    )
+    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color="k")
+ax.set_title("marker positions - non-working example")
 fig.show()
 
 ###############################################################################
-# Again, we can simply fix with the **markerPosition** parameter
+# Again, we can simply fix with the **markerPos** parameter
 polygon1 = mt.createPolygon(
     [[0.0, 0.0], [1.0, 0.0], [1.0, -1.0], [0.0, -1]],
     isClosed=True,
     marker=1,
-    markerPosition=[0.9, -0.9],
+    markerPos=[0.9, -0.9],
 )
 
 polygon2 = mt.createPolygon(
@@ -134,10 +146,14 @@ ax, cb = pg.show(plc, markers=True)
 
 fig = ax.get_figure()
 for nr, marker in enumerate(plc.regionMarkers()):
-    print('Position marker number {}:'.format(nr + 1), marker.x(), marker.y(),
-          marker.z())
-    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color='k')
-ax.set_title('marker positions - working example')
+    print(
+        f"Position marker number {nr + 1}:",
+        marker.x(),
+        marker.y(),
+        marker.z(),
+    )
+    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color="k")
+ax.set_title("marker positions - working example")
 fig.show()
 ###############################################################################
 # And finally, a similar example for rectangles...
@@ -162,10 +178,14 @@ ax, cb = pg.show(plc, markers=True)
 
 fig = ax.get_figure()
 for nr, marker in enumerate(plc.regionMarkers()):
-    print('Position marker number {}:'.format(nr + 1), marker.x(), marker.y(),
-          marker.z())
-    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color='k')
-ax.set_title('marker positions - non-working example')
+    print(
+        f"Position marker number {nr + 1}:",
+        marker.x(),
+        marker.y(),
+        marker.z(),
+    )
+    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color="k")
+ax.set_title("marker positions - non-working example")
 fig.show()
 
 ###############################################################################
@@ -175,7 +195,7 @@ rect1 = mt.createRectangle(
     end=[2.0, -1.0],
     isClosed=True,
     marker=1,
-    markerPosition=[1.75, -0.25],
+    markerPos=[1.75, -0.25],
 )
 
 # move the rectangle by changing the center position
@@ -192,10 +212,14 @@ ax, cb = pg.show(plc, markers=True)
 
 fig = ax.get_figure()
 for nr, marker in enumerate(plc.regionMarkers()):
-    print('Position marker number {}:'.format(nr + 1), marker.x(), marker.y(),
-          marker.z())
-    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color='k')
-ax.set_title('marker positions - working example')
+    print(
+        f"Position marker number {nr + 1}:",
+        marker.x(),
+        marker.y(),
+        marker.z(),
+    )
+    ax.scatter(marker.x(), marker.y(), s=(4 - nr) * 20, color="k")
+ax.set_title("marker positions - working example")
 fig.show()
 
 ###############################################################################

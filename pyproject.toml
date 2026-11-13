@@ -294,6 +294,13 @@ convention = "numpy"
     "S603",  # subprocess call for the doxygen build
     "SIM115",  # open without context manager
 ]
+"doc/**" = [
+    # sphinx-gallery examples start with an RST heading that is rendered as
+    # the example title. pydocstyle reads that heading as summary line
+    # without trailing period and without blank line before the description.
+    "D205",  # 1 blank line required between summary line and description
+    "D400",  # first line should end with a period
+]
 
 [tool.ruff.lint.pep8-naming]
 staticmethod-decorators = [

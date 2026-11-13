@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Class for managing first arrival travel time inversions."""
+
 from pathlib import Path
 import numpy as np
 
@@ -7,8 +8,8 @@ import pygimli as pg
 from pygimli.frameworks import MeshMethodManager
 
 from pygimli.utils import getSavePath
-from . modelling import TravelTimeDijkstraModelling, FatrayDijkstraModelling
-from . plotting import drawFirstPicks
+from .modelling import TravelTimeDijkstraModelling, FatrayDijkstraModelling
+from .plotting import drawFirstPicks
 
 
 class TravelTimeManager(MeshMethodManager):
@@ -28,20 +29,18 @@ class TravelTimeManager(MeshMethodManager):
             when calling the inversion.
         """
         self.useFatray = kwargs.pop("fatray", False)
-        self.frequency = kwargs.pop("frequency", 100.)
+        self.frequency = kwargs.pop("frequency", 100.0)
         self.secNodes = kwargs.pop("secNodes", 2)
 
         super().__init__(data=data, **kwargs)
 
         self.inv.dataTrans = pg.trans.Trans()
 
-
     @property
     def velocity(self):
         """Return velocity vector (the inversion model)."""
         # we can check here if there was an inversion run
         return self.fw.model  # shouldn't it be the inverse?
-
 
     def createForwardOperator(self, **kwargs):
         """Create default forward operator for Traveltime modelling.
@@ -55,12 +54,10 @@ class TravelTimeManager(MeshMethodManager):
             fop = TravelTimeDijkstraModelling(verbose=self.verbose)
         return fop
 
-
     def load(self, fileName):
         """Load any supported data file."""
         self.data = pg.physics.traveltime.load(fileName)
         return self.data
-
 
     def createMeshMovedToMeshManager(self, data=None, **kwargs):
         """Create default inversion mesh.
@@ -76,36 +73,34 @@ class TravelTimeManager(MeshMethodManager):
         ------------
         Forwarded to `:py:func:pygimli.meshtools.createParaMesh`
         """
-        pg._error('do not use. will be removed soon') #25032025
+        pg._error("do not use. will be removed soon")  # 25032025
         data = data or self.data
 
-        if not hasattr(data, 'sensors'):
-            pg.critical('Please provide a data container for mesh generation')
+        if not hasattr(data, "sensors"):
+            pg.critical("Please provide a data container for mesh generation")
 
-        return pg.meshtools.createParaMesh(data.sensors(), paraBoundary=0,
-                                           boundary=0, **kwargs)
-
+        return pg.meshtools.createParaMesh(
+            data.sensors(), paraBoundary=0, boundary=0, **kwargs
+        )
 
     def checkData(self, data):
         """Return data from container."""
         if isinstance(data, pg.DataContainer):
-            if not data.haveData('t'):
+            if not data.haveData("t"):
                 pg.critical('DataContainer has no "t" values.')
-            return data['t']
+            return data["t"]
 
         return data
-
 
     def checkError(self, err, dataVals):
         """Return relative error."""
         if isinstance(err, pg.DataContainer):
-            if not err.haveData('err'):
+            if not err.haveData("err"):
                 pg.error('DataContainer has no "err" values. Fallback to 3%')
                 return np.ones(err.size()) * 0.03
-            return err['err'] / dataVals
+            return err["err"] / dataVals
 
         return err
-
 
     def applyMesh(self, mesh, secNodes=None, ignoreRegionManager=False):
         """Apply mesh, i.e. set mesh in the forward operator class."""
@@ -119,9 +114,18 @@ class TravelTimeManager(MeshMethodManager):
         self.fop.setMesh(mesh, ignoreRegionManager=ignoreRegionManager)
         self.fop.jacobian().clear()
 
-
-    def simulate(self, mesh=None, scheme=None, slowness=None, vel=None, seed=None,
-                 secNodes=2, noiseLevel=0.0, noiseAbs=0.0, **kwargs):
+    def simulate(
+        self,
+        mesh=None,
+        scheme=None,
+        slowness=None,
+        vel=None,
+        seed=None,
+        secNodes=2,
+        noiseLevel=0.0,
+        noiseAbs=0.0,
+        **kwargs,
+    ):
         """Simulate traveltime measurements.
 
         Perform the forward task for a given mesh, a slowness distribution (per
@@ -168,7 +172,7 @@ class TravelTimeManager(MeshMethodManager):
             or DataContainer containing them in t field (returnArray=False).
             Either one column array or matrix in case of slowness matrix.
         """
-        verbose = kwargs.pop('verbose', self.verbose)
+        verbose = kwargs.pop("verbose", self.verbose)
 
         fop = self.fop
         scheme = scheme or self.data
@@ -179,16 +183,17 @@ class TravelTimeManager(MeshMethodManager):
             self.applyMesh(mesh, secNodes=secNodes, ignoreRegionManager=True)
 
         if vel is not None:
-            slowness = 1/vel
+            slowness = 1 / vel
 
         if slowness is None:
-            pg.critical("Need some slowness or velocity distribution for"
-                        " simulation.")
+            pg.critical(
+                "Need some slowness or velocity distribution for simulation."
+            )
 
         if len(slowness) == self.fop.mesh().cellCount():
             t = fop.response(slowness)
             if verbose:
-                print('min/max t:', min(t), max(t))
+                print("min/max t:", min(t), max(t))
         else:
             print(self.fop.mesh())
             print("slowness: ", slowness)
@@ -197,24 +202,33 @@ class TravelTimeManager(MeshMethodManager):
         ret = pg.DataContainer(scheme)
 
         if noiseLevel > 0 or noiseAbs > 0:
-            if not ret.allNonZero('err'):
+            if not ret.allNonZero("err"):
                 err = noiseAbs + t * noiseLevel
-                ret['err'] = err
+                ret["err"] = err
 
-            pg.verbose("Absolute error estimates (min:max) {}:{}".format(
-                min(ret['err']), max(ret['err'])))
+            pg.verbose(
+                "Absolute error estimates (min:max) {}:{}".format(
+                    min(ret["err"]), max(ret["err"])
+                )
+            )
 
-            t += pg.randn(ret.size(), seed=seed) * ret['err']
+            t += pg.randn(ret.size(), seed=seed) * ret["err"]
 
-        if kwargs.pop('returnArray', False) is True:
+        if kwargs.pop("returnArray", False) is True:
             return t
 
-        ret['t'] = t
+        ret["t"] = t
         return ret
 
-
-    def invert(self, data=None, useGradient=True, vTop=500, vBottom=5000,
-               secNodes=None, **kwargs):
+    def invert(
+        self,
+        data=None,
+        useGradient=True,
+        vTop=500,
+        vBottom=5000,
+        secNodes=None,
+        **kwargs,
+    ):
         """Invert data.
 
         Parameters
@@ -235,7 +249,7 @@ class TravelTimeManager(MeshMethodManager):
 
         Returns
         -------
-        model:
+        model : array
             Mapped (for paradomain) velocity model.
 
         Keyword Arguments
@@ -244,16 +258,18 @@ class TravelTimeManager(MeshMethodManager):
             Inversion related arguments:
             See :py:mod:`pygimli.frameworks.MeshMethodManager.invert`
         """
-        mesh = kwargs.pop('mesh', None)
+        mesh = kwargs.pop("mesh", None)
         if secNodes is not None:
             self.secNodes = secNodes
 
-        if 'limits' in kwargs and kwargs['limits'][0] > 1:
-            tmp = kwargs['limits'][0]
-            kwargs['limits'][0] = 1.0 / kwargs['limits'][1]
-            kwargs['limits'][1] = 1.0 / tmp
-            pg.verbose('Switching velocity limits to slowness limits.',
-                       kwargs['limits'])
+        if "limits" in kwargs and kwargs["limits"][0] > 1:
+            tmp = kwargs["limits"][0]
+            kwargs["limits"][0] = 1.0 / kwargs["limits"][1]
+            kwargs["limits"][1] = 1.0 / tmp
+            pg.verbose(
+                "Switching velocity limits to slowness limits.",
+                kwargs["limits"],
+            )
 
         if useGradient:
             self.fop._useGradient = [vTop, vBottom]
@@ -264,10 +280,11 @@ class TravelTimeManager(MeshMethodManager):
         slowness = super().invert(data, mesh, **kwargs)
         velocity = 1.0 / slowness
         velocity.isParaModel = slowness.isParaModel
-        self.fw.model = 1.0 / self.fw.model #C42 self.fw only hold non-mapped model
+        self.fw.model = (
+            1.0 / self.fw.model
+        )  # C42 self.fw only hold non-mapped model
         # that needs to be compatible to self.fw.mesh
         return velocity
-
 
     def showFit(self, axs=None, firstPicks=True, **kwargs):
         """Show data fit as first-break picks or apparent velocity."""
@@ -278,14 +295,12 @@ class TravelTimeManager(MeshMethodManager):
         else:
             super().showFit(axs=axs, **kwargs)
 
-
     def showMisfit(self):
         """Show data misfit (traveltime) color-coded."""
         misfit = self.inv.dataVals - self.inv.response
         pg.viewer.mpl.showDataContainerAsMatrix(
-            self.data, "s", "g", misfit,
-            cMin=-1e-3, cMax=1e-3, cMap="bwr");
-
+            self.data, "s", "g", misfit, cMin=-1e-3, cMax=1e-3, cMap="bwr"
+        )
 
     def getRayPaths(self, model=None):
         """Compute ray paths.
@@ -304,7 +319,7 @@ class TravelTimeManager(MeshMethodManager):
         """
         if model is not None:
             # if self.fop.jacobian().size() == 0 or model != self.model:
-            self.fop.createJacobian(1/model)
+            self.fop.createJacobian(1 / model)
 
         shots = self.fop.data.id("s")
         recei = self.fop.data.id("g")
@@ -318,7 +333,6 @@ class TravelTimeManager(MeshMethodManager):
             segs.append(np.column_stack((pg.x(points), pg.y(points))))
 
         return segs
-
 
     def drawRayPaths(self, ax, model=None, rayPaths=None, **kwargs):
         """Draw the the ray paths for model or last model.
@@ -349,11 +363,11 @@ class TravelTimeManager(MeshMethodManager):
         _ = kwargs.setdefault("linewidths", 0.8)
 
         from matplotlib.collections import LineCollection
+
         lc = LineCollection(rayPaths, **kwargs)
         ax.add_collection(lc)
 
         return lc
-
 
     def showRayPaths(self, model=None, ax=None, **kwargs):
         """Show the model with ray paths for given model.
@@ -382,8 +396,9 @@ class TravelTimeManager(MeshMethodManager):
         >>>
         >>> x, y = 8, 6
         >>> mesh = pg.createGrid(x, y)
-        >>> data = tt.createRAData([(0, 0)] + [(x, i) for i in range(y)],
-        ...                       shotDistance=y+1)
+        >>> data = tt.createRAData(
+        ...     [(0, 0)] + [(x, i) for i in range(y)], shotDistance=y + 1
+        ... )
         >>> data["t"] = 1.0
         >>> mgr = tt.Manager(data)
         >>> mgr.applyMesh(mesh, secNodes=10)
@@ -392,25 +407,27 @@ class TravelTimeManager(MeshMethodManager):
         if model is None:
             if self.fop.jacobian().size() == 0:
                 self.fop.mesh()  # initialize any meshs .. just to be sure is 1
-                model = pg.Vector(self.fop.regionManager().parameterCount(),
-                                  1.0)
+                model = pg.Vector(
+                    self.fop.regionManager().parameterCount(), 1.0
+                )
             else:
                 model = self.model
 
-        ax, cbar = self.showModel(ax=ax, model=model,
-                                  showMesh=kwargs.pop('showMesh', None),
-                                  diam=kwargs.pop('diam', None))
+        ax, cbar = self.showModel(
+            ax=ax,
+            model=model,
+            showMesh=kwargs.pop("showMesh", None),
+            diam=kwargs.pop("diam", None),
+        )
 
         self.drawRayPaths(ax, model=model, **kwargs)
 
         return ax, cbar
 
-
     def rayCoverage(self):
         """Ray coverage, i.e. summed raypath lengths."""
         J = self.fop.jacobian()
         return J.transMult(np.ones(J.rows()))
-
 
     def createTraveltimefield(self, v=None, startPos=None, withSec=False):
         """Compute a single traveltime field."""
@@ -418,15 +435,14 @@ class TravelTimeManager(MeshMethodManager):
         fop = self.fop
         mesh = fop.mesh()
         Di = fop.dijkstra
-        slowPerCell = fop.createMappedModel(1/v, 1e16)
+        slowPerCell = fop.createMappedModel(1 / v, 1e16)
         Di.setGraph(fop._core.createGraph(slowPerCell))
         Di.setStartNode(mesh.findNearestNode(startPos))
         dist = Di.distances()
         if withSec:
             return dist
         else:
-            return dist[:mesh.nodeCount()]
-
+            return dist[: mesh.nodeCount()]
 
     def standardizedCoverage(self):
         """Standardized coverage vector (0|1) using neighbor info."""
@@ -434,17 +450,19 @@ class TravelTimeManager(MeshMethodManager):
         C = self.fop.constraintsRef()
         return np.sign(np.absolute(C.transMult(C * coverage)))
 
-
-    def showCoverage(self, ax=None, name='coverage', **kwargs):
+    def showCoverage(self, ax=None, name="coverage", **kwargs):
         """Show the ray coverage in log-scale."""
         if ax is None:
             fig, ax = pg.plt.subplots()
 
         cov = self.rayCoverage()
-        return pg.show(self.fop.paraDomain,
-                       pg.log10(cov+min(cov[cov > 0])*.5), ax=ax,
-                       coverage=self.standardizedCoverage(), **kwargs)
-
+        return pg.show(
+            self.fop.paraDomain,
+            pg.log10(cov + min(cov[cov > 0]) * 0.5),
+            ax=ax,
+            coverage=self.standardizedCoverage(),
+            **kwargs,
+        )
 
     def saveResult(self, folder=None, size=(16, 10), verbose=False, **kwargs):
         """Save the results in a specified (or date-time derived) folder.
@@ -476,28 +494,28 @@ class TravelTimeManager(MeshMethodManager):
         path = Path(getSavePath(folder, subfolder))
 
         if verbose:
-            pg.info(f'Saving refraction data to: {path}')
+            pg.info(f"Saving refraction data to: {path}")
 
-        np.savetxt(path / 'velocity.vector', self.velocity)
-        np.savetxt(path / 'velocity-cov.vector', self.rayCoverage())
-        np.savetxt(path / 'velocity-scov.vector', self.standardizedCoverage())
+        np.savetxt(path / "velocity.vector", self.velocity)
+        np.savetxt(path / "velocity-cov.vector", self.rayCoverage())
+        np.savetxt(path / "velocity-scov.vector", self.standardizedCoverage())
 
         m = pg.Mesh(self.paraDomain)
 
-        m['Velocity'] = self.paraModel(self.velocity)
-        m['Coverage'] = self.rayCoverage()
-        m['S_Coverage'] = self.standardizedCoverage()
-        m.exportVTK(str(path / 'velocity'))
-        m.saveBinaryV2(str(path / 'velocity-pd'))
-        self.fop.mesh().save(str(path / 'velocity-mesh'))
+        m["Velocity"] = self.paraModel(self.velocity)
+        m["Coverage"] = self.rayCoverage()
+        m["S_Coverage"] = self.standardizedCoverage()
+        m.exportVTK(str(path / "velocity"))
+        m.saveBinaryV2(str(path / "velocity-pd"))
+        self.fop.mesh().save(str(path / "velocity-mesh"))
 
-        np.savetxt(path / 'chi.txt', self.inv.chi2History)
+        np.savetxt(path / "chi.txt", self.inv.chi2History)
 
         if m.dim() == 2:
             fig, ax = pg.plt.subplots()
             self.showResult(ax=ax, cov=self.standardizedCoverage(), **kwargs)
             fig.set_size_inches(size)
-            fig.savefig(path / 'velocity.pdf', bbox_inches='tight')
+            fig.savefig(path / "velocity.pdf", bbox_inches="tight")
             pg.plt.close(fig)
 
         return path

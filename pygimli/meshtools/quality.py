@@ -1,7 +1,5 @@
-# coding=utf-8
 """
 Tools to assess the quality of unstructured meshes.
----------------------------------------------------
 
 Quality measures are based on the following review article:
 
@@ -16,7 +14,8 @@ import numpy as np
 def _boundaryLengths(cell):
     """Return boundary lengths of a given cell."""
     return np.array(
-        [cell.boundary(i).size() for i in range(cell.boundaryCount())])
+        [cell.boundary(i).size() for i in range(cell.boundaryCount())]
+    )
 
 
 def _unitVector(vector):
@@ -47,14 +46,14 @@ def _cellAngles(cell):
     --------
     >>> import pygimli as pg
     >>> mesh = pg.Mesh()
-    >>> for pos in (0.,0.), (0.,1.), (1.,0.):
+    >>> for pos in (0.0, 0.0), (0.0, 1.0), (1.0, 0.0):
     ...     n = mesh.createNode(pos[0], pos[1], 0.0)
     >>> cell = mesh.createCell((0, 1, 2))
     >>> print(_cellAngles(cell)[0])
     90.0
     """
     if cell.nodeCount() > 3:
-        raise Exception("Cell %d is not a triangular cell." % cell.id())
+        raise ValueError(f"Cell {cell.id()} is not a triangular cell.")
 
     a = cell.node(0).pos()
     b = cell.node(1).pos()
@@ -67,7 +66,8 @@ def _cellAngles(cell):
     alpha = _angleBetween(ab, ac)
     beta = _angleBetween(-ab, bc)
     gamma = _angleBetween(-ac, -bc)
-    assert np.allclose(gamma, 180.0 - alpha - beta)
+    if not np.allclose(gamma, 180.0 - alpha - beta):
+        raise RuntimeError("Inconsistent triangle angles.")
 
     return alpha, beta, gamma
 
@@ -83,12 +83,12 @@ def eta(cell):
 
         \eta = \frac{4\sqrt{3}a}{l_1^2 + l_2^2 + l_3^2}
     """
-    return 4 * np.sqrt(3) * cell.size() / np.sum(_boundaryLengths(cell)**2)
+    return 4 * np.sqrt(3) * cell.size() / np.sum(_boundaryLengths(cell) ** 2)
 
 
 def minimumAngle(cell):
     """Return the normalized minimum angle of a given cell."""
-    return np.min(_cellAngles(cell)) / 60.
+    return np.min(_cellAngles(cell)) / 60.0
 
 
 def nsr(cell):
@@ -126,20 +126,27 @@ def quality(mesh, measure="eta"):
     >>> from pygimli.meshtools import polytools as plc
     >>> from pygimli.meshtools import quality
     >>> # Create Mesh
-    >>> world = plc.createWorld(start=[-10, 0], end=[10, -10],
-    ...                         marker=1, worldMarker=False)
-    >>> c1 = plc.createCircle(pos=[0.0, -5.0], radius=3.0, area=.3)
+    >>> world = plc.createWorld(
+    ...     start=[-10, 0], end=[10, -10], marker=1, worldMarkers=False
+    ... )
+    >>> c1 = plc.createCircle(pos=[0.0, -5.0], radius=3.0, area=0.3)
     >>> mesh = pg.meshtools.createMesh([world, c1], quality=21.3)
     >>> # Compute and show quality
     >>> q = quality(mesh, measure="nsr")
-    >>> ax, _ = pg.show(mesh, q, cMap="RdYlGn", showMesh=True, cMin=0.5,
-    ...                 cMax=1.0, label="Normalized shape ratio")
+    >>> ax, _ = pg.show(
+    ...     mesh,
+    ...     q,
+    ...     cMap="RdYlGn",
+    ...     showMesh=True,
+    ...     cMin=0.5,
+    ...     cMax=1.0,
+    ...     label="Normalized shape ratio",
+    ... )
 
-    See also
+    See Also
     --------
     eta, nsr, minimumAngle
     """
-
     # Implemented quality measures (Triangular meshses only.)
     measures = {"eta": eta, "nsr": nsr, "minimumAngle": minimumAngle}
 

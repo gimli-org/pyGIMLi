@@ -77,7 +77,7 @@ def setPolyRegionMarker(poly, marker=1, area=0.0, isHole=False, **kwargs):
     -----------------
     **kwargs
         Additional kwargs
-    markerPosition : pg.Pos
+    markerPos : pg.Pos
         Absolute marker position if you don't want the marker in the center of
         the geometry.
     """
@@ -494,9 +494,9 @@ def createCircle(
 
     Keyword Arguments
     -----------------
-    marker: int [None]
+    marker: int [1]
         Marker for the resulting triangle cells after mesh generation
-    markerPosition : floats [x, y] [0.0, 0.0]
+    markerPos : floats [x, y] [0.0, 0.0]
         Position of the marker (works for both regions and holes)
     area: float [0]
         Maximum cell size for resulting triangles after mesh generation
@@ -535,7 +535,7 @@ def createCircle(
     ... )
     >>> plc = mt.mergePLC([c0, c1, c2, c3])
     >>> fig, ax = pg.plt.subplots()
-    >>> drawMesh(ax, plc, fillRegion=False)
+    >>> drawMesh(ax, plc, regions=False)
     >>> pg.wait()
     """
     pg.renameKwarg("segments", "nSegments", kwargs, "1.2")  # 20210312
@@ -571,7 +571,11 @@ def createCircle(
 
     _polyCreateDefaultEdges(poly, **kwargs)
 
-    if kwargs.get("marker") is not None or kwargs.get("isHole", False):
+    if (
+        kwargs.get("isClosed", True)
+        or kwargs.get("isHole", False)
+        or kwargs.get("marker") is not None
+    ):
         setPolyRegionMarker(poly, **kwargs)
 
     # need a better way mess with these or wrong kwargs
@@ -636,7 +640,7 @@ def createLine(start, end, nSegments=1, **kwargs):
     ...         l2,
     ...     ],
     ...     ax=ax,
-    ...     fillRegion=False,
+    ...     regions=False,
     ... )
     >>> pg.wait()
     """
@@ -690,7 +694,7 @@ def createPolygon(
 
         marker : int [None]
             Marker for the resulting triangle cells after mesh generation.
-        markerPosition : floats [x, y] [0.0, 0.0]
+        markerPos : floats [x, y] [0.0, 0.0]
             Position (absolute) of the marker (works for both regions and
             holes)
         area : float [0]
@@ -736,7 +740,7 @@ def createPolygon(
     ...     interpolate="spline",
     ...     marker=4,
     ... )
-    >>> ax, _ = pg.show(mt.mergePLC([p1, p2, p3, p4]), showNodes=True)
+    >>> ax, _ = pg.show(mt.mergePLC([p1, p2, p3, p4]), nodes=True)
     >>> pg.wait()
     """
     poly = pg.Mesh(dim=2, isGeometry=True)
@@ -1218,8 +1222,8 @@ def createParaMeshSurface(
 
     Args
     ----
-    sensors: DataContainer with sensorPositions()
-        Sensor positions.
+    sensors : pygimli.core.DataContainer
+        Data container with sensor positions.
 
     paraBoundary: [float, float] [1.1, 1.1]
         Margin for parameter domain in relative extend.

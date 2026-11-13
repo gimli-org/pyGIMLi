@@ -114,7 +114,7 @@ python3 -m pip --version
 ```
 
 To avoid conflicts with other packages we install pyGIMLi into a separate
-environment, here called `pg` (you can pick any name; the environment only has to be created once). 
+environment, here called `pg` (you can pick any name; the environment only has to be created once).
 
 ::::{tab-set}
 
@@ -235,7 +235,7 @@ pyGIMLi package via pip:
 Some preinstalled packages may pull in an incompatible NumPy version, so you
 might have to uninstall them first:
 
-```python
+```bash
 !pip uninstall -y numba tensorflow pytensor thinc
 !pip install pygimli tetgen
 ```

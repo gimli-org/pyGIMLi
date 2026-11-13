@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Full-frame (timelapse) forward modelling."""
+
 import numpy as np
 import pygimli as pg
 from .modelling import MeshModelling
@@ -19,7 +20,6 @@ class MultiFrameModelling(MeshModelling):
         self.nf = 0
         self.nm = 0
 
-
     def setData(self, data, modellingOperator=None, **ini):
         """Distribute the data containers amongst the fops."""
         modellingOperator = modellingOperator or self.modellingOperator
@@ -31,15 +31,12 @@ class MultiFrameModelling(MeshModelling):
             # fopi.setData(pg.Vector(datai))
             self.fops.append(fopi)
 
-
     def setMeshPost(self, mesh):
         """Set mesh to all forward operators."""
         for fop in self.fops:
             fop.setMesh(mesh, ignoreRegionManager=True)
 
         self.prepareJacobian()
-
-
 
     def setDefaultBackground(self):
         """Set the default background behaviour."""
@@ -51,7 +48,6 @@ class MultiFrameModelling(MeshModelling):
         #     pg.info("Region with smallest marker ({0}) "
         #             "set to background".format(bk))
         #     self.setRegionProperties(bk, background=True)
-
 
     @property
     def parameterCount(self):
@@ -73,7 +69,7 @@ class MultiFrameModelling(MeshModelling):
         print(self.nm, "model cells")
         nd = 0
         for i, fop in enumerate(self.fops):
-            self.jac.addMatrix(fop.jacobian(), nd, i*self.nm)
+            self.jac.addMatrix(fop.jacobian(), nd, i * self.nm)
             nd += fop.data.size()
 
         self.jac.recalcMatrixSize()
@@ -89,9 +85,9 @@ class MultiFrameModelling(MeshModelling):
         else:
             self.C1 = self.constraints()
 
-        self.C = pg.matrix.FrameConstraintMatrix(self.C1,
-                                                 len(self.fops),
-                                                 self.scalef)
+        self.C = pg.matrix.FrameConstraintMatrix(
+            self.C1, len(self.fops), self.scalef
+        )
         self.setConstraints(self.C)
         # cw = self.regionManager().constraintWeights()
         # self.regionManager().setConstraintsWeights(np.tile(cw, self.nf))
@@ -102,21 +98,26 @@ class MultiFrameModelling(MeshModelling):
     def response(self, model):
         """Forward response."""
         mod = np.reshape(model, [len(self.fops), -1])
-        return np.concatenate([fop.response(mo) for fop, mo in
-                               zip(self.fops, mod)])
+        return np.concatenate(
+            [fop.response(mo) for fop, mo in zip(self.fops, mod, strict=True)]
+        )
 
     def createJacobian(self, model):
         """Create Jacobian matrix."""
         mod = np.reshape(model, [len(self.fops), -1])
         for i, fop in enumerate(self.fops):
             fop.createJacobian(mod[i])
+        # the frame Jacobians are only allocated on creation, so the block
+        # matrix has to update its dimensions here as well (not only in
+        # prepareJacobian, where they are still empty)
+        self.jac.recalcMatrixSize()
 
     def createDefaultStartModel(self):  # , dataVals):
         """Create standard starting model."""
-        return pg.Vector(self.nm*self.nf, 10.0)  # look up in fop
+        return pg.Vector(self.nm * self.nf, 10.0)  # look up in fop
 
     def createStartModel(self, dataVals):
         """Create a starting model from mean data values."""
         # return np.concatenate([f.createStartModel() for f in self.fops])
         self.nm = self.regionManager().parameterCount()
-        return pg.Vector(self.nm*len(self.fops), np.median(dataVals))
+        return pg.Vector(self.nm * len(self.fops), np.median(dataVals))
