@@ -253,7 +253,6 @@ convention = "numpy"
     "F403",  # from x import *
     "F405",  # name may be defined from star import
     "N801",  # legacy public class names (tictoc, pygimli, ...)
-    "N807",  # __RVector_str and friends are monkey patches
 ]
 "tests/*.py" = [
     # "D100",
@@ -272,7 +271,6 @@ convention = "numpy"
 "pygimli/core/matrix.py" = [
     # public API hub: names are re-exported for pygimli.core and friends
     "F401",  # re-export of core classes (RVector, MatrixBase, ...)
-    "N807",  # __mul__ and friends are monkey patches of core classes
 ]
 "pygimli/core/math.py" = [
     # public API hub: re-exported as pygimli.math.* (see pygimli/__init__.py)

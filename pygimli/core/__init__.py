@@ -194,7 +194,7 @@ pgcore.RVector.__gt__ = _greaterThan_
 __origIndexArrayInit__ = pgcore.IndexArray.__init__
 
 
-def __newIndexArrayInit__(self, arr=None, val=None):
+def _newIndexArrayInit_(self, arr=None, val=None):
     """Initialize Index array."""
     if arr is None:
         __origIndexArrayInit__(self)
@@ -208,7 +208,7 @@ def __newIndexArrayInit__(self, arr=None, val=None):
             __origIndexArrayInit__(self, arr)
 
 
-pgcore.IndexArray.__init__ = __newIndexArrayInit__
+pgcore.IndexArray.__init__ = _newIndexArrayInit_
 
 
 # Overwrite constructor for BVector
@@ -217,7 +217,7 @@ pgcore.IndexArray.__init__ = __newIndexArrayInit__
 __origBVectorInit__ = pgcore.BVector.__init__
 
 
-def __newBVectorInit__(self, arr=None, val=None):
+def _newBVectorInit_(self, arr=None, val=None):
     """Initialize Bool array."""
     if arr is None:
         __origIndexArrayInit__(self)
@@ -234,7 +234,7 @@ def __newBVectorInit__(self, arr=None, val=None):
             __origBVectorInit__(self, arr)
 
 
-pgcore.BVector.__init__ = __newBVectorInit__
+pgcore.BVector.__init__ = _newBVectorInit_
 
 ######################
 # special overwrites
@@ -244,7 +244,7 @@ pgcore.BVector.__init__ = __newBVectorInit__
 __oldRVectorAdd__ = pgcore.RVector.__add__
 
 
-def __newRVectorAdd__(a, b):
+def _newRVectorAdd_(a, b):
     if isinstance(b, np.ndarray) and b.dtype == complex:
         return __oldRVectorAdd__(a, pgcore.CVector(b))
     if isInt(b):
@@ -254,13 +254,13 @@ def __newRVectorAdd__(a, b):
     return __oldRVectorAdd__(a, b)
 
 
-pgcore.RVector.__add__ = __newRVectorAdd__
+pgcore.RVector.__add__ = _newRVectorAdd_
 
 
 __oldRVectorSub__ = pgcore.RVector.__sub__
 
 
-def __newRVectorSub__(a, b):
+def _newRVectorSub_(a, b):
     if isInt(b):
         return __oldRVectorSub__(a, float(b))
     if isInt(a):
@@ -268,13 +268,13 @@ def __newRVectorSub__(a, b):
     return __oldRVectorSub__(a, b)
 
 
-pgcore.RVector.__sub__ = __newRVectorSub__
+pgcore.RVector.__sub__ = _newRVectorSub_
 
 
 __oldRVectorMul__ = pgcore.RVector.__mul__
 
 
-def __newRVectorMul__(a, b):
+def _newRVectorMul_(a, b):
     if isInt(b):
         return __oldRVectorMul__(a, float(b))
     if isInt(a):
@@ -282,54 +282,54 @@ def __newRVectorMul__(a, b):
     return __oldRVectorMul__(a, b)
 
 
-pgcore.RVector.__mul__ = __newRVectorMul__
+pgcore.RVector.__mul__ = _newRVectorMul_
 
 try:
     __oldRVectorTrueDiv__ = pgcore.RVector.__truediv__
 
-    def __newRVectorTrueDiv__(a, b):
+    def _newRVectorTrueDiv_(a, b):
         if isInt(b):
             return __oldRVectorTrueDiv__(a, float(b))
         if isInt(a):
             return __oldRVectorTrueDiv__(float(a), b)
         return __oldRVectorTrueDiv__(a, b)
 
-    pgcore.RVector.__truediv__ = __newRVectorTrueDiv__
+    pgcore.RVector.__truediv__ = _newRVectorTrueDiv_
 except BaseException:
     __oldRVectorTrueDiv__ = pgcore.RVector.__div__
 
-    def __newRVectorTrueDiv__(a, b):
+    def _newRVectorTrueDiv_(a, b):
         if isInt(b):
             return __oldRVectorTrueDiv__(a, float(b))
         if isInt(a):
             return __oldRVectorTrueDiv__(float(a), b)
         return __oldRVectorTrueDiv__(a, b)
 
-    pgcore.RVector.__div__ = __newRVectorTrueDiv__
+    pgcore.RVector.__div__ = _newRVectorTrueDiv_
 
 
 __oldRMatMul__ = pgcore.RMatrix.__mul__
 
 
-def __newRMatMul__(a, b):
+def _newRMatMul_(a, b):
     if isInt(b):
         return __oldRMatMul__(a, float(b))
     return __oldRMatMul__(a, b)
 
 
-pgcore.RMatrix.__mul__ = __newRMatMul__
+pgcore.RMatrix.__mul__ = _newRMatMul_
 
 
 __oldRMatAdd__ = pgcore.RMatrix.__add__
 
 
-def __newRMatAdd__(a, b):
+def _newRMatAdd_(a, b):
     if isInt(b):
         return __oldRMatAdd__(a, float(b))
     return __oldRMatAdd__(a, b)
 
 
-pgcore.RMatrix.__add__ = __newRMatAdd__
+pgcore.RMatrix.__add__ = _newRMatAdd_
 
 
 ###############################################################################
@@ -338,8 +338,8 @@ pgcore.RMatrix.__add__ = __newRMatAdd__
 __origRVectorSetVal__ = pgcore.RVector.setVal
 
 
-def __newRVectorSetVal__(self, *args, **kwargs):
-    # print('__newRVectorSetVal__', *args, **kwargs)
+def _newRVectorSetVal_(self, *args, **kwargs):
+    # print('_newRVectorSetVal_', *args, **kwargs)
     if len(args) == 2:
         if isinstance(args[1], int):
             if args[1] < 0:
@@ -353,14 +353,14 @@ def __newRVectorSetVal__(self, *args, **kwargs):
     return __origRVectorSetVal__(self, *args, **kwargs)
 
 
-pgcore.RVector.setVal = __newRVectorSetVal__
+pgcore.RVector.setVal = _newRVectorSetVal_
 
 
 __origR3VectorSetVal__ = pgcore.R3Vector.setVal
 
 
-def __newR3VectorSetVal__(self, *args, **kwargs):
-    # print('__newRVectorSetVal__', *args, **kwargs)
+def _newR3VectorSetVal_(self, *args, **kwargs):
+    # print('_newR3VectorSetVal_', *args, **kwargs)
     if len(args) == 2:
         if isinstance(args[1], int):
             return __origR3VectorSetVal__(self, args[0], i=args[1])
@@ -369,13 +369,13 @@ def __newR3VectorSetVal__(self, *args, **kwargs):
     return __origR3VectorSetVal__(self, *args, **kwargs)
 
 
-pgcore.R3Vector.setVal = __newR3VectorSetVal__
+pgcore.R3Vector.setVal = _newR3VectorSetVal_
 
 
 __origBVectorSetVal__ = pgcore.BVector.setVal
 
 
-def __newBVectorSetVal__(self, *args, **kwargs):
+def _newBVectorSetVal_(self, *args, **kwargs):
     if len(args) == 2:
         if isinstance(args[1], int):
             return __origBVectorSetVal__(self, args[0], i=args[1])
@@ -384,13 +384,13 @@ def __newBVectorSetVal__(self, *args, **kwargs):
     return __origBVectorSetVal__(self, *args, **kwargs)
 
 
-pgcore.BVector.setVal = __newBVectorSetVal__
+pgcore.BVector.setVal = _newBVectorSetVal_
 
 
 __origCVectorSetVal__ = pgcore.CVector.setVal
 
 
-def __newCVectorSetVal__(self, *args, **kwargs):
+def _newCVectorSetVal_(self, *args, **kwargs):
     if len(args) == 2:
         if isinstance(args[1], int):
             return __origCVectorSetVal__(self, args[0], i=args[1])
@@ -399,13 +399,13 @@ def __newCVectorSetVal__(self, *args, **kwargs):
     return __origCVectorSetVal__(self, *args, **kwargs)
 
 
-pgcore.CVector.setVal = __newCVectorSetVal__
+pgcore.CVector.setVal = _newCVectorSetVal_
 
 
 __origIVectorSetVal__ = pgcore.IVector.setVal
 
 
-def __newIVectorSetVal__(self, *args, **kwargs):
+def _newIVectorSetVal_(self, *args, **kwargs):
     if len(args) == 2:
         if isinstance(args[1], int):
             return __origIVectorSetVal__(self, args[0], i=args[1])
@@ -414,13 +414,13 @@ def __newIVectorSetVal__(self, *args, **kwargs):
     return __origIVectorSetVal__(self, *args, **kwargs)
 
 
-pgcore.IVector.setVal = __newIVectorSetVal__
+pgcore.IVector.setVal = _newIVectorSetVal_
 
 
 __origIndexArraySetVal__ = pgcore.IndexArray.setVal
 
 
-def __newIndexArraySetVal__(self, *args, **kwargs):
+def _newIndexArraySetVal_(self, *args, **kwargs):
     if len(args) == 2:
         if isinstance(args[1], int):
             return __origIndexArraySetVal__(self, args[0], i=args[1])
@@ -429,7 +429,7 @@ def __newIndexArraySetVal__(self, *args, **kwargs):
     return __origIndexArraySetVal__(self, *args, **kwargs)
 
 
-pgcore.IndexArray.setVal = __newIndexArraySetVal__
+pgcore.IndexArray.setVal = _newIndexArraySetVal_
 
 
 ############################
@@ -704,7 +704,7 @@ class VectorIter:
         return self.it.nextForPy()
 
 
-def __VectorIterCall__(self):
+def _VectorIterCall_(self):
     """Return iterator."""
     return VectorIter(self)
     # don't use pygimli iterators here until the reference for temporary
@@ -712,12 +712,12 @@ def __VectorIterCall__(self):
     # return pgcore.RVectorIter(self.beginPyIter())
 
 
-pgcore.RVector.__iter__ = __VectorIterCall__
-pgcore.R3Vector.__iter__ = __VectorIterCall__
-pgcore.BVector.__iter__ = __VectorIterCall__
-pgcore.IVector.__iter__ = __VectorIterCall__
-pgcore.IndexArray.__iter__ = __VectorIterCall__
-pgcore.CVector.__iter__ = __VectorIterCall__
+pgcore.RVector.__iter__ = _VectorIterCall_
+pgcore.R3Vector.__iter__ = _VectorIterCall_
+pgcore.BVector.__iter__ = _VectorIterCall_
+pgcore.IVector.__iter__ = _VectorIterCall_
+pgcore.IndexArray.__iter__ = _VectorIterCall_
+pgcore.CVector.__iter__ = _VectorIterCall_
 
 
 class DefaultContainerIter:
@@ -747,14 +747,14 @@ class DefaultContainerIter:
             return self.vec[self.pos]
 
 
-def __MatIterCall__(self):
+def _MatIterCall_(self):
     """Return iterator."""
     return DefaultContainerIter(self)
 
 
-pgcore.RMatrix.__iter__ = __MatIterCall__
-pgcore.RDenseMatrix.__iter__ = __MatIterCall__
-pgcore.CMatrix.__iter__ = __MatIterCall__
+pgcore.RMatrix.__iter__ = _MatIterCall_
+pgcore.RDenseMatrix.__iter__ = _MatIterCall_
+pgcore.CMatrix.__iter__ = _MatIterCall_
 
 
 class PosIter:
@@ -786,11 +786,11 @@ class PosIter:
             return self.vec[self.pos]
 
 
-def __PosIterCall__(self):
+def _PosIterCall_(self):
     return PosIter(self)
 
 
-pgcore.Pos.__iter__ = __PosIterCall__
+pgcore.Pos.__iter__ = _PosIterCall_
 
 ## there are weird exposed value expressions for POS OP with int argument
 ## so we need to overwrite them here until its known how to avoid the exposure
@@ -800,19 +800,19 @@ pgcore.Pos.__iter__ = __PosIterCall__
 __POS_orig__add__ = pgcore.Pos.__add__
 
 
-def __POS_new__add__(self, b):
+def _POS_new__add_(self, b):
     if isinstance(b, int):
         return __POS_orig__add__(self, float(b))
     return __POS_orig__add__(self, b)
 
 
-pgcore.Pos.__add__ = __POS_new__add__
+pgcore.Pos.__add__ = _POS_new__add_
 
 
 __POS_orig__radd__ = pgcore.Pos.__radd__
 
 
-def __POS_new__radd__(self, b):
+def _POS_new__radd_(self, b):
     if isinstance(b, int):
         return __POS_orig__radd__(self, float(b))
     elif isinstance(b, list):
@@ -821,25 +821,25 @@ def __POS_new__radd__(self, b):
         return __POS_orig__radd__(self, b)
 
 
-pgcore.Pos.__radd__ = __POS_new__radd__
+pgcore.Pos.__radd__ = _POS_new__radd_
 
 
 __POS_orig__sub__ = pgcore.Pos.__sub__
 
 
-def __POS_new__sub__(self, b):
+def _POS_new__sub_(self, b):
     if isinstance(b, int):
         return __POS_orig__sub__(self, float(b))
     return __POS_orig__sub__(self, b)
 
 
-pgcore.Pos.__sub__ = __POS_new__sub__
+pgcore.Pos.__sub__ = _POS_new__sub_
 
 
 __POS_orig__rsub__ = pgcore.Pos.__rsub__
 
 
-def __POS_new__rsub__(self, b):
+def _POS_new__rsub_(self, b):
     if isinstance(b, int):
         return __POS_orig__rsub__(self, float(b))
     elif isinstance(b, list):
@@ -848,36 +848,36 @@ def __POS_new__rsub__(self, b):
         return __POS_orig__rsub__(self, b)
 
 
-pgcore.Pos.__rsub__ = __POS_new__rsub__
+pgcore.Pos.__rsub__ = _POS_new__rsub_
 
 
 __POS_orig__mul__ = pgcore.Pos.__mul__
 
 
-def __POS_new__mul__(self, b):
+def _POS_new__mul_(self, b):
     if isinstance(b, int):
         return __POS_orig__mul__(self, float(b))
     return __POS_orig__mul__(self, b)
 
 
-pgcore.Pos.__mul__ = __POS_new__mul__
+pgcore.Pos.__mul__ = _POS_new__mul_
 
 
 __POS_orig__truediv__ = pgcore.Pos.__truediv__
 
 
-def __POS_new__truediv__(self, b):
+def _POS_new__truediv_(self, b):
     if isinstance(b, int):
         return __POS_orig__truediv__(self, float(b))
     return __POS_orig__truediv__(self, b)
 
 
-pgcore.Pos.__truediv__ = __POS_new__truediv__
+pgcore.Pos.__truediv__ = _POS_new__truediv_
 
 
 # ######### c to python converter ######
 # default converter from Pos to numpy array
-def __PosArrayCall__(self, dtype=None, **kwargs):
+def _PosArrayCall_(self, dtype=None, **kwargs):
     # if idx:
     # print(self)
     # print(idx)
@@ -890,7 +890,7 @@ def __PosArrayCall__(self, dtype=None, **kwargs):
 # default converter from RVector to numpy array
 
 
-def __RVectorArrayCall__(self, dtype=None, **kwargs):
+def _RVectorArrayCall_(self, dtype=None, **kwargs):
     #
     # This wrapper is needed to catch explicit type conversion from np.asarray
     #
@@ -907,7 +907,7 @@ def __RVectorArrayCall__(self, dtype=None, **kwargs):
     return self.array()
 
 
-def __CVectorArrayCall__(self, dtype=None, **kwargs):
+def _CVectorArrayCall_(self, dtype=None, **kwargs):
     #
     # This wrapper is needed to catch explicit type conversion from np.asarray
     #
@@ -925,20 +925,20 @@ def __CVectorArrayCall__(self, dtype=None, **kwargs):
 
 
 # default converter from RVector to numpy array
-pgcore.RVector.__array__ = __RVectorArrayCall__
+pgcore.RVector.__array__ = _RVectorArrayCall_
 # not yet ready handmade_wrappers.py
-pgcore.BVector.__array__ = __RVectorArrayCall__
-pgcore.IndexArray.__array__ = __RVectorArrayCall__
-pgcore.stdVectorI.__array__ = __RVectorArrayCall__
-pgcore.R3Vector.__array__ = __RVectorArrayCall__
+pgcore.BVector.__array__ = _RVectorArrayCall_
+pgcore.IndexArray.__array__ = _RVectorArrayCall_
+pgcore.stdVectorI.__array__ = _RVectorArrayCall_
+pgcore.R3Vector.__array__ = _RVectorArrayCall_
 
 # should work with handmade wrapper -- test me!
-pgcore.Pos.__array__ = __PosArrayCall__
+pgcore.Pos.__array__ = _PosArrayCall_
 
 pgcore.R3Vector.append = pgcore.R3Vector.push_back
 
 # see bug description
-pgcore.CVector.__array__ = __CVectorArrayCall__
+pgcore.CVector.__array__ = _CVectorArrayCall_
 
 
 ##################################
@@ -965,7 +965,7 @@ __BINOP__ = [
 ]
 
 
-def __stdVectorRVector_NEG__(self):
+def _stdVectorRVector_NEG_(self):
     """Unary minus operator."""
     ret = pgcore.stdVectorRVector()
     for _i, ai in enumerate(self):
@@ -973,10 +973,10 @@ def __stdVectorRVector_NEG__(self):
     return ret
 
 
-pgcore.stdVectorRVector.__neg__ = __stdVectorRVector_NEG__
+pgcore.stdVectorRVector.__neg__ = _stdVectorRVector_NEG_
 
 
-def __stdVectorRVector_POW__(self, exp):
+def _stdVectorRVector_POW_(self, exp):
     """Power operator."""
     ret = pgcore.stdVectorRVector()
     if hasattr(exp, "__iter__"):
@@ -988,10 +988,10 @@ def __stdVectorRVector_POW__(self, exp):
     return ret
 
 
-pgcore.stdVectorRVector.__pow__ = __stdVectorRVector_POW__
+pgcore.stdVectorRVector.__pow__ = _stdVectorRVector_POW_
 
 
-def __stdVectorRVector_ABS__(self):
+def _stdVectorRVector_ABS_(self):
     """Absolute value operator."""
     ret = pgcore.stdVectorRVector()
     for _i, ai in enumerate(self):
@@ -999,10 +999,10 @@ def __stdVectorRVector_ABS__(self):
     return ret
 
 
-pgcore.stdVectorRVector.__abs__ = __stdVectorRVector_ABS__
+pgcore.stdVectorRVector.__abs__ = _stdVectorRVector_ABS_
 
 
-def __stdVectorRVector_IOP__(self, a, OP):
+def _stdVectorRVector_IOP_(self, a, OP):
     if isScalar(a):
         for i in range(len(self)):
             self[i] = getattr(self[i], OP)(a)
@@ -1019,7 +1019,7 @@ def __stdVectorRVector_IOP__(self, a, OP):
     return self
 
 
-def __stdVectorRVector_BIOP__(self, b, OP):
+def _stdVectorRVector_BIOP_(self, b, OP):
 
     ret = pgcore.stdVectorRVector()
     if isScalar(b):
@@ -1041,18 +1041,18 @@ def __stdVectorRVector_BIOP__(self, b, OP):
 
 # for _OP in __IOP__:
 #     def _closure(OP):
-#         return lambda a, b: __stdVectorRVector_IOP__(a, b, OP)
+#         return lambda a, b: _stdVectorRVector_IOP_(a, b, OP)
 #     setattr(pgcore.stdVectorRVector, _OP, _closure(_OP))
 
 for _OP in __BINOP__:
 
     def _closure(OP):
-        return lambda a, b: __stdVectorRVector_BIOP__(a, b, OP)
+        return lambda a, b: _stdVectorRVector_BIOP_(a, b, OP)
 
     setattr(pgcore.stdVectorRVector, _OP, _closure(_OP))
 
 
-def __stdVectorRVector__array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+def _stdVectorRVector__array_ufunc_(self, ufunc, method, *inputs, **kwargs):
     """For numpy operators."""
     ###  more advanced behaviour possible ... instead of __array_ufunc__ = None
     ### https://docs.scipy.org/doc/numpy-1.13.0/neps/ufunc-overrides.html
@@ -1131,7 +1131,7 @@ def __stdVectorRVector__array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         return ret
 
 
-pgcore.stdVectorRVector.__array_ufunc__ = __stdVectorRVector__array_ufunc__
+pgcore.stdVectorRVector.__array_ufunc__ = _stdVectorRVector__array_ufunc_
 
 
 ##################################
@@ -1187,7 +1187,7 @@ pgcore.R3Vector.__rtruediv__ = lambda self, o: _r3v_coerce(
 ##################################
 
 
-def __stdVectorR3Vector_BINARY_OP__(self, b, OP):
+def _stdVectorR3Vector_BINARY_OP_(self, b, OP):
     """Binary operator for stdVectorR3Vector."""
     ret = pgcore.stdVectorR3Vector()
 
@@ -1218,12 +1218,12 @@ def __stdVectorR3Vector_BINARY_OP__(self, b, OP):
 for _OP in __BINOP__:
 
     def _closure(OP):
-        return lambda a, b: __stdVectorR3Vector_BINARY_OP__(a, b, OP)
+        return lambda a, b: _stdVectorR3Vector_BINARY_OP_(a, b, OP)
 
     setattr(pgcore.stdVectorR3Vector, _OP, _closure(_OP))
 
 
-def __stdVectorR3Vector_ABS__(self):
+def _stdVectorR3Vector_ABS_(self):
     """Unary absolute value operator."""
     ret = pgcore.stdVectorRVector()
     for _i, ai in enumerate(self):
@@ -1231,10 +1231,10 @@ def __stdVectorR3Vector_ABS__(self):
     return ret
 
 
-pgcore.stdVectorR3Vector.__abs__ = __stdVectorR3Vector_ABS__
+pgcore.stdVectorR3Vector.__abs__ = _stdVectorR3Vector_ABS_
 
 
-def __stdVectorR3Vector_NEG__(self):
+def _stdVectorR3Vector_NEG_(self):
     """Unary minus operator."""
     ret = pgcore.stdVectorR3Vector()
     for _i, ai in enumerate(self):
@@ -1242,7 +1242,7 @@ def __stdVectorR3Vector_NEG__(self):
     return ret
 
 
-pgcore.stdVectorR3Vector.__neg__ = __stdVectorR3Vector_NEG__
+pgcore.stdVectorR3Vector.__neg__ = _stdVectorR3Vector_NEG_
 
 
 ##################################
@@ -1250,7 +1250,7 @@ pgcore.stdVectorR3Vector.__neg__ = __stdVectorR3Vector_NEG__
 ##################################
 
 
-def __stdVectorRMatrix_BINARY_OP__(self, b, OP):
+def _stdVectorRMatrix_BINARY_OP_(self, b, OP):
 
     ret = pgcore.stdVectorRMatrix()
 
@@ -1274,12 +1274,12 @@ def __stdVectorRMatrix_BINARY_OP__(self, b, OP):
 for _OP in __BINOP__:
 
     def _closure(OP):
-        return lambda a, b: __stdVectorRMatrix_BINARY_OP__(a, b, OP)
+        return lambda a, b: _stdVectorRMatrix_BINARY_OP_(a, b, OP)
 
     setattr(pgcore.stdVectorRMatrix, _OP, _closure(_OP))
 
 
-def __stdVectorMatrixVector_BINARY_OP__(self, b, OP):
+def _stdVectorMatrixVector_BINARY_OP_(self, b, OP):
 
     ret = pgcore.stdVectorMatrixVector()
 
@@ -1303,36 +1303,36 @@ def __stdVectorMatrixVector_BINARY_OP__(self, b, OP):
 for _OP in __BINOP__:
 
     def _closure(OP):
-        return lambda a, b: __stdVectorMatrixVector_BINARY_OP__(a, b, OP)
+        return lambda a, b: _stdVectorMatrixVector_BINARY_OP_(a, b, OP)
 
     setattr(pgcore.stdVectorMatrixVector, _OP, _closure(_OP))
 
 
-def __RMatrix_NEG__(self):
+def _RMatrix_NEG_(self):
     return pgcore.RMatrix(self * -1.0)
 
 
-pgcore.RMatrix.__neg__ = __RMatrix_NEG__
+pgcore.RMatrix.__neg__ = _RMatrix_NEG_
 
 
-def __stdVectorRMatrix_NEG__(self):
+def _stdVectorRMatrix_NEG_(self):
     ret = pgcore.stdVectorRMatrix()
     for _i, ai in enumerate(self):
         ret.append(-ai)
     return ret
 
 
-pgcore.stdVectorRMatrix.__neg__ = __stdVectorRMatrix_NEG__
+pgcore.stdVectorRMatrix.__neg__ = _stdVectorRMatrix_NEG_
 
 
-def __stdVectorMatrixVector_NEG__(self):
+def _stdVectorMatrixVector_NEG_(self):
     ret = pgcore.stdVectorMatrixVector()
     for _i, ai in enumerate(self):
         ret.append(-ai)
     return ret
 
 
-pgcore.stdVectorMatrixVector.__neg__ = __stdVectorMatrixVector_NEG__
+pgcore.stdVectorMatrixVector.__neg__ = _stdVectorMatrixVector_NEG_
 
 
 ##################################
@@ -1486,13 +1486,13 @@ def clip(v, aMin, aMax):
 pgcore.__EQ_RVector__ = pgcore.RVector.__eq__
 
 
-def __EQ_RVector__(self, val):
+def _EQ_RVector_(self, val):
     if isinstance(val, int):
         val = float(val)
     return pgcore.__EQ_RVector__(self, val)
 
 
-pgcore.RVector.__eq__ = __EQ_RVector__
+pgcore.RVector.__eq__ = _EQ_RVector_
 
 
 ############################
@@ -1605,7 +1605,7 @@ def __GLOBAL__response_mt_shm_(fop, model, shm, i):
         shm[j] = resp[j]
 
 
-def __MP_context__(method="fork"):
+def _MP_context_(method="fork"):
     """Get multiprocessing context.
 
     Currently only 'fork' is supported on Linux. On Windows and macOS,
@@ -1633,13 +1633,13 @@ def __MP_context__(method="fork"):
         return None
 
 
-def __ModellingBase__createJacobian_mt__(self, model, resp):
+def _ModellingBase__createJacobian_mt_(self, model, resp):
     """Create Jacobian with multi threading. (patch to multiproc.)."""
 
     def calcSerial():
         self.createJacobian(model, resp)
 
-    _ctx = __MP_context__("fork")
+    _ctx = _MP_context_("fork")
     if _ctx is None:
         calcSerial()
         return
@@ -1705,7 +1705,7 @@ def __ModellingBase__createJacobian_mt__(self, model, resp):
         self._J.setCol(i, dData / dModel[i])
 
 
-def __ModellingBase__responses_mt__(self, models, respos):
+def _ModellingBase__responses_mt_(self, models, respos):
     """Calculate responses for multiple models. (patch to multiproc.)."""
 
     def calcSerial():
@@ -1715,7 +1715,7 @@ def __ModellingBase__responses_mt__(self, models, respos):
         for i, m in enumerate(models):
             respos[i] = self.response_mt(m, i)
 
-    _ctx = __MP_context__("fork")
+    _ctx = _MP_context_("fork")
     if _ctx is None:
         calcSerial()
         return
@@ -1796,8 +1796,8 @@ class ModellingBaseMT__(pgcore.ModellingBase):
         self.setJacobian(self._J)
 
 
-ModellingBaseMT__.createJacobian_mt = __ModellingBase__createJacobian_mt__
-ModellingBaseMT__.responses = __ModellingBase__responses_mt__
+ModellingBaseMT__.createJacobian_mt = _ModellingBase__createJacobian_mt_
+ModellingBaseMT__.responses = _ModellingBase__responses_mt_
 
 ModellingBase = ModellingBaseMT__
 

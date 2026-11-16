@@ -139,7 +139,7 @@ def showMesh3DVista(*args, **kwargs):
     Draw PV window in an own Process to allow multiple windows
     for terminal users.
     """
-    ctx = pg.core.__MP_context__(method="fork")
+    ctx = pg.core._MP_context_(method="fork")
 
     if ctx is None or pg.isNotebook() or pg.isIPyTerminal():
         return showMesh3DVistaProcess(*args, **kwargs)

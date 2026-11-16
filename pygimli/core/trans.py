@@ -6,7 +6,7 @@ import numpy as np
 __TransCumulative_addForGC__ = pgcore.RTransCumulative.add
 
 
-def __TransCumulative_addForGC_MP__(self, T, *args):
+def _TransCumulative_addForGC_MP_(self, T, *args):
     """Don't use directly.
 
     Monkey patch to keep the GC happy until redesign.
@@ -22,7 +22,7 @@ def __TransCumulative_addForGC_MP__(self, T, *args):
     return __TransCumulative_addForGC__(self, T, *args)
 
 
-pgcore.RTransCumulative.add = __TransCumulative_addForGC_MP__
+pgcore.RTransCumulative.add = _TransCumulative_addForGC_MP_
 
 def __RTransCumulative_str(self):
     """Return string representation."""
@@ -164,4 +164,3 @@ def str2Trans(tr:str):
         return TransArsinh()
     else:  # check for LU values, e.g. "Log1-1000" or "Cot0-1"
         raise KeyError("Transformation string unknown!")
-

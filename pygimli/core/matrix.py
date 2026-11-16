@@ -58,7 +58,7 @@ __Matrices = [
 ]
 
 
-def __Matrix_array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+def _Matrix_array_ufunc_(self, ufunc, method, *inputs, **kwargs):
     """Handle ufunc to communicate with numpy."""
     if ufunc == np.multiply:
         ## for self * np.float
@@ -125,7 +125,7 @@ for m in __Matrices:
     ## To allow for ignoring np.*.__mul__ in case A has the __rmul__ function
     ## see test TestMatrixMethods.testSparseMatrixBasics,
     ## TestRVectorMethods.testUFunc
-    m.__array_ufunc__ = __Matrix_array_ufunc__
+    m.__array_ufunc__ = _Matrix_array_ufunc_
     m.__rmul__ = lambda self: critical("not yet implemented")
 
 
@@ -346,13 +346,13 @@ pgcore.RVector.__format__ = __RVector_format
 __ElementMatrix_mat = pgcore.ElementMatrix.mat
 
 
-def __ElementMatrix_mat_GC__(self):
+def _ElementMatrix_mat_GC_(self):
     R = __ElementMatrix_mat(self)
     R.owner = self
     return R
 
 
-pgcore.ElementMatrix.mat = __ElementMatrix_mat_GC__
+pgcore.ElementMatrix.mat = _ElementMatrix_mat_GC_
 
 
 # temporary object for debugging
@@ -367,27 +367,27 @@ pgcore.ElementMatrix.mat = __ElementMatrix_mat_GC__
 __DenseMatrix_row = pgcore.RDenseMatrix.row
 
 
-def __DenseMatrix_row_GC__(self, i):
+def _DenseMatrix_row_GC_(self, i):
     R = __DenseMatrix_row(self, i)
     R.owner = self
     return R
 
 
-pgcore.RDenseMatrix.row = __DenseMatrix_row_GC__
+pgcore.RDenseMatrix.row = _DenseMatrix_row_GC_
 
 
-def __CopyRMatrixTranspose__(self):
+def _CopyRMatrixTranspose_(self):
     return pgcore.RMatrix(np.array(self).T)
 
 
-pgcore.RMatrix.T = property(__CopyRMatrixTranspose__)
+pgcore.RMatrix.T = property(_CopyRMatrixTranspose_)
 
 
-def __CopyRDenseMatrixTranspose__(self):
+def _CopyRDenseMatrixTranspose_(self):
     return pgcore.RDenseMatrix(np.array(self).T)
 
 
-pgcore.RDenseMatrix.T = property(__CopyRDenseMatrixTranspose__)
+pgcore.RDenseMatrix.T = property(_CopyRDenseMatrixTranspose_)
 
 
 class __TransMatrixView:
@@ -429,7 +429,7 @@ pgcore.RSparseMapMatrix.T = property(lambda self: __TransMatrixView(self))
 __RSparseMapMatrix_Mul__orig = pgcore.RSparseMapMatrix.__mul__
 
 
-def __RSparseMapMatrix_Mul__(self, b):
+def _RSparseMapMatrix_Mul_(self, b):
     """Multiply SparseMapMatrix with b."""
     if isinstance(b, (int, np.float64)):
         ## or this will be wrongly parsed into mul(self, RVector(b))
@@ -448,26 +448,26 @@ def __RSparseMapMatrix_Mul__(self, b):
     return __RSparseMapMatrix_Mul__orig(self, b)
 
 
-pgcore.RSparseMapMatrix.__mul__ = __RSparseMapMatrix_Mul__
+pgcore.RSparseMapMatrix.__mul__ = _RSparseMapMatrix_Mul_
 
 
 __RSparseMapMatrix_TrueDiv__orig = pgcore.RSparseMapMatrix.__truediv__
 
 
-def __RSparseMapMatrix_TrueDiv__(self, b):
+def _RSparseMapMatrix_TrueDiv_(self, b):
     if isinstance(b, (int, np.float64)):
         ## or this will be wrongly parsed into truediv(self, RVector(b))
         return __RSparseMapMatrix_TrueDiv__orig(self, float(b))
     return __RSparseMapMatrix_TrueDiv__orig(self, b)
 
 
-pgcore.RSparseMapMatrix.__truediv__ = __RSparseMapMatrix_TrueDiv__
+pgcore.RSparseMapMatrix.__truediv__ = _RSparseMapMatrix_TrueDiv_
 
 
 __RSparseMatrix_Mul__orig = pgcore.RSparseMatrix.__mul__
 
 
-def __RSparseMatrix_Mul__(self, b):
+def _RSparseMatrix_Mul_(self, b):
     """Multiply SparseMatrix with b."""
     # pg._b(b)
     if isinstance(b, (int, np.float64)):
@@ -480,32 +480,32 @@ def __RSparseMatrix_Mul__(self, b):
     return __RSparseMatrix_Mul__orig(self, b)
 
 
-pgcore.RSparseMatrix.__mul__ = __RSparseMatrix_Mul__
+pgcore.RSparseMatrix.__mul__ = _RSparseMatrix_Mul_
 
 
 __RSparseMatrix_TrueDiv__orig = pgcore.RSparseMatrix.__truediv__
 
 
-def __RSparseMatrix_TrueDiv__(self, b):
+def _RSparseMatrix_TrueDiv_(self, b):
     if isinstance(b, (int, np.float64)):
         ## or this will be wrongly parsed into truediv(self, RVector(b))
         return __RSparseMatrix_TrueDiv__orig(self, float(b))
     return __RSparseMatrix_TrueDiv__orig(self, b)
 
 
-pgcore.RSparseMatrix.__truediv__ = __RSparseMatrix_TrueDiv__
+pgcore.RSparseMatrix.__truediv__ = _RSparseMatrix_TrueDiv_
 
 
-def __RSparseMapMatrix_Neg__(self):
+def _RSparseMapMatrix_Neg_(self):
     """Multiply SparseMapMatrix with b."""
     return self * -1.0
 
 
-pgcore.RSparseMapMatrix.__neg__ = __RSparseMapMatrix_Neg__
-pgcore.RSparseMatrix.__neg__ = __RSparseMapMatrix_Neg__
+pgcore.RSparseMapMatrix.__neg__ = _RSparseMapMatrix_Neg_
+pgcore.RSparseMatrix.__neg__ = _RSparseMapMatrix_Neg_
 
 
-def __stdVectorRSparseMapMatrix_Mult__(self, b):
+def _stdVectorRSparseMapMatrix_Mult_(self, b):
     ret = None
     if isinstance(b, list):
         # ret = np.array([pgcore.mult(self, bi) for bi in b]).T
@@ -533,7 +533,7 @@ def __stdVectorRSparseMapMatrix_Mult__(self, b):
     return ret
 
 
-pgcore.stdVectorRSparseMapMatrix.__mul__ = __stdVectorRSparseMapMatrix_Mult__
+pgcore.stdVectorRSparseMapMatrix.__mul__ = _stdVectorRSparseMapMatrix_Mult_
 
 
 # Special Monkeypatch core classes
@@ -541,7 +541,7 @@ pgcore.stdVectorRSparseMapMatrix.__mul__ = __stdVectorRSparseMapMatrix_Mult__
 __BlockMatrix_addMatrix__ = pgcore.RBlockMatrix.addMatrix
 
 
-def __BlockMatrix_addMatrix_happy_GC__(
+def _BlockMatrix_addMatrix_happy_GC_(
     self, M, row=None, col=None, scale=1.0, transpose=False
 ):
     """Add an existing matrix to this block matrix and return a unique index.
@@ -612,20 +612,20 @@ def __BlockMatrix_addMatrix_happy_GC__(
     return matrixID
 
 
-def __BlockMatrix_str__(self):
+def _BlockMatrix_str_(self):
     string = "BlockMatrix of size %d x %d consisting of %d submatrices."
     return string % (self.rows(), self.cols(), len(self.entries()))
 
 
-pgcore.RBlockMatrix.addMatrix = __BlockMatrix_addMatrix_happy_GC__
-pgcore.RBlockMatrix.add = __BlockMatrix_addMatrix_happy_GC__
-pgcore.RBlockMatrix.__repr__ = __BlockMatrix_str__
+pgcore.RBlockMatrix.addMatrix = _BlockMatrix_addMatrix_happy_GC_
+pgcore.RBlockMatrix.add = _BlockMatrix_addMatrix_happy_GC_
+pgcore.RBlockMatrix.__repr__ = _BlockMatrix_str_
 pgcore.RBlockMatrix.ndim = 2
-# pgcore.CBlockMatrix.addMatrix = __BlockMatrix_addMatrix_happy_GC__
-# pgcore.CBlockMatrix.add = __BlockMatrix_addMatrix_happy_GC__
+# pgcore.CBlockMatrix.addMatrix = _BlockMatrix_addMatrix_happy_GC_
+# pgcore.CBlockMatrix.add = _BlockMatrix_addMatrix_happy_GC_
 
 
-def __SparseMatrixEqual__(self, T):
+def _SparseMatrixEqual_(self, T):
     """Compare two SparseMatrices."""
     from .matrix import sparseMatrix2Array
 
@@ -670,24 +670,24 @@ def __SparseMatrixEqual__(self, T):
         return nAB < 1e-12
 
 
-pgcore.RSparseMatrix.__eq__ = __SparseMatrixEqual__
-pgcore.RSparseMapMatrix.__eq__ = __SparseMatrixEqual__
+pgcore.RSparseMatrix.__eq__ = _SparseMatrixEqual_
+pgcore.RSparseMapMatrix.__eq__ = _SparseMatrixEqual_
 
 
-def __SparseMatrixCopy__(self):
+def _SparseMatrixCopy_(self):
     """Create a copy."""
     return pgcore.RSparseMatrix(self)
 
 
-pgcore.RSparseMatrix.copy = __SparseMatrixCopy__
+pgcore.RSparseMatrix.copy = _SparseMatrixCopy_
 
 
-def __SparseMapMatrixCopy__(self):
+def _SparseMapMatrixCopy_(self):
     """Create a copy."""
     return pgcore.RSparseMapMatrix(self)
 
 
-pgcore.RSparseMapMatrix.copy = __SparseMapMatrixCopy__
+pgcore.RSparseMapMatrix.copy = _SparseMapMatrixCopy_
 
 
 def toSparseMatrix(A):

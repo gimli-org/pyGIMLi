@@ -23,11 +23,11 @@ Mesh.ymax = Mesh.yMax
 Mesh.zmax = Mesh.zMax
 
 
-def __Mesh__show__(self, *args, **kwargs):
+def _Mesh__show_(self, *args, **kwargs):
     """Syntactic sugar to pg.show(mesh, *args, **kwargs)."""
     import pygimli as pg
     return pg.show(self, *args, **kwargs)
-Mesh.show = __Mesh__show__
+Mesh.show = _Mesh__show_
 
 
 def __Mesh_unique_dataKeys(self):
@@ -45,7 +45,7 @@ def __Mesh_unique_dataKeys(self):
         if '#' in d:
             uName = uName[0:d.find('#')]
 
-        if not uName in uniqueNames:
+        if uName not in uniqueNames:
             uniqueNames[uName] = []
 
         uniqueNames[uName].append(d)
@@ -53,7 +53,7 @@ def __Mesh_unique_dataKeys(self):
 Mesh.dataKeys = __Mesh_unique_dataKeys
 
 
-def __Mesh_getData__(self):
+def _Mesh_getData_(self):
     """Return mesh data as dictionary.
 
     The data are returned as a dictionary with the keys as the data names.
@@ -91,7 +91,7 @@ def __Mesh_getData__(self):
         # print(k, ret[k].shape)
 
     return ret
-Mesh.dataDict = __Mesh_getData__
+Mesh.dataDict = _Mesh_getData_
 
 
 def __Mesh_str(self):
@@ -122,16 +122,16 @@ def __Mesh_str(self):
 Mesh.__repr__ =__Mesh_str
 
 
-def __Mesh_createNodes__(self, posList):
+def _Mesh_createNodes_(self, posList):
     """Create nodes for all pos in posList."""
     try:
         return [self.createNode(p) for p in posList]
     except BaseException:
         return [self.createNode(p) for p in np.asarray(posList).T]
-Mesh.createNodes = __Mesh_createNodes__
+Mesh.createNodes = _Mesh_createNodes_
 
 
-def __Mesh_createCells__(self, cellList, marker=0):
+def _Mesh_createCells_(self, cellList, marker=0):
     """Create cells for all cell in cellList."""
     if isinstance(marker, (int, float)):
         marker = np.full(len(cellList), marker)
@@ -140,27 +140,31 @@ def __Mesh_createCells__(self, cellList, marker=0):
     marker = np.squeeze(marker)
 
     try:
-        return [self.createCell(c, m) for c, m in zip(cellList, marker)]
-    except:
         return [self.createCell(c, m)
-                    for c, m in zip(np.asarray(cellList).T, marker)]
-Mesh.createCells = __Mesh_createCells__
+                for c, m in zip(cellList, marker, strict=False)]
+    except Exception:
+        cellList = np.asarray(cellList).T
+        return [self.createCell(c, m)
+                for c, m in zip(cellList, marker, strict=False)]
+Mesh.createCells = _Mesh_createCells_
 
 
-def __Mesh_createBoundaries__(self, boundaryList, marker=0):
+def _Mesh_createBoundaries_(self, boundaryList, marker=0):
     """Create boundaries for all boundary in boundaryList."""
     if isinstance(marker, (int, float)):
         marker = np.full(len(boundaryList), marker)
     marker = np.squeeze(marker)
     try:
-        return [self.createBoundary(b, m) for b, m in zip(boundaryList, marker)]
-    except:
         return [self.createBoundary(b, m)
-                    for b, m in zip(np.asarray(boundaryList).T, marker)]
-Mesh.createBoundaries = __Mesh_createBoundaries__
+                for b, m in zip(boundaryList, marker, strict=False)]
+    except Exception:
+        boundaryList = np.asarray(boundaryList).T
+        return [self.createBoundary(b, m)
+                for b, m in zip(boundaryList, marker, strict=False)]
+Mesh.createBoundaries = _Mesh_createBoundaries_
 
 
-def __addPLCs__(self, other):
+def _addPLCs_(self, other):
     """Add another mesh or a list of points as a new PLC."""
     if isR3Array(other):
         m = Mesh(dim=self.dim(), isGeometry=True)
@@ -171,7 +175,7 @@ def __addPLCs__(self, other):
         return mergePLC([self, other])
     else:
         error("Addition is only supported for PLCs, i.e. mesh's without cells.")
-Mesh.__add__ = __addPLCs__
+Mesh.__add__ = _addPLCs_
 
 
 def __MeshEntity_str(self):
@@ -306,7 +310,7 @@ def __Mesh_getVal(self, key):
             if '#' in uName:
                 uName = uName[0:uName.find('#')]
 
-            if not uName in uniqueNames:
+            if uName not in uniqueNames:
                 uniqueNames[uName] = []
 
             uniqueNames[uName].append(dat)
@@ -326,23 +330,23 @@ def __Mesh_getVal(self, key):
 Mesh.__getitem__ = __Mesh_getVal
 
 
-def __MeshBoundingBox__(self):
+def _MeshBoundingBox_(self):
     bb = self.boundingBox()
     mi = Pos([bb.min()[i] for i in range(3)])
     ma = Pos([bb.max()[i] for i in range(3)])
     return [mi, ma]
 
-Mesh.bb = __MeshBoundingBox__
+Mesh.bb = _MeshBoundingBox_
 
 
-def __MeshHoleMarkers__(self):
+def _MeshHoleMarkers_(self):
     """Return list of hole markers."""
     return self.holeMarker()
 
-Mesh.holeMarkers = __MeshHoleMarkers__
+Mesh.holeMarkers = _MeshHoleMarkers_
 
 
-def __createSecondaryNodes__(self, n=3, verbose=False):
+def _createSecondaryNodes_(self, n=3, verbose=False):
     """Create `n` equally distributed secondary nodes on the mesh boundaries.
 
     This is useful to increase the accuracy of travel time calculations.
@@ -438,18 +442,18 @@ def __createSecondaryNodes__(self, n=3, verbose=False):
 
     if verbose:
         info(f"Added {self.secondaryNodeCount()} secondary nodes.")
-Mesh.createSecondaryNodes = __createSecondaryNodes__
+Mesh.createSecondaryNodes = _createSecondaryNodes_
 
 
-def __createMeshWithSecondaryNodes__(self, n=3, verbose=False):
+def _createMeshWithSecondaryNodes_(self, n=3, verbose=False):
     m = Mesh(self)
     m.createSecondaryNodes(n, verbose)
     return m
-Mesh.createMeshWithSecondaryNodes = __createMeshWithSecondaryNodes__
+Mesh.createMeshWithSecondaryNodes = _createMeshWithSecondaryNodes_
 
 
 __Mesh_deform__ = Mesh.deform
-def __deform__(self, u, magnify=1.0):
+def _deform_(self, u, magnify=1.0):
     v = None
     dof = self.nodeCount()
     if hasattr(u, 'values'):
@@ -479,21 +483,21 @@ def __deform__(self, u, magnify=1.0):
 
     __Mesh_deform__(self, v, magnify)
     return self
-Mesh.deform = __deform__
-
-
+Mesh.deform = _deform_
 Mesh.exportPLC = exportPLC
 
 
-def __Boundary_outside__(self):
+def _Boundary_outside_(self):
     """Is the boundary is on the outside of the mesh."""
     return self.leftCell() is not None and self.rightCell() is None
-Boundary.outside = __Boundary_outside__
+Boundary.outside = _Boundary_outside_
 
 
 def __Node_on_boundary(self, outside=True):
     """Is the node is on an boundary (i.e. marker != 0).
-    Or is on and outside boundary-"""
+
+    Or is on and outside boundary.
+    """
     for b in self.boundSet():
         if outside is True and b.outside():
             return True
@@ -503,18 +507,18 @@ def __Node_on_boundary(self, outside=True):
 Node.onBoundary = __Node_on_boundary
 
 
-def __Mesh_h__(self):
-    """ Returns the maximal node distance for each cell.
+def _Mesh_h_(self):
+    """Return the maximal node distance for each cell.
 
     TODO
     ----
         * different name since this is not cell size for p2 cells
     """
     return np.array([c.shape().h() for c in self.cells()])
-Mesh.h = __Mesh_h__
+Mesh.h = _Mesh_h_
 
 
-def __Mesh_findPaths__(self, bounds):
+def _Mesh_findPaths_(self, bounds):
     """Find paths of connected boundaries.
 
     Arguments
@@ -604,10 +608,10 @@ def __Mesh_findPaths__(self, bounds):
             followPath(path, S, rID)
 
     return paths
-Mesh.findPaths = __Mesh_findPaths__
+Mesh.findPaths = _Mesh_findPaths_
 
 
-def __Mesh_cutBoundary__(self, marker, boundaryMarker=None):
+def _Mesh_cutBoundary_(self, marker, boundaryMarker=None):
     """Cut the mesh along a given inner boundary.
 
     Cut the mesh along a given boundary and convert this inner boundary
@@ -684,31 +688,31 @@ def __Mesh_cutBoundary__(self, marker, boundaryMarker=None):
         toBeReplaced = []
         for i in range(c.boundaryCount()):
             b = c.boundary(i)
-            if b is not None and n1.id() in b.ids():
+            if (b is not None and n1.id() in b.ids()
+                    and b.marker() != marker):
                 # pg._y('\tbound: ', b.id(), ':',
                 #         b.node(0).id(), b.node(1).id(), "ma:", b.marker())
 
-                if b.marker() != marker:
-                    lC = b.leftCell()
-                    rC = b.rightCell()
-                    # rcS = None
-                    # if rC is not None:
-                    #     rcS = rC.id()
-                    # lcS = None
-                    # if lC is not None:
-                    #     lcS = lC.id()
+                lC = b.leftCell()
+                rC = b.rightCell()
+                # rcS = None
+                # if rC is not None:
+                #     rcS = rC.id()
+                # lcS = None
+                # if lC is not None:
+                #     lcS = lC.id()
 
-                    # pg._y('\tNeigh: {0} : {1}'.format(lcS, rcS))
-                    # pg._r("add:", b.id())
-                    toBeReplaced.append(b)
+                # pg._y('\tNeigh: {0} : {1}'.format(lcS, rcS))
+                # pg._r("add:", b.id())
+                toBeReplaced.append(b)
 
-                    if lC != c and lC is not None and lC != lastC:
-                        # pg._r("follow up left:", lC.id())
-                        replaceNode_(mesh, lC, n1, n2, marker, c)
+                if lC != c and lC is not None and lC != lastC:
+                    # pg._r("follow up left:", lC.id())
+                    replaceNode_(mesh, lC, n1, n2, marker, c)
 
-                    if rC != c and rC is not None and rC != lastC:
-                        # pg._r("follow up right:", rC.id())
-                        replaceNode_(mesh, rC, n1, n2, marker, c)
+                if rC != c and rC is not None and rC != lastC:
+                    # pg._r("follow up right:", rC.id())
+                    replaceNode_(mesh, rC, n1, n2, marker, c)
 
         for b in toBeReplaced:
             nIds = [n2.id() if n == n1.id() else n for n in b.ids()]
@@ -788,10 +792,10 @@ def __Mesh_cutBoundary__(self, marker, boundaryMarker=None):
                                 marker=boundaryMarker)
         b.setLeftCell(rightCells[i])
 
-Mesh.cutBoundary = __Mesh_cutBoundary__
+Mesh.cutBoundary = _Mesh_cutBoundary_
 
 
-def __Mesh__align__(self, pnts):
+def _Mesh__align_(self, pnts):
     """Align 2D mesh along 3D coordinates.
 
     Align a xy-mesh along xyz-coordinates.
@@ -813,7 +817,6 @@ def __Mesh__align__(self, pnts):
             Dx should start with <=0 max dx should be larger than
             `mesh.xmax() - mesh.xmin()`
     """
-    import pygimli as pg
     if self.dim() != 2:
         critical("Only 2D meshes can be aligned to 3D coordinates")
 
@@ -847,10 +850,10 @@ def __Mesh__align__(self, pnts):
 
     self.geometryChanged()
 
-Mesh.align = __Mesh__align__
+Mesh.align = _Mesh__align_
 
 
-def __Mesh__swapOrientation__(self):
+def _Mesh__swapOrientation_(self):
     """Swap orientation from one right-hand-side type into another.
 
     - xyz (right, up, up) with z pointing upwards
@@ -858,7 +861,7 @@ def __Mesh__swapOrientation__(self):
     """
     self.swapCoordinates(0, 1)  # exchange x and y
     self.scale([1, 1, -1])  # revert z
-Mesh.swapOrientation = __Mesh__swapOrientation__
+Mesh.swapOrientation = _Mesh__swapOrientation_
 
 
 def __Mesh__copy(self):
@@ -867,21 +870,21 @@ def __Mesh__copy(self):
 Mesh.copy = __Mesh__copy
 
 
-def __Mesh__NED__(self):
+def _Mesh__NED_(self):
     """Return NED copy of mesh."""
     m = self.copy()
     m.swapOrientation()
     return m
-Mesh.NED = __Mesh__NED__
+Mesh.NED = _Mesh__NED_
 
 
-def __Mesh__midpoint__(self):
+def _Mesh__midpoint_(self):
     """Return midpoint."""
     return sum(self.bb()) / 2
-Mesh.midpoint = __Mesh__midpoint__
+Mesh.midpoint = _Mesh__midpoint_
 
 
-def __Mesh__extent__(self, axis=None):
+def _Mesh__extent_(self, axis=None):
     """Return extent of mesh.
 
     Parameters
@@ -920,10 +923,10 @@ def __Mesh__extent__(self, axis=None):
         return dist.abs()
     else:
         return abs(dist[axis])
-Mesh.extent = __Mesh__extent__
+Mesh.extent = _Mesh__extent_
 
 
-def __Mesh__populate__(self, prop:str, value):
+def _Mesh__populate_(self, prop:str, value):
     """Fill property of mesh with values from map or vector.
 
     Arguments
@@ -956,10 +959,10 @@ def __Mesh__populate__(self, prop:str, value):
             raise ValueError("Length mismatch!")
 
     return self[prop]
-Mesh.populate = __Mesh__populate__
+Mesh.populate = _Mesh__populate_
 
 
-def __Mesh__submesh__(self, relation="=", **kwargs):
+def _Mesh__submesh_(self, relation="=", **kwargs):
     """Select sub mesh according to keywords.
 
     Arguments
@@ -993,17 +996,17 @@ def __Mesh__submesh__(self, relation="=", **kwargs):
         isTrue = np.bitwise_and(isTrue, isk)
 
     return self.createSubMesh(self.cells(np.nonzero(isTrue)[0]))
-Mesh.submesh = __Mesh__submesh__
+Mesh.submesh = _Mesh__submesh_
 
 
-def __Mesh__innerBoundaryCenters__(self):
+def _Mesh__innerBoundaryCenters_(self):
     """Center of all inner boundaries (C1-constraints)."""
     return [b.center() for b in self.boundaries() if not b.outside()]
-Mesh.innerBoundaryCenters = __Mesh__innerBoundaryCenters__
+Mesh.innerBoundaryCenters = _Mesh__innerBoundaryCenters_
 
 
 __Mesh__createH2__Orig = Mesh.createH2
-def __Mesh__createH2__(self):
+def _Mesh__createH2_(self):
     """Create a new refined mesh according to H2 criteria."""
     if self.dim() == 3 and self.isGeometry():
 
@@ -1054,4 +1057,4 @@ def __Mesh__createH2__(self):
     else:
         return __Mesh__createH2__Orig(self)
 
-Mesh.createH2 = __Mesh__createH2__
+Mesh.createH2 = _Mesh__createH2_
