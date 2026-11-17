@@ -395,7 +395,7 @@ DLLEXPORT bool debug();
 DLLEXPORT void setDeepDebug(int level);
 DLLEXPORT int deepDebug();
 
-/*! Set maximum amount of threads used by gimli and thirdparty software
+/*! Set maximum amount of threads used by gimli and third-party software
 (sets openblas and omp to nThreads too). Default is number min(8, CPU./2)
 */
 DLLEXPORT void setThreadCount(Index nThreads);

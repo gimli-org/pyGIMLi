@@ -90,7 +90,7 @@ public:
     /*! Sets the position within the system matrix, e.g. the node id for ElectrodeShapeNode.*/
     void setMID(uint id){ mID_ = id; }
 
-    /*! Return matrix ID, i.e. the discrete index within the system of matrix or vector. maybee also dof-position, -1 for unknown.*/
+    /*! Return matrix ID, i.e. the discrete index within the system of matrix or vector. maybe also dof-position, -1 for unknown.*/
     virtual int mID() const { return mID_; }
 
 protected:
@@ -179,7 +179,7 @@ protected:
 };
 
 
-//! Electrodeshape is a domain, e.g. the boundary of a complicated geoemtry for the complete electrode model
+//! Electrodeshape is a domain, e.g. the boundary of a complicated geometry for the complete electrode model
 class DLLEXPORT ElectrodeShapeDomain : public ElectrodeShape{
 public:
     ElectrodeShapeDomain(const std::vector < MeshEntity * > & entities);

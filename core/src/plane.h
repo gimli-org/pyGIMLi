@@ -26,7 +26,7 @@ namespace GIMLI{
 
 //! A plane
 /*! A plane, defined through Hessian normal form, norm * x = -p.
-    Stores Normvector norm with |norm| = 1.0 and distance d from orign. */
+    Stores Normvector norm with |norm| = 1.0 and distance d from origin. */
 class DLLEXPORT Plane{
 public:
     /*! Default constructor, Construct an invalid empty plane. */
@@ -35,10 +35,10 @@ public:
     /*! Construct a plane based on Hessian normal form norm * x = -p.*/
     Plane(const RVector3 & norm, double d);
 
-    /*! Construct a plane based on his unit nomal vector norm and a base position x0.*/
+    /*! Construct a plane based on his unit normal vector norm and a base position x0.*/
     Plane(const RVector3 & norm, const RVector3 & x0);
 
-    /*! Construct a plane based on 3 real positions in R^3, respectivly parameterized style.*/
+    /*! Construct a plane based on 3 real positions in R^3, respectively parameterized style.*/
     Plane(const RVector3 & p0, const RVector3 & p1, const RVector3 & p2);
 
     /*! Construct a plane based on his general equation */
@@ -54,20 +54,20 @@ public:
     Plane & operator = (const Plane & plane);
 
     /*! Equal_to operator */
-    inline bool operator == (const Plane & plane){ 
+    inline bool operator == (const Plane & plane){
         return this->compare(plane);
     }
 
     /*! Not_equal_to operator */
-    inline bool operator != (const Plane & plane){ 
+    inline bool operator != (const Plane & plane){
         return !(*this== plane);
     }
 
     /*! Compare two planes with a given tolerance. Check if both norms and distances are equal.
-    | norm - p.norm | < tol && | d_ - p.d | < tol. 
+    | norm - p.norm | < tol && | d_ - p.d | < tol.
     If bothDirection is True  | norm - p.norm | can be 2.0 to allow for coplanar check with different orientations.*/
     bool compare(const Plane & p, double tol=TOLERANCE, bool bothDirs=false);
-    
+
     /*! Returns true if the plane is valid and pos touch this plane.
         Touch when plane.distance(pos) < tol. */
     bool touch(const RVector3 & pos, double tol=TOLERANCE);
@@ -85,13 +85,13 @@ public:
         | norm | = 1.0 */
     inline const RVector3 & norm() const { return norm_; }
 
-    /*! Returns the orign if the unit vector. x0 = n * d. */
+    /*! Returns the origin if the unit vector. x0 = n * d. */
     inline const RVector3 x0() const { return norm_ * d_; }
 
     /*! Returns the distance between the Point pos and this plane.*/
     inline double distance(const RVector3 & pos) const { return norm_.dot(pos) - d_ ; }
 
-    /*! Distance between the orign(0,0,0) and this plane.*/
+    /*! Distance between the origin(0,0,0) and this plane.*/
     inline double d() const { return d_; }
 
     /*! Check if the plane spans norm vector has a length of 1.0 that means it spans a valid R3 space. */

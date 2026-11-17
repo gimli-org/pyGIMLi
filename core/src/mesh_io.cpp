@@ -118,7 +118,7 @@ void Mesh::writeToStream(std::ostream & out) const {
         writeStream(out, cellMarker[0], nCells);
     }
 
-    //** write boundarys
+    //** write boundaries
     uint32 nBound = this->boundaryCount();
     uint8 * boundVerts = new uint8[nBound];
     std::vector < uint32 > boundIdx;

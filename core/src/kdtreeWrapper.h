@@ -31,7 +31,7 @@
 //#define KDTREE_DEFINE_OSTREAM_OPERATORS
 #include <kdtree++/kdtree.hpp>
 
-struct _Node_Bracket_accessor { 
+struct _Node_Bracket_accessor {
     typedef double result_type;
     result_type operator()(GIMLI::Node * n, size_t i) const;
 };
@@ -42,7 +42,7 @@ namespace GIMLI{
 
 //! Interface class for a kd-search tree. We use it for fast nearest neighbor point search in three dimensions.
 /*! Interface class for a kd-search tree. Currently we use libkdtree++ from: http://libkdtreeplus-pplus-p.sourcearchive.com/
-We use it for fast nearest neighbor point search in three dimensions. The tree is designed to cooperate with \ref Mesh thus it has to be feeded by pointers of \ref Node. */
+We use it for fast nearest neighbor point search in three dimensions. The tree is designed to cooperate with \ref Mesh thus it has to be fed by pointers of \ref Node. */
 class KDTreeWrapper{
 public:
     /*! Standard constructor */

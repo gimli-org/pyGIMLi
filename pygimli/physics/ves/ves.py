@@ -1,5 +1,8 @@
+"""Vertical electrical sounding (VES) simulation."""
+
 import numpy as np
 from .vesModelling import VESModelling
+
 
 def simulate(res, thk=None, **kwargs):
     """Synthetic forward simulation.
@@ -29,10 +32,11 @@ def simulate(res, thk=None, **kwargs):
         pyGIMLi data container from which AM/AN/BM,BN are taken
     """
     if thk is None:  # assume d1, .., rho1,
-        nLay = (len(res)-1) // 2 + 1
-        thk = res[:nLay-1]
-        res = res[nLay-1:2*nLay-1]
+        nLay = (len(res) - 1) // 2 + 1
+        thk = res[: nLay - 1]
+        res = res[nLay - 1 : 2 * nLay - 1]
 
-    assert len(res) == len(thk)+1, "Lengths of res/thk+1 must match!"
+    if len(res) != len(thk) + 1:
+        raise ValueError("Lengths of res/thk+1 must match!")
     fop = VESModelling(**kwargs)
     return fop.response(np.concatenate([thk, res]))

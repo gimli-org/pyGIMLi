@@ -234,7 +234,7 @@ public:
 	       //(*S_)[dataIdx][(*cellMapIndex_)[cellID]] += sum * (2.0 * (*weights_)[kIdx]);
                     {
 //                   #ifdef HAVE_LIBBOOST_THREAD
-//                   boost::mutex::scoped_lock lock(eraseMutex__); // slows down alot
+//                   boost::mutex::scoped_lock lock(eraseMutex__); // slows down a lot
 //                   #endif
 
                         (*S_)[dataIdx][modelIdx] += sum * (weightsFactor * (*weights_)[kIdx]);
@@ -485,7 +485,7 @@ RVector prepExportSensitivityData(const Mesh & mesh, const RVector & data, doubl
     // //RVector tmp(data/mesh.cellSizes());
     // if ((uint)data.size() != (uint)mesh.cellCount()){
 
-    //     throwLengthError(WHERE_AM_I + " Datasize missmatch: " + str(mesh.cellCount())+
+    //     throwLengthError(WHERE_AM_I + " Datasize mismatch: " + str(mesh.cellCount())+
     //                         " " + str(data.size()));
     // } else {
     //     //for (uint i = 0; i < tmp.size(); i ++) tmp[i] = tmp[i] / mesh.cell(i).shape().domainSize();

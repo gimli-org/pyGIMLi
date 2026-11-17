@@ -196,7 +196,7 @@ double exactDCSolution(const RVector3 & v, const RVector3 & source,
     RVector3 sourceMirror(source);
     sourceMirror[dim - 1] = 2.0 * surfaceZ - source[dim - 1];
 
-    if (surfaceZ == -MAX_DOUBLE || std::isnan(surfaceZ)){// ** asuming fullspace
+    if (surfaceZ == -MAX_DOUBLE || std::isnan(surfaceZ)){// ** assuming fullspace
         if (k == 0.0) {
             //** 3D fullspace
             return 1.0 / (4.0 * PI * r);
@@ -367,4 +367,3 @@ RVector prepExportPotentialData(const RVector & data, double logdrop){
 }
 
 } //namespace GIMLI
-

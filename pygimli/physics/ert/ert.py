@@ -7,7 +7,7 @@ import pygimli as pg
 from .ertModelling import ERTModelling
 from .ertScheme import createData
 
-createERTData = createData  # backward compatibility  # noqa: N816
+createERTData = createData  # backward compatibility
 
 
 def simulate(mesh, scheme, res, **kwargs):

@@ -36,7 +36,7 @@ inline double GByte(long byte){ return double(byte / (1024.0 * 1024.0 * 1024)); 
 
 //! Memory watch.
 /*! Class that might help debugging memory usage.
- * Informations are taken from /proc system, so only available for linux systems.
+ * Information are taken from /proc system, so only available for linux systems.
  * This is a singleton class to ensure a single instance.
  * To call it use e.g.: MemWatch::instance().info(WHERE);*/
 class DLLEXPORT MemWatch : public Singleton< MemWatch > {

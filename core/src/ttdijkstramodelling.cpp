@@ -615,7 +615,7 @@ void TravelTimeDijkstraModelling::createJacobian(RSparseMapMatrix & jacobian,
 TTModellingWithOffset::TTModellingWithOffset(Mesh & mesh, DataContainer & dataContainer, bool verbose)
 : TravelTimeDijkstraModelling(mesh, dataContainer, verbose) {
 
-    //! find occuring shots, and map them to indices starting from zero
+    //! find occurring shots, and map them to indices starting from zero
     shots_ = unique(sort(dataContainer.get("s")));
     std::cout << "found " << shots_.size() << " shots." << std::endl;
     for (Index i = 0 ; i < shots_.size() ; i++) {

@@ -47,7 +47,7 @@ DLLEXPORT Mesh createMesh1DBlock(Index nLayers, Index nProperties=1);
 /*! Generate simple two dimensional mesh with nodes at position in RVector x and y. */
 DLLEXPORT Mesh createMesh2D(const RVector & x, const RVector & y, int markerType=0);
 
-/*! Generate a simple 2D mesh by extruding a 1D polygone into
+/*! Generate a simple 2D mesh by extruding a 1D polygon into
  * RVector y using quads.
  * We assume a 2D mesh here consisting on nodes and edge boundaries.
  * Nodes with marker are extruded as edges with marker or set to front- and backMarker.

@@ -1,15 +1,18 @@
 #!/usr/bin/env python
-"""
-"""
+"""Test the region manager constraint handling."""
+
 import unittest
 
 import numpy as np
 import pygimli as pg
 from pygimli.frameworks import MeshModelling
 
+
 class DummyMod(MeshModelling):
+    """Provide a two-region modelling class for testing."""
+
     def __init__(self, mesh, verbose=True):
-        super(DummyMod, self).__init__()
+        super().__init__()
         self.meshlist = []
         for i in range(2):
             for cell in mesh.cells():
@@ -23,11 +26,11 @@ class DummyMod(MeshModelling):
 
 
 class TestRM(unittest.TestCase):
+    """Test the region manager and its constraints."""
 
     def test_Constraints(self):
-        """ Test FOP """
-
-        grid = pg.createGrid(x=[0., 1., 2.], y=[0., 1., 2.])
+        """Test FOP."""
+        grid = pg.createGrid(x=[0.0, 1.0, 2.0], y=[0.0, 1.0, 2.0])
         fop = DummyMod(grid)
 
         fop.createConstraints()
@@ -38,8 +41,8 @@ class TestRM(unittest.TestCase):
         # pg.solver.showSparseMatrix(fop.constraints(), full=True)
 
     def test_zweight(self):
+        """Keep a placeholder test for the z weight handling."""
         # what's this test for?
-        mesh = pg.meshtools.createGrid(x=np.arange(0, 4), y=np.arange(0, 3))
 
         # fop = pg.Modelling()
 
@@ -73,7 +76,7 @@ class TestRM(unittest.TestCase):
         # self.assertTrue(np.allclose(w0, w2))
 
     def test_zweight_2meshes(self):
-
+        """Test z weighting for a mesh merged from two submeshes."""
         # marker = 0
         mesh = pg.meshtools.createGrid(x=np.arange(0, 4), y=np.arange(0, 3))
         mesh.setCellMarkers(np.zeros(mesh.cellCount(), dtype=int))
@@ -83,8 +86,8 @@ class TestRM(unittest.TestCase):
         mesh2.setCellMarkers(np.ones(mesh.cellCount(), dtype=int))
 
         together = pg.meshtools.merge2Meshes(
-            mesh,
-            mesh2.translate(pg.Vector([0., 0., 1.])))
+            mesh, mesh2.translate(pg.Vector([0.0, 0.0, 1.0]))
+        )
 
         fop = pg.Modelling()
 
@@ -111,9 +114,8 @@ class TestRM(unittest.TestCase):
 
         # check distribution of zWeight
         self.assertTrue(np.allclose(w0, w1))
-        #self.assertTrue(np.allclose(w0, w2))
+        # self.assertTrue(np.allclose(w0, w2))
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     unittest.main()

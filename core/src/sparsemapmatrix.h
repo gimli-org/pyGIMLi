@@ -204,8 +204,8 @@ public:
     }
     #endif
 
-    /*! Contruct Map Matrix from 3 arrays of the same length.
-     *Number of colums are max(j)+1 and Number of rows are max(i)+1.*/
+    /*! Construct Map Matrix from 3 arrays of the same length.
+     *Number of columns are max(j)+1 and Number of rows are max(i)+1.*/
     SparseMapMatrix(const IndexArray & i, const IndexArray & j, const RVector & v)
         : SparseMatrixBase(){
         ASSERT_EQUAL(i.size(), j.size())
@@ -375,7 +375,7 @@ public:
     }
 
     // ## fails python conversion
-    // /*! Negation operator thats return a copy of this with negative values. */
+    // /*! Negation operator that returns a copy of this with negative values. */
     // SparseMapMatrix< ValueType, IndexType > operator - () {
     //     return *this * ValueType(-1.0); }
 
@@ -826,7 +826,7 @@ template <> DLLEXPORT void SparseMapMatrix< double, Index >
 template <> DLLEXPORT void SparseMapMatrix< Complex, Index >
     ::reduce(const IVector & ids, bool keepDiag);
 
-/*!Conveniance functions.*/
+/*!Convenience functions.*/
 
 inline RVector transMult(const RSparseMapMatrix & A, const RVector & b){
     return A.transMult(b);

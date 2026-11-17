@@ -100,7 +100,7 @@ void CHOLMODWrapper::free(){
     if (NumericD_) umfpack_di_free_numeric (&NumericD_);
     NumericD_ = nullptr;
 #endif
-    // try allways
+    // try always
     if (AxV_) delete AxV_;
     AxV_ = nullptr;
     if (AzV_) delete AzV_;
@@ -322,7 +322,7 @@ int CHOLMODWrapper::initMatrixChol_(SparseMatrix < ValueType > & S, int xType){
         ((cholmod_sparse*)A_)->xtype = xType;  // data type for the pattern (Real, complex, zcomplex)
         ((cholmod_sparse*)A_)->dtype = CHOLMOD_DOUBLE; // data type for complex or real (float/double)
         ((cholmod_sparse*)A_)->packed = true;
-        ((cholmod_sparse*)A_)->sorted = true; // testen, scheint schneller, aber hab ich das immer?
+        ((cholmod_sparse*)A_)->sorted = true; // test, seems to be faster, but is it always?
 
         factorise_();
 #else
@@ -336,7 +336,7 @@ int CHOLMODWrapper::factorise_(){
     if (!dummy_){
 #if USE_CHOLMOD
          if (useUmfpack_){
-             // allready factorized in matrix init;
+             // already factorized in matrix init;
              //std::cerr << WHERE_AM_I << " factorize for umfpack called" << std::endl;
          } else {
             if (verbose_) cholmod_print_sparse((cholmod_sparse *)A_, "A", (cholmod_common*)c_);

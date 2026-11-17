@@ -27,13 +27,13 @@
 namespace GIMLI{
 
 /*! Potential matrix for BERT.
-Stores the potential values for every current injection at every electrode positions. Filtering a specific data configuration is done by the \ref data call. In generall, the map size is equal to the amount of electrodes. There are exceptions: Dipol-Pattern sources, Dipol-Sources against a reference Electrode. */
+Stores the potential values for every current injection at every electrode positions. Filtering a specific data configuration is done by the \ref data call. In general, the map size is equal to the amount of electrodes. There are exceptions: Dipol-Pattern sources, Dipol-Sources against a reference Electrode. */
 class DLLEXPORT DataMap {
 public:
-    /*! Default contructor, builds an empty map */
+    /*! Default constructor, builds an empty map */
     DataMap();
 
-    /*! Contructs a map and load content from a file */
+    /*! Constructs a map and load content from a file */
     DataMap(const std::string & filename);
 
     /*! Copyconstructor */
@@ -52,7 +52,7 @@ public:
     int load(const std::string & filename);
 
     /*! Fill the map. Collect potential values from complete mesh related solution matrix
-        and a vector of assiciated electrodes. */
+        and a vector of associated electrodes. */
     void collect(const std::vector < ElectrodeShape * > & electrodes,
                  const RMatrix & sol, bool isCEM=false);
 

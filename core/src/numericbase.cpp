@@ -148,7 +148,7 @@ void GaussLegendre(double x1, double x2, uint n, RVector & x, RVector & w){
    x[ i - 1 ] = xm - xl * z;
    x[ n - i ] = xm + xl * z;
    //   x[ n +1 - i ] = xm + xl * z;
-   //Compute the weight and ist symmetric counterpart
+   //Compute the weight and its symmetric counterpart
    w[ i - 1 ] = 2.0 * xl / ((1.0 -z * z) *pp *pp);
    w[ n - i ] = w[ i - 1 ];
    //   w[ n + 1 - i ] = w[ i - 1 ];

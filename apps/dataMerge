@@ -1,74 +1,79 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
-This program is part of pygimli
+Merge multiple data files into one.
+
+This program is part of pygimli.
 See https://www.pygimli.org for further information.
 """
 
 import sys
+from pathlib import Path
+
 import numpy as np
 
 try:
     import pygimli as pg
     from pygimli.utils import trimDocString
 except ImportError:
-    sys.stderr.write('ERROR: cannot import the library pygimli.' +
-                     ' Ensure that pygimli is in your PYTHONPATH')
+    sys.stderr.write(
+        "ERROR: cannot import the library pygimli."
+        + " Ensure that pygimli is in your PYTHONPATH"
+    )
     sys.exit(1)
 
 
 def merge(data1, data2, ContainerType=pg.DataContainer, snap=0.001):
     """
-        Merge two datacontainers into one by copying the sensor positions
-        and datapoints from data2 into data1.\n
-        Double sensor positions will be unified and snapped to a grid.
+    Merge two datacontainers into one.
+
+    Copy the sensor positions and datapoints from data2 into data1.
+    Double sensor positions will be unified and snapped to a grid.
     """
     data = ContainerType(data1)
     data.add(data2, snap)
     return data
 
 
-def loadProjectFile(
-        projectfile, ContainerType=pg.DataContainer, verbose=False):
+def loadProjectFile(projectfile, ContainerType=pg.DataContainer, verbose=False):
     """
-        A project file defines how multiple data files can be imported and
-        merged.
-        A list of row entries for each data file to merge. The data will not be
-        sorted, i.e., the sensor positions will be in the same order than the
-        list entries are. However, sensors on the same positions (with
-        tolerance snapping) will be merged.
-        You can also give just one data file if you want just a spatial
-        transformation of the data.
+    Load a project file and return the list of imported datacontainers.
 
-        The currently supported formats are:
+    A project file defines how multiple data files can be imported and
+    merged.
+    A list of row entries for each data file to merge. The data will not be
+    sorted, i.e., the sensor positions will be in the same order than the
+    list entries are. However, sensors on the same positions (with
+    tolerance snapping) will be merged.
+    You can also give just one data file if you want just a spatial
+    transformation of the data.
 
-        dataFilename
-        dataFilename interpolationFilename
-        dataFilename startx endx
-        dataFilename startx starty endx endy
-        dataFilename x1 y1 x2 y2 x3 y3 ...
+    The currently supported formats are:
 
-        You can comment out a row by adding a leading '#'
+    dataFilename
+    dataFilename interpolationFilename
+    dataFilename startx endx
+    dataFilename startx starty endx endy
+    dataFilename x1 y1 x2 y2 x3 y3 ...
 
-        interpolationFilename is a 3-column-ascii-file (dx x y)
+    You can comment out a row by adding a leading '#'
+
+    interpolationFilename is a 3-column-ascii-file (dx x y)
 
     """
     dataList = []
 
-    fi = open(projectfile, "r")
-    content = fi.readlines()
-    fi.close()
+    content = Path(projectfile).read_text(encoding="utf-8").splitlines()
 
     for c in content:
-        row = c.split('\n')[0].split('#')[0].split()
+        row = c.split("\n")[0].split("#")[0].split()
         d = None
 
-        if len(row) > 0 and row[0] != '#':
+        if len(row) > 0 and row[0] != "#":
             if len(row) == 1:  # filename only
                 d = ContainerType(row[0])
             elif len(row) == 2:  # dataFilename interpolationFilename
-                # Thomas?? ist das von dir?? was macht das
-                # kommt mir nur vage bekannt vor, benutzt aber extra-File
+                # Thomas?? is that from you?? what does it do
+                # looks vaguely familiar, but uses an extra file
                 d = ContainerType(row[0])
 
                 xn = pg.x(d.sensorPositions())
@@ -89,8 +94,9 @@ def loadProjectFile(
                 end = pg.RVector3(float(row[2]), 0.0)
 
                 for i in range(d.sensorCount()):
-                    pos = start + \
-                        float(i) * (end - start) / (d.sensorCount() - 1.)
+                    pos = start + float(i) * (end - start) / (
+                        d.sensorCount() - 1.0
+                    )
                     d.setSensorPosition(i, pos)
 
             elif len(row) == 5:  # filename xstart ystart xend yend
@@ -100,65 +106,97 @@ def loadProjectFile(
                 end = pg.RVector3(float(row[3]), float(row[4]))
 
                 for i in range(d.sensorCount()):
-                    pos = start + \
-                        float(i) * (end - start) / (d.sensorCount() - 1.)
+                    pos = start + float(i) * (end - start) / (
+                        d.sensorCount() - 1.0
+                    )
                     d.setSensorPosition(i, pos)
-            elif not len(row) % 2 is 0:  # dataFilename x1 y1 x2 y2 x3 y3 ...
+            elif len(row) % 2 != 0:  # dataFilename x1 y1 x2 y2 x3 y3 ...
                 d = ContainerType(row[0])
 
-                raise ('toimpl')
-                start = pg.RVector3(
-                    float(
-                        row[1]), float(
-                        row[2]), float(
-                        row[3]))
+                raise NotImplementedError(
+                    "parsing of x/y coordinate lists is not implemented"
+                )
+                start = pg.RVector3(float(row[1]), float(row[2]), float(row[3]))
                 end = pg.RVector3(float(row[4]), float(row[5]), float(row[6]))
 
                 for i in range(d.sensorCount()):
-                    pos = start + \
-                        float(i) * (end - start) / (d.sensorCount() - 1.)
+                    pos = start + float(i) * (end - start) / (
+                        d.sensorCount() - 1.0
+                    )
                     d.setSensorPosition(i, pos)
             else:
-                print(("cannot interpret the project format: len(row) = ",
-                       len(row)))
+                print(
+                    (
+                        "cannot interpret the project format: len(row) = ",
+                        len(row),
+                    )
+                )
                 return dataList
 
             dataList.append(d)
 
             if verbose:
                 print(("append: ", d))
-                print(("from:", d.sensorPositions()[0],
-                       "to:", d.sensorPositions()[-1]))
+                print(
+                    (
+                        "from:",
+                        d.sensorPositions()[0],
+                        "to:",
+                        d.sensorPositions()[-1],
+                    )
+                )
 
     return dataList
 
 
 def main(argv):
-
+    """Parse the command line and merge the data files of a project."""
     import argparse
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=trimDocString(loadProjectFile.__doc__))
+        description=trimDocString(loadProjectFile.__doc__),
+    )
 
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
-                        help="Be verbose.")
-    parser.add_argument("-o", "--output", dest="outFileName", metavar="File",
-                        help="Filename for the resulting data file.")
-    parser.add_argument("-s", "--snap", dest="snap", type=float,
-                        default=0.1,
-                        help="Snap coordinates to gridsize")
-    parser.add_argument("-B", "--bert", dest="bert", action="store_true",
-                        help="Use BERT sensor indices (a b m n)")
-    parser.add_argument('project')
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        help="Be verbose.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="outFileName",
+        metavar="File",
+        help="Filename for the resulting data file.",
+    )
+    parser.add_argument(
+        "-s",
+        "--snap",
+        dest="snap",
+        type=float,
+        default=0.1,
+        help="Snap coordinates to gridsize",
+    )
+    parser.add_argument(
+        "-B",
+        "--bert",
+        dest="bert",
+        action="store_true",
+        help="Use BERT sensor indices (a b m n)",
+    )
+    parser.add_argument("project")
 
     args = parser.parse_args()
 
     projectFileName = args.project
 
     if args.outFileName is None:
-        args.outFileName = \
-            projectFileName[0:projectFileName.find('.pro')] + '.dat'
+        args.outFileName = (
+            projectFileName[0 : projectFileName.find(".pro")] + ".dat"
+        )
 
     if args.verbose:
         print(args)
@@ -171,11 +209,12 @@ def main(argv):
 
     if args.bert:
         import pybert as b
+
         ContainerTyp = b.DataContainerERT
 
-    dataList = loadProjectFile(projectFileName,
-                               ContainerTyp,
-                               verbose=args.verbose)
+    dataList = loadProjectFile(
+        projectFileName, ContainerTyp, verbose=args.verbose
+    )
 
     outdata = dataList[0]
 
@@ -193,6 +232,7 @@ def main(argv):
         print("Write file to: ", args.outFileName)
 
     outdata.save(args.outFileName)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

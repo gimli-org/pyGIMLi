@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 Reciprocal data analysis of field ERT data
 ==========================================
@@ -35,18 +34,17 @@ This procedure, originally designed for lab ERT with a small range of R values,
 was used by Udphuay et al. (2011) for determining the error model for field data
 with a much larger range for R values (section 4.4 and Fig. 11).
 For the two data sets (OP and RCP) they found rather low percentage errors of
-about 1% or below and ohmic errors of about :math:`1.5m\Omega` (unfortunately the
-milli is missing in the paper) which is about :math:`100\mu V` considering a medium value
-of  60mA. This value is a good estimate that has been used as default value in
-the BERT software, which was used to invert the data. To account for other error
-sources like positioning, topography, they increased the percentage error to 2%
-to determine the weighting in inversion as described by Günther et al. (2006).
-This procedure could also be made based on the voltage as this is the critical
-measure of signal strength.
+about 1% or below and ohmic errors of about :math:`1.5m\Omega` (unfortunately
+the milli is missing in the paper) which is about :math:`100\mu V` considering
+a medium value of  60mA. This value is a good estimate that has been used as
+default value in the BERT software, which was used to invert the data. To
+account for other error sources like positioning, topography, they increased
+the percentage error to 2% to determine the weighting in inversion as described
+by Günther et al. (2006). This procedure could also be made based on the
+voltage as this is the critical measure of signal strength.
 """
 
 # sphinx_gallery_thumbnail_number = 5
-import numpy as np
 import matplotlib.pyplot as plt
 import pygimli as pg
 from pygimli.physics import ert
@@ -55,7 +53,7 @@ from pygimli.physics import ert
 # After importing the necessary libraries, we load the RCP data from the paper
 # of Udphuay et al. (2011).
 #
-data = pg.getExampleData('ert/reciprocal.ohm')
+data = pg.getExampleData("ert/reciprocal.ohm")
 print(data)
 
 ###############################################################################
@@ -65,7 +63,10 @@ print(data)
 # at a later processing stage. We show the electrode positions resembling
 # Fig. 8 of Udphuay et al. (2011), however rotated.
 #
-fig, ax, = plt.subplots()
+(
+    fig,
+    ax,
+) = plt.subplots()
 ax.plot(pg.x(data), pg.y(data), ".", label="electrodes")
 ax.set_xlabel("x (m)")
 ax.set_ylabel("y (m)")
@@ -81,9 +82,9 @@ _ = ax.set_aspect(1.0)
 # analyses, plus 4190 single data.
 #
 iF, iB = ert.reciprocalIndices(data, True)
-print(len(iF), data.size()-len(iF)-len(iB))
+print(len(iF), data.size() - len(iF) - len(iB))
 fig, ax = plt.subplots()
-ax.loglog(data['r'][iF], data['r'][iB], '.', markersize=2)
+ax.loglog(data["r"][iF], data["r"][iB], ".", markersize=2)
 ax.set_xlabel(r"R normal ($\Omega$)")
 ax.set_ylabel(r"R reciprocal ($\Omega$)")
 _ = ax.grid()
@@ -94,13 +95,13 @@ _ = ax.grid()
 # increased (relative as indicated by the logarithmic axis) errors.
 # We look at reciprocal errors a bit more in detail:
 #
-R = data['r']
+R = data["r"]
 Rmean = abs(R[iF] + R[iB]) / 2
 dR = abs(R[iF] - R[iB])
 fig, ax = plt.subplots()
-ax.loglog(Rmean, dR, '.', markersize=2)
-ax.set_xlabel(r'R ($\Omega$)')
-ax.set_ylabel(r'dR ($\Omega$)')
+ax.loglog(Rmean, dR, ".", markersize=2)
+ax.set_xlabel(r"R ($\Omega$)")
+ax.set_ylabel(r"dR ($\Omega$)")
 ax.grid()
 
 ###############################################################################
@@ -116,9 +117,9 @@ ax.grid()
 #
 dRbyR = dR / Rmean
 fig, ax = plt.subplots()
-ax.loglog(Rmean, dRbyR, '.', markersize=2)
-ax.set_xlabel(r'R ($\Omega$)')
-ax.set_ylabel('dR / R')
+ax.loglog(Rmean, dRbyR, ".", markersize=2)
+ax.set_xlabel(r"R ($\Omega$)")
+ax.set_ylabel("dR / R")
 ax.grid()
 
 ###############################################################################
@@ -146,16 +147,16 @@ _ = ax.set_yscale("symlog", linthresh=0.001)
 # We plot the two models against each other.
 #
 
-relerr1 = ab1[1] +  ab1[0] / data['r']
-relerr2 = ab2[0] +  ab2[1] / data['r']
+relerr1 = ab1[1] + ab1[0] / data["r"]
+relerr2 = ab2[0] + ab2[1] / data["r"]
 fig, ax = plt.subplots()
-ax.loglog(relerr1*100, relerr2*100, ".", markersize=2)
+ax.loglog(relerr1 * 100, relerr2 * 100, ".", markersize=2)
 ax.set_aspect(1.0)
-ax.set_xlabel('model 1 error (%)')
-ax.set_ylabel('model 2 error (%)')
+ax.set_xlabel("model 1 error (%)")
+ax.set_ylabel("model 2 error (%)")
 ax.set_xlim(1, 200)
 ax.set_ylim(1, 100)
-ax.grid(which='both')
+ax.grid(which="both")
 
 ###############################################################################
 # In this case, the second error model (2.3-40% relative error) based on
@@ -167,7 +168,8 @@ ax.grid(which='both')
 # -----------------
 # A N/R pair of data cannot be independently fitted. Therefore, it is
 # reasonable to remove all values above a certain threshold, as suggested by
-# Slater et al. (2000), who used a threshold of 10% (here: ``sum(dRbyR>0.1)`` =223).
+# Slater et al. (2000), who used a threshold of 10% (here:
+# ``sum(dRbyR>0.1)`` =223).
 # Furthermore, it makes sense to keep only one quadrupole of each pair by taking
 # the mean resistance, possibly weighted by the current strength or stacking
 # error. This "stacking" can improve the data quality. Alternatively, one could
@@ -177,9 +179,9 @@ ax.grid(which='both')
 # large individual values higher than the error model could be taken instead of
 # these. At any rate, I suggest removing data with either large reciprocal error
 # or large error misfits above values in the range of 20%.
-# All this is implemented in the function ``reciprocalProcessing``, which basically
-# averages the N/R pairs and sets the property ``data['err']`` that is used in
-# inversion to weight the data. One can pass a maximum reciprocal error
+# All this is implemented in the function ``reciprocalProcessing``, which
+# basically averages the N/R pairs and sets the property ``data['err']`` that
+# is used in inversion to weight the data. One can pass a maximum reciprocal
 # (``maxrec``) to eliminate pairs with wrong reciprocity completely, and maximum
 # error (``maxerr``) for large error estimate that might destroy the statistics.
 #
@@ -196,16 +198,17 @@ print(out)
 #   effects of noise on Occam’s inversion of resistivity tomography data,
 #   Geophysics, 61, 538–548.
 # * Slater, L., A. M. Binley, W. Daily, and R. Johnson (2000): Cross-hole
-#   electrical imaging of a controlled saline tracer injection, J. Appl. Geophys.,
-#   44, 85–102, doi:10.1016/S0926-9851(00)00002-1.
+#   electrical imaging of a controlled saline tracer injection,
+#   J. Appl. Geophys., 44, 85–102, doi:10.1016/S0926-9851(00)00002-1.
 # * Günther, T., Rücker, C. & Spitzer, K. (2006): Three-dimensional modeling and
 #   inversion of dc resistivity data incorporating topography – II: Inversion.
 #   Geophys. J. Int. 166, 506-517, doi:10.1111/j.1365-246X.2006.03011.x.
 # * Koestel, J., Kemna, A., Javaux, M., Binley, A. & Vereecken, H. (2008):
-#   Quantitative imaging of solute transport in an unsaturated and undisturbed soil
-#   monolith with 3-D ERT and TDR, Water Resour. Res., 44, W12411,
-#   doi:10.1029/2007WR006755.
-# * Udphuay, S., Günther, T., Everett, M.E., Warden, R.R. & Briaud, J.-L. (2011):
-#   Three-dimensional resistivity tomography in extreme coastal terrain amidst dense
-#   cultural signals: application to cliff stability assessment at the historic D-Day
-#   site. Geophys. J. Int. 185(1), 201-220, doi:10.1111/j.1365-246X.2010.04915.x.
+#   Quantitative imaging of solute transport in an unsaturated and
+#   undisturbed soil monolith with 3-D ERT and TDR, Water Resour. Res.,
+#   44, W12411, doi:10.1029/2007WR006755.
+# * Udphuay, S., Günther, T., Everett, M.E., Warden, R.R. & Briaud, J.-L.
+#   (2011): Three-dimensional resistivity tomography in extreme coastal
+#   terrain amidst dense cultural signals: application to cliff stability
+#   assessment at the historic D-Day site. Geophys. J. Int. 185(1),
+#   201-220, doi:10.1111/j.1365-246X.2010.04915.x.

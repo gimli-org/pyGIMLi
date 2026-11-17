@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 The DataContainer class
 =======================
@@ -17,6 +16,7 @@ Assume we want to store Vertical Electrical Sounding (VES) data.
 import numpy as np
 import matplotlib.pyplot as plt
 import pygimli as pg
+from pathlib import Path
 from pygimli.physics import VESManager
 
 # %%%
@@ -53,18 +53,19 @@ print(ves)
 #
 
 fig, ax = plt.subplots()
-ax.loglog(ves["rhoa"], ves["ab2"], "x-");
+ax.loglog(ves["rhoa"], ves["ab2"], "x-")
 ax.set_ylim(ax.get_ylim()[::-1])
 ax.grid(True)
 ax.set_xlabel("Apparent resistivity (Ohmm)")
-ax.set_ylabel("AB/2 (m)");
+ax.set_ylabel("AB/2 (m)")
 
 # %%%
 # A data container can be saved to disk
 #
 
 ves.save("ves.data")
-print(open("ves.data").read())
+with Path("ves.data").open() as f:
+    print(f.read())
 
 # %%%
 # The data are (along with a valid flat) in the second section.
@@ -74,7 +75,8 @@ print(open("ves.data").read())
 ves["flag"] = pg.Vector(ves["rhoa"] > 100) + 1
 print(ves)
 ves.save("ves.data", "ab2 mn2 rhoa")
-print(open("ves.data").read())
+with Path("ves.data").open() as f:
+    print(f.read())
 
 # %%%
 # We can mask or unmask the data with a boolean vector.
@@ -102,7 +104,7 @@ print(data)
 #
 
 for x in np.arange(10):
-    data.createSensor([x*2, 0])
+    data.createSensor([x * 2, 0])
 
 print(data)
 
@@ -116,7 +118,8 @@ data["Rx"] = np.arange(12)
 data["Tx"] = pg.Vector(data.size(), 2)
 print(data)
 data.save("TxRx.data")
-print(open("TxRx.data").read())
+with Path("TxRx.data").open() as f:
+    print(f.read())
 
 # %%%
 # Again, we can mark the data validity.
@@ -171,7 +174,7 @@ print(data)  # no change
 # , however, not at a position where already a sensor is
 #
 
-data.createSensor(data.sensors()[-1]+0.1)
+data.createSensor(data.sensors()[-1] + 0.1)
 print(data)
 # data.save("TxRx.data")
 
@@ -179,7 +182,7 @@ print(data)
 # Any DataContainer (indexed or not) can be visualized as matrix plot
 #
 
-pg.viewer.mpl.showDataContainerAsMatrix(data, "Rx", "Tx", "dist");
+pg.viewer.mpl.showDataContainerAsMatrix(data, "Rx", "Tx", "dist")
 
 # %%%
 # Instead of marking and filtering one can remove directly

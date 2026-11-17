@@ -72,7 +72,7 @@ template < class Vec > bool saveVec(const Vec & a, const std::string & filename,
         file.close();
     } else {
         if (fname.rfind(".") == std::string::npos) fname += VECTORBINSUFFIX;
-    // so haett ich das gern //
+    // that is how I would like it //
 //     std::ofstream file(filename.c_str(), std::ofstream::binary);
 //     std::copy(&a[0], &a[a.size()-1], ostream_iterator< double >(&file));
 //     file.close();
@@ -111,7 +111,7 @@ template < class Vec > bool loadVec(Vec & a, const std::string & filename,
         std::fstream file; openInFile(filename.c_str(), &file);
         double val; while(file >> val) a.push_back(val);
 
-    //so haett ich das gern
+    //that is how I would like it
 //     std::ifstream file(filename.c_str());
 //     std::copy( std::istream_iterator<double>(file),
 //                 std::istream_iterator<double>(),
@@ -300,7 +300,7 @@ void rand(Vector < ValueType > & vec, ValueType min = 0.0, ValueType max = 1.0){
 template < class ValueType >
 void randn(Vector< ValueType > & vec){
     //   vec = sqrt(log(1.0 - vec) * -2.0) * cos(vec * 2.0 * PI_);
-    //** keine Ahnung was passiert aber es funktioniert. vgl. tests/vector/baseio.cpp
+    //** no idea what happens here, but it works. cf. tests/vector/baseio.cpp
     for (uint i = 0, imax = vec.size(); i < imax; i ++){
         double sum = 0.0;
         for (int j = 0; j < 16; j++) sum += std::rand() & 0xfff;

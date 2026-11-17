@@ -27,7 +27,8 @@ namespace GIMLI{
 
 void interpolate(const Mesh & mesh, const RMatrix & vData,
                  const R3Vector & ipos, RMatrix & iData,
-                 bool verbose, double fillValue){ ALLOW_PYTHON_THREADS
+                 bool verbose, double fillValue, bool nearest){
+    ALLOW_PYTHON_THREADS
 
     R3Vector pos(ipos);
 
@@ -51,7 +52,11 @@ void interpolate(const Mesh & mesh, const RMatrix & vData,
     Cell * c = 0;
     for (uint i = 0; i < pos.size(); i ++) {
 //         __MS(pos[i])
-        c = mesh.findCell(pos[i], count, false, true);
+        // By default positions outside the mesh give fillValue. Only with
+        // nearest the closest cell is used, which extrapolates with the
+        // shape functions (e.g. negative resistivities outside a model
+        // domain) and is therefore not the default.
+        c = mesh.findCell(pos[i], count, false, nearest);
 //         if (!c) {
 //             __MS(pos[i])
 // //             c = mesh.findCell(pos[i], count, true);
@@ -100,7 +105,7 @@ void interpolate(const Mesh & mesh, const RMatrix & vData,
 //                    iData[i][j] = vData[i][cells[j]->id()];
                 } else {
                     iData[i][j] = fillValue;
-                    //std::cout << "Cant find cell for " << pos[j]<< std::endl;
+                    //std::cout << "Can't find cell for " << pos[j]<< std::endl;
 //                     for (uint i = 0; i < mesh.cellCount(); i ++){
 //                     	if (mesh.cell(i).shape().isInside(pos[j], true)){
 //                         	std::cout << mesh.cell(i) << std::endl;
@@ -115,46 +120,56 @@ void interpolate(const Mesh & mesh, const RMatrix & vData,
 }
 
 void interpolate(const Mesh & mesh, const RVector & data,
-                 const Mesh & pos, RVector & iData, bool verbose, double fillValue){
+                 const Mesh & pos, RVector & iData,
+                 bool verbose, double fillValue, bool nearest){
 
     RMatrix vData; vData.push_back(data);
     RMatrix viData;
-    interpolate(mesh, vData, pos.positions(), viData, verbose, fillValue);
+    interpolate(mesh, vData, pos.positions(), viData, verbose, fillValue,
+                nearest);
     iData = viData[0];
 }
 
 RVector interpolate(const Mesh & mesh, const RVector & data,
-                    const R3Vector & pos, bool verbose, double fillValue){
+                    const R3Vector & pos,
+                    bool verbose, double fillValue, bool nearest){
 
     RMatrix vData; vData.push_back(data);
     RMatrix viData;
-    interpolate(mesh, vData, pos, viData, verbose, fillValue);
+    interpolate(mesh, vData, pos, viData, verbose, fillValue, nearest);
     return viData[0];
 }
 
 void interpolate(const Mesh & mesh, const std::string & dataName, Mesh & pos,
-                 bool verbose, double fillValue){
+                 bool verbose, double fillValue, bool nearest){
     RMatrix vData; vData.push_back(mesh.data(dataName));
     RMatrix viData;
-    interpolate(mesh, vData, pos.positions(), viData, verbose, fillValue);
+    interpolate(mesh, vData, pos.positions(), viData, verbose, fillValue,
+                nearest);
     pos.addData(dataName, viData[0]);
 }
 
 void interpolate(const Mesh & mesh, const RVector & data,
                  const R3Vector & pos,
-                 RVector & iData, bool verbose, double fillValue){
+                 RVector & iData, bool verbose, double fillValue,
+                 bool nearest){
     RMatrix vData; vData.push_back(data);
     RMatrix viData;
-    interpolate(mesh, vData, pos, viData, verbose, fillValue);
+    interpolate(mesh, vData, pos, viData, verbose, fillValue, nearest);
     iData = viData[0];
 }
 
 RVector interpolate(const Mesh & mesh, const RVector & data,
                     const RVector & x, const RVector & y,
-                    const RVector & z, bool verbose, double fillValue){
+                    const RVector & z, bool verbose, double fillValue,
+                    bool nearest){
 
-    if (z.size() == 0) return interpolate(mesh, data, x, y, verbose, fillValue);
-    if (z.size() == 0 && y.size() == 0) return interpolate(mesh, data, x, verbose, fillValue);
+    if (z.size() == 0){
+        return interpolate(mesh, data, x, y, verbose, fillValue, nearest);
+    }
+    if (z.size() == 0 && y.size() == 0){
+        return interpolate(mesh, data, x, verbose, fillValue, nearest);
+    }
 
     if (x.size() != y.size() || x.size() != z.size()) {
         throwLengthError(" x.size invalid y.size invalid z.size() "
@@ -165,24 +180,30 @@ RVector interpolate(const Mesh & mesh, const RVector & data,
     for (uint i = 0; i < x.size(); i ++) pos[i] = RVector3(x[i], y[i], z[i]);
 
     RVector iData;
-    interpolate(mesh, data, pos, iData, verbose, fillValue);
+    interpolate(mesh, data, pos, iData, verbose, fillValue, nearest);
     return iData;
 }
 
 RVector interpolate(const Mesh & mesh, const RVector & data,
                     const RVector & x, const RVector & y,
-                    bool verbose, double fillValue){
-    if (y.size() == 0) return interpolate(mesh, data, x, verbose, fillValue);
-    return interpolate(mesh, data, x, y, RVector(x.size(), 0.0), verbose, fillValue);
+                    bool verbose, double fillValue, bool nearest){
+    if (y.size() == 0){
+        return interpolate(mesh, data, x, verbose, fillValue, nearest);
+    }
+    return interpolate(mesh, data, x, y, RVector(x.size(), 0.0), verbose,
+                       fillValue, nearest);
 }
 
 RVector interpolate(const Mesh & mesh, const RVector & data,
-                    const RVector & x, bool verbose, double fillValue){
+                    const RVector & x, bool verbose, double fillValue,
+                    bool nearest){
     return interpolate(mesh, data, x,
-                       RVector(x.size(), 0.0), RVector(x.size(), 0.0), fillValue);
+                       RVector(x.size(), 0.0), RVector(x.size(), 0.0),
+                       verbose, fillValue, nearest);
 }
 
-void interpolate(const Mesh & mesh, Mesh & qmesh, bool verbose, double fillValue){
+void interpolate(const Mesh & mesh, Mesh & qmesh, bool verbose,
+                 double fillValue, bool nearest){
     RMatrix cellData;
     RMatrix nodeData;
     std::vector< std::string > cellDataNames;
@@ -207,14 +228,16 @@ void interpolate(const Mesh & mesh, Mesh & qmesh, bool verbose, double fillValue
 
     if (cellData.rows() > 0){
         RMatrix qCellData;
-        interpolate(mesh, cellData, qmesh.cellCenter(), qCellData, verbose, fillValue);
+        interpolate(mesh, cellData, qmesh.cellCenter(), qCellData, verbose,
+                    fillValue, nearest);
         for (uint i= 0; i < cellData.rows(); i ++){
             qmesh.addData(cellDataNames[i], qCellData[i]);
         }
     }
     if (nodeData.rows() > 0){
         RMatrix qNodeData;
-        interpolate(mesh, nodeData, qmesh.positions(), qNodeData, verbose) ;
+        interpolate(mesh, nodeData, qmesh.positions(), qNodeData, verbose,
+                    fillValue, nearest);
         for (uint i= 0; i < nodeData.rows(); i ++){
             qmesh.addData(nodeDataNames[i], qNodeData[i]);
         }

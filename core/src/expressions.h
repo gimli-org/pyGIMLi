@@ -36,7 +36,7 @@
 #include <cmath>
 
 namespace std{
-    // make std::less happy .. this wont work without this namespace
+    // make std::less happy .. this won't work without this namespace
     inline bool operator < (const std::complex< double > & a,
                             const std::complex< double > & b){
         return a.real() < b.real() || (!(b.real() < a.real()) && a.imag() < b.imag());
@@ -108,7 +108,7 @@ template< class Ex > double sum(Expr< Ex > expr, double start, double end){
     return result;
 }
 #ifndef PI
-//** I redefine PI here, because vector.h should independ from alternative non std::headers, Ca
+//** I redefine PI here, because vector.h should independent from alternative non std::headers, Ca
 #define PI 3.141592653589793238462643383279502884197169399375105820974944592308
 #define PI2 6.2831853071795864769252867665590057683942387987502116419498891846
 #define PI_2 1.5707963267948967384626433682795028841971193993751058209749445923
@@ -131,7 +131,7 @@ template < class T > bool isEqual(const T & a, const T & b) { return a==b; }
 template < > inline bool isEqual(const double & a, const double & b) {
     return (::fabs(a - b) < TOLERANCE); }
 template < > inline bool isEqual(const Complex & a, const Complex & b) {
-    return (::fabs(a.real() - b.real()) < TOLERANCE && 
+    return (::fabs(a.real() - b.real()) < TOLERANCE &&
             ::fabs(a.imag() - b.imag()) < TOLERANCE); }
 template < class T > bool isNonEqual(const T & a, const T & b) { return !isEqual(a, b); }
 

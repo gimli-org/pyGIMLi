@@ -49,7 +49,7 @@ class DLLEXPORT DataContainer{
 public:
     /*! Simple Constructor, builds an empty data container.*/
     DataContainer();
-    
+
     /*! Constructor, builds a data container and fills the data from a file.
      * See \ref load.
       \param fileName String of the file name
@@ -222,11 +222,11 @@ public:
 
     /*! Return unique sortable data index, based on sensor index.
     $$id_i = \sum_j sensorIndex[i](j) * nSensors^j$$
-    */ 
+    */
     IndexArray dataIndex();
 
-    /*! Sort all data regarding there sensor indices and sensorIdxNames. 
-    Return the resulting permuation index array.
+    /*! Sort all data regarding there sensor indices and sensorIdxNames.
+    Return the resulting permutation index array.
     */
     IndexArray sortSensorsIndex();
 
@@ -234,18 +234,18 @@ public:
 
     /*! set additional points. */
     inline void setAdditionalPoints(const PosVector & a ){ topoPoints_ = a; }
-    
+
     /*! Return the additional points. */
     inline const PosVector & additionalPoints() const { return topoPoints_; }
 
     /*! Set additional point i.*/
-    inline void setAdditionalPoint(Index i, const Pos & p) { 
+    inline void setAdditionalPoint(Index i, const Pos & p) {
         ASSERT_SIZE(topoPoints_, i)
-        topoPoints_[i] = p; 
+        topoPoints_[i] = p;
     }
     /*! Push back additional point p.*/
-    inline void addAdditionalPoint(const Pos & p) { 
-        topoPoints_.push_back(p); 
+    inline void addAdditionalPoint(const Pos & p) {
+        topoPoints_.push_back(p);
     }
 
     /*! Return true if token data exist and all elements != 0.0.
@@ -258,7 +258,7 @@ public:
     /*! Return true if token data exist and at least one value is != 0.0.
      Return false if the data contains ONLY zero values. */
     inline bool haveData(const std::string & token) const {
-        if (exists(token) && dataMap_.find(token)->second.size() > 0) 
+        if (exists(token) && dataMap_.find(token)->second.size() > 0)
             return !zero(dataMap_.find(token)->second);
         return false;
     }
@@ -321,7 +321,7 @@ public:
      * If withAnnotation sets the List separated by the Words "SensorIndex:" and "Data:" */
     std::string tokenList(bool withAnnotation=true) const;
 
-    /*! Add new data field with optional description. Throws an exception if the data 
+    /*! Add new data field with optional description. Throws an exception if the data
     field size is not the same size of the DataContainer.
         \param token String to identify the data
         \param data \ref RVector of the data

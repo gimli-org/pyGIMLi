@@ -33,7 +33,7 @@ that means it do nothing. Just for prototyping f(a). */
 template< class Vec > class Trans {
 public:
 //
-    /*! Default constructur. */
+    /*! Default constructor. */
     Trans() { }
 
     /*! Default destructor.*/
@@ -537,7 +537,7 @@ protected:
     Vec factor_;
 };
 
-/*! Auxillary cumulative transformation function using a vector of transformations*/
+/*! Auxiliary cumulative transformation function using a vector of transformations*/
 //! Very Slow. Refactor it!!
 template< class Vec > class TransCumulative : public Trans < Vec >{
 public:
@@ -600,4 +600,3 @@ typedef TransCumulative< RVector > RTransCumulative;
 
 
 #endif // _GIMLI_TRANS__H
-

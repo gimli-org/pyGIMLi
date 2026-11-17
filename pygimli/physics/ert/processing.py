@@ -1,4 +1,5 @@
 """Utility functions for ERT data processing."""
+
 import numpy as np
 # from numpy import ma
 
@@ -26,10 +27,12 @@ def uniqueERTIndex(data, nI=0, reverse=False, unify=True):
         nI = data.sensorCount() + 1
 
     if unify:
-        normABMN = {'a': np.minimum(data['a'], data['b']) + 1,
-                    'b': np.maximum(data['a'], data['b']) + 1,
-                    'm': np.minimum(data['m'], data['n']) + 1,
-                    'n': np.maximum(data['m'], data['n']) + 1}
+        normABMN = {
+            "a": np.minimum(data["a"], data["b"]) + 1,
+            "b": np.maximum(data["a"], data["b"]) + 1,
+            "m": np.minimum(data["m"], data["n"]) + 1,
+            "n": np.maximum(data["m"], data["n"]) + 1,
+        }
     else:
         normABMN = {tok: data[tok] + 1 for tok in "abmn"}
 
@@ -42,6 +45,7 @@ def uniqueERTIndex(data, nI=0, reverse=False, unify=True):
         ind = ind * nI + normABMN[el]
 
     return ind  # np.array(ind, dtype=int)
+
 
 def generateDataFromUniqueIndex(ind, data=None, nI=None):
     """Generate data container from unique index."""
@@ -103,22 +107,24 @@ def reciprocalIndices(data, onlyOnce=False, unify=True):
     else:
         return iF, iB
 
+
 def getResistance(data):
     """Return data resistance from either R, U/I or rhoa/k."""
-    if data.allNonZero('r'):
-        R = data['r']
-    elif data.haveData('u') and data.haveData('i'):
-        R = data['u'] / data['i']
+    if data.allNonZero("r"):
+        R = data["r"]
+    elif data.haveData("u") and data.haveData("i"):
+        R = data["u"] / data["i"]
     else:  # neither R or U/I
-        if not data.allNonZero('k'):
-            data['k'] = createGeometricFactors(data)
+        if not data.allNonZero("k"):
+            data["k"] = createGeometricFactors(data)
 
-        if data.haveData('rhoa'):
-            R = data['rhoa'] / data['k']
+        if data.haveData("rhoa"):
+            R = data["rhoa"] / data["k"]
         else:
-            pg.error('Either R, U/I or rhoa must be defined!')
+            pg.error("Either R, U/I or rhoa must be defined!")
 
     return R
+
 
 def fitReciprocalErrorModel(data, nBins=None, show=False, rel=False):
     """Fit an error by statistical normal-reciprocal analysis.
@@ -149,50 +155,53 @@ def fitReciprocalErrorModel(data, nBins=None, show=False, rel=False):
     sInd = np.argsort(RR)
     RR = RR[sInd]
     dR = (R[iF] - R[iB])[sInd]
-    inds = np.linspace(0, len(RR), nBins+1, dtype=int)
+    inds = np.linspace(0, len(RR), nBins + 1, dtype=int)
     stdR = np.zeros(nBins)
     meanR = np.zeros(nBins)
     for b in range(nBins):
-        ii = range(inds[b], inds[b+1])
+        ii = range(inds[b], inds[b + 1])
         stdR[b] = np.std(dR[ii])
         meanR[b] = np.mean(RR[ii])
 
-    G = np.ones([len(meanR), 2]) # a*x+b
+    G = np.ones([len(meanR), 2])  # a*x+b
     w = np.reshape(np.isfinite(meanR), [-1, 1])
     meanR[np.isnan(meanR)] = 1e-16
     stdR[np.isnan(stdR)] = 0
     if rel:
         G[:, 1] = 1 / meanR
-        ab, *_ = np.linalg.lstsq(w*G, stdR/meanR, rcond=None)
+        ab, *_ = np.linalg.lstsq(w * G, stdR / meanR, rcond=None)
     else:
         G[:, 1] = meanR
-        ab, *_ = np.linalg.lstsq(w*G, stdR, rcond=None)
+        ab, *_ = np.linalg.lstsq(w * G, stdR, rcond=None)
 
     if show:
         x = np.logspace(np.log10(min(meanR)), np.log10(max(meanR)), 30)
         _, ax = pg.plt.subplots()
         if rel:
-            ax.semilogx(RR, dR/RR, '.', label='data')  # /RR
+            ax.semilogx(RR, dR / RR, ".", label="data")  # /RR
             ii = meanR > 1e-12
             x = x[x > 1e-12]
             eModel = ab[0] + ab[1] / x
-            ax.plot(meanR[ii], stdR[ii]/meanR[ii], '*', label='std dev') #/meanR
-            ax.set_title(r'$\delta$R/R={:.6f}+{:.6f}/|R|'.format(*ab))
-            ax.set_ylabel(r'$\delta$R/R')
+            ax.plot(
+                meanR[ii], stdR[ii] / meanR[ii], "*", label="std dev"
+            )  # /meanR
+            ax.set_title(r"$\delta$R/R={:.6f}+{:.6f}/|R|".format(*ab))
+            ax.set_ylabel(r"$\delta$R/R")
         else:
             eModel = ab[0] + ab[1] * x
-            ax.semilogx(RR, dR, '.', label='data')  # /RR
-            ax.plot(meanR, stdR, '*', label='std dev') # /meanR
-            ax.set_title(r'$\delta$R={:.6f}+{:.6f}*|R|'.format(*ab))
-            ax.set_ylabel(r'$\delta$R ($\Omega$)')
+            ax.semilogx(RR, dR, ".", label="data")  # /RR
+            ax.plot(meanR, stdR, "*", label="std dev")  # /meanR
+            ax.set_title(r"$\delta$R={:.6f}+{:.6f}*|R|".format(*ab))
+            ax.set_ylabel(r"$\delta$R ($\Omega$)")
 
-        ax.plot(x, eModel, '-', label='error model') # /x
-        ax.grid(which='both')
-        ax.set_xlabel(r'R ($\Omega$)')
+        ax.plot(x, eModel, "-", label="error model")  # /x
+        ax.grid(which="both")
+        ax.set_xlabel(r"R ($\Omega$)")
         ax.legend()
         return ab, ax
     else:
         return ab
+
 
 def reciprocalProcessing(data, rel=True, maxrec=0.2, maxerr=0.2):
     """Reciprocal data analysis and error estimation.
@@ -227,22 +236,23 @@ def reciprocalProcessing(data, rel=True, maxrec=0.2, maxerr=0.2):
         return data
 
     R = getResistance(out)
-    meanR = np.abs(R[iF]+R[iB]) / 2
-    dRbyR = np.abs(R[iF]-R[iB]) / meanR
-    out['rec'] = 0
-    out['rec'][iF] = dRbyR
-    out.markInvalid(out['rec'] > maxrec)
+    meanR = np.abs(R[iF] + R[iB]) / 2
+    dRbyR = np.abs(R[iF] - R[iB]) / meanR
+    out["rec"] = 0
+    out["rec"][iF] = dRbyR
+    out.markInvalid(out["rec"] > maxrec)
     ab = fitReciprocalErrorModel(out, rel=rel)
     if rel:
         out["err"] = ab[0] + ab[1] / R
     else:
         out["err"] = ab[0] + ab[1] * R
 
-    out['r'][iF] = meanR
+    out["r"][iF] = meanR
     out.markInvalid(iB)
-    out.markInvalid(out['err'] > maxerr)
+    out.markInvalid(out["err"] > maxerr)
     out.removeInvalid()
     return out
+
 
 def getReciprocals(data, change=False, remove=False):
     """Compute data reciprocity from forward and backward data.
@@ -259,35 +269,35 @@ def getReciprocals(data, change=False, remove=False):
     remove : bool [False]
         remove backward data that are present as forward data
     """
-    if not data.allNonZero('r'):
-        data['r'] = data['u'] / data['i']
+    if not data.allNonZero("r"):
+        data["r"] = data["u"] / data["i"]
 
     unF = uniqueERTIndex(data)
     unB = uniqueERTIndex(data, reverse=True)
     rF, rB = [], []
     rec = np.zeros(data.size())
-    data['rec'] = 0
+    data["rec"] = 0
     for iB in range(data.size()):
         if unB[iB] in unF:
             iF = int(np.nonzero(unF == unB[iB])[0][0])
-            rF.append(data['r'][iF])
-            rB.append(data['r'][iB])
-            rec[iB] = (rF[-1]-rB[-1]) / (rF[-1]+rB[-1]) * 2
-            data['rec'][iF] = rec[iB]
-            IF, IB = data['i'][iF], data['i'][iB]  # use currents for weighting
-            if change and data['valid'][iF]:
-                data['r'][iF] = (rF[-1] * IF + rB[-1] * IB) / (IF + IB)
-                data['i'][iF] = (IF**2 + IB**2) / (IF + IB)  # according weight
-                data['u'][iF] = data['r'][iF] * data['i'][iF]
+            rF.append(data["r"][iF])
+            rB.append(data["r"][iB])
+            rec[iB] = (rF[-1] - rB[-1]) / (rF[-1] + rB[-1]) * 2
+            data["rec"][iF] = rec[iB]
+            IF, IB = data["i"][iF], data["i"][iB]  # use currents for weighting
+            if change and data["valid"][iF]:
+                data["r"][iF] = (rF[-1] * IF + rB[-1] * IB) / (IF + IB)
+                data["i"][iF] = (IF**2 + IB**2) / (IF + IB)  # according weight
+                data["u"][iF] = data["r"][iF] * data["i"][iF]
                 if remove:
-                    data['valid'][iB] = 0  # for adding all others later on
+                    data["valid"][iB] = 0  # for adding all others later on
 
     print(len(rF), "reciprocals")
     if remove:
         data.removeInvalid()
 
 
-def removeDuplicates(data, mode:str="average"):
+def removeDuplicates(data, mode: str = "average"):
     """Remove duplicate rows from an ERT datacontainer.
 
     Parameters
@@ -335,25 +345,26 @@ def extractReciprocals(fwd, bwd):
     rF, rB = [], []
     rec = np.zeros(bwd.size())
     both = pg.DataContainerERT(fwd)
-    both.set('rec', pg.Vector(both.size()))
+    both.set("rec", pg.Vector(both.size()))
     back = pg.DataContainerERT(bwd)
-    back.set('rec', pg.Vector(back.size()))
+    back.set("rec", pg.Vector(back.size()))
     for iB in range(bwd.size()):
         if unB[iB] in unF:
             iF = int(np.nonzero(unF == unB[iB])[0][0])
-            rF.append(fwd('r')[iF])
-            rB.append(bwd('r')[iB])
-            rec[iB] = (rF[-1]-rB[-1]) / (rF[-1]+rB[-1]) * 2
-            both('rec')[iF] = rec[iB]
-            IF, IB = fwd('i')[iF], bwd('i')[iB]  # use currents for weighting
-            both('r')[iF] = (rF[-1] * IF + rB[-1] * IB) / (IF + IB)
-            both('i')[iF] = (IF**2 + IB**2) / (IF + IB)  # according to weight
-            both('u')[iF] = fwd('r')[iF] * fwd('i')[iF]
-            back('valid')[iB] = 0  # for adding all others later on
+            rF.append(fwd("r")[iF])
+            rB.append(bwd("r")[iB])
+            rec[iB] = (rF[-1] - rB[-1]) / (rF[-1] + rB[-1]) * 2
+            both("rec")[iF] = rec[iB]
+            IF, IB = fwd("i")[iF], bwd("i")[iB]  # use currents for weighting
+            both("r")[iF] = (rF[-1] * IF + rB[-1] * IB) / (IF + IB)
+            both("i")[iF] = (IF**2 + IB**2) / (IF + IB)  # according to weight
+            both("u")[iF] = fwd("r")[iF] * fwd("i")[iF]
+            back("valid")[iB] = 0  # for adding all others later on
     print(len(rF), "reciprocals")
     back.removeInvalid()
     both.add(back)
     return rec, both
+
 
 def combineMultipleData(DATA):
     """Combine multiple data containers into data/err matrices.
@@ -379,7 +390,7 @@ def combineMultipleData(DATA):
     IPERR : np.array(same size)
         induced polarization error matrix
     """
-    if not hasattr(DATA, '__iter__'):
+    if not hasattr(DATA, "__iter__"):
         raise TypeError("DATA should be DataContainers or str!")
 
     if isinstance(DATA[0], str):  # read in if strings given
@@ -392,29 +403,29 @@ def combineMultipleData(DATA):
     uIs = [uniqueERTIndex(data) for data in DATA]
     uI = np.unique(np.hstack(uIs))
     scheme = generateDataFromUniqueIndex(uI, DATA[0])
-    uI = uniqueERTIndex(scheme)   #, unify=False)
+    uI = uniqueERTIndex(scheme)  # , unify=False)
     R = np.ones([scheme.size(), len(DATA)]) * np.nan
     IP = R.copy()
     ERR = np.zeros_like(R)
     IPERR = R.copy()
-    if not scheme.haveData('k'):  # just do that only once
-        scheme['k'] = createGeometricFactors(scheme)  # check numerical
+    if not scheme.haveData("k"):  # just do that only once
+        scheme["k"] = createGeometricFactors(scheme)  # check numerical
 
     for i, di in enumerate(DATA):
         ii = np.searchsorted(uI, uIs[i])
-        if di.haveData('k'):  # sort in geometric factors #887
-            scheme['k'][ii] = di['k']
+        if di.haveData("k"):  # sort in geometric factors #887
+            scheme["k"][ii] = di["k"]
 
-        if not di.haveData('r'):
-            if di.allNonZero('u') and di.allNonZero('i'):
-                di['r'] = di['u']/di['i']
-            elif di.allNonZero('rhoa'):
-                di['r'] = di['rhoa'] / scheme['k'][ii]
+        if not di.haveData("r"):
+            if di.allNonZero("u") and di.allNonZero("i"):
+                di["r"] = di["u"] / di["i"]
+            elif di.allNonZero("rhoa"):
+                di["r"] = di["rhoa"] / scheme["k"][ii]
 
-        R[ii, i] = di['r']
-        ERR[ii, i] = di['err']
-        IP[ii, i] = di['ip']
-        IPERR[ii, i] = di['iperr']
+        R[ii, i] = di["r"]
+        ERR[ii, i] = di["err"]
+        IP[ii, i] = di["ip"]
+        IPERR[ii, i] = di["iperr"]
 
-    RHOA = np.abs(np.reshape(scheme['k'], [-1, 1]) * R)
+    RHOA = np.abs(np.reshape(scheme["k"], [-1, 1]) * R)
     return scheme, RHOA, ERR, IP, IPERR

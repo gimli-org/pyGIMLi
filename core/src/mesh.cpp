@@ -896,7 +896,7 @@ Cell * Mesh::findCellBySlopeSearch_(const RVector3 & pos, Cell * start,
 //                 }
                 if (debug()){
                     std::cout << WHERE_AM_I << " exit with submesh " << cellIDX__.size() << std::endl;
-                    std::cout << "probably cant find a cell for " << pos << std::endl;
+                    std::cout << "probably can't find a cell for " << pos << std::endl;
 
                     Mesh subMesh; subMesh.createMeshByCellIdx(*this, cellIDX__);
 
@@ -955,7 +955,7 @@ Cell * Mesh::findCell(const RVector3 & pos, size_t & count,
             double nearestDist = MAX_DOUBLE;
             for (auto *c: refNode->cellSet()){
                 //std::cout << c->id() << std::endl;
-                //** isInside useing shapefunctions only work for aligned dimensions
+                //** isInside using shapefunctions only work for aligned dimensions
                 double dist = c->shape().center().distSquared(pos);
                 if (dist < nearestDist){
                     nearestDist = dist;

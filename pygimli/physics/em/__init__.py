@@ -1,5 +1,5 @@
 """
-Electromagnetics (EM) in 1D (for 3D we refer to custEM(x))
+Electromagnetics (EM) in 1D (for 3D we refer to custEM(x)).
 
 Frequency-domain (FD) or time-domain (TD) semi-analytical 1D solutions.
 
@@ -26,7 +26,7 @@ from .vmd import VMDTimeDomainModelling
 
 from .fdem import FDEM
 from .tdem import TDEM, rhoafromB, rhoafromU
-from .tdem import VMDTimeDomainModelling, TDEMSmoothModelling
+from .tdem import TDEMSmoothModelling
 from .mt1dmodelling import MT1dBlockModelling, MT1dSmoothModelling
 
 MT1dModelling = MT1dBlockModelling  # default

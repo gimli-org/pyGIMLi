@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # %%
 r"""
 3D magnetics modelling and inversion
@@ -13,6 +12,7 @@ In the following, we will build the model, create synthetic data, and do
 inversion using a depth-weighting function as outlined in the paper.
 
 """
+
 # sphinx_gallery_thumbnail_number = 2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,9 +27,9 @@ from pygimli.physics.gravimetry import MagneticsModelling
 #
 
 dx = 50
-x = np.arange(0., 1001, dx)
-y = np.arange(0., 1001, dx)
-z = np.arange(-500., .1, dx)
+x = np.arange(0.0, 1001, dx)
+y = np.arange(0.0, 1001, dx)
+z = np.arange(-500.0, 0.1, dx)
 grid = pg.createGrid(x, y, z)
 print(grid)
 
@@ -39,9 +39,9 @@ print(grid)
 # are shifted by one cell for subsequent cells.
 #
 
-v = np.zeros((len(z)-1, len(y)-1, len(x)-1))
+v = np.zeros((len(z) - 1, len(y) - 1, len(x) - 1))
 for i in range(7):
-    v[1+i, 11-i:16-i, 7:13] = 0.05
+    v[1 + i, 11 - i : 16 - i, 7:13] = 0.05
 
 grid["synth"] = v.ravel()
 
@@ -56,8 +56,14 @@ grid["synth"] = v.ravel()
 #
 
 pl, _ = pg.show(grid, style="wireframe", hold=True)
-pv.drawMesh(pl, grid, label="synth", style="surface", cMap="Spectral_r",
-            filter={"threshold": dict(value=0.05, scalars="synth")})
+pv.drawMesh(
+    pl,
+    grid,
+    label="synth",
+    style="surface",
+    cMap="Spectral_r",
+    filter={"threshold": dict(value=0.05, scalars="synth")},
+)
 pl.camera_position = "yz"
 pl.camera.roll = 90
 pl.camera.azimuth = 180 - 15
@@ -86,7 +92,7 @@ igrf = [D, I, H, X, Y, Z, F]
 py, px = np.meshgrid(x, y)
 px = px.ravel()
 py = py.ravel()
-points = np.column_stack((px, py, np.ones_like(px)*20))
+points = np.column_stack((px, py, np.ones_like(px) * 20))
 
 # The forward operator
 cmp = ["TFA"]  # ["Bx", "By", "Bz"]
@@ -116,9 +122,11 @@ data += np.random.randn(len(data)) * absError
 #
 
 # depth weighting
-bz = np.array([abs(b.center().z()) for b in grid.boundaries() if not b.outside()])
+bz = np.array(
+    [abs(b.center().z()) for b in grid.boundaries() if not b.outside()]
+)
 z0 = 25
-wz = 100 / (bz+z0)**1.5
+wz = 100 / (bz + z0) ** 1.5
 print(min(wz), max(wz))
 
 # %%%
@@ -132,7 +140,9 @@ print(min(wz), max(wz))
 inv = pg.Inversion(fop=fop, verbose=True)  # , debug=True)
 inv.setRegularization(limits=[0, 0.07])  # to limit values
 inv.setConstraintWeights(wz)
-invmodel = inv.run(data, absoluteError=absError, lam=200, startModel=1e-3, verbose=True)
+invmodel = inv.run(
+    data, absoluteError=absError, lam=200, startModel=1e-3, verbose=True
+)
 grid["inv"] = invmodel
 
 # %%%
@@ -144,12 +154,29 @@ grid["inv"] = invmodel
 # wireframe.
 #
 
-pl, _ = pg.show(grid, label="synth", style="wireframe", hold=True,
-                filter={"threshold": dict(value=0.025, scalars="synth")})
-pv.drawMesh(pl, grid, label="inv", style="surface", cMap="Spectral_r",
-            filter={"threshold": dict(value=0.02, scalars="inv")})
-pv.drawMesh(pl, grid, label="inv", style="surface", cMap="Spectral_r",
-            filter={"slice": dict(normal=[-1, 0, 0], origin=[500, 600, 250])})
+pl, _ = pg.show(
+    grid,
+    label="synth",
+    style="wireframe",
+    hold=True,
+    filter={"threshold": dict(value=0.025, scalars="synth")},
+)
+pv.drawMesh(
+    pl,
+    grid,
+    label="inv",
+    style="surface",
+    cMap="Spectral_r",
+    filter={"threshold": dict(value=0.02, scalars="inv")},
+)
+pv.drawMesh(
+    pl,
+    grid,
+    label="inv",
+    style="surface",
+    cMap="Spectral_r",
+    filter={"slice": dict(normal=[-1, 0, 0], origin=[500, 600, 250])},
+)
 pl.camera_position = "yz"
 pl.camera.roll = 90
 pl.camera.azimuth = 180 - 15

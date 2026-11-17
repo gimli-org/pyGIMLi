@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# encoding: utf-8
 """File: sidebar_gallery.py.
 
 Author: Florian Wagner <fwagner@gfz-potsdam.de>
@@ -7,35 +6,39 @@ Description: Add all examples/tutorials to sidebar gallery
 Created on: 2013-10-13
 """
 
-import os
 import random
 import re
-from glob import glob
-from os.path import basename, dirname, join
+from pathlib import Path
 
 import pygimli as pg
+
 
 def make_gallery(src_path, out_path):
     """TODO DOCUMENTME."""
     pg.info(f"Creating gallery: {src_path} at: {out_path}")
-    example_dir = join(src_path, "examples")
-    tutorial_dir = join(src_path, "tutorials")
+    example_dir = Path(src_path) / "examples"
+    tutorial_dir = Path(src_path) / "tutorials"
     img_dir = "{{ pathto('_images', 1) }}"
 
     # Get examples/tutorials
-    examples = [fn for fn in glob(join(example_dir, "*/*plot*.py"))
-                if not join(example_dir, "dev") in fn]
-    tutorials = [fn for fn in glob(join(tutorial_dir, "*/*plot*.py"))
-                 if not join(tutorial_dir, "dev") in fn]
+    examples = [
+        str(fn)
+        for fn in example_dir.glob("*/*plot*.py")
+        if str(example_dir / "dev") not in str(fn)
+    ]
+    tutorials = [
+        str(fn)
+        for fn in tutorial_dir.glob("*/*plot*.py")
+        if str(tutorial_dir / "dev") not in str(fn)
+    ]
 
     # Get captions
     def readRSTSecTitles(fname, verbose=False):
-        """ Return list of section titles found in a given RST file. """
-        print('fname:', fname)
+        """Return list of section titles found in a given RST file."""
+        print("fname:", fname)
         rst_titles = re.compile(r"^(.+)\n[-=]+\n", flags=re.MULTILINE)
-        
-        with open(fname, encoding="utf8") as f:
 
+        with Path(fname).open(encoding="utf8") as f:
             titles = re.findall(rst_titles, f.read())
             if verbose:
                 print(("File:", fname))
@@ -44,7 +47,7 @@ def make_gallery(src_path, out_path):
         # go through lines only if compiled regex fails (py2/py3 issue)
         if not titles:
             print(("WARNING: Problem reading section title in", fname))
-            with open(fname, encoding="utf8") as f:
+            with Path(fname).open(encoding="utf8") as f:
                 title = "unknown"
                 for line in f.readlines():
                     if "---" in line or "===" in line:
@@ -58,19 +61,18 @@ def make_gallery(src_path, out_path):
     titles = ex_titles + tut_titles
 
     # Adjust paths to output directory for html links
-    examples = [e.replace(example_dir, "{{ pathto('_examples_auto', 1) }}")
-                for e in examples]
+    examples_url = "{{ pathto('_examples_auto', 1) }}"
+    tutorials_url = "{{ pathto('_tutorials_auto', 1) }}"
+    examples = [e.replace(str(example_dir), examples_url) for e in examples]
 
-    tutorials = [t.replace(tutorial_dir, "{{ pathto('_tutorials_auto', 1) }}")
-                 for t in tutorials]
+    tutorials = [t.replace(str(tutorial_dir), tutorials_url) for t in tutorials]
 
     # Create HTML gallery for sidebar with random start item
     gallery = examples + tutorials
-    print(("\nAdding %d examples/tutorials to sidebar gallery.\n" %
-          len(gallery)))
-    print(("\t{:40}{}\n\t".format("Title", "File") + "-" * 80))
-    for line in zip(titles, gallery):
-        print(("\t{:40}{}".format(*line)))
+    print(f"\nAdding {len(gallery)} examples/tutorials to sidebar gallery.\n")
+    print("\t{:40}{}\n\t".format("Title", "File") + "-" * 80)
+    for line in zip(titles, gallery, strict=False):
+        print("\t{:40}{}".format(*line))
     print("\n")
 
     html_top = """\
@@ -78,17 +80,23 @@ def make_gallery(src_path, out_path):
           <div id="sidebar_example_gallery" class="carousel slide">
             <div class="carousel-inner">"""
 
-    html_bottom = """\
+    html_bottom = (
+        """\
             </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#sidebar_example_gallery" data-bs-slide="prev">
-              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <button class="carousel-control-prev" type="button" """
+        """data-bs-target="#sidebar_example_gallery" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" """
+        """aria-hidden="true"></span>
               <span class="visually-hidden">Previous</span>
             </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#sidebar_example_gallery" data-bs-slide="next">
-              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <button class="carousel-control-next" type="button" """
+        """data-bs-target="#sidebar_example_gallery" data-bs-slide="next">
+              <span class="carousel-control-next-icon" """
+        """aria-hidden="true"></span>
               <span class="visually-hidden">Next</span>
             </button>
           </div>"""
+    )
 
     html_item = """\
               <div class="carousel-item">
@@ -100,13 +108,15 @@ def make_gallery(src_path, out_path):
                 </a>
               </div>"""
 
-    idx = random.randint(0, len(gallery) - 1)
+    idx = random.randint(0, len(gallery) - 1)  # noqa: S311 - random start
     items = []
-    for ix, (item, title) in enumerate(zip(gallery, titles)):
-        path = dirname(item)
-        name = basename(item)
-        url = join(path, name.replace(".py", ".html"))
-        img = join(img_dir, "sphx_glr_" + name.replace(".py", "_thumb.png"))
+    for ix, (item, title) in enumerate(zip(gallery, titles, strict=False)):
+        itemPath = Path(item)
+        name = itemPath.name
+        url = str(itemPath.parent / name.replace(".py", ".html"))
+        img = str(
+            Path(img_dir) / ("sphx_glr_" + name.replace(".py", "_thumb.png"))
+        )
         item = html_item.format(url, img, title)
 
         if ix == idx:
@@ -118,12 +128,13 @@ def make_gallery(src_path, out_path):
     items.append(html_bottom)
     html = "\n".join(items)
 
-    if not os.path.exists(join(out_path, "_templates/")):
-        os.mkdir(join(out_path, "_templates/"))
+    templates_path = Path(out_path) / "_templates"
+    if not templates_path.exists():
+        templates_path.mkdir()
 
-    with open(join(out_path, "_templates/gallery.html"), "w") as file:
+    with (templates_path / "gallery.html").open("w") as file:
         file.write(html)
 
 
-if __name__ == '__main__':
-    make_gallery('.', '.')
+if __name__ == "__main__":
+    make_gallery(".", ".")

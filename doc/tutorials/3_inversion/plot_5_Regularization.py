@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 Regularization - concepts explained
 ===================================
@@ -9,7 +8,8 @@ the L2 norm of the misfit between data :math:`d` and the forward
 response :math:`f(m)` of the model :math:`m`, weighted by the data error
 :math:`\epsilon`:
 
-.. math:: \Phi_d = \sum\limits_i^N \left(\frac{d_i-f_i(m)}{\epsilon_i}\right)^2=\|W_d(d-f(m))\|^2
+.. math:: \Phi_d = \sum\limits_i^N \left(\frac{d_i-f_i(m)}{\epsilon_i}\right)^2
+          = \|W_d(d-f(m))\|^2
 
 As this minimization problem is non-unique and ill-posed, we introduce a
 regularization term :math:`\Phi`, weighted by a regularization parameter
@@ -92,7 +92,7 @@ print(mesh)
 #
 
 pos = [[3, -3], [7, -7]]
-vals = np.array([20., 15.])
+vals = np.array([20.0, 15.0])
 fop = PriorModelling(mesh, pos)
 
 # %%%
@@ -262,7 +262,7 @@ v = np.random.rand(N) * 10 + 10
 # %%%
 # and repeat the above computations
 #
-pos = [pg.Pos(xi, yi) for xi, yi in zip(x, y)]
+pos = [pg.Pos(xi, yi) for xi, yi in zip(x, y, strict=False)]
 fop = PriorModelling(mesh, pos)
 inv = pg.Inversion(fop=fop, verbose=True)
 inv.setRegularization(correlationLengths=[4, 4])

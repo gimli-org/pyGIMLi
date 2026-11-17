@@ -321,7 +321,7 @@ inline RVector mag(const CVector & a){return abs(a);}
 
 //** maybe better to move these instantiation into libgimli, but why should the lib have unused template symbols??
 // explicit instantiaion leads to duplicate symbols for architecture arm64
-// if the symbols allready exists, extern to mark them
+// if the symbols already exists, extern to mark them
 
 #define DEFINE_COMPARE_OPERATOR__(OP) \
 extern template BVector operator OP (const GIMLI::RVector & v1, const GIMLI::RVector & v2); \

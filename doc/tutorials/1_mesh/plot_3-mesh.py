@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # sphinx_gallery_thumbnail_number = 2
 r"""
 The mesh class
@@ -22,6 +21,7 @@ create and manipulate meshes from the scratch.
 
 import numpy as np
 import pygimli as pg
+from pathlib import Path
 
 # %%%
 # We construct a mesh by creating nodes and cells.
@@ -127,5 +127,5 @@ ax, cb = pg.show(mesh, "velocity")
 
 if False:
     mesh.exportVTK("mesh.vtk")
-    with open("mesh.vtk") as f:
+    with Path("mesh.vtk").open() as f:
         print(f.read())

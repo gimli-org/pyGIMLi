@@ -84,11 +84,11 @@ DLLEXPORT void DCErrorEstimation(DataContainerERT & data,
 
 DLLEXPORT double DCParaDepth(const DataContainerERT & data);
 
-/*! Set the boundary marker at the outer boundarys.
+/*! Set the boundary marker at the outer boundaries.
 MARKER_BOUND_HOMOGEN_NEUMANN at the surface (boundary.center == zmax) and otherwise MARKER_BOUND_MIXED. */
 DLLEXPORT void setDefaultBERTBoundaryConditions(Mesh & mesh);
 
-/*! Set the boundary marker to MARKER_BOUND_HOMOGEN_NEUMANN at the outer boundarys. */
+/*! Set the boundary marker to MARKER_BOUND_HOMOGEN_NEUMANN at the outer boundaries. */
 DLLEXPORT void setAllNeumannBoundaryConditions(Mesh & mesh);
 
 /*! log10 scale of potential data for visualisation. */
@@ -97,5 +97,3 @@ DLLEXPORT RVector prepExportPotentialData(const RVector & data, double logdrop=1
 } // namespace BERT
 
 #endif // _BERT_BERT_MISC__H
-
-

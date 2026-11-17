@@ -1,8 +1,13 @@
-# -*- coding: utf-8 -*-
-import sys
-import os
+"""Core module of pyGIMLi.
 
-#if sys.platform == 'win32':
+Import the compiled extension module (in-place build or installed package) and
+provide small helpers on top of it.
+"""
+
+import sys
+import traceback
+
+# if sys.platform == 'win32':
 #    os.environ['PATH'] = os.path.abspath(__file__) + ';' + os.environ['PATH']
 
 pgcore = None
@@ -14,27 +19,28 @@ try:
     # from ._pygimli_ import *  # check if . can be omitted
     # pgcore = _pygimli_
 
-    #print("importing inplace core")
-    from .libs import _pygimli_ as pgcore
-    from .libs._pygimli_ import *
-    #print("inplace core")
+    # print("importing inplace core")
+    from .libs import _pygimli_ as pgcore  # noqa: F401  # re-exported
+    from .libs._pygimli_ import *  # noqa: F403  # C++ bindings star import
+    # print("inplace core")
 
-except ImportError as e:
-    #print("did not find in-place pg core, try import pgcore")
+except ImportError:
+    # print("did not find in-place pg core, try import pgcore")
     # import pgcore as _pygimli_
-    import pgcore
     # from pgcore import _pygimli_  # check version compatibility
-    from pgcore import *
-    # pass
-except ImportError as e:
-    print(e)
-    traceback.print_exc(file=sys.stdout)
-    sys.stderr.write("ERROR: cannot import the library '_pygimli_'.\n")
-
-
-# keep orginal python max
-def max(a, b):
     try:
-        return pg.core.max(a,b)
-    except:
-        return __PY_MAX__(a,b)
+        from pgcore import *  # noqa: F403  # C++ bindings star import
+        # pass
+    except ImportError:
+        traceback.print_exc(file=sys.stdout)
+        sys.stderr.write("ERROR: cannot import the library '_pygimli_'.\n")
+        raise
+
+
+# keep original python max
+def max(a, b):
+    """Return the maximum of a and b (C++ core version if available)."""
+    try:
+        return pg.core.max(a, b)  # noqa: F405  # from C++ star import
+    except Exception:
+        return __PY_MAX__(a, b)

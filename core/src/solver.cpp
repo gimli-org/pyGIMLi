@@ -172,7 +172,7 @@ __MS("##################################################################")
 
         if ((count % 10) == -1) { // TOM
             x_tm.assign(x / tm);
-            z = bR - (S * x_tm) * td; // z exakt durch extra Mult.
+            z = bR - (S * x_tm) * td; // z exactly by extra mult.
             z *= dW;
         } else {
             z -= q * alpha;
@@ -274,7 +274,7 @@ int solveCGLSCDWWtrans(const MatrixBase & S, const MatrixBase & C,
         alpha = normR2 / (dot(q, q) + lambda * dot(wcp, wcp));
         x += p * alpha;
         if((count % 10) == -1) { // TOM
-        z = b - S * Vec(x / tm) * td; // z exakt durch extra Mult.
+        z = b - S * Vec(x / tm) * td; // z exactly by extra mult.
         z *= dWeight;
         } else {
         z -= q * alpha;
@@ -296,4 +296,3 @@ int solveCGLSCDWWtrans(const MatrixBase & S, const MatrixBase & C,
 }
 
 } //namespace GIMLI
-

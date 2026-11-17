@@ -30,7 +30,7 @@ OptionMap::OptionMap(const std::string & description)
     showVersion_    = false;
     debug_          = false;
     add(help,              "h" , "help"    , "Show this help.");
-    add(showVersion_,      ""  , "version" , "Show library version and exit programm.");
+    add(showVersion_,      ""  , "version" , "Show library version and exit program.");
     add(debug_,            ""  , "debug"   , "Enable global debug mode.");
 }
 

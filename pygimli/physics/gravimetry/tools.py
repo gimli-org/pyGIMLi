@@ -1,10 +1,17 @@
 """Tools for gravity and magnetics."""
+
 import numpy as np
 import pygimli as pg
 
 
-def depthWeighting(mesh, z0:float=25, height:float=0, power:float=1.5,
-                   normalize:bool=False, cell:bool=False):
+def depthWeighting(
+    mesh,
+    z0: float = 25,
+    height: float = 0,
+    power: float = 1.5,
+    normalize: bool = False,
+    cell: bool = False,
+):
     r"""Return Li&Oldenburg like depth weighting of boundaries or cells.
 
     To account for inherent ambiguity in potential field methods, a depth
@@ -48,7 +55,7 @@ def depthWeighting(mesh, z0:float=25, height:float=0, power:float=1.5,
     if mesh.dim() == 2 and np.isclose(max(z), min(z)):
         z = pg.y(cc)
 
-    weight = 2 / (np.abs(height-z)/z0 + 1)**power
+    weight = 2 / (np.abs(height - z) / z0 + 1) ** power
     if normalize:
         weight /= np.median(weight)  # normalize that maximum is 1
 

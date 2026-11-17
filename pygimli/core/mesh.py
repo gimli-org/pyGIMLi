@@ -1,10 +1,23 @@
 #!/usr/bin/env python
 """Import and extensions of the core Mesh class."""
+
 from math import ceil
 import numpy as np
-from .core import (cat, HexahedronShape, Line,
-                   Mesh, MeshEntity, Node, Boundary, RVector, RMatrix, Pos,
-                   PolygonFace, TetrahedronShape, TriangleFace)
+from .core import (
+    cat,
+    HexahedronShape,
+    Line,
+    Mesh,
+    MeshEntity,
+    Node,
+    Boundary,
+    RVector,
+    RMatrix,
+    Pos,
+    PolygonFace,
+    TetrahedronShape,
+    TriangleFace,
+)
 
 from .logger import error, info, warn, critical, _r
 from .base import isR3Array
@@ -26,7 +39,10 @@ Mesh.zmax = Mesh.zMax
 def _Mesh__show_(self, *args, **kwargs):
     """Syntactic sugar to pg.show(mesh, *args, **kwargs)."""
     import pygimli as pg
+
     return pg.show(self, *args, **kwargs)
+
+
 Mesh.show = _Mesh__show_
 
 
@@ -34,22 +50,23 @@ def __Mesh_unique_dataKeys(self):
     """Return unique data keys."""
     uniqueNames = {}
     for d in self.dataMap().keys():
-
         uName = d
-        if '_x' in d:
-            uName = uName[0:d.find('_x')]
+        if "_x" in d:
+            uName = uName[0 : d.find("_x")]
 
-        if '_y' in d or '_z' in d:
+        if "_y" in d or "_z" in d:
             continue
 
-        if '#' in d:
-            uName = uName[0:d.find('#')]
+        if "#" in d:
+            uName = uName[0 : d.find("#")]
 
         if uName not in uniqueNames:
             uniqueNames[uName] = []
 
         uniqueNames[uName].append(d)
     return uniqueNames
+
+
 Mesh.dataKeys = __Mesh_unique_dataKeys
 
 
@@ -65,39 +82,47 @@ def _Mesh_getData_(self):
     # print(self)
     for k, v in self.dataMap():
         # print(k, v)
-        if '_y' in k or '_z' in k:
+        if "_y" in k or "_z" in k:
             continue
 
         name = k
 
-        if '_x' in name:
-            name = k[0:name.find('_x')]
-            v = np.asarray([v, self[name + '_y'], self[name + '_z']]).T
+        if "_x" in name:
+            name = k[0 : name.find("_x")]
+            v = np.asarray([v, self[name + "_y"], self[name + "_z"]]).T
 
-        if '#' in name:
-            name = name[0:name.find('#')]
+        if "#" in name:
+            name = name[0 : name.find("#")]
 
             if name not in ret:
                 ret[name] = [np.asarray(v)]
             else:
                 ret[name].append(np.asarray(v))
 
-            #print('\t', name, ret[name].shape)
+            # print('\t', name, ret[name].shape)
         else:
             ret[name] = v
 
-    for k , v in ret.items():
+    for k, v in ret.items():
         ret[k] = np.asarray(v)
         # print(k, ret[k].shape)
 
     return ret
+
+
 Mesh.dataDict = _Mesh_getData_
 
 
 def __Mesh_str(self):
     """Return string representation for mesh."""
-    st = "Mesh: Nodes: " + str(self.nodeCount()) + " Cells: " + str(
-        self.cellCount()) + " Boundaries: " + str(self.boundaryCount())
+    st = (
+        "Mesh: Nodes: "
+        + str(self.nodeCount())
+        + " Cells: "
+        + str(self.cellCount())
+        + " Boundaries: "
+        + str(self.boundaryCount())
+    )
 
     if self.secondaryNodeCount() > 0:
         st += " secNodes: " + str(self.secondaryNodeCount())
@@ -106,20 +131,22 @@ def __Mesh_str(self):
         st += "\nMesh contains data:\n"
 
         data = self.dataDict()
-        #uniqueNames = self.dataKeys()
+        # uniqueNames = self.dataKeys()
 
         for d, v in data.items():
             if len(v) > 1:
-                st += f'\t{d} :{v.shape}'
+                st += f"\t{d} :{v.shape}"
             else:
-                st += f'\t{d}'
+                st += f"\t{d}"
 
-            st += '\n'
+            st += "\n"
 
-        st = st.rstrip(', ')
+        st = st.rstrip(", ")
 
     return st
-Mesh.__repr__ =__Mesh_str
+
+
+Mesh.__repr__ = __Mesh_str
 
 
 def _Mesh_createNodes_(self, posList):
@@ -128,6 +155,8 @@ def _Mesh_createNodes_(self, posList):
         return [self.createNode(p) for p in posList]
     except BaseException:
         return [self.createNode(p) for p in np.asarray(posList).T]
+
+
 Mesh.createNodes = _Mesh_createNodes_
 
 
@@ -140,12 +169,18 @@ def _Mesh_createCells_(self, cellList, marker=0):
     marker = np.squeeze(marker)
 
     try:
-        return [self.createCell(c, m)
-                for c, m in zip(cellList, marker, strict=False)]
+        return [
+            self.createCell(c, m)
+            for c, m in zip(cellList, marker, strict=False)
+        ]
     except Exception:
         cellList = np.asarray(cellList).T
-        return [self.createCell(c, m)
-                for c, m in zip(cellList, marker, strict=False)]
+        return [
+            self.createCell(c, m)
+            for c, m in zip(cellList, marker, strict=False)
+        ]
+
+
 Mesh.createCells = _Mesh_createCells_
 
 
@@ -155,12 +190,18 @@ def _Mesh_createBoundaries_(self, boundaryList, marker=0):
         marker = np.full(len(boundaryList), marker)
     marker = np.squeeze(marker)
     try:
-        return [self.createBoundary(b, m)
-                for b, m in zip(boundaryList, marker, strict=False)]
+        return [
+            self.createBoundary(b, m)
+            for b, m in zip(boundaryList, marker, strict=False)
+        ]
     except Exception:
         boundaryList = np.asarray(boundaryList).T
-        return [self.createBoundary(b, m)
-                for b, m in zip(boundaryList, marker, strict=False)]
+        return [
+            self.createBoundary(b, m)
+            for b, m in zip(boundaryList, marker, strict=False)
+        ]
+
+
 Mesh.createBoundaries = _Mesh_createBoundaries_
 
 
@@ -175,32 +216,43 @@ def _addPLCs_(self, other):
         return mergePLC([self, other])
     else:
         error("Addition is only supported for PLCs, i.e. mesh's without cells.")
+
+
 Mesh.__add__ = _addPLCs_
 
 
 def __MeshEntity_str(self):
     """Return string representation for mesh entity."""
     s = self.__repr__()
-    s += '\tID: ' + str(self.id()) + \
-         ', Marker: ' + str(self.marker()) + \
-         ', Size: ' + str(self.size()) + '\n'
+    s += (
+        "\tID: "
+        + str(self.id())
+        + ", Marker: "
+        + str(self.marker())
+        + ", Size: "
+        + str(self.size())
+        + "\n"
+    )
 
     if isinstance(self, PolygonFace) and len(self.nodes()) > 5:
-        s += '\t' + str(self.nodeCount()) + " Nodes.\n"
+        s += "\t" + str(self.nodeCount()) + " Nodes.\n"
     else:
         for n in self.nodes():
-            s += '\t' + str(n.id()) + " " + str(n.pos()) + "\n"
+            s += "\t" + str(n.id()) + " " + str(n.pos()) + "\n"
     return s
-MeshEntity.__str__ =__MeshEntity_str
+
+
+MeshEntity.__str__ = __MeshEntity_str
 
 
 def __Node_str(self):
     """Return string representation for node."""
-    s = '\tID: ' + str(self.id()) + \
-         ', Marker: ' + str(self.marker())
-    s += '\t' + str(self.pos()) + '\n'
+    s = "\tID: " + str(self.id()) + ", Marker: " + str(self.marker())
+    s += "\t" + str(self.pos()) + "\n"
     return s
-Node.__repr__ =__Node_str
+
+
+Node.__repr__ = __Node_str
 
 
 def __Mesh_setVal(self, key, val):
@@ -208,12 +260,15 @@ def __Mesh_setVal(self, key, val):
 
     Multiple arrays via matrix will be saved too.
     """
+
     def _matchSize(val, v=None):
         _v = v if v is not None else val.values
 
-        if len(_v) == self.nodeCount() or \
-            len(_v) == self.cellCount() or \
-             len(_v) == self.boundaryCount():
+        if (
+            len(_v) == self.nodeCount()
+            or len(_v) == self.cellCount()
+            or len(_v) == self.boundaryCount()
+        ):
             return _v
         else:
             return interpolate(val.mesh, _v.T, self.positions()).T
@@ -221,9 +276,9 @@ def __Mesh_setVal(self, key, val):
             # return np.asarray(val.qpInterpolationMatrix(self.positions())*_v)
 
     ## find values from special objects
-    #_r(type(val), hasattr(val, 'history'))
+    # _r(type(val), hasattr(val, 'history'))
 
-    if hasattr(val, 'history') and hasattr(val, 'values'):
+    if hasattr(val, "history") and hasattr(val, "values"):
         # print(key, 'history:', len(val.history), len(val.values))
 
         # print(val.history[0].shape)
@@ -238,29 +293,27 @@ def __Mesh_setVal(self, key, val):
         # val = np.asarray(v).shape
         # print(len(val), val[0].shape)
         # print(key, len(val), isR3Array(val))
-    elif hasattr(val, 'values'):
-        _r(key ,val.shape)
+    elif hasattr(val, "values"):
+        _r(key, val.shape)
         val = _matchSize(val)
-        #.eval(mesh.positions())
+        # .eval(mesh.positions())
 
     if isinstance(val, (float, int)):  # single value
         val = RVector(self.cellCount(), val)
     # print(key, len(val), isR3Array(val))
 
-
     if isR3Array(val):
         return self.addData(key, val)
 
-    if (isinstance(val, list) and len(val) > 0) \
-            and isinstance(val[0], (RVector, RMatrix, np.ndarray)) \
-        or (isinstance(val, np.ndarray) \
-            and (val.ndim == 2 or val.ndim == 3)):
-
+    if (
+        (isinstance(val, list) and len(val) > 0)
+        and isinstance(val[0], (RVector, RMatrix, np.ndarray))
+        or (isinstance(val, np.ndarray) and (val.ndim == 2 or val.ndim == 3))
+    ):
         maxDigit = ceil(np.log10(len(val)))
 
         for i, v in enumerate(val):
-            self.addData(f'{key}#{str(i).zfill(maxDigit)}',
-                         np.asarray(v))
+            self.addData(f"{key}#{str(i).zfill(maxDigit)}", np.asarray(v))
     else:
         try:
             if key == "marker":
@@ -268,13 +321,14 @@ def __Mesh_setVal(self, key, val):
             else:
                 self.addData(key, val)
         except BaseException as e:
-            if (isinstance(val, list) and len(val) > 0):
+            if isinstance(val, list) and len(val) > 0:
                 _r(type(val[0]), val[0].shape)
             if isinstance(val, np.ndarray):
                 _r(val.ndim, val.shape)
 
-            raise ValueError(f"Could not add data with key {key} "
-                             f"of shape {np.shape(val)}") from e
+            raise ValueError(
+                f"Could not add data with key {key} of shape {np.shape(val)}"
+            ) from e
 
             # try:
             #     print(val.shape)
@@ -282,6 +336,8 @@ def __Mesh_setVal(self, key, val):
             #     pass
             # error('Could not add data.')
             return
+
+
 Mesh.__setitem__ = __Mesh_setVal
 
 
@@ -292,23 +348,23 @@ def __Mesh_getVal(self, key):
     else:
         uniqueNames = {}
         for d in self.dataMap().keys():
-            #print(d)
-            if '_y' in d or '_z' in d:
+            # print(d)
+            if "_y" in d or "_z" in d:
                 continue
 
             uName = d
 
-            if '_x' in uName:
-                uName = uName[0:uName.find('_x')]
+            if "_x" in uName:
+                uName = uName[0 : uName.find("_x")]
                 d1 = self.data(d)
-                d2 = self.data(d.replace('_x', '_y'))
-                d3 = self.data(d.replace('_x', '_z'))
+                d2 = self.data(d.replace("_x", "_y"))
+                d3 = self.data(d.replace("_x", "_z"))
                 dat = np.array([d1, d2, d3]).T
             else:
                 dat = self.data(d)
 
-            if '#' in uName:
-                uName = uName[0:uName.find('#')]
+            if "#" in uName:
+                uName = uName[0 : uName.find("#")]
 
             if uName not in uniqueNames:
                 uniqueNames[uName] = []
@@ -323,8 +379,13 @@ def __Mesh_getVal(self, key):
             except BaseException:
                 return uniqueNames[key]
 
-        critical(NameError, 'The mesh does not have the requested data:', key,
-                    '. Available:', uniqueNames)
+        critical(
+            NameError,
+            "The mesh does not have the requested data:",
+            key,
+            ". Available:",
+            uniqueNames,
+        )
 
 
 Mesh.__getitem__ = __Mesh_getVal
@@ -336,12 +397,14 @@ def _MeshBoundingBox_(self):
     ma = Pos([bb.max()[i] for i in range(3)])
     return [mi, ma]
 
+
 Mesh.bb = _MeshBoundingBox_
 
 
 def _MeshHoleMarkers_(self):
     """Return list of hole markers."""
     return self.holeMarker()
+
 
 Mesh.holeMarkers = _MeshHoleMarkers_
 
@@ -385,11 +448,13 @@ def _createSecondaryNodes_(self, n=3, verbose=False):
                         nMax = n - sx
                     for sy in range(nMax):
                         if isinstance(b, TriangleFace):
-                            pos = bs.xyz([(sx + 1) / (n + 2),
-                                          (sy + 1) / (n + 2)])
+                            pos = bs.xyz(
+                                [(sx + 1) / (n + 2), (sy + 1) / (n + 2)]
+                            )
                         else:
-                            pos = bs.xyz([(sx + 1) / (n + 1),
-                                          (sy + 1) / (n + 1)])
+                            pos = bs.xyz(
+                                [(sx + 1) / (n + 1), (sy + 1) / (n + 1)]
+                            )
 
                         sn = self.createSecondaryNode(pos)
                         b.addSecondaryNode(sn)
@@ -429,19 +494,22 @@ def _createSecondaryNodes_(self, n=3, verbose=False):
                     edges.append([c.shape().node(3), c.shape().node(1)])
                 else:
                     print(c)
-                    warn('cell type unknown')
+                    warn("cell type unknown")
 
                 for e in edges:
                     line = Line(e[0].pos(), e[1].pos())
                     for i in range(n):
-                        sn = self.createSecondaryNode(line.at((i+1)/(n+1)),
-                                                      tol=1e-6)
+                        sn = self.createSecondaryNode(
+                            line.at((i + 1) / (n + 1)), tol=1e-6
+                        )
                         c.addSecondaryNode(sn)
         else:
             warn("Unknown dimension. Don't know what to do.")
 
     if verbose:
         info(f"Added {self.secondaryNodeCount()} secondary nodes.")
+
+
 Mesh.createSecondaryNodes = _createSecondaryNodes_
 
 
@@ -449,21 +517,25 @@ def _createMeshWithSecondaryNodes_(self, n=3, verbose=False):
     m = Mesh(self)
     m.createSecondaryNodes(n, verbose)
     return m
+
+
 Mesh.createMeshWithSecondaryNodes = _createMeshWithSecondaryNodes_
 
 
 __Mesh_deform__ = Mesh.deform
+
+
 def _deform_(self, u, magnify=1.0):
     v = None
     dof = self.nodeCount()
-    if hasattr(u, 'values'):
+    if hasattr(u, "values"):
         if len(u.values) != self.nodeCount():
-            if hasattr(u, 'eval'):
+            if hasattr(u, "eval"):
                 u = u.eval(self.positions())
         else:
             u = u.values
 
-    if hasattr(u, 'ndim') and u.ndim == 1:
+    if hasattr(u, "ndim") and u.ndim == 1:
         v = u
     elif len(u) == self.dim():
         if len(u[0]) == dof:
@@ -476,13 +548,15 @@ def _deform_(self, u, magnify=1.0):
         else:
             print(self)
             print(len(u), len(u[0]))
-            error('Size of displacement does not match mesh nodes size.')
+            error("Size of displacement does not match mesh nodes size.")
 
     elif len(u) == self.nodeCount() and u.ndim == 2:
-        v = u.reshape(self.nodeCount() * u.shape[1], order='F')
+        v = u.reshape(self.nodeCount() * u.shape[1], order="F")
 
     __Mesh_deform__(self, v, magnify)
     return self
+
+
 Mesh.deform = _deform_
 Mesh.exportPLC = exportPLC
 
@@ -490,6 +564,8 @@ Mesh.exportPLC = exportPLC
 def _Boundary_outside_(self):
     """Is the boundary is on the outside of the mesh."""
     return self.leftCell() is not None and self.rightCell() is None
+
+
 Boundary.outside = _Boundary_outside_
 
 
@@ -504,6 +580,8 @@ def __Node_on_boundary(self, outside=True):
         if b.marker() != 0:
             return True
     return False
+
+
 Node.onBoundary = __Node_on_boundary
 
 
@@ -515,6 +593,8 @@ def _Mesh_h_(self):
         * different name since this is not cell size for p2 cells
     """
     return np.array([c.shape().h() for c in self.cells()])
+
+
 Mesh.h = _Mesh_h_
 
 
@@ -537,8 +617,8 @@ def _Mesh_findPaths_(self, bounds):
         pg.error("No boundaries in mesh.")
         return []
 
-    scipy = pg.optImport('scipy')
-    scipy.sparse = pg.optImport('scipy.sparse')
+    scipy = pg.optImport("scipy")
+    scipy.sparse = pg.optImport("scipy.sparse")
 
     S = pg.core.SparseMapMatrix()
 
@@ -560,8 +640,8 @@ def _Mesh_findPaths_(self, bounds):
             # print('row', rID, 'col', cID)
             # print('add', cID)
             path.append(cID)
-            #try:
-            #print('pop-r', (rID, cID))
+            # try:
+            # print('pop-r', (rID, cID))
             del S[(rID, cID)]
             del S[(cID, rID)]
 
@@ -588,7 +668,7 @@ def _Mesh_findPaths_(self, bounds):
         row = S[rID]
 
         if len(row) == 1:
-            #single starting
+            # single starting
             path = []
             paths.append(path)
             # starting node
@@ -608,6 +688,8 @@ def _Mesh_findPaths_(self, bounds):
             followPath(path, S, rID)
 
     return paths
+
+
 Mesh.findPaths = _Mesh_findPaths_
 
 
@@ -644,10 +726,12 @@ def _Mesh_cutBoundary_(self, marker, boundaryMarker=None):
     >>> import pygimli.meshtools as mt
     >>> plc = mt.createCircle(nSegments=24)
     >>> l1 = mt.createLine(start=[0, -1], end=[0, -0.1], boundaryMarker=2)
-    >>> l2 = mt.createLine(start=[-0.3, 0.25], end=[0.3, 0.25],boundaryMarker=3)
+    >>> l2 = mt.createLine(
+    ...     start=[-0.3, 0.25], end=[0.3, 0.25], boundaryMarker=3
+    ... )
     >>> mesh = mt.createMesh([plc, l1, l2], area=0.1, quality=32.0)
-    >>> fig, axs= pg.plt.subplots(1, 2)
-    >>> ax ,_ = pg.show(mesh, boundaryMarkers=True, ax=axs[0])
+    >>> fig, axs = pg.plt.subplots(1, 2)
+    >>> ax, _ = pg.show(mesh, boundaryMarkers=True, ax=axs[0])
     >>> oldNodeCount = mesh.nodeCount()
     >>> print(mesh)
     Mesh: Nodes: 50 Cells: 74 Boundaries: 123
@@ -660,21 +744,30 @@ def _Mesh_cutBoundary_(self, marker, boundaryMarker=None):
     ...     no = mesh.node(n)
     ...     for b in no.boundSet():
     ...         if b.marker() == 4 or b.marker() == 5:
-    ...              no.translate(b.norm()*-0.1)
-    ...              break;
-    >>> ax, _ = pg.show(mesh, data=range(mesh.cellCount()),
-    ...                 boundaryMarkers=True, colorBar=False,
-    ...                 showMesh=True, boundaryProps={'lw':2}, ax=axs[1])
+    ...             no.translate(b.norm() * -0.1)
+    ...             break
+    >>> ax, _ = pg.show(
+    ...     mesh,
+    ...     data=range(mesh.cellCount()),
+    ...     boundaryMarkers=True,
+    ...     colorBar=False,
+    ...     showMesh=True,
+    ...     boundaryProps={"lw": 2},
+    ...     ax=axs[1],
+    ... )
     >>> for b in mesh.boundaries():
     ...     if b.marker() != 0:
     ...         c = b.center()
     ...         n = b.norm()
-    ...         _ = ax.annotate('', xytext=(c[0], c[1]),
-    ...                    xy=((c+n/30.)[0], (c+n/30.)[1]),
-    ...                    arrowprops=dict(arrowstyle="-|>", lw=1),
-    ...                     )
+    ...         _ = ax.annotate(
+    ...             "",
+    ...             xytext=(c[0], c[1]),
+    ...             xy=((c + n / 30.0)[0], (c + n / 30.0)[1]),
+    ...             arrowprops=dict(arrowstyle="-|>", lw=1),
+    ...         )
     """
     import pygimli as pg
+
     if boundaryMarker is None:
         boundaryMarker = marker
 
@@ -688,8 +781,7 @@ def _Mesh_cutBoundary_(self, marker, boundaryMarker=None):
         toBeReplaced = []
         for i in range(c.boundaryCount()):
             b = c.boundary(i)
-            if (b is not None and n1.id() in b.ids()
-                    and b.marker() != marker):
+            if b is not None and n1.id() in b.ids() and b.marker() != marker:
                 # pg._y('\tbound: ', b.id(), ':',
                 #         b.node(0).id(), b.node(1).id(), "ma:", b.marker())
 
@@ -733,9 +825,9 @@ def _Mesh_cutBoundary_(self, marker, boundaryMarker=None):
         pg.error(f"did not found path for marker: {marker}")
 
     ## step 1 . fix direction along the path
-    for i in range(len(paths[0])-1):
+    for i in range(len(paths[0]) - 1):
         nA1 = mesh.node(paths[0][i])
-        nB1 = mesh.node(paths[0][i+1])
+        nB1 = mesh.node(paths[0][i + 1])
         b = pg.core.findBoundary(nA1, nB1)
 
         if b.node(0) != nA1:
@@ -744,15 +836,14 @@ def _Mesh_cutBoundary_(self, marker, boundaryMarker=None):
         lC = b.leftCell()
         rC = b.rightCell()
         if rC is None or lC is None:
-            pg.error('Path is not inside the mesh')
+            pg.error("Path is not inside the mesh")
             return
 
     ## add new nodes and decouple cells along the path
     rightCells = []
-    for i in range(len(paths[0])-1):
-
+    for i in range(len(paths[0]) - 1):
         nA1 = mesh.node(paths[0][i])
-        nB1 = mesh.node(paths[0][i+1])
+        nB1 = mesh.node(paths[0][i + 1])
         b = pg.core.findBoundary(nA1, nB1)
 
         lC = b.leftCell()
@@ -787,10 +878,12 @@ def _Mesh_cutBoundary_(self, marker, boundaryMarker=None):
 
     newNodes.append(mesh.node(paths[0][-1]))
 
-    for i in range(len(newNodes)-1):
-        b = mesh.createBoundary([newNodes[i+1].id(), newNodes[i].id()],
-                                marker=boundaryMarker)
+    for i in range(len(newNodes) - 1):
+        b = mesh.createBoundary(
+            [newNodes[i + 1].id(), newNodes[i].id()], marker=boundaryMarker
+        )
         b.setLeftCell(rightCells[i])
+
 
 Mesh.cutBoundary = _Mesh_cutBoundary_
 
@@ -825,13 +918,13 @@ def _Mesh__align_(self, pnts):
     pnts = np.asarray(pnts)
     if pnts.ndim == 2:
         if pnts.shape[1] == 2:
-
             A = np.zeros((pnts.shape[0], 3))
 
             from ..utils import cumDist
-            A[:,0] = cumDist(pnts[:,0:2])
-            A[:,1] = pnts[:,0]
-            A[:,2] = pnts[:,1]
+
+            A[:, 0] = cumDist(pnts[:, 0:2])
+            A[:, 1] = pnts[:, 0]
+            A[:, 2] = pnts[:, 1]
 
         elif pnts.shape[1] == 3:
             A = pnts
@@ -843,12 +936,13 @@ def _Mesh__align_(self, pnts):
     tn = [n.pos()[0] for n in self.nodes()]
     zn = [n.pos()[1] for n in self.nodes()]
 
-    p = interpolateAlongCurve(A[:,1:3], tn, tCurve=A[:,0])
+    p = interpolateAlongCurve(A[:, 1:3], tn, tCurve=A[:, 0])
 
     for i, n in enumerate(self.nodes()):
         n.setPos((p[i][0], p[i][1], zn[i]))
 
     self.geometryChanged()
+
 
 Mesh.align = _Mesh__align_
 
@@ -861,12 +955,16 @@ def _Mesh__swapOrientation_(self):
     """
     self.swapCoordinates(0, 1)  # exchange x and y
     self.scale([1, 1, -1])  # revert z
+
+
 Mesh.swapOrientation = _Mesh__swapOrientation_
 
 
 def __Mesh__copy(self):
     """Return copy of a mesh."""
     return Mesh(self)
+
+
 Mesh.copy = __Mesh__copy
 
 
@@ -875,12 +973,16 @@ def _Mesh__NED_(self):
     m = self.copy()
     m.swapOrientation()
     return m
+
+
 Mesh.NED = _Mesh__NED_
 
 
 def _Mesh__midpoint_(self):
     """Return midpoint."""
     return sum(self.bb()) / 2
+
+
 Mesh.midpoint = _Mesh__midpoint_
 
 
@@ -904,15 +1006,15 @@ def _Mesh__extent_(self, axis=None):
     >>> m = mt.createGrid(3, 4, 2)
     >>> print(m.extent())
     3.0
-    >>> print(m.extent('x'))
+    >>> print(m.extent("x"))
     2.0
     >>> print(m.extent(2))
     1.0
-    >>> print(np.round(m.extent('d'), 2))
+    >>> print(np.round(m.extent("d"), 2))
     3.74
     """
     bb = self.bb()
-    dist = bb[1]- bb[0]
+    dist = bb[1] - bb[0]
     if isinstance(axis, str):
         sa0 = axis.lower()[0]
         axis = None if sa0 == "m" else "dxyz".find(sa0) - 1
@@ -923,10 +1025,12 @@ def _Mesh__extent_(self, axis=None):
         return dist.abs()
     else:
         return abs(dist[axis])
+
+
 Mesh.extent = _Mesh__extent_
 
 
-def _Mesh__populate_(self, prop:str, value):
+def _Mesh__populate_(self, prop: str, value):
     """Fill property of mesh with values from map or vector.
 
     Arguments
@@ -947,10 +1051,10 @@ def _Mesh__populate_(self, prop:str, value):
     from pygimli.solver import parseMapToCellArray
 
     if isinstance(value, dict):
-        self[prop] =  parseMapToCellArray(value, self)
-    elif hasattr(value, '__iter__'):
-        if hasattr(value[0], '__iter__'):
-            self[prop] =  parseMapToCellArray(value, self)
+        self[prop] = parseMapToCellArray(value, self)
+    elif hasattr(value, "__iter__"):
+        if hasattr(value[0], "__iter__"):
+            self[prop] = parseMapToCellArray(value, self)
         elif len(value) == self.cellCount():
             self[prop] = value
         elif len(value) > max(self.cellMarkers()):  # cell marker indexing
@@ -959,6 +1063,8 @@ def _Mesh__populate_(self, prop:str, value):
             raise ValueError("Length mismatch!")
 
     return self[prop]
+
+
 Mesh.populate = _Mesh__populate_
 
 
@@ -996,20 +1102,25 @@ def _Mesh__submesh_(self, relation="=", **kwargs):
         isTrue = np.bitwise_and(isTrue, isk)
 
     return self.createSubMesh(self.cells(np.nonzero(isTrue)[0]))
+
+
 Mesh.submesh = _Mesh__submesh_
 
 
 def _Mesh__innerBoundaryCenters_(self):
     """Center of all inner boundaries (C1-constraints)."""
     return [b.center() for b in self.boundaries() if not b.outside()]
+
+
 Mesh.innerBoundaryCenters = _Mesh__innerBoundaryCenters_
 
 
 __Mesh__createH2__Orig = Mesh.createH2
+
+
 def _Mesh__createH2_(self):
     """Create a new refined mesh according to H2 criteria."""
     if self.dim() == 3 and self.isGeometry():
-
         poly = Mesh(3, isGeometry=True)
         ## non-optimized version, if runtime is an issue, implement
         ## a better core version
@@ -1023,17 +1134,28 @@ def _Mesh__createH2_(self):
                 n5 = poly.createNode((b.node(1).pos() + b.node(2).pos()) / 2)
                 n6 = poly.createNode((b.node(2).pos() + b.node(3).pos()) / 2)
                 n7 = poly.createNode((b.node(3).pos() + b.node(0).pos()) / 2)
-                n8 = poly.createNode((  b.node(0).pos() + b.node(1).pos()
-                                      + b.node(2).pos() + b.node(3).pos()) / 4)
+                n8 = poly.createNode(
+                    (
+                        b.node(0).pos()
+                        + b.node(1).pos()
+                        + b.node(2).pos()
+                        + b.node(3).pos()
+                    )
+                    / 4
+                )
 
-                poly.createBoundary([n0.id(), n4.id(), n8.id(), n7.id()],
-                                    marker=b.marker())
-                poly.createBoundary([n4.id(), n1.id(), n5.id(), n8.id()],
-                                    marker=b.marker())
-                poly.createBoundary([n5.id(), n2.id(), n6.id(), n8.id()],
-                                    marker=b.marker())
-                poly.createBoundary([n6.id(), n3.id(), n7.id(), n8.id()],
-                                    marker=b.marker())
+                poly.createBoundary(
+                    [n0.id(), n4.id(), n8.id(), n7.id()], marker=b.marker()
+                )
+                poly.createBoundary(
+                    [n4.id(), n1.id(), n5.id(), n8.id()], marker=b.marker()
+                )
+                poly.createBoundary(
+                    [n5.id(), n2.id(), n6.id(), n8.id()], marker=b.marker()
+                )
+                poly.createBoundary(
+                    [n6.id(), n3.id(), n7.id(), n8.id()], marker=b.marker()
+                )
 
             elif b.nodeCount() == 3:
                 n0 = poly.createNode(b.node(0).pos(), b.node(0).marker())
@@ -1043,18 +1165,23 @@ def _Mesh__createH2_(self):
                 n4 = poly.createNode((b.node(1).pos() + b.node(2).pos()) / 2)
                 n5 = poly.createNode((b.node(2).pos() + b.node(0).pos()) / 2)
 
-                poly.createBoundary([n0.id(), n3.id(), n5.id()],
-                                    marker=b.marker())
-                poly.createBoundary([n3.id(), n1.id(), n4.id()],
-                                    marker=b.marker())
-                poly.createBoundary([n4.id(), n2.id(), n5.id()],
-                                    marker=b.marker())
-                poly.createBoundary([n3.id(), n4.id(), n5.id()],
-                                    marker=b.marker())
+                poly.createBoundary(
+                    [n0.id(), n3.id(), n5.id()], marker=b.marker()
+                )
+                poly.createBoundary(
+                    [n3.id(), n1.id(), n4.id()], marker=b.marker()
+                )
+                poly.createBoundary(
+                    [n4.id(), n2.id(), n5.id()], marker=b.marker()
+                )
+                poly.createBoundary(
+                    [n3.id(), n4.id(), n5.id()], marker=b.marker()
+                )
 
         return poly
 
     else:
         return __Mesh__createH2__Orig(self)
+
 
 Mesh.createH2 = _Mesh__createH2_

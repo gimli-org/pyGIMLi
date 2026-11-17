@@ -1,31 +1,75 @@
+"""Create streamlines following a vector or scalar field.
+
+Tools to trace streamlines through a mesh, either in both directions
+from a start coordinate or in one direction only.
+"""
+
 import pygimli as pg
 
 
-def streamline(mesh, field, startCoord, dLengthSteps, dataMesh=None,
-               maxSteps=1000, verbose=False, coords=(0, 1)):
-    """Create a streamline from start coordinate and following a vector field in up and down direction.
+class _StreamlineError(Exception):
+    """Raised when a streamline cannot be traced."""
+
+
+def streamline(
+    mesh,
+    field,
+    startCoord,
+    dLengthSteps,
+    dataMesh=None,
+    maxSteps=1000,
+    verbose=False,
+    coords=(0, 1),
+):
+    """Create a streamline following a vector field in both directions.
+
+    The field is traced from a start coordinate in up and down direction
+    until it vanishes or leaves the mesh.
     """
-    xd, yd, vd = streamlineDir(mesh, field, startCoord, dLengthSteps,
-                               dataMesh=dataMesh, maxSteps=maxSteps,
-                               down=True,  verbose=verbose, coords=coords)
+    xd, yd, vd = streamlineDir(
+        mesh,
+        field,
+        startCoord,
+        dLengthSteps,
+        dataMesh=dataMesh,
+        maxSteps=maxSteps,
+        down=True,
+        verbose=verbose,
+        coords=coords,
+    )
 
     c = mesh.findCell(startCoord)
 
     if c is not None:
         c.setValid(True)
 
-    xu, yu, vu = streamlineDir(mesh, field, startCoord, dLengthSteps,
-                               dataMesh=dataMesh, maxSteps=maxSteps,
-                               down=False, verbose=verbose, coords=coords)
+    xu, yu, vu = streamlineDir(
+        mesh,
+        field,
+        startCoord,
+        dLengthSteps,
+        dataMesh=dataMesh,
+        maxSteps=maxSteps,
+        down=False,
+        verbose=verbose,
+        coords=coords,
+    )
 
     return xd + xu[1:], yd + yu[1:], vd + vu[1:]
 
 
-def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
-                  maxSteps=150, down=True, verbose=False, coords=(0, 1)):
-    """
-        down = -1, up = 1, both = 0
-    """
+def streamlineDir(
+    mesh,
+    field,
+    startCoord,
+    dLengthSteps,
+    dataMesh=None,
+    maxSteps=150,
+    down=True,
+    verbose=False,
+    coords=(0, 1),
+):
+    """Trace a streamline in down (down=True) or up direction."""
     xd = []
     yd = []
     vd = []
@@ -38,11 +82,13 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
     if isinstance(field, pg.PosVector):
         field = field.array()
 
-    if hasattr(field[0], '__len__'):
-        if (max(field[:, 0]) - min(field[:, 0])) < 0.0 and \
-           (max(field[:, 1]) - min(field[:, 1])) < 0.0:
-            raise Exception("No data range streamline: min/max == ",
-                                min(field[:, 0]))
+    if hasattr(field[0], "__len__"):
+        if (max(field[:, 0]) - min(field[:, 0])) < 0.0 and (
+            max(field[:, 1]) - min(field[:, 1])
+        ) < 0.0:
+            raise _StreamlineError(
+                "No data range streamline: min/max == ", min(field[:, 0])
+            )
 
         vx = pg.Vector(field[:, 0])
         vy = pg.Vector(field[:, 1])
@@ -50,9 +96,11 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
         isVectorData = True
     else:
         if min(field) == max(field):
-            raise Exception("No scalar data range for any gradients "
-                                " to draw a streamline: min/max == ",
-                                min(field))
+            raise _StreamlineError(
+                "No scalar data range for any gradients "
+                " to draw a streamline: min/max == ",
+                min(field),
+            )
 
         if dataMesh is not None:
             if len(field) == dataMesh.nodeCount():
@@ -61,9 +109,11 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
                 pot = pg.core.cellDataToPointData(dataMesh, field)
             else:
                 print(len(field), dataMesh)
-                raise Exception("Data length (%i) for streamline is "
-                    "neither nodeCount (%i) nor cellCount (%i)" %
-                    (len(field), dataMesh.nodeCount(), dataMesh.nodeCount()))
+                raise _StreamlineError(
+                    f"Data length ({len(field)}) for streamline is neither "
+                    f"nodeCount ({dataMesh.nodeCount()}) nor cellCount "
+                    f"({dataMesh.nodeCount()})"
+                )
         else:
             if len(field) == mesh.nodeCount():
                 pot = pg.Vector(field)
@@ -71,9 +121,11 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
                 pot = pg.core.cellDataToPointData(mesh, field)
             else:
                 print(len(field), dataMesh)
-                raise Exception("Data length (%i) for streamline is "
-                    "neither nodeCount (%i) nor cellCount (%i)" %
-                    (len(field), mesh.nodeCount(), mesh.nodeCount()))
+                raise _StreamlineError(
+                    f"Data length ({len(field)}) for streamline is neither "
+                    f"nodeCount ({mesh.nodeCount()}) nor cellCount "
+                    f"({mesh.nodeCount()})"
+                )
 
     direction = 1
     if down:
@@ -95,13 +147,12 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
 
     d = None
     while c is not None and len(xd) < maxSteps:
-
         # valid .. temporary check if there is already a stream within the cell
         if not c.valid():
             break
 
         if isVectorData:
-            u = 0.
+            u = 0.0
             if len(vx) == mesh.cellCount():
                 d = pg.Pos(vx[c.id()], vy[c.id()])
             elif len(vx) == mesh.nodeCount():
@@ -109,18 +160,22 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
             elif dataMesh:
                 cd = dataMesh.findCell(pos)
                 if cd is None:
-                    raise Exception("Cannot find " + str(pos) + " dataMesh")
+                    raise _StreamlineError(f"Cannot find {pos} dataMesh")
                 if len(vx) == dataMesh.cellCount():
                     d = pg.Pos(vx[cd.id()], vy[cd.id()])
-                elif len(vx) == dataMesh.nodeCount() and \
-                        len(vy) == dataMesh.nodeCount():
+                elif (
+                    len(vx) == dataMesh.nodeCount()
+                    and len(vy) == dataMesh.nodeCount()
+                ):
                     d = pg.Pos(cd.pot(pos, vx), cd.pot(pos, vy))
                 else:
                     print(dataMesh, len(vx), len(vy))
-                    raise Exception("data size wrong")
+                    raise _StreamlineError("data size wrong")
             else:
                 print("mesh:", mesh, len(vx), len(vy))
-                raise Exception("Data length neither node size or cell size.")
+                raise _StreamlineError(
+                    "Data length neither node size or cell size."
+                )
         else:
             if dataMesh:
                 cd = dataMesh.findCell(pos)
@@ -135,10 +190,10 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
 
         # always go u down
         dAbs = d.length()
-        #print("cell:", c.id(), u, d, dAbs)
+        # print("cell:", c.id(), u, d, dAbs)
 
         if dAbs == 0.0:
-            #print(d, "check this in streamlineDir(",)
+            # print(d, "check this in streamlineDir(",)
             break
 
         if down:
@@ -166,8 +221,8 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
                 pos0 = pg.Pos(xd[-3], yd[-3])
                 pos1 = pg.Pos(xd[-2], yd[-2])
                 pos2 = pg.Pos(xd[-1], yd[-1])
-                if (pos0.dist(pos2) < pos0.dist(pos1)):
-                    pg.debug('degenerating stream aborted')
+                if pos0.dist(pos2) < pos0.dist(pos1):
+                    pg.debug("degenerating stream aborted")
                     break
 
             # If the new cell is different from the current we move into the
@@ -188,7 +243,6 @@ def streamlineDir(mesh, field, startCoord, dLengthSteps, dataMesh=None,
     # Stream line has stopped and the current cell (if there is one) ..
     # .. contains a stream element
     if c is not None:
-
         c.setValid(False)
 
     if down:

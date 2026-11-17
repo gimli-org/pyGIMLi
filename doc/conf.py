@@ -1,6 +1,21 @@
 #!/usr/bin/env python3
 """pyGIMLi sphinx configuration file."""
 
+import os
+
+# Documentation builds are headless. The gallery examples run in joblib
+# worker processes that only inherit the environment, and the backend has to be
+# chosen before matplotlib is imported anywhere. Otherwise a plt.show() in an
+# example opens a window and blocks the build until it is closed by hand.
+# The same settings are re-applied per example by _sphinx-ext/headless.py.
+if os.environ.get("GIMLI_DOC_SHOW", "0") != "1":
+    os.environ["MPLBACKEND"] = "Agg"
+    os.environ["PYVISTA_OFF_SCREEN"] = "true"
+
+import matplotlib
+
+matplotlib.use("Agg", force=True)
+
 import warnings
 
 warnings.filterwarnings(
@@ -12,7 +27,6 @@ warnings.filterwarnings(
 
 import random
 import datetime
-import os
 import re
 import sys
 from os import path
@@ -44,6 +58,12 @@ except ImportError:
 
 sys.path.append(os.path.abspath(SPHINXDOC_PATH))
 sys.path.append(os.path.abspath(join(SPHINXDOC_PATH, "_sphinx-ext")))
+
+# Fail the build on CRITICAL log messages of the pyGIMLi core
+# (the extension itself is registered in `extensions` below).
+from criticalguard import criticalLogScraper, startExample
+from galleryprogress import reportProgress
+from headless import forceHeadless
 
 # The following line is necessary for the Tools section
 sys.path.append(os.path.abspath(join(TRUNK_PATH, "pygimli")))
@@ -89,6 +109,12 @@ extensions = [
     "sphinx.ext.napoleon",
     "matplotlib.sphinxext.plot_directive",
     "srclinks",
+    # abort the build on CRITICAL log messages of the pyGIMLi core
+    "criticalguard",
+    # one line per finished gallery example instead of the C++ output
+    "galleryprogress",
+    # execute the examples of all sections in one worker pool
+    "gallerywarmup",
     "sphinxcontrib.doxylink",
     "sphinxcontrib.bibtex",
     "sphinxcontrib.programoutput",
@@ -359,8 +385,12 @@ try:
         matplotlib.rcParams.update(plot_rcparams)
 
     # Setup automatic gallery generation
+    # Number of examples executed in parallel by sphinx-gallery (joblib).
+    # Every worker runs a full pyGIMLi + matplotlib (+ maybe pyvista) process,
+    # so the count is limited by the cores and by the available memory.
     _ncpu = os.cpu_count() or 1
-    _parallel = max(1, _ncpu - 2)
+    _parallel = max(1, min(_ncpu - 2, 8))
+    _parallel = int(os.environ.get("GIMLI_DOC_JOBS", _parallel))
 
     sphinx_gallery_conf = {
         "examples_dirs": [
@@ -399,7 +429,9 @@ try:
         "ignore_repr_types": r"matplotlib[text, axes, collections]",
         "show_signature": False,
         "download_all_examples": False,
-        "parallel": 1,
+        # Parallel example execution; each worker runs its own python process
+        # and its own instance of the critical log guard.
+        "parallel": _parallel,
         "abort_on_example_error": True,  # Fail early
         # 'matplotlib_animations': (True, 'mp4'),
         # Binder integration for interactive tutorials
@@ -428,7 +460,28 @@ try:
     #         return matplotlib_scraper(*args, format='svg', **kwargs)
     #
     # sphinx_gallery_conf['image_scrapers']=(matplotlib_svg_scraper(),)
-    sphinx_gallery_conf["image_scrapers"] = ("matplotlib",)
+    #
+    # The guard function drops CRITICAL messages that were logged before the
+    # example started (reset_modules runs before every example), the scraper
+    # below aborts on the ones logged by the example itself. The first hook
+    # makes sure the example runs headless, also in a gallery worker process,
+    # the last one condenses the output of the examples to one line each.
+    sphinx_gallery_conf["reset_modules"] = (
+        forceHeadless,
+        reset_mpl,
+        startExample,
+        reportProgress,
+    )
+    # Call the hooks after the example as well, so the progress hook can
+    # restore stdout and report the runtime.
+    sphinx_gallery_conf["reset_modules_order"] = "both"
+
+    # The last scraper only checks for CRITICAL log messages of the pyGIMLi
+    # core (see _sphinx-ext/criticalguard.py) and aborts the build.
+    sphinx_gallery_conf["image_scrapers"] = (
+        "matplotlib",
+        criticalLogScraper,
+    )
 
     # ## allow svg images from mpl
     # import sphinx_mpatch.patch_sphinx_gallery
@@ -860,6 +913,19 @@ html_context = {
 }
 
 
+def skipInternalMembers(app, what, name, obj, skip, options):
+    """Hide helpers with a trailing underscore from the API reference.
+
+    The C++ bindings expose their internal helpers with a single trailing
+    underscore (``Edge_``, ``DistancePair_``, ``hash_``, ...). Their
+    Boost.Python signatures are no valid reStructuredText, e.g.
+    ``GIMLI::Dijkstra::Edge_ {lvalue}`` reads as an unknown reference target.
+    """
+    if not skip and name.endswith("_") and not name.endswith("__"):
+        return True
+    return skip
+
+
 def setup(app: Sphinx):
     """Add functions to the Sphinx setup."""
     from myst_parser._docs import MystLexer
@@ -874,3 +940,4 @@ def setup(app: Sphinx):
         exampleDirective = SyntaxExampleDocsDirective
     app.add_directive("myst-example", exampleDirective)
     app.add_lexer("myst", MystLexer)
+    app.connect("autodoc-skip-member", skipInternalMembers)

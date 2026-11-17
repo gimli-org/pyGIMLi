@@ -7,6 +7,7 @@ import pygimli as pg
 from pygimli.viewer.mpl import createColorBar
 from .TravelTimeManager import TravelTimeManager
 from .plotting import drawVA, drawFirstPicks
+
 Manager = TravelTimeManager  # convenience alias
 
 

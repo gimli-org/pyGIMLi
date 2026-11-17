@@ -9,11 +9,11 @@ import pygimli as pg
 mu0 = pg.physics.constants.mu0  # magn. field const.
 G = pg.physics.constants.GmGal  # gravitation constant in mGal
 
-deltaACyl = lambda R__, rho__: 2. * np.pi * R__**2. * rho__
+deltaACyl = lambda R__, rho__: 2.0 * np.pi * R__**2.0 * rho__
 # [m^2 kg/m^3]=[kg/m]
-deltaMSph = lambda R__, rho__: 4. / 3. * np.pi * R__**3. * rho__  # [kg]
+deltaMSph = lambda R__, rho__: 4.0 / 3.0 * np.pi * R__**3.0 * rho__  # [kg]
 rabs = lambda r__: np.asarray([np.sqrt(x__.dot(x__)) for x__ in r__])
-gradR = lambda r__: (r__.T / rabs(r__))
+gradR = lambda r__: r__.T / rabs(r__)
 adot = lambda M__, x__: np.asarray([(a__.dot(M__)) for a__ in x__])
 
 # def magnetization(lat, lon, suszept, dat=(2010, 1, 1)):
@@ -21,9 +21,9 @@ adot = lambda M__, x__: np.asarray([(a__.dot(M__)) for a__ in x__])
 # TODO
 # """
 # T0, I, D = GeoMagT0(lat, lon, 0, dat)
-#  # indizierte Magnetisierung
+#  # induced magnetization
 # Mi = 1. / mu0 * suszept * T0
-#  # remanente Magnetisierung
+#  # remanent magnetization
 # Mr = 0.
 
 # print(T0, I, D, "abs: ", np.sqrt(T0.dot(T0)))
@@ -67,8 +67,7 @@ def BaZSphere(pnts, R, pos, M):
     M : [float, float, float]
         [Mx, My, Mz] -- magnetization
     """
-    return poissonEoetvoes(
-        adot(M, gradGZSphere(pnts, R, rho=1.0, pos=pos)))
+    return poissonEoetvoes(adot(M, gradGZSphere(pnts, R, rho=1.0, pos=pos)))
 
 
 def BaZCylinderHoriz(pnts, R, pos, M):
@@ -93,7 +92,8 @@ def BaZCylinderHoriz(pnts, R, pos, M):
 
     """
     return poissonEoetvoes(
-        adot(M, gradGZCylinderHoriz(pnts, R, rho=1.0, pos=pos)))
+        adot(M, gradGZCylinderHoriz(pnts, R, rho=1.0, pos=pos))
+    )
 
 
 def poissonEoetvoes(dg):
@@ -123,11 +123,11 @@ def uSphere(r, rad, rho, pos=None):
         position of sphere (0.0, 0.0, 0.0)
     """
     if pos is None:
-        pos = (0., 0., 0.)
-    return -G * deltaMSph(rad, rho) * 1. / rabs(r - pos)
+        pos = (0.0, 0.0, 0.0)
+    return -G * deltaMSph(rad, rho) * 1.0 / rabs(r - pos)
 
 
-def gradUSphere(r, rad, rho, pos=(0., 0., 0.)):
+def gradUSphere(r, rad, rho, pos=(0.0, 0.0, 0.0)):
     r"""Gravitational field of a sphere.
 
     .. math:: g = -G[m^3/(kg s^2)] * dM[kg] * 1/r^2 1/m^2] *
@@ -147,13 +147,16 @@ def gradUSphere(r, rad, rho, pos=(0., 0., 0.)):
     [gx, gy, gz] : [float*3]
         gravitational acceleration (note that gz points negative)
     """
-    # gesucht eigentlich g_z aber nach unten also -z
-    return [1., 1., -1.] * (
-        gradR(r - pos) * - G * deltaMSph(rad, rho) * 1. / (rabs(r - pos)**2)).T
+    # actually g_z is wanted, but pointing downward, i.e. -z
+    return [1.0, 1.0, -1.0] * (
+        gradR(r - pos) * -G * deltaMSph(rad, rho) * 1.0 / (rabs(r - pos) ** 2)
+    ).T
+
+
 # def gSphere(...)
 
 
-def gradGZSphere(r, rad, rho, pos=(0., 0., 0.)):
+def gradGZSphere(r, rad, rho, pos=(0.0, 0.0, 0.0)):
     r"""TODO WRITEME.
 
     .. math:: g = -\nabla u
@@ -173,10 +176,14 @@ def gradGZSphere(r, rad, rho, pos=(0., 0., 0.)):
     """
     t = pos[2]
 
-    gzxyz = np.asarray([-3.0 * t * r[:, 0],
-                        -3.0 * t * r[:, 1],
-                        +2.0 * t * t - r[:, 0]**2 - r[:, 1]**2])
-    return (G * deltaMSph(rad, rho) / rabs(r - pos)**5. * gzxyz).T
+    gzxyz = np.asarray(
+        [
+            -3.0 * t * r[:, 0],
+            -3.0 * t * r[:, 1],
+            +2.0 * t * t - r[:, 0] ** 2 - r[:, 1] ** 2,
+        ]
+    )
+    return (G * deltaMSph(rad, rho) / rabs(r - pos) ** 5.0 * gzxyz).T
 
 
 def uCylinderHoriz(pnts, rad, rho, pos=None):
@@ -198,7 +205,7 @@ def uCylinderHoriz(pnts, rad, rho, pos=None):
     gravimetric potential at the given points
     """
     if pos is None:
-        pos = [0., 0.]
+        pos = [0.0, 0.0]
 
     u = np.zeros(len(pnts))
     for i, r in enumerate(rabs(pnts - pos)):
@@ -210,7 +217,7 @@ def uCylinderHoriz(pnts, rad, rho, pos=None):
     return u
 
 
-def gradUCylinderHoriz(r, a, rho, pos=(0., 0.)):
+def gradUCylinderHoriz(r, a, rho, pos=(0.0, 0.0)):
     r"""2D Gradient of gravimetric potential of horizontal cylinder.
 
     .. math::
@@ -235,11 +242,12 @@ def gradUCylinderHoriz(r, a, rho, pos=(0., 0.)):
     """
     p = np.array(pos)
     ra = np.array(r)
-    return [1., -1.0] * (
-        gradR(ra - p) * -G * deltaACyl(a, rho) * 1. / (rabs(ra - p))).T
+    return [1.0, -1.0] * (
+        gradR(ra - p) * -G * deltaACyl(a, rho) * 1.0 / (rabs(ra - p))
+    ).T
 
 
-def gradGZCylinderHoriz(r, a, rho, pos=(0., 0.)):
+def gradGZCylinderHoriz(r, a, rho, pos=(0.0, 0.0)):
     r"""TODO WRITEME.
 
     .. math:: g = -grad u(r), with r = [x,z], |r| = \sqrt{x^2+z^2}
@@ -261,10 +269,13 @@ def gradGZCylinderHoriz(r, a, rho, pos=(0., 0.)):
     p = np.array(pos)
     t = pos[1]
 
-    gz_xz = np.asarray([-2.0 * r[:, 0] * (t - r[:, 1]),
-                       (-r[:, 0]**2 + (t - r[:, 1])**2)])
+    gz_xz = np.asarray(
+        [-2.0 * r[:, 0] * (t - r[:, 1]), (-(r[:, 0] ** 2) + (t - r[:, 1]) ** 2)]
+    )
 
-    return (G * deltaACyl(a, rho) / rabs(r - p)**4. * gz_xz).T
+    return (G * deltaACyl(a, rho) / rabs(r - p) ** 4.0 * gz_xz).T
+
+
 # def gZSphere(...)
 
 
@@ -296,7 +307,7 @@ def gradUHalfPlateHoriz(pnts, t, rho, pos=(0.0, 0.0)):
         # TODO: Fix first column of gu
         # gu[i][0] = G * rho * (np.pi - 3. * \
         # np.arctan((q[0] - pos[0]) / (q[1] - pos[1])))
-        gu[i][1] = -G * rho * t * (np.pi + 2.0 * np.arctan2(xx1, zz1)) * -1.
+        gu[i][1] = -G * rho * t * (np.pi + 2.0 * np.arctan2(xx1, zz1)) * -1.0
 
     return gu
 
@@ -324,7 +335,6 @@ def gradGZHalfPlateHoriz(pnts, t, rho, pos=(0.0, 0.0)):
     gz = np.zeros((len(pnts), 2))
 
     for i, q in enumerate(pnts):
-
         zz1 = q[1] - pos[1]
         xx1 = q[0] - pos[0]
 
@@ -332,6 +342,8 @@ def gradGZHalfPlateHoriz(pnts, t, rho, pos=(0.0, 0.0)):
         gz[i, 1] = +2.0 * G * rho * t * (xx1 / (xx1 * xx1 + zz1 * zz1))
 
     return gz
+
+
 # def gzPlatteHoriz(...)
 
 
@@ -347,8 +359,11 @@ def lineIntegralZ_WonBevis(p1, p2):
     dg = pg.Pos(0.0, 0.0, 0.0)
     dgz = pg.Pos(0.0, 0.0, 0.0)
     pg.core.lineIntegralZ_WonBevis(p1, p2, dg, dgz)
-    return (np.asarray((dg[0], dg[1], dg[2])),
-            np.asarray((dgz[0], dgz[1], dgz[2])))
+    return (
+        np.asarray((dg[0], dg[1], dg[2])),
+        np.asarray((dgz[0], dgz[1], dgz[2])),
+    )
+
 
 #     x1 = p1[0]
 #     z1 = p1[1]
@@ -431,7 +446,7 @@ def lineIntegralZ_WonBevis(p1, p2):
 #     return np.asarray((Fx, 0.0, Fz)), np.asarray((Fzx, 0.0, Fzz))
 
 
-def calcPolyGz(pnts, poly, density=1., openPoly=False, forceOpen=False):
+def calcPolyGz(pnts, poly, density=1.0, openPoly=False, forceOpen=False):
     """Calculate 2D gravimetric response at given points for a polygon.
 
     Calculate 2D gravimetric response at given points for a polygon with
@@ -459,14 +474,16 @@ def calcPolyGz(pnts, poly, density=1., openPoly=False, forceOpen=False):
         for j in range(len(poly) - (openPoly)):
             a = poly[j]
             b = poly[(j + 1) % len(poly)]
-        #    print "a, b", a, b
+            #    print "a, b", a, b
             gzi, gzzi = lineIntegralZ_WonBevis(a - p, b - p)
 
-#            print(gzi, gzzi)
+            #            print(gzi, gzzi)
             gz[i, :] += gzi * [1.0, 1.0, 1.0]
             gzz[i, :] += gzzi
 
     return density * 2.0 * G * gz, density * 2.0 * G * gzz
+
+
 # def calcPolydgdz()
 
 
@@ -508,8 +525,10 @@ def angle(p1, p2, p3, Un):
 
     # Normals
     n1 = np.asarray([y2 * z1 - y1 * z2, x1 * z2 - x2 * z1, x2 * y1 - x1 * y2])
-    n2 = np.asarray(
-        [y3 * z2 - y2 * z3, x2 * z3 - x3 * z2, x3 * y2 - x2 * y3]) * -1.0
+    n2 = (
+        np.asarray([y3 * z2 - y2 * z3, x2 * z3 - x3 * z2, x3 * y2 - x2 * y3])
+        * -1.0
+    )
 
     n1 = n1 / np.linalg.norm(n1)
     n2 = n2 / np.linalg.norm(n2)
@@ -525,6 +544,8 @@ def angle(p1, p2, p3, Un):
         ang = 2.0 * np.pi - ang
 
     return ang, perp
+
+
 # angle(...)
 
 
@@ -543,15 +564,15 @@ def gravMagBoundarySinghGup(boundary):
     u = shape.norm()
     di = r.dot(u)
 
-    P = 0.
-    Q = 0.
-    R = 0.
+    P = 0.0
+    Q = 0.0
+    R = 0.0
 
     l = u[0]
     m = u[1]
     n = u[2]
 
-    # Berechne Raumwinkel
+    # compute solid angle
     W = 0
     for i in range(shape.nodeCount()):
         p1 = shape.node(i).pos()
@@ -567,7 +588,6 @@ def gravMagBoundarySinghGup(boundary):
     Omega = -fsign * W
 
     for i in range(shape.nodeCount()):
-
         vr1 = shape.node(i).pos()
         vr2 = shape.node((i + 1) % shape.nodeCount()).pos()
 
@@ -578,24 +598,25 @@ def gravMagBoundarySinghGup(boundary):
         Ly = vr2[1] - vr1[1]
         Lz = vr2[2] - vr1[2]
 
-        b = 2. * (vr1[0] * Lx + vr1[1] * Ly + vr1[2] * Lz)
+        b = 2.0 * (vr1[0] * Lx + vr1[1] * Ly + vr1[2] * Lz)
 
-        b2 = b / (2. * L)
+        b2 = b / (2.0 * L)
         if abs(r1 + b2) < 1e-10:
             I = (1.0 / L) * np.log(abs(L - r1) / r1)
         else:
-            I = (1.0 / L) * \
-                np.log((np.sqrt(L * L + b + r1 * r1) + L + b2) / (r1 + b2))
+            I = (1.0 / L) * np.log(
+                (np.sqrt(L * L + b + r1 * r1) + L + b2) / (r1 + b2)
+            )
 
         # print(I, L, b, r1,  Lx, Ly, Lz)
         P += I * Lx
         Q += I * Ly
         R += I * Lz
 
-#    print "norm:", u
-#    print Omega, l, m, n, P, Q, R
-#    exitd
-#    print "r", r
+    #    print "norm:", u
+    #    print Omega, l, m, n, P, Q, R
+    #    exitd
+    #    print "r", r
 
     Fx = di * (l * Omega + n * Q - m * R)
     Fy = di * (m * Omega + l * R - n * P)
@@ -609,10 +630,13 @@ def gravMagBoundarySinghGup(boundary):
     Fzy = Pd * (m * Omega + l * R - n * P)
     Fzz = Pd * (n * Omega + m * P - l * Q)
 
-#    print Fx, Fy, Fz, Fzx, Fzy, Fzz
-#    Fzx, Fzy, Fzz = Fz* u
-#    exitd
-    return np.asarray([Fx, Fy, Fz]), np.asarray([Fzx, Fzy, Fzz]),
+    #    print Fx, Fy, Fz, Fzx, Fzy, Fzz
+    #    Fzx, Fzy, Fzz = Fz* u
+    #    exitd
+    return (
+        np.asarray([Fx, Fy, Fz]),
+        np.asarray([Fzx, Fzy, Fzz]),
+    )
 
 
 def solveGravimetry(mesh, dDensity=None, pnts=None, complete=False):
@@ -673,20 +697,24 @@ def solveGravimetry(mesh, dDensity=None, pnts=None, complete=False):
         mesh.translate(-p)
 
         for b in mesh.boundaries():
-            if b.marker() != 0 or hasattr(dDensity, '__len__') or \
-                    dDensity is None:
-
+            if (
+                b.marker() != 0
+                or hasattr(dDensity, "__len__")
+                or dDensity is None
+            ):
                 if mesh.dimension() == 2:
                     # tic = time.time()
                     if complete:
-                        dgi, dgzi = lineIntegralZ_WonBevis(b.node(0).pos(),
-                                                           b.node(1).pos())
-#                        times.append(time.time() - tic)
+                        dgi, dgzi = lineIntegralZ_WonBevis(
+                            b.node(0).pos(), b.node(1).pos()
+                        )
+                        #                        times.append(time.time() - tic)
                         dgi *= -2.0
                         dgzi *= -2.0
                     else:
-                        dgi = pg.core.lineIntegralZ_WonBevis(b.node(0).pos(),
-                                                             b.node(1).pos())
+                        dgi = pg.core.lineIntegralZ_WonBevis(
+                            b.node(0).pos(), b.node(1).pos()
+                        )
                         dgi *= -2.0 * G
                 else:
                     if complete:
@@ -699,7 +727,7 @@ def solveGravimetry(mesh, dDensity=None, pnts=None, complete=False):
                     dgi *= -G
                     dgzi *= -G
 
-                if hasattr(dDensity, '__len__') or dDensity is None:
+                if hasattr(dDensity, "__len__") or dDensity is None:
                     cl = b.leftCell()
                     cr = b.rightCell()
 
@@ -718,15 +746,15 @@ def solveGravimetry(mesh, dDensity=None, pnts=None, complete=False):
 
         mesh.translate(p)
 
-#    import matplotlib.pyplot as plt
-#    print("times:", sum(times), np.mean(times))
-#    plt.plot(times)
+    #    import matplotlib.pyplot as plt
+    #    print("times:", sum(times), np.mean(times))
+    #    plt.plot(times)
 
     if dDensity is None:
         if complete:
             return Gdg.transpose([0, 2, 1]), Gdgz.transpose([0, 2, 1])
         return Gdg
-    elif hasattr(dDensity, '__len__'):
+    elif hasattr(dDensity, "__len__"):
         if complete:
             dg = Gdg.transpose([0, 2, 1]).dot(dDensity)
             dgz = Gdgz.transpose([0, 2, 1]).dot(dDensity)
@@ -773,26 +801,33 @@ class GravityModelling2D(pg.frameworks.MeshModelling):
 
     def response(self, model):
         """Calculate response for a given density distribution."""
-        if (self._J.rows() == len(self.sensorPositions) and
-                self._J.cols() == len(model)):
+        if self._J.rows() == len(
+            self.sensorPositions
+        ) and self._J.cols() == len(model):
             return self._J * model
         else:
-            solveGravimetry(self.regionManager().paraDomain(),
-                            model, pnts=self.sensorPositions,
-                            complete=False)
+            solveGravimetry(
+                self.regionManager().paraDomain(),
+                model,
+                pnts=self.sensorPositions,
+                complete=False,
+            )
 
     def createJacobian(self, model):
         """Create Jacobian."""
-        if (self._J.rows() != len(self.sensorPositions) or
-                self._J.cols() != len(model)):
+        if self._J.rows() != len(self.sensorPositions) or self._J.cols() != len(
+            model
+        ):
             self.calcMatrix()
 
     def calcMatrix(self):
         """Create Jacobian matrix (density-independent)."""
-        gdz = solveGravimetry(self.regionManager().paraDomain(),
-                              dDensity=None,
-                              pnts=self.sensorPositions,
-                              complete=False)
+        gdz = solveGravimetry(
+            self.regionManager().paraDomain(),
+            dDensity=None,
+            pnts=self.sensorPositions,
+            complete=False,
+        )
         self._J.resize(len(gdz), len(gdz[0]))
 
         for i, gdzi in enumerate(gdz):

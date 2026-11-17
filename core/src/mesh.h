@@ -162,7 +162,7 @@ public:
     inline bool staticGeometry() const { return staticGeometry_; }
 
     /*! Mesh is marked as geometry definition or PLC
-    so createNode will allways with check. */
+    so createNode will always with check. */
     void setGeometry(bool b);
 
     /*! Return if the mesh is a geometry definition.*/
@@ -191,7 +191,7 @@ public:
     Node * createSecondaryNode(const RVector3 & pos, double tol=-1);
 
     /*! Create new Node with duplication checks. Returns the already existing node when its within a tolerance distance to pos.
-    If edgeCheck is set, any 2d (p1) boundary edges will be checked for any intersection with pos and splitted if necessary.*/
+    If edgeCheck is set, any 2d (p1) boundary edges will be checked for any intersection with pos and split if necessary.*/
     Node * createNodeWithCheck(const RVector3 & pos, double tol=1e-6,
                                bool warn=false, bool edgeCheck=false);
 
@@ -219,12 +219,12 @@ public:
 
     /*! Create a cell as a copy of a cell from an alternative mesh.
      * Each node of the new cell will be created with duplication check and
-     * reused if there is already a node withing the tolerance distance tol.
+     * reused if there is already a node within the tolerance distance tol.
      * tol=-1 disables this duplication check. */
     Cell * copyCell(const Cell & cell, double tol=1e-6);
     /*! Create a boundary as a copy of a boundary from an alternative mesh.
      * Each node of the new cell will be created with duplication check and
-     * reused if there is already a node withing the tolerance distance tol.
+     * reused if there is already a node within the tolerance distance tol.
      * tol=-1 disables this duplication check. */
     Boundary * copyBoundary(const Boundary & bound, double tol=1e-6, bool check=true);
 
@@ -339,7 +339,7 @@ public:
     Node & secondaryNode(Index id) const;
     Node & secondaryNode(Index id);
 
-    /*!Return ids for all nodes. Optionally including for secondary ndoes.*/
+    /*!Return ids for all nodes. Optionally including for secondary nodes.*/
     IndexArray nodeIDs(bool withSecNodes=false) const;
     /*!Set all node ids.
     Size of IndexArray indicated if it should be set the secondary nodes too.
@@ -831,7 +831,7 @@ protected:
 
     mutable KDTreeWrapper * tree_;
 
-    /*! A static geometry mesh caches geometry informations. */
+    /*! A static geometry mesh caches geometry information. */
     bool staticGeometry_;
     bool isGeometry_; // mesh is marked as PLC
     mutable RVector cellSizesCache_;

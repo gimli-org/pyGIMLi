@@ -182,7 +182,7 @@ public:
     /*! Default destructor. */
     virtual ~Shape();
 
-    /*! Pure virtual methode for runtime identification. */
+    /*! Pure virtual method for runtime identification. */
     virtual int rtti() const = 0;
 
     virtual int dim() const = 0;
@@ -762,4 +762,3 @@ public:
 } // namespace GIMLI
 
 #endif // _GIMLI_SHAPE__H
-

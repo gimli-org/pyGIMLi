@@ -15,22 +15,22 @@ searchPython(){
         PYTHONVERSION=`python -c 'import sys; print(sys.version)'`
         PYTHONMAJOR=`python -c 'import sys; print(sys.version_info.major)'`
         PYTHONMINOR=`python -c 'import sys; print(sys.version_info.minor)'`
-        
+
         echo "PYTHON FOUND:" $PYTHONVERSION $PYTHONMAJOR
         echo "VERSION:" $PYTHONMAJOR.$PYTHONMINOR
-        
+
         if [ -z "$FindRunDone" ]; then
-            # obvious python is allready path
+            # obvious python is already path
             rm -rf $GIMLI_ROOT/.bash_hint_python
         fi
     else
         if [ -z "$FindRunDone" ]; then
             echo "---------------------------------------------------------------------------------------------------"
             echo "Please install latest version from $WINPYTHON_DOWNLOAD"
-            echo "We try to find it if you already have but forget to set a proper path" 
+            echo "We try to find it if you already have but forget to set a proper path"
             echo "---------------------------------------------------------------------------------------------------"
-            echo "No suiteable python version found .. trying to find one .......... find /C -name $WINPYTHON_VERSION"
-            
+            echo "No suitable python version found .. trying to find one .......... find /C -name $WINPYTHON_VERSION"
+
             ar=($(find /C -name "$WINPYTHON_VERSION" 2>/dev/null))
             if [ -n "$ar" ]; then
                 echo "Found: " $ar
@@ -45,9 +45,9 @@ searchPython(){
             fi
             searchPython 1
         else
-  
+
             echo "-----------------------------------------------------------------------------------"
-            echo "No suiteable python version found .. you need to install latest anaconda for windows"
+            echo "No suitable python version found .. you need to install latest anaconda for windows"
             echo "$WINPYTHON_DOWNLOAD"
             echo "You can the simple rerun this script and find you Python installation temporarily, "
             echo "or set your PATH variable to your anaconda installation directory."
@@ -57,13 +57,13 @@ searchPython(){
 
 patchPython(){
     pacman -S --needed --noconfirm diffutils patch
-        
+
     PYPATH=`which python`
     PYCONFIGFILE=${PYPATH%/python}/include/pyconfig.h
     echo "backup $PYCONFIGFILE to $PYCONFIGFILE.backup"
     [ ! -f $PYCONFIGFILE.backup ] && cp $PYCONFIGFILE $PYCONFIGFILE.backup
     cp $PYCONFIGFILE.backup $PYCONFIGFILE
-    
+
     LINE=`grep -n '#define COMPILER "\[gcc\]"' $PYCONFIGFILE | cut -d':' -f1`
     LINE=$[$LINE + 1]
     echo "patch hypot gcc bug at line: $LINE"

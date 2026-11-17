@@ -28,10 +28,9 @@ ax, cb = pg.show(geom, markers=True)
 # Create a mesh from based on the geometry definition.
 # When calling the :func:`pg.meshtools.createMesh` function, a quality parameter
 # can be forwarded to Triangle, which prescribes the minimum angle allowed in
-# the final mesh. For a tutorial on the quality of the mesh please refer to :
-# Mesh quality inspection [1]
-# [1]: https://www.pygimli.org/_tutorials_auto/1_mesh/
-#      plot_6-mesh-quality-inspection.html
+# the final mesh. For a tutorial on the quality of the mesh please refer to the
+# `Mesh quality inspection
+# <https://www.pygimli.org/_tutorials_auto/1_mesh/plot_6-mesh-quality-inspection.html>`_.
 # Note: Incrementing quality increases computer time, take precaution
 # with quality values over 33.
 mesh = mt.createMesh(geom, quality=33, area=0.2, smooth=[1, 10])

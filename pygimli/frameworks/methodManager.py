@@ -723,7 +723,7 @@ class ParameterInversionManager(MethodManager):
         return np.asarray(data)
 
     def _ensureError(self, error, *args, **kwargs):
-        """Overwriten to allow for non error."""
+        """Overwritten to allow for non error."""
         return error
 
     def createInversionFramework(self, **kwargs):

@@ -226,7 +226,7 @@ public:
     /*! Set all values to zero but keep sparsity pattern.*/
     void clean(){ this->vals_*=ValueType(0); }
 
-    /*! Clear the whole matrix and remvoe values and sparsity pattern.*/
+    /*! Clear the whole matrix and remove values and sparsity pattern.*/
     void clear(){
         colPtr_.clear();
         rowIdx_.clear();
@@ -304,7 +304,7 @@ public:
      */
     void reduce(const IVector & ids, bool keepDiag=true);
 
-    /*! Create value mask to reduce rows and colums.*/
+    /*! Create value mask to reduce rows and columns.*/
     /**
      * @brief Creates a reduction mask based on the provided indices.
      *
@@ -406,7 +406,7 @@ public:
     inline const Vector < ValueType > & vecVals() const { return vals_; }
     inline Vector < ValueType > & vecVals() { return vals_; }
 
-    //!!prefered
+    //!!preferred
     inline const Vector < ValueType > & values() const { return vals_; }
     inline Vector < ValueType > values(const IndexArray & mask)
         const { return vals_[mask]; }
@@ -459,7 +459,7 @@ public:
     bool valid() const { return valid_; }
     void setValid(bool v) { valid_ = v; }
 
-    /*! Just set the matrix dimensions, not usefull until proper fill of pattern. Only use for internal use.*/
+    /*! Just set the matrix dimensions, not useful until proper fill of pattern. Only use for internal use.*/
     inline virtual void resize(Index rows, Index cols){
             // __MS(_rows, colPtr_.size() - 1, rows)
             // __MS(_cols, max(rowIdx_) + 1, cols)

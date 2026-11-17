@@ -86,15 +86,15 @@ bool Line::intersectRay(const RVector3 & start, const RVector3 & dir,
     RVector3 u(_p1 - _p0);
     RVector3 v(dir);
     RVector3 w(_p0 - start);
-    
-    double a = u.dot(u); 
+
+    double a = u.dot(u);
     double b = u.dot(v);
-    double c = v.dot(v);  
+    double c = v.dot(v);
     double d = u.dot(w);
     double e = v.dot(w);
-    double dd = a*c - b*b; 
+    double dd = a*c - b*b;
     double sc, tc;
-    
+
     bool isParallel = false;
     // __MS(dd)
     if (dd < TOLERANCE) {
@@ -123,7 +123,7 @@ bool Line::intersectRay(const RVector3 & start, const RVector3 & dir,
         }
     }
 
-    return false; 
+    return false;
 }
 
 RVector3 Line::intersect(const RVector3 & start, const RVector3 & dir, double tol) const{
@@ -138,7 +138,7 @@ RVector3 Line::intersect(const Line & line, double tol) const {
     THROW_TO_IMPL
     //check parallel and equal
 
-  //** in 3D: wenn sie sich ber�hren spannen sie eine Ebene auf.
+  //** in 3D: if they touch, they span a plane.
 
 // x0 + s * x1 = x2 + t * x3;
 // x0 - x2 = t * x3 - s * x1;
@@ -278,4 +278,3 @@ bool Line::touch1(const RVector3 & pos, int & pFunIdx, double tol) const{
 }
 
 } // namespace GIMLI
-

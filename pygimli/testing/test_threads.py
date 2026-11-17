@@ -17,7 +17,7 @@ import time
 import unittest
 from unittest import mock
 
-import numpy  # noqa: F401  # must stay in front of pygimli (see bug above)
+import numpy  # must stay in front of pygimli (see bug above)
 
 import pygimli as pg
 from pygimli.core import threads

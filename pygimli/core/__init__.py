@@ -1136,7 +1136,7 @@ pgcore.stdVectorRVector.__array_ufunc__ = _stdVectorRVector__array_ufunc_
 
 ##################################
 # R3Vector (PosVector) additional operators
-# TODO native RValue suuport for int->double conversion to avoid this hack
+# TODO native RValue support for int->double conversion to avoid this hack
 ##################################
 
 __R3Vector_mul_orig = pgcore.R3Vector.__mul__
@@ -1887,7 +1887,7 @@ def x(instance):
     >>> pg.x([[0, 0], [1, 0]])
     2 [0.0, 1.0]
     """
-    ## test atoms first (perfomance)
+    ## test atoms first (performance)
     if isPos(instance):
         return instance[0]
     if isArray(instance) and not isPos(instance):
@@ -1906,7 +1906,7 @@ def y(instance):
     instance : DataContainer, Mesh, R3Vector, np.array, list(Pos)
         Return the associated coordinate positions for given class instance.
     """
-    ## test atoms first (perfomance)
+    ## test atoms first (performance)
     if isPos(instance):
         return instance[1]
     if isinstance(instance, (int, float)):
@@ -1925,7 +1925,7 @@ def z(instance):
     instance : DataContainer, Mesh, R3Vector, np.array, list(Pos)
         Return the associated coordinate positions for given class instance.
     """
-    ## test atoms first (perfomance)
+    ## test atoms first (performance)
     if isPos(instance):
         return instance[2]
     if isinstance(instance, (int, float)):

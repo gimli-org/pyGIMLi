@@ -46,7 +46,7 @@ class SpectrumModelling(ParameterModelling):
         """
         self._complex = kwargs.pop("complex", False)
         super().__init__(funct=funct, **kwargs)
-        self.defaultModelTrans = 'log'
+        self.defaultModelTrans = "log"
         self._freqs = kwargs.pop("frequencies", None)
 
     @property
@@ -93,8 +93,9 @@ class SpectrumModelling(ParameterModelling):
         """Draw data."""
         if self.complex:
             Z = toComplex(data)
-            showSpectrum(self.freqs, np.abs(Z), -np.angle(Z)*1000,
-                         axs=ax, **kwargs)
+            showSpectrum(
+                self.freqs, np.abs(Z), -np.angle(Z) * 1000, axs=ax, **kwargs
+            )
         else:
             ax.semilogx(self.freqs, data)
             ax.legend()
@@ -158,7 +159,7 @@ class SpectrumManager(MethodManager):
         if phi is not None:
             self.fw.dataVals = self._ensureData(toComplex(amp, phi))
             if isinstance(ePhi, float):
-                ePhi = abs(ePhi/phi)
+                ePhi = abs(ePhi / phi)
         else:
             self.fw.dataVals = self._ensureData(amp)
 
@@ -211,16 +212,17 @@ class SpectrumManager(MethodManager):
         if f is not None:
             self.fop.freqs = f
 
-        limits = kwargs.pop('limits', {})
+        limits = kwargs.pop("limits", {})
 
         for k, v in limits.items():
             self.fop.setRegionProperties(k, limits=v)
 
-            if 'startmodel' not in kwargs:
+            if "startmodel" not in kwargs:
                 sm = (v[1] + v[0]) / 2
                 if v[0] > 0:
-                    sm = np.exp(np.log(v[0]) +
-                                (np.log(v[1]) - np.log(v[0])) / 2.)
+                    sm = np.exp(
+                        np.log(v[0]) + (np.log(v[1]) - np.log(v[0])) / 2.0
+                    )
 
                 self.fop.setRegionProperties(k, startModel=sm)
 
@@ -235,8 +237,8 @@ class SpectrumManager(MethodManager):
             fig, ax = pg.plt.subplots(nrows=1, ncols=1)
 
         self.fop.drawModel(ax, self.fw.model)
-        self.fop.drawData(ax, self.fw.dataVals, label='data')
-        self.fop.drawData(ax, self.fw.response, label='response')
+        self.fop.drawData(ax, self.fw.dataVals, label="data")
+        self.fop.drawData(ax, self.fw.response, label="response")
 
         return ax
 
@@ -244,15 +246,25 @@ class SpectrumManager(MethodManager):
 class SIPSpectrum:
     """SIP spectrum data analysis."""
 
-    def __init__(self, filename=None, unify=False, onlydown=True,
-                 f=None, amp=None, phi=None, k=1, sort=True,
-                 basename='new', **kwargs):
+    def __init__(
+        self,
+        filename=None,
+        unify=False,
+        onlydown=True,
+        f=None,
+        amp=None,
+        phi=None,
+        k=1,
+        sort=True,
+        basename="new",
+        **kwargs,
+    ):
         """Init SIP class with either filename to read or data vectors.
 
         Examples
         --------
-        >>> #sip = SIPSpectrum('sipexample.txt', unify=True) # unique f values
-        >>> #sip = SIPSpectrum(f=f, amp=R, phi=phase, basename='new')
+        >>> # sip = SIPSpectrum('sipexample.txt', unify=True) # unique f values
+        >>> # sip = SIPSpectrum(f=f, amp=R, phi=phase, basename='new')
         """
         self._verbose = False
         self.basename = basename
@@ -292,7 +304,7 @@ class SIPSpectrum:
     def __repr__(self):
         """Human readable string representation of the class."""
         out = self.__class__.__name__ + " object"
-        if self.f is not None and hasattr(self.f, '__iter__'):
+        if self.f is not None and hasattr(self.f, "__iter__"):
             out += "\nnf=" + str(len(self.f)) + " min/max="
             out += str(min(self.f)) + "/" + str(max(self.f))
         return out
@@ -302,35 +314,46 @@ class SIPSpectrum:
 
         Import Data and try to assume the file format.
         """
-        verbose = kwargs.pop('verbose', self._verbose)
+        verbose = kwargs.pop("verbose", self._verbose)
 
-        with codecs.open(filename, 'r', encoding='iso-8859-15',
-                         errors='replace') as f:
+        with codecs.open(
+            filename, "r", encoding="iso-8859-15", errors="replace"
+        ) as f:
             firstLine = f.readline()
 
         fnLow = filename.lower()
         self.basename = filename[:-4]
-        if 'SIP Fuchs III' in firstLine:
+        if "SIP Fuchs III" in firstLine:
             if verbose:
                 pg.info("Reading SIP Fuchs III file")
             self.f, self.amp, self.phi, self.header = readFuchs3File(
-                filename, verbose=verbose, **kwargs)
-            self.phi *= -np.pi/180.
-        elif 'SIP-Quad' in firstLine:
+                filename, verbose=verbose, **kwargs
+            )
+            self.phi *= -np.pi / 180.0
+        elif "SIP-Quad" in firstLine:
             if verbose:
                 pg.info("Reading SIP Quad file")
             self.f, self.amp, self.phi, self.header = readFuchs3File(
-                filename, nfr=9, namp=10, nphi=11, nk=7,
-                verbose=verbose, **kwargs)
-            self.phi *= -np.pi/180.
-        elif 'SIP-Fuchs' in firstLine:
+                filename,
+                nfr=9,
+                namp=10,
+                nphi=11,
+                nk=7,
+                verbose=verbose,
+                **kwargs,
+            )
+            self.phi *= -np.pi / 180.0
+        elif "SIP-Fuchs" in firstLine:
             if verbose:
                 pg.info("Reading SIP Fuchs file")
             self.f, self.amp, self.phi, drhoa, dphi = readRadicSIPFuchs(
-                filename, verbose=verbose, quad='SIP-Quad' in firstLine,
-                **kwargs)
-            self.phi *= -np.pi/180.
-        elif fnLow.endswith('.txt') or fnLow.endswith('.csv'):
+                filename,
+                verbose=verbose,
+                quad="SIP-Quad" in firstLine,
+                **kwargs,
+            )
+            self.phi *= -np.pi / 180.0
+        elif fnLow.endswith(".txt") or fnLow.endswith(".csv"):
             self.f, self.amp, self.phi = readTXTSpectrum(filename, **kwargs)
         else:
             try:
@@ -392,12 +415,13 @@ class SIPSpectrum:
             self.ampOrg = self.ampOrg[ind]
 
         self.f = self.f[ind]
-#        self.amp = self.amp[self.f <= fcut]
-#        self.phi = self.phi[self.f <= fcut]
-#        if np.any(self.phiOrg):
-#            self.phiOrg = self.phiOrg[self.f <= fcut]
-#        # finally cut f
-#        self.f = self.f[self.f <= fcut]
+
+    #        self.amp = self.amp[self.f <= fcut]
+    #        self.phi = self.phi[self.f <= fcut]
+    #        if np.any(self.phiOrg):
+    #            self.phiOrg = self.phiOrg[self.f <= fcut]
+    #        # finally cut f
+    #        self.f = self.f[self.f <= fcut]
 
     def omega(self):
         """Angular frequency."""
@@ -412,7 +436,7 @@ class SIPSpectrum:
         """Normalize real (difference) and imag. z :cite:`NordsiekWel2008`."""
         re, im = self.realimag()
         R0 = max(self.amp)
-        zNormRe = 1. - re / R0
+        zNormRe = 1.0 - re / R0
         zNormIm = im / R0
         return zNormRe, zNormIm
 
@@ -420,13 +444,14 @@ class SIPSpectrum:
         """Plot phase spectrum (-phi over frequency)."""
         if ax is None:
             fig, ax = pg.plt.subplots()
-            self.fig['phase'] = fig
+            self.fig["phase"] = fig
 
-        drawPhaseSpectrum(ax, self.f, self.phi*1000, **kwargs)
+        drawPhaseSpectrum(ax, self.f, self.phi * 1000, **kwargs)
         return ax
 
-    def showData(self, reim=False, znorm=False, cond=False, nrows=2, ax=None,
-                 **kwargs):
+    def showData(
+        self, reim=False, znorm=False, cond=False, nrows=2, ax=None, **kwargs
+    ):
         """Show amplitude and phase spectrum in two subplots.
 
         Parameters
@@ -444,22 +469,24 @@ class SIPSpectrum:
         fig, ax : mpl.figure, mpl.axes array
         """
         if reim or znorm or cond:
-            addstr = ''
+            addstr = ""
             if znorm:
                 re, im = self.zNorm()
-                addstr = ' (norm)'
+                addstr = " (norm)"
             else:
                 re, im = self.realimag(cond=cond)
 
-            fig, ax = showSpectrum(self.f, re, im, ylog=cond, nrows=nrows,
-                                   axs=ax, **kwargs)
-            self.fig['data'] = fig
-            ax[0].set_ylabel('real part'+addstr)
-            ax[1].set_ylabel('imaginary part'+addstr)
+            fig, ax = showSpectrum(
+                self.f, re, im, ylog=cond, nrows=nrows, axs=ax, **kwargs
+            )
+            self.fig["data"] = fig
+            ax[0].set_ylabel("real part" + addstr)
+            ax[1].set_ylabel("imaginary part" + addstr)
         else:
-            fig, ax = showSpectrum(self.f, self.amp, self.phi*1000,
-                                   axs=ax, **kwargs)
-            self.fig['data'] = fig
+            fig, ax = showSpectrum(
+                self.f, self.amp, self.phi * 1000, axs=ax, **kwargs
+            )
+            self.fig["data"] = fig
 
         ax[0].set_title(kwargs.pop("title", self.basename))
         return fig, ax
@@ -469,8 +496,9 @@ class SIPSpectrum:
         re, im = self.realimag()
         if False:
             ind = np.argsort(self.f)
-            reKK, imKK = KramersKronig(self.f[ind], re[ind], im[ind],
-                                       usezero=use0)
+            reKK, imKK = KramersKronig(
+                self.f[ind], re[ind], im[ind], usezero=use0
+            )
         else:
             fsort, ind = np.unique(self.f, return_index=True)
 
@@ -489,44 +517,44 @@ class SIPSpectrum:
         """Show data as real/imag subplots along with Kramers-Kronig curves."""
         fig, ax = self.showData(reim=True)
         reKK, imKK = self.getKK(use0)
-        ax[0].semilogx(self.f, reKK, label='KK')
-        ax[1].semilogx(self.f, imKK, label='KK')
+        ax[0].semilogx(self.f, reKK, label="KK")
+        ax[1].semilogx(self.f, imKK, label="KK")
         for a in ax:
-            a.set_yscale('linear')
+            a.set_yscale("linear")
             a.legend()
 
-        self.fig['dataKK'] = fig
+        self.fig["dataKK"] = fig
         return fig, ax
 
     def checkCRKK(self, useEps=False, use0=False, ax=None):
         """Check coupling removal (CR) by Kramers-Kronig (KK) relation."""
         if ax is None:
             fig, ax = pg.plt.subplots()
-            self.fig['dataCRKK'] = fig
+            self.fig["dataCRKK"] = fig
 
-        ax.semilogx(self.f, self.phi*1000, "+-", label='org')
-        ax.semilogx(self.f, self.getPhiKK(use0)*1000, "x-", label='orgKK')
+        ax.semilogx(self.f, self.phi * 1000, "+-", label="org")
+        ax.semilogx(self.f, self.getPhiKK(use0) * 1000, "x-", label="orgKK")
         if useEps:
             self.removeEpsilonEffect()
         else:
             self.fitCCEM()
 
-        ax.semilogx(self.f, self.phi*1000, "+--", label='corr')
-        ax.semilogx(self.f, self.getPhiKK(use0)*1000, "+--", label='corrKK')
+        ax.semilogx(self.f, self.phi * 1000, "+--", label="corr")
+        ax.semilogx(self.f, self.getPhiKK(use0) * 1000, "+--", label="corrKK")
         ax.grid(True)
-        ax.legend(loc='best')
+        ax.legend(loc="best")
 
     def showPolarPlot(self, cond=False):
         """Show data in a polar plot (imaginary vs. real parts)."""
         re, im = self.realimag(cond=cond)
         fig, ax = pg.plt.subplots()
-        self.fig['polar'] = fig
-        ax.plot(re, im, 'b.')
+        self.fig["polar"] = fig
+        ax.plot(re, im, "b.")
         ax.set_aspect(1)
         ax.grid(True)
         for i in range(0, len(re), 5):
             fi = self.f[i]
-            mul = 10**np.floor(np.log10(fi) - 2)  # 3 counting digits
+            mul = 10 ** np.floor(np.log10(fi) - 2)  # 3 counting digits
             ax.text(re[i], im[i], str(int(fi / mul) * mul))
 
         return fig, ax
@@ -562,11 +590,11 @@ class SIPSpectrum:
         nmax = np.argmax(self.f)
         if mode == 0:
             f1 = self.f * 1
-            a = f1[nmax] * 1.
+            a = f1[nmax] * 1.0
             f1[nmax] = 0
             nmax1 = np.argmax(f1)
             a = a / f1[nmax1]
-            er = (a*epsr[nmax] - epsr[nmax1]) / (a-1)
+            er = (a * epsr[nmax] - epsr[nmax1]) / (a - 1)
         elif mode < 0:
             er = np.median(epsr[mode:])
         else:
@@ -596,13 +624,20 @@ class SIPSpectrum:
 
         sigI -= er * self.omega() * self.epsilon0
         self.phiOrg = self.phi
-        self.phi = np.arctan(sigI/sigR)
+        self.phi = np.arctan(sigI / sigR)
         self.ampOrg = self.amp
-        self.amp = 1. / np.sqrt(sigR**2 + sigI**2)
+        self.amp = 1.0 / np.sqrt(sigR**2 + sigI**2)
         return er
 
-    def fitCCPhi(self, ePhi=0.001, lam=1000., mpar=(0, 0, 1),
-                 taupar=(0, 1e-5, 100), cpar=(0.3, 0, 1), verbose=False):
+    def fitCCPhi(
+        self,
+        ePhi=0.001,
+        lam=1000.0,
+        mpar=(0, 0, 1),
+        taupar=(0, 1e-5, 100),
+        cpar=(0.3, 0, 1),
+        verbose=False,
+    ):
         """Fit a Cole-Cole term (to phase only).
 
         Parameters
@@ -617,20 +652,32 @@ class SIPSpectrum:
 
         """
         if taupar[0] == 0:
-            taupar = (1.0 / self.f[np.argmax(self.phi)] / 2.0 / pi,
-                      taupar[1], taupar[2])
-#            taupar[0] = 1.0 / self.f[np.argmax(self.phi)] / 2.0 / pi
+            taupar = (
+                1.0 / self.f[np.argmax(self.phi)] / 2.0 / pi,
+                taupar[1],
+                taupar[2],
+            )
+            #            taupar[0] = 1.0 / self.f[np.argmax(self.phi)] / 2.0
+            #                / pi
             print("taupar", taupar)
         if mpar[0] == 0:
-            mpar = (1. - min(self.amp)/max(self.amp), mpar[1], mpar[2])
-#            mpar[0] = 1. - min(self.amp)/max(self.amp)
+            mpar = (1.0 - min(self.amp) / max(self.amp), mpar[1], mpar[2])
+            #            mpar[0] = 1. - min(self.amp)/max(self.amp)
             print("mpar", mpar)
         self.mCC, self.phiCC, self.chi2 = fitCCPhi(
-            self.f, self.phi, ePhi, lam, mpar=mpar, taupar=taupar, cpar=cpar)
+            self.f, self.phi, ePhi, lam, mpar=mpar, taupar=taupar, cpar=cpar
+        )
 
-    def fit2CCPhi(self, ePhi=0.001, lam=1000., mpar=(0, 0, 1),
-                  taupar1=(0, 1e-5, 1), taupar2=(0, 1e-1, 1000),
-                  cpar=(0.5, 0, 1), verbose=False):
+    def fit2CCPhi(
+        self,
+        ePhi=0.001,
+        lam=1000.0,
+        mpar=(0, 0, 1),
+        taupar1=(0, 1e-5, 1),
+        taupar2=(0, 1e-1, 1000),
+        cpar=(0.5, 0, 1),
+        verbose=False,
+    ):
         """Fit two Cole-Cole terms (to phase only).
 
         Parameters
@@ -647,23 +694,39 @@ class SIPSpectrum:
             starting value, lower bound, upper bound for 2 relaxation exponents
         """
         if taupar1[0] == 0:
-            taupar1 = (np.sqrt(taupar1[1]*taupar1[2]), taupar1[1], taupar1[2])
+            taupar1 = (np.sqrt(taupar1[1] * taupar1[2]), taupar1[1], taupar1[2])
             print("taupar1", taupar1)
         if taupar2[0] == 0:
-            taupar2 = (np.sqrt(taupar2[1]*taupar2[2]), taupar2[1], taupar2[2])
+            taupar2 = (np.sqrt(taupar2[1] * taupar2[2]), taupar2[1], taupar2[2])
             print("taupar2", taupar2)
-#            taupar1[0] = 1.0 / self.f[np.argmax(self.phi)] / 2.0 / pi
+        #            taupar1[0] = 1.0 / self.f[np.argmax(self.phi)] / 2.0 / pi
         if mpar[0] == 0:
-            mpar = (1. - min(self.amp)/max(self.amp), mpar[1], mpar[2])  # *2
+            mpar = (1.0 - min(self.amp) / max(self.amp), mpar[1], mpar[2])  # *2
             print("mpar", mpar)
-        self.mCC, self.phiCC = fit2CCPhi(self.f, self.phi, ePhi, lam,
-                                         mpar1=mpar, mpar2=mpar,
-                                         cpar1=cpar, cpar2=cpar,
-                                         taupar1=taupar1, taupar2=taupar2)
+        self.mCC, self.phiCC = fit2CCPhi(
+            self.f,
+            self.phi,
+            ePhi,
+            lam,
+            mpar1=mpar,
+            mpar2=mpar,
+            cpar1=cpar,
+            cpar2=cpar,
+            taupar1=taupar1,
+            taupar2=taupar2,
+        )
 
-    def fitCCEM(self, ePhi=0.001, lam=1000., remove=True,
-                mpar=(0.2, 0, 1), taupar=(1e-2, 1e-5, 100),
-                cpar=(0.25, 0, 1), empar=(1e-7, 1e-9, 1e-5), verbose=False):
+    def fitCCEM(
+        self,
+        ePhi=0.001,
+        lam=1000.0,
+        remove=True,
+        mpar=(0.2, 0, 1),
+        taupar=(1e-2, 1e-5, 100),
+        cpar=(0.25, 0, 1),
+        empar=(1e-7, 1e-9, 1e-5),
+        verbose=False,
+    ):
         """Fit a Cole-Cole term with additional EM term to phase.
 
         Parameters
@@ -678,13 +741,21 @@ class SIPSpectrum:
             inversion parameters (starting value, lower bound, upper bound)
             for Cole-Cole parameters (m, tau, c) and EM relaxation time (em)
         """
-        self.mCC, self.phiCC = fitCCEMPhi(self.f, self.phi, ePhi, lam, mpar,
-                                          taupar, cpar, empar, verbose=verbose)
+        self.mCC, self.phiCC = fitCCEMPhi(
+            self.f,
+            self.phi,
+            ePhi,
+            lam,
+            mpar,
+            taupar,
+            cpar,
+            empar,
+            verbose=verbose,
+        )
         # correct EM term from data
         if remove:
             self.phiOrg = self.phi
-            self.phi = self.phi + \
-                np.angle(relaxationTerm(self.f, self.mCC[3]))
+            self.phi = self.phi + np.angle(relaxationTerm(self.f, self.mCC[3]))
 
     def fitColeCole(self, useCond=False, **kwargs):
         """Fit a Cole-Cole model to the phase data.
@@ -706,17 +777,32 @@ class SIPSpectrum:
         """
         if useCond:  # use conductivity formulation instead of resistivity
             self.mCC, self.ampCC, self.phiCC, self.chi2 = fitCCCC(
-                self.f, self.amp, self.phi, **kwargs)
-            self.mCC[0] = 1. / self.mCC[0]
+                self.f, self.amp, self.phi, **kwargs
+            )
+            self.mCC[0] = 1.0 / self.mCC[0]
         else:
             self.mCC, self.ampCC, self.phiCC, self.chi2 = fitCCC(
-                self.f, self.amp, self.phi, **kwargs)
+                self.f, self.amp, self.phi, **kwargs
+            )
 
-    def fitDoubleColeCole(self, ePhi=0.001, eAmp=0.01, lam=1000., robust=False,
-                          verbose=True, useRho=True, useMult=False, aphi=True,
-                          mpar1=(0.2, 0, 1), mpar2=(0.2, 0, 1), tauRho=True,
-                          taupar1=(1e-2, 1e-5, 100), taupar2=(1e-4, 1e-5, 100),
-                          cpar1=(0.5, 0, 1), cpar2=(0.5, 0, 1)):
+    def fitDoubleColeCole(
+        self,
+        ePhi=0.001,
+        eAmp=0.01,
+        lam=1000.0,
+        robust=False,
+        verbose=True,
+        useRho=True,
+        useMult=False,
+        aphi=True,
+        mpar1=(0.2, 0, 1),
+        mpar2=(0.2, 0, 1),
+        tauRho=True,
+        taupar1=(1e-2, 1e-5, 100),
+        taupar2=(1e-4, 1e-5, 100),
+        cpar1=(0.5, 0, 1),
+        cpar2=(0.5, 0, 1),
+    ):
         """Fit double Cole-Cole term to complex resistivity or phase.
 
         Parameters
@@ -740,30 +826,32 @@ class SIPSpectrum:
             for Cole-Cole parameters (m, tau, c)
 
         """
-        f2CC = DoubleColeCole(self.f, rho=useRho, aphi=aphi, tauRho=False,
-                              mult=useMult)
+        f2CC = DoubleColeCole(
+            self.f, rho=useRho, aphi=aphi, tauRho=False, mult=useMult
+        )
         if useRho:
             rhoStart = min(self.amp)
-            f2CC.region(0).setParameters(rhoStart, 0., rhoStart*10)
+            f2CC.region(0).setParameters(rhoStart, 0.0, rhoStart * 10)
         else:
-            sigStart = 1./max(self.amp)
-            f2CC.region(0).setParameters(sigStart, 0., sigStart*10)
+            sigStart = 1.0 / max(self.amp)
+            f2CC.region(0).setParameters(sigStart, 0.0, sigStart * 10)
 
-        f2CC.region(1).setParameters(*mpar1)    # m (start,lower,upper)
+        f2CC.region(1).setParameters(*mpar1)  # m (start,lower,upper)
         f2CC.region(2).setParameters(*taupar1)  # tau
-        f2CC.region(3).setParameters(*cpar1)   # c
-        f2CC.region(4).setParameters(*mpar2)    # m (start,lower,upper)
+        f2CC.region(3).setParameters(*cpar1)  # c
+        f2CC.region(4).setParameters(*mpar2)  # m (start,lower,upper)
         f2CC.region(5).setParameters(*taupar2)  # tau
-        f2CC.region(6).setParameters(*cpar2)   # c
+        f2CC.region(6).setParameters(*cpar2)  # c
         if aphi:
-            amp = self.amp if useRho else 1./self.amp
+            amp = self.amp if useRho else 1.0 / self.amp
             data = np.hstack((amp, self.phi))
-            error = np.hstack((np.ones_like(amp)*eAmp,
-                               ePhi / np.abs(self.phi)))
+            error = np.hstack(
+                (np.ones_like(amp) * eAmp, ePhi / np.abs(self.phi))
+            )
         else:
             re, im = self.realimag(not useRho)
             data = np.hstack((re, im))
-            error = np.ones(len(self.f)*2) * eAmp
+            error = np.ones(len(self.f) * 2) * eAmp
 
         ICC = pg.core.Inversion(data, f2CC, False)  # set up inversion class
         ICC.setRelativeError(error)  # 1 mrad
@@ -771,7 +859,7 @@ class SIPSpectrum:
         ICC.setMarquardtScheme(0.8)  # lower lambda by 20%/it., no stop chi=1
         ICC.setRobustData(robust)
         ICC.setDeltaPhiAbortPercent(1)
-    #    ICC.setMaxIter(0)
+        #    ICC.setMaxIter(0)
         self.mCC = ICC.run()  # run inversion
         self.chi2 = ICC.chi2()
         if verbose:
@@ -782,9 +870,20 @@ class SIPSpectrum:
             self.ampCC = one
             self.phiCC = two
 
-    def fitDebyeModel(self, ePhi=0.001, lam=1e3, lamFactor=0.8,
-                      tau=None, mint=None, maxt=None, nt=None, useComplex=True,
-                      showFit=False, verbose=False, **kwargs):
+    def fitDebyeModel(
+        self,
+        ePhi=0.001,
+        lam=1e3,
+        lamFactor=0.8,
+        tau=None,
+        mint=None,
+        maxt=None,
+        nt=None,
+        useComplex=True,
+        showFit=False,
+        verbose=False,
+        **kwargs,
+    ):
         """Fit a (smooth) continuous Debye model (Debye decomposition).
 
         Parameters
@@ -811,11 +910,11 @@ class SIPSpectrum:
         nf = len(self.f)
         if tau is None:
             if mint is None:
-                mint = .1 / max(self.f)
+                mint = 0.1 / max(self.f)
             if maxt is None:
-                maxt = .5 / min(self.f)
+                maxt = 0.5 / min(self.f)
             if nt is None:
-                nt = nf*2
+                nt = nf * 2
             self.tau = np.logspace(log10(mint), log10(maxt), nt)
         else:
             self.tau = tau
@@ -827,23 +926,38 @@ class SIPSpectrum:
             fDD = DebyeComplex(self.f, self.tau)
             Znorm = pg.cat(reNorm, imNorm)
             IDD = pg.Inversion(fop=fDD)
-            absErr = max(Znorm)*0.003+ePhi
-            self.mDD = IDD.run(Znorm, absoluteError=absErr,
-                               startModel=startModel,
-                               lam=lam, lambdaFactor=lamFactor,
-                               **kwargs)
+            absErr = max(Znorm) * 0.003 + ePhi
+            self.mDD = IDD.run(
+                Znorm,
+                absoluteError=absErr,
+                startModel=startModel,
+                lam=lam,
+                lambdaFactor=lamFactor,
+                **kwargs,
+            )
             IDD.echoStatus()
         else:
             fDD = DebyePhi(self.f, self.tau)
             IDD = pg.Inversion(fop=fDD)
             phi = kwargs.pop("phi", self.phi)
-            self.mDD = IDD.run(phi, absoluteError=ePhi, startModel=startModel,
-                               lam=lam, lambdaFactor=lamFactor, **kwargs)
+            self.mDD = IDD.run(
+                phi,
+                absoluteError=ePhi,
+                startModel=startModel,
+                lam=lam,
+                lambdaFactor=lamFactor,
+                **kwargs,
+            )
 
         self.invDD = IDD
         if new:
             if verbose:
-                pg.info("ARMS=", IDD.absrms(), "RRMS=", IDD.absrms()/max(Znorm)*100)
+                pg.info(
+                    "ARMS=",
+                    IDD.absrms(),
+                    "RRMS=",
+                    IDD.absrms() / max(Znorm) * 100,
+                )
 
             resp = np.array(IDD.response)
             respRe = resp[:nf]
@@ -853,22 +967,22 @@ class SIPSpectrum:
             self.ampDD = np.abs(respC)
             if showFit:
                 fig, ax = self.showData(znorm=True, nrows=3)
-                self.fig['DebyeFit'] = fig
-                ax[0].plot(self.f, respRe, 'r-')
-                ax[1].plot(self.f, respIm, 'r-')
-                ax[2].semilogx(self.tau, self.mDD, 'r-')
+                self.fig["DebyeFit"] = fig
+                ax[0].plot(self.f, respRe, "r-")
+                ax[1].plot(self.f, respIm, "r-")
+                ax[2].semilogx(self.tau, self.mDD, "r-")
                 ax[2].set_xlim(max(self.tau), min(self.tau))
-                ax[2].set_ylim(0., max(self.mDD))
+                ax[2].set_ylim(0.0, max(self.mDD))
                 ax[2].grid(True)
-                ax[2].set_xlabel(r'$\tau$ (s)')
-                ax[2].set_ylabel('$m$ (-)')
+                ax[2].set_xlabel(r"$\tau$ (s)")
+                ax[2].set_ylabel("$m$ (-)")
 
         else:
             self.phiDD = IDD.response
             if showFit:
                 fig, ax = self.showData(nrows=3)
-                self.fig['DebyeSpectrum'] = fig
-                ax[2].semilogx(self.tau, self.mDD, 'r-')
+                self.fig["DebyeSpectrum"] = fig
+                ax[2].semilogx(self.tau, self.mDD, "r-")
 
     def totalChargeability(self):
         """Total chargeability (sum) from Debye curve."""
@@ -882,7 +996,7 @@ class SIPSpectrum:
         """Create decay from Debye decomposition."""
         v = np.zeros(len(t))
         for tau, m in zip(self.tau, self.mDD, strict=False):
-            v += np.exp(-t/tau) * m
+            v += np.exp(-t / tau) * m
 
         return v
 
@@ -890,8 +1004,8 @@ class SIPSpectrum:
         """Plot spectrum, Cole-Cole fit and Debye distribution."""
         if np.any(self.mCC):  # generate title strings
             mCC = self.mCC
-            rstr = r'$\rho$={:.4f} '
-            cstr = r'CC: m={:.3f} $\tau$={:.1e}s c={:.2f} '
+            rstr = r"$\rho$={:.4f} "
+            cstr = r"CC: m={:.3f} $\tau$={:.1e}s c={:.2f} "
             if len(mCC) == 7:  # double Cole-Cole
                 tstr = rstr + cstr + cstr
             elif len(mCC) == 6:  # double Cole-Cole only Phi
@@ -904,67 +1018,69 @@ class SIPSpectrum:
             tCC = tstr.format(*mCC)
 
         if ax is None:
-            fig, ax = pg.plt.subplots(nrows=2+(self.mDD is not None),
-                                      figsize=(12, 12))
+            fig, ax = pg.plt.subplots(
+                nrows=2 + (self.mDD is not None), figsize=(12, 12)
+            )
         else:
             fig = ax[0].figure
 
-        self.fig['all'] = fig
+        self.fig["all"] = fig
         fig.subplots_adjust(hspace=0.25)
         # amplitude
-        drawAmplitudeSpectrum(ax[0], self.f, self.amp,
-                              label='data', ylog=0)
+        drawAmplitudeSpectrum(ax[0], self.f, self.amp, label="data", ylog=0)
         if np.any(self.ampDD):
-            ax[0].plot(self.f, self.ampDD, 'm-', label='DD response')
+            ax[0].plot(self.f, self.ampDD, "m-", label="DD response")
         if np.any(self.ampCC):
-            ax[0].semilogx(self.f, self.ampCC, 'r-', label='CC model')
-        ax[0].legend(loc='best')
+            ax[0].semilogx(self.f, self.ampCC, "r-", label="CC model")
+        ax[0].legend(loc="best")
         # phase
         if np.any(self.ampOrg):
-            ax[0].semilogx(self.f, self.ampOrg, 'cx-', label='org. data')
-            ax[0].legend(loc='best')
+            ax[0].semilogx(self.f, self.ampOrg, "cx-", label="org. data")
+            ax[0].legend(loc="best")
         if np.any(self.phiOrg):
-            ax[1].semilogx(self.f, self.phiOrg * 1e3, 'cx-', label='org. data')
+            ax[1].semilogx(self.f, self.phiOrg * 1e3, "cx-", label="org. data")
 
-        ax[1].semilogx(self.f, self.phi * 1e3, 'b+-', label='data')
+        ax[1].semilogx(self.f, self.phi * 1e3, "b+-", label="data")
         if np.any(self.phiCC):
-            ax[1].semilogx(self.f, self.phiCC * 1e3, 'r-', label='CC model')
+            ax[1].semilogx(self.f, self.phiCC * 1e3, "r-", label="CC model")
         if np.any(self.phiDD):
-            ax[1].semilogx(self.f, self.phiDD * 1e3, 'm-', label='DD model')
+            ax[1].semilogx(self.f, self.phiDD * 1e3, "m-", label="DD model")
 
         ax[1].grid(True)
-        ax[1].legend(loc='best')
-        ax[1].set_xlabel('f (Hz)')
-        ax[1].set_ylabel('-phi (mrad)')
+        ax[1].legend(loc="best")
+        ax[1].set_xlabel("f (Hz)")
+        ax[1].set_ylabel("-phi (mrad)")
         if np.any(self.mCC):
-            ax[1].set_title(tCC, loc='left')
+            ax[1].set_title(tCC, loc="left")
         if np.any(self.mDD):
             mtot = self.totalChargeability()
             lmtau = self.logMeanTau()
-            tDD = rf'DD: m={mtot:.3f} $\tau$={lmtau:.1e}s'
+            tDD = rf"DD: m={mtot:.3f} $\tau$={lmtau:.1e}s"
             ax[2].semilogx(self.tau, self.mDD * 1e3)
             ax[2].set_xlim(ax[2].get_xlim()[::-1])
             ax[2].grid(True)
-            ax[2].set_xlabel(r'$\tau$ (s)')
-            ax[2].set_ylabel('m (mV/V)')
-            ax[2].set_title(tDD, loc='left')
+            ax[2].set_xlabel(r"$\tau$ (s)")
+            ax[2].set_ylabel("m (mV/V)")
+            ax[2].set_title(tDD, loc="left")
 
         if save:
-            savename = save if isinstance(save, str) else self.basename + '.pdf'
+            savename = save if isinstance(save, str) else self.basename + ".pdf"
 
-            fig.savefig(savename, bbox_inches='tight')
+            fig.savefig(savename, bbox_inches="tight")
 
         pg.plt.show(block=False)
         return fig, ax
 
-    def saveFigures(self, name=None, ext='pdf'):
+    def saveFigures(self, name=None, ext="pdf"):
         """Save all existing figures to files using file basename."""
         if name is None:
             name = self.basename
         if name is None or not any(name):
-            name = 'out'
+            name = "out"
         for key in self.fig:
-            self.fig[key].savefig(name+'-'+key+'.'+ext, bbox_inches='tight')
+            self.fig[key].savefig(
+                name + "-" + key + "." + ext, bbox_inches="tight"
+            )
 
 
 def run_SIPSPectrum(myfile):
@@ -985,6 +1101,6 @@ def run_SIPSPectrum(myfile):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("No filename given, falling back to test case")
-        run_SIPSPectrum('sipexample.txt')
+        run_SIPSPectrum("sipexample.txt")
     else:
         run_SIPSPectrum(sys.argv[1])

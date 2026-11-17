@@ -372,7 +372,7 @@ function test(){
         fi
 
         testReport
-        python -c 'import pygimli; pygimli.test(show=False, abort=True)'
+        python -c "import pygimli; pygimli.test(show=False, abort=True, n=$NUM_THREADS)"
     popd
 }
 
@@ -410,7 +410,13 @@ function doc(){
                 NG='-NG'
             fi
 
-            #make clean-gallery # should not be necessary
+            if [ ! -z "$CLEAN_GALLERY" ]; then
+                # Drop the cached gallery so every example is executed again
+                # without the need of a full clean.
+                echo "CLEAN_GALLERY set: rebuilding all gallery examples"
+                make clean-gallery
+            fi
+
             if [ -x "$(command -v xvfb-run)" ]; then
                 # xvfb is necessary for headless display of pyvista plots
                 echo "xvfb-run available: using it to build docs"
@@ -542,10 +548,21 @@ function help(){
     echo "    PYVERSION    python version (e.g. 3.11, 3.14t) if no BASEPYTHON is given"
     echo "    SOURCE_DIR   source directory (default: top-level directory of the project)"
     echo "    SKIP_GALLERY Skip building the gallery in the documentation"
+    echo "    CLEAN_GALLERY  full gallery run without a full clean"
+    echo "    NUM_THREADS  parallel workers (default: cores-2, max 16)"
+    echo "    MEM_PER_WORKER_MB  memory per worker (default: 4096 MB)"
+    echo "    MEMORY_HEADROOM_MB  memory kept free (default: 1024 MB)"
+    echo "    GIMLI_DOC_JOBS  gallery workers, 1 = serial (default: max 8)"
+    echo "    GIMLI_DOC_SHOW  set 1 to keep figure windows in the doc build"
+    echo "    GIMLI_DOC_PROGRESS  0 = raw example output, no status table"
+    echo "    GIMLI_DOC_LIVE  0 = plain lines instead of the running table"
+    echo "    GIMLI_DOC_GLOBAL_PARALLEL  0 = one joblib pool per gallery section"
     echo ""
     echo "Examples:"
     echo "    bash ${BASH_SOURCE[0]} clean build test doc"
     echo "    PYVERSION=3.12 bash ${BASH_SOURCE[0]} all"
+    echo "    GIMLI_DOC_JOBS=1 bash ${BASH_SOURCE[0]} doc  # serial gallery"
+    echo "    CLEAN_GALLERY=1 bash ${BASH_SOURCE[0]} doc  # rerun all"
     echo ""
 }
 
@@ -670,11 +687,82 @@ fi
 PYVERSION=$($BASEPYTHON -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")')
 
 if [ "$OS" == "MacOS" ] || [ "$(uname -s)" == "Darwin" ]; then
-    GIMLI_NUM_THREADS=$((`sysctl -n hw.ncpu` - 2))
+    NUM_CORES=$(sysctl -n hw.ncpu)
     alias realpath='grealpath'
 else
-    GIMLI_NUM_THREADS=$((`nproc --all` - 2))
+    # Not "nproc --all": that reports every core of the machine. Inside a
+    # cgroup restricted job plain "nproc" honours the allowed CPU set.
+    NUM_CORES=$(nproc)
+    if [ -r /sys/fs/cgroup/cpu.max ]; then
+        read -r cgroupQuota cgroupPeriod < /sys/fs/cgroup/cpu.max \
+            || cgroupQuota="max"
+        if [ "$cgroupQuota" != "max" ] && [ "${cgroupPeriod:-0}" -gt 0 ]; then
+            quotaCores=$(( (cgroupQuota + cgroupPeriod - 1) / cgroupPeriod ))
+            if [ "$quotaCores" -lt "$NUM_CORES" ]; then
+                NUM_CORES=$quotaCores
+            fi
+        fi
+    fi
 fi
+
+# Cores are not the only constraint: every xdist worker and every make job
+# imports pyGIMLi and matplotlib and needs a few GB, so cap the worker count
+# by the available memory as well. An explicitly set NUM_THREADS still wins.
+MEM_PER_WORKER_MB="${MEM_PER_WORKER_MB:-4096}"
+MEMORY_HEADROOM_MB="${MEMORY_HEADROOM_MB:-1024}"
+
+function memoryLimitMb(){
+    # cgroup v2 sets the limit on the job cgroup and inherits it, so walk up
+    # the chain and keep the smallest value, that is what the OOM killer uses.
+    local cgroupPath=""
+    local value=""
+    local valueMb=0
+    local limitMb=0
+
+    cgroupPath="/sys/fs/cgroup$(awk -F: '/^0:/{print $3}' /proc/self/cgroup)"
+    while [ -n "$cgroupPath" ] && [ "$cgroupPath" != "/" ]; do
+        value=$(cat "$cgroupPath/memory.max" 2>/dev/null || echo max)
+        if [ "$value" != "max" ]; then
+            valueMb=$(( value / 1048576 ))
+            if [ "$limitMb" -eq 0 ] || [ "$valueMb" -lt "$limitMb" ]; then
+                limitMb=$valueMb
+            fi
+        fi
+        if [ "$cgroupPath" = "/sys/fs/cgroup" ]; then
+            break
+        fi
+        cgroupPath=$(dirname "$cgroupPath")
+    done
+
+    if [ "$limitMb" -eq 0 ] && [ -r /proc/meminfo ]; then
+        limitMb=$(awk '/^MemTotal:/ {print int($2 / 1024)}' /proc/meminfo)
+    fi
+
+    echo "$limitMb"
+}
+
+workerLimit=16
+MAX_WORKING_THREADS=30
+memoryLimitMb=$(memoryLimitMb)
+if [ "$memoryLimitMb" -gt 0 ]; then
+    workerLimit=$(( (memoryLimitMb - MEMORY_HEADROOM_MB) / MEM_PER_WORKER_MB ))
+    if [ "$workerLimit" -lt 1 ]; then
+        workerLimit=1
+    fi
+fi
+
+if [ -z "${NUM_THREADS:-}" ]; then
+    NUM_THREADS=$((NUM_CORES - 2))
+else
+    blue "NUM_THREADS set explicitly, ignoring the core/memory heuristic"
+fi
+if [ "$NUM_THREADS" -lt 1 ]; then
+    NUM_THREADS=1
+fi
+if [ "$NUM_THREADS" -gt $MAX_WORKING_THREADS ]; then
+    NUM_THREADS=$MAX_WORKING_THREADS
+fi
+GIMLI_NUM_THREADS=$NUM_THREADS
 
 OPENBLAS_CORETYPE="ARMV8"
 DISPLAY=':99.0'
@@ -693,6 +781,7 @@ echo "WORKSPACE=$WORKSPACE"
 echo "PROJECT_SRC=$PROJECT_SRC"
 echo "OS=$OS"
 echo "SYSTEM=$SYSTEM"
+echo "NUM_CORES=$NUM_CORES"
 echo "NUM_THREADS=$GIMLI_NUM_THREADS"
 echo "PYTHON=$BASEPYTHON"
 echo "PYVERSION=$PYVERSION"

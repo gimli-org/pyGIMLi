@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# encoding: utf-8
 
 r"""
 Simple fit
@@ -39,6 +38,7 @@ import pygimli as pg
 
 class ExpModelling(pg.Modelling):
     """Exponential decay function modelling operator."""
+
     def __init__(self, xvec, verbose=False):
         """Initialize with storing x values."""
         super().__init__()
@@ -49,6 +49,7 @@ class ExpModelling(pg.Modelling):
         return model[0] * pg.exp(-self.x / model[1])
 
     def createStartModel(self, dataVals):
+        """Create a start model with A=1.0 and X=3.0."""
         return pg.Vector([1.0, 3.0])
 
 
@@ -66,7 +67,7 @@ class ExpModelling(pg.Modelling):
 # X values.
 
 x = np.arange(0, 1, 1e-2)
-data = 10.5 * np.exp(- x / 550e-3)
+data = 10.5 * np.exp(-x / 550e-3)
 
 ###############################################################################
 # We define an (absolute) error level and add Gaussian noise to the data.
@@ -110,7 +111,7 @@ print(inv.relrms(), inv.chi2())
 # We finally create a plotting figure and plot both data and model response.
 
 plt.figure()
-plt.plot(x, data, 'x', x, inv.response, '-')
+plt.plot(x, data, "x", x, inv.response, "-")
 plt.grid(True)
 
 ###############################################################################

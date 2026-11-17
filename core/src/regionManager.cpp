@@ -234,7 +234,7 @@ void Region::setStartModel(const RVector & start){
     if (start.size() == parameterCount_){
        startModel_ = start;
     } else {
-        throwLengthError(WHERE_AM_I + " sizes missmatch for region " +
+        throwLengthError(WHERE_AM_I + " sizes mismatch for region " +
         str(this->marker_) + " " +str(start.size()) + " != " + str(parameterCount_));
     }
 }
@@ -330,7 +330,7 @@ void Region::fillConstraints(RSparseMapMatrix & C, Index startConstraintsID){
             }
         } else {
             for (Index i = 0; i < parameterCount_; i++) {
-                // this fails after parameter permution
+                // this fails after parameter permutation
                 C[startConstraintsID + i][startParameter_ + i] = cMixRatio;
             }
         }
@@ -398,7 +398,7 @@ void Region::fillConstraints(RSparseMapMatrix & C, Index startConstraintsID){
     }
     if (constraintType_ == 10) { //** combination with 0th order
         for (Index i = 0; i < parameterCount_; i++) {
-            // this fails after parameter permution ..
+            // this fails after parameter permutation ..
             //CR: dont know what C==10 is supposed to be to fix it
             if (isPermuted_){
                 __MS("Ctype 10 are untested for permuted region.")
@@ -1004,7 +1004,7 @@ void RegionManager::fillConstraints(RSparseMapMatrix & C){
                     // setting cWeights
                     if (interfaceConstraints_.count(b.marker())) {
                         // setting interface constraints between regions over inter region constraints ..
-                        // inner interfaces are allready mentioned in the regions itself
+                        // inner interfaces are already mentioned in the regions itself
                         this->_cWeights[cID] = interfaceConstraints_[b.marker()];
                         if (debug()){
                             std::cout << b << " Interface weight: " << interfaceConstraints_[b.marker()] << std::endl;
@@ -1105,7 +1105,7 @@ void RegionManager::loadMap(const std::string & fname){
              return;
         }
 
-        // interpret row as region informations
+        // interpret row as region information
         if (lower(token[0]) == "no"){
 
             if (verbose_){
@@ -1206,14 +1206,14 @@ void RegionManager::loadMap(const std::string & fname){
                         for (auto & it: reg->boundaries()){
                             Boundary *b = it;
                             if (b->marker() != 0){
-                                log(Debug, "Applying interface constaint: ", b->marker(), "=", cw);
+                                log(Debug, "Applying interface constraint: ", b->marker(), "=", cw);
                                 this->setInterfaceConstraint(b->marker(), cw);
                             }
                         }
                     }
                 } else {
                     SIndex iF = toInt(row[0]);
-                    log(Debug, "Applying interface constaint: ", iF, "=", cw);
+                    log(Debug, "Applying interface constraint: ", iF, "=", cw);
                     this->setInterfaceConstraint(iF, cw);
                 }
             } else {
@@ -1264,7 +1264,7 @@ void RegionManager::setInterRegionConstraint(SIndex aIn, SIndex bIn, double cw){
             interRegionConstraints_[std::pair< SIndex, SIndex >(a, b)] = cw;
             if (debug()){
                std::cout << "Constraining regions: " << a << "<->" << b
-               << "(weigth: " << cw << ")" << std::endl;
+               << "(weight: " << cw << ")" << std::endl;
            }
         }
     }

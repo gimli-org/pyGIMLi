@@ -44,7 +44,7 @@ template < > inline int npType<GIMLI::Index>(){
     return NPY_UINT64;
 }
 template < > inline int npType<int>(){
-    // int might by ambigous, check here .. MAC vs. WIN cs. LIN
+    // int might by ambiguous, check here .. MAC vs. WIN cs. LIN
     return NPY_INT32;
 }
 template < > inline int npType<uint8>(){

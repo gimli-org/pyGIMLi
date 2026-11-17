@@ -18,15 +18,17 @@ by Nico Skibbe et al. (2020), and applied in the papers
 
 It uses managers holding data and inversion instances.
 """
-import os
+
+from pathlib import Path
+
 import numpy as np
 import pygimli as pg
 
 
-class SCCI(object):
+class SCCI:
     """Structurally coupled cooperative inversion class."""
 
-    def __init__(self, managers=[], **kwargs):
+    def __init__(self, managers=None, **kwargs):
         """Structurally coupled cooperative inversion framework."""
         # scci parameters
         self.a = None
@@ -37,13 +39,12 @@ class SCCI(object):
         self.setCouplingPara()
 
         # init managers list
-        self.managers = managers
+        self.managers = [] if managers is None else managers
         # I think we don't need the managers unless we plot etc.
 
         self.resultdir = None  # "scci_results"
 
-        self.names = kwargs.pop("names",
-                                ["M{0}".format(i+1) for i in range(10)])
+        self.names = kwargs.pop("names", [f"M{i + 1}" for i in range(10)])
         # init constraint weights
 
     def setCouplingPara(self, a=0.1, b=0.1, c=1.0, cmin=None, cmax=1.0):
@@ -57,25 +58,25 @@ class SCCI(object):
     @property
     def invs(self):
         """Return inversions."""
-        return self._gather('inv', raise_error=True)
+        return self._gather("inv", raise_error=True)
 
     @property
     def fops(self):
         """Return forward operators."""
-        return self._gather('fop', raise_error=True)
+        return self._gather("fop", raise_error=True)
 
     @property
     def npara(self):
         """Number of total model parameters."""
         npara = 0
-        paras = self._gather('_numPara', default=1)
+        paras = self._gather("_numPara", default=1)
         npara += np.sum(paras)
         return npara
 
     @property
     def nparas(self):
         """Return model parameters for the individual methods."""
-        paras = self._gather('_numPara', default=1)
+        paras = self._gather("_numPara", default=1)
         return paras
 
     @property
@@ -91,10 +92,10 @@ class SCCI(object):
 
             roughness = man.inv.inv.pureRoughness(model)
 
-            seg = int(len(roughness)/self.nparas[im])
+            seg = int(len(roughness) / self.nparas[im])
             # do for all parameters
             for i in range(self.nparas[im]):
-                output.append(np.array(roughness[i * seg:i * seg + seg]))
+                output.append(np.array(roughness[i * seg : i * seg + seg]))
 
         return output
 
@@ -103,8 +104,13 @@ class SCCI(object):
         cweights = []
         for rough in self.roughnesses:
             cweight = roughness2CWeight(
-                rough, a=self.a, b=self.b, c=self.c, Min=0,  # self.cmin,
-                Max=self.cmax)
+                rough,
+                a=self.a,
+                b=self.b,
+                c=self.c,
+                Min=0,  # self.cmin,
+                Max=self.cmax,
+            )
             pg.debug([np.min(cweight), np.max(cweight)])
             cweights.append(cweight)
 
@@ -112,11 +118,12 @@ class SCCI(object):
 
     def updateConstraintWeights(self):
         """Set new constraint weights based on the model roughnesses."""
-        pg.debug('SCCI: updateConstraintWeights()')
+        pg.debug("SCCI: updateConstraintWeights()")
         # write down single c weights
         single_weights = np.array(self.singleCWeights())
-        pg.debug('single c weights before updateConstraintWeights: {}'
-                 .format(single_weights))
+        pg.debug(
+            f"single c weights before updateConstraintWeights: {single_weights}"
+        )
 
         new_cweight = np.ones_like(single_weights)
 
@@ -124,7 +131,7 @@ class SCCI(object):
         # other parameters
         for ipar in range(self.npara):
             all_others = np.arange(self.npara) != ipar
-            pg.debug('SCCI: all others: {}'.format(all_others))
+            pg.debug(f"SCCI: all others: {all_others}")
             new_cweight[all_others] *= single_weights[ipar]
             # new_cweight *= single_weights[ipar]
 
@@ -132,20 +139,20 @@ class SCCI(object):
         new_cweight = np.minimum(new_cweight, self.cmax)
         new_cweight = np.maximum(new_cweight, self.cmin)
 
-        pg.debug('min/max new c weight: {}/{}'
-                 .format(np.min(new_cweight), np.max(new_cweight)))
+        pg.debug(
+            f"min/max new c weight: {np.min(new_cweight)}/{np.max(new_cweight)}"
+        )
 
         # set c weights
         total = 0
         matrices = []
         for iinv, inv in enumerate(self.invs):
             weight = []
-            for j in range(self.nparas[iinv]):
+            for _ in range(self.nparas[iinv]):
                 weight.extend(new_cweight[total])
                 total += 1
 
-            pg.debug('SCCI: manager {}, weights {}'.format(
-                iinv, np.shape(weight)))
+            pg.debug(f"SCCI: manager {iinv}, weights {np.shape(weight)}")
 
             inv.inv.setCWeight(weight)
 
@@ -157,27 +164,25 @@ class SCCI(object):
         """Run coupled inversion."""
         maxIter = kwargs.pop("maxIter", 8)
         if self.resultdir is None:
-            self.resultdir = "result_a{}_b{}".format(self.a, self.b).replace(
-                ".", "_")
+            self.resultdir = f"result_a{self.a}_b{self.b}".replace(".", "_")
 
-        if save and not os.path.exists(self.resultdir):
-            os.makedirs(self.resultdir)
+        if save and not Path(self.resultdir).exists():
+            Path(self.resultdir).mkdir(parents=True, exist_ok=True)
 
         for i in range(maxIter):
-            print("Coupled inversion {0}".format(i+1))
+            print(f"Coupled inversion {i + 1}")
             self.updateConstraintWeights()
             for i, inv in enumerate(self.invs):
                 basename = self.resultdir + "/" + self.names[i]
                 if save:
-                    np.save(basename+'_cWeight_{}.npy'.format(i + 1),
-                            inv.inv.cWeight())
+                    np.save(
+                        basename + f"_cWeight_{i + 1}.npy", inv.inv.cWeight()
+                    )
 
                 inv.inv.oneStep()
                 if save:
-                    np.save(basename + '_response_{}.npy'.format(i + 1),
-                            inv.response)
-                    np.save(basename + '_model_{}.npy'.format(i + 1),
-                            inv.model)
+                    np.save(basename + f"_response_{i + 1}.npy", inv.response)
+                    np.save(basename + f"_model_{i + 1}.npy", inv.model)
 
     def _gather(self, attribute, raise_error=False, default=None):
         """Gather variables from underlying managers for convenience."""
@@ -188,8 +193,9 @@ class SCCI(object):
             else:
                 if raise_error:
                     raise AttributeError(
-                        'Manager {} of type {} has no attribute "{}"'
-                        .format(mi, type(manager), attribute))
+                        f"Manager {mi} of type {type(manager)} has no "
+                        f'attribute "{attribute}"'
+                    )
                 else:
                     ret.append(default)
         return ret
@@ -202,9 +208,10 @@ class SCCI(object):
                 to_call = getattr(manager, call)
                 if not callable(to_call):
                     if raise_error:
-                        raise TypeError('{} object of manager {} of type {} '
-                                        'is not callable'.format(
-                                            type(to_call), mi, type(manager)))
+                        raise TypeError(
+                            f"{type(to_call)} object of manager {mi} "
+                            f"of type {type(manager)} is not callable"
+                        )
                     else:
                         ret.append(default)
                 else:
@@ -212,8 +219,9 @@ class SCCI(object):
             else:
                 if raise_error:
                     raise AttributeError(
-                        'Manager {} of type {} has no function "{}"'
-                        .format(mi, type(manager), call))
+                        f"Manager {mi} of type {type(manager)} has no "
+                        f'function "{call}"'
+                    )
                 else:
                     ret.append(default)
         return ret
@@ -225,7 +233,7 @@ def roughness2CWeight(vec, a=0.1, b=0.1, c=1.0, Max=1.0, Min=0.2):
     See Günther et al. (2010, SAGEEP extended abstract) (case a>0) for details.
     """
     avec = np.absolute(vec)
-    cfun = (a / (avec + a) + b)**c
+    cfun = (a / (avec + a) + b) ** c
     # confine between min and max
     # cfun = (cfun - min(cfun)) / (max(cfun) - min(cfun)) * (Max-Min) + Min
     cfun = np.minimum(cfun, Max)
@@ -233,7 +241,7 @@ def roughness2CWeight(vec, a=0.1, b=0.1, c=1.0, Max=1.0, Min=0.2):
     return cfun
 
 
-def getNormalizedRoughness(mesh, model, trans='log', tmin=None, tmax=None):
+def getNormalizedRoughness(mesh, model, trans="log", tmin=None, tmax=None):
     """Return normalized roughness of the model given mesh and transformation.
 
     The roughness is defined on each cell boundary with connection to another
@@ -252,13 +260,13 @@ def getNormalizedRoughness(mesh, model, trans='log', tmin=None, tmax=None):
     inv = pg.core.Inversion([1, 2, 3], fop, True, False)
 
     # Step 2: take care of transformation
-    if trans.lower() == 'log':
+    if trans.lower() == "log":
         if tmin is not None and tmax is not None:
             transmodel = pg.core.TransLogLU(tmin, tmax)
         else:
             transmodel = pg.core.TransLogLU()
 
-    elif trans.lower() == 'cot':
+    elif trans.lower() == "cot":
         if tmin is None:
             tmin = 0
 
@@ -268,9 +276,10 @@ def getNormalizedRoughness(mesh, model, trans='log', tmin=None, tmax=None):
         transmodel = pg.core.TransCotLU(tmin, tmax)
 
     else:
-        raise Exception(
-            'Transformation not implemented, expect "log" or "cot", not "{}".'
-            .format(trans))
+        raise ValueError(
+            f'Transformation not implemented, expect "log" or "cot", '
+            f'not "{trans}".'
+        )
 
     # Step 3: region manager initialization (enables use of createConstraints)
     inv.setTransModel(transmodel)
@@ -282,4 +291,3 @@ def getNormalizedRoughness(mesh, model, trans='log', tmin=None, tmax=None):
 
     # return as numpy array
     return np.asarray(roughness)
-

@@ -11,7 +11,7 @@ def _TransCumulative_addForGC_MP_(self, T, *args):
 
     Monkey patch to keep the GC happy until redesign.
     """
-    if not hasattr(self, '__trans__'):
+    if not hasattr(self, "__trans__"):
         self.__trans__ = []
     self.__trans__.append(T)
 
@@ -24,6 +24,7 @@ def _TransCumulative_addForGC_MP_(self, T, *args):
 
 pgcore.RTransCumulative.add = _TransCumulative_addForGC_MP_
 
+
 def __RTransCumulative_str(self):
     """Return string representation."""
     out = "Cumulative Data transformation:"
@@ -32,6 +33,7 @@ def __RTransCumulative_str(self):
         out += f"\n{i}, {itr}"
 
     return out
+
 
 pgcore.RTransCumulative.__repr__ = __RTransCumulative_str
 
@@ -43,7 +45,9 @@ def __RTransLog_str(self):
         out += f", lower bound {lB}"
     return out
 
+
 pgcore.RTransLog.__repr__ = __RTransLog_str
+
 
 def __RTransLogLU_str(self):
     """Return string representation."""
@@ -52,7 +56,9 @@ def __RTransLogLU_str(self):
     out += f", upper bound {self.upperBound()}"
     return out
 
+
 pgcore.RTransLogLU.__repr__ = __RTransLogLU_str
+
 
 def __RTransCotLU_str(self):
     """Return string representation."""
@@ -62,11 +68,14 @@ def __RTransCotLU_str(self):
     # out += f", upper bound {self.upperBound()}"
     return out
 
+
 pgcore.RTransCotLU.__repr__ = __RTransCotLU_str
+
 
 def __RTrans_str(self):
     """Return string representation."""
     return "Identity transform"
+
 
 pgcore.RTrans.__repr__ = __RTrans_str
 
@@ -100,11 +109,11 @@ class TransSymLog(pgcore.RTrans):
 
     def invTrans(self, y):
         """Inverse transformation."""
-        return (pgcore.exp(np.abs(y)) - 1.) * self.tol * np.sign(y)
+        return (pgcore.exp(np.abs(y)) - 1.0) * self.tol * np.sign(y)
 
     def deriv(self, x):
         """Return derivative of the transformation."""
-        return 1. / (np.abs(x) / self.tol + 1) / self.tol
+        return 1.0 / (np.abs(x) / self.tol + 1) / self.tol
 
 
 class TransArsinh(pgcore.RTrans):
@@ -124,14 +133,14 @@ class TransArsinh(pgcore.RTrans):
 
     def invTrans(self, y):
         """Inverse transformation."""
-        return (pgcore.exp(y) - pgcore.exp(-y)) / 2.
+        return (pgcore.exp(y) - pgcore.exp(-y)) / 2.0
 
     def deriv(self, x):
         """Return derivative of the transformation."""
-        return 1. / (pgcore.sqrt(x**2 + 1))
+        return 1.0 / (pgcore.sqrt(x**2 + 1))
 
 
-def str2Trans(tr:str):
+def str2Trans(tr: str):
     """Convert string to transformation.
 
     Convention
@@ -151,9 +160,9 @@ def str2Trans(tr:str):
         if "-" in low:  # lower/upper
             sp = low[3:].split("-")
             return TransLogLU(float(sp[0]), float(sp[1]))
-        elif len(low) > 3: # lower
+        elif len(low) > 3:  # lower
             return TransLog(float(low[3:]))
-        else: # just log
+        else:  # just log
             return TransLog()
     elif low.startswith("cot") and "-" in low:
         sp = low[3:].split("-")

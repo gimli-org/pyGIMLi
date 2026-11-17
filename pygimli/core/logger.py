@@ -9,20 +9,21 @@ pg.error() # non critical
 pg.critical() # raises exception
 
 """
+
 import logging
 import inspect
 import traceback
 
-from . core import pgcore
+from .core import pgcore
 
 __ANSICOLORS__ = {
-    'r': '\033[0;31;49m',  # normal, #FG red; #BG black
-    'g': '\033[0;32;49m',
-    'y': '\033[0;33;49m',
-    'b': '\033[0;34;49m',
-    'm': '\033[0;35;49m',
-    'DARK_GREY': '\033[1;30m',
-    'NC': '\033[0m',  # No Color
+    "r": "\033[0;31;49m",  # normal, #FG red; #BG black
+    "g": "\033[0;32;49m",
+    "y": "\033[0;33;49m",
+    "b": "\033[0;34;49m",
+    "m": "\033[0;35;49m",
+    "DARK_GREY": "\033[1;30m",
+    "NC": "\033[0m",  # No Color
 }
 
 
@@ -39,11 +40,11 @@ def _msg(*args):
     str
         Space-separated concatenation of all arguments.
     """
-    msg = ''
+    msg = ""
     for i, arg in enumerate(args):
         msg += str(arg)
-        if i < len(args)-1:
-            msg += ' '
+        if i < len(args) - 1:
+            msg += " "
     return msg
 
 
@@ -51,12 +52,12 @@ def _(*args, c=None):
     # will probably only for linux or any msys like shell
     if c is None:
         return _msg(*args)
-    elif '\033' in c:
-        return c + _msg(*args) + __ANSICOLORS__['NC']
+    elif "\033" in c:
+        return c + _msg(*args) + __ANSICOLORS__["NC"]
     try:
-        return __ANSICOLORS__[c] + _msg(*args) + __ANSICOLORS__['NC']
+        return __ANSICOLORS__[c] + _msg(*args) + __ANSICOLORS__["NC"]
     except Exception:
-        return '\033[' + c + 'm' + _msg(*args) + __ANSICOLORS__['NC']
+        return "\033[" + c + "m" + _msg(*args) + __ANSICOLORS__["NC"]
 
 
 def _clsNameFromFrame(fr):
@@ -73,10 +74,10 @@ def _clsNameFromFrame(fr):
         The class of the ``self`` argument, or ``None`` if not a method frame.
     """
     args, _, _, value_dict = inspect.getargvalues(fr)
-    if len(args) and args[0] == 'self':
-        instance = value_dict.get('self', None)
+    if len(args) and args[0] == "self":
+        instance = value_dict.get("self", None)
         if instance is not None:
-            return getattr(instance, '__class__', None)
+            return getattr(instance, "__class__", None)
     return None
 
 
@@ -93,38 +94,39 @@ def whereAmI(nr=3):
     str
         String of the form ``ClassName.method(file.py:lineno)``.
     """
-    nr = min(len(inspect.stack())-1, nr)
+    nr = min(len(inspect.stack()) - 1, nr)
     clsName = _clsNameFromFrame(inspect.stack()[nr][0])
     method = inspect.stack()[nr].function
-    fileN = inspect.stack()[nr].filename.split('/')[-1]
+    fileN = inspect.stack()[nr].filename.split("/")[-1]
     line = inspect.stack()[nr].lineno
     # print(inspect.stack()[nr])
     # print('{0}:{1}'.format(fileN, line))
-    return str(clsName) + '.' + method + '({0}:{1})'.format(fileN, line)
+    return str(clsName) + "." + method + f"({fileN}:{line})"
 
 
-def p(*args, c='y'):
-    deprecated(hint='use _d instead')
+def p(*args, c="y"):
+    """Print a colored deprecation hint message."""
+    deprecated(hint="use _d instead")
     print(_(*args, c=c))
 
 
 def _g(*args, **kwargs):
-    _d(*args, c='g', **kwargs)
+    _d(*args, c="g", **kwargs)
 
 
 def _y(*args, **kwargs):
-    _d(*args, c='y', **kwargs)
+    _d(*args, c="y", **kwargs)
 
 
 def _r(*args, **kwargs):
-    _d(*args, c='r', **kwargs)
+    _d(*args, c="r", **kwargs)
 
 
 def _b(*args, **kwargs):
-    _d(*args, c='b', **kwargs)
+    _d(*args, c="b", **kwargs)
 
 
-def _d(*args, c='y', trace=False, plain=False):
+def _d(*args, c="y", trace=False, plain=False):
     """Simplistic colored debug msg.
 
     Arguments
@@ -144,45 +146,60 @@ def _d(*args, c='y', trace=False, plain=False):
         traceback.print_stack()
 
 
-
 class ColorFormatter(logging.Formatter):
-    def __init__(self,
-                 fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s'):
+    """Formatter coloring the level name according to the log level."""
+
+    def __init__(
+        self, fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    ):
         logging.Formatter.__init__(self, fmt, "%d/%m/%y - %H:%M:%S")
         self._formatter = {
             logging.INFO: logging.PercentStyle(
-                '%(asctime)s - %(name)s - ' + _('%(levelname)s', c='g') +
-                ' - %(message)s'),
+                "%(asctime)s - %(name)s - "
+                + _("%(levelname)s", c="g")
+                + " - %(message)s"
+            ),
             logging.ERROR: logging.PercentStyle(
-                '%(asctime)s - %(name)s - ' + _('%(levelname)s', c='r') +
-                ' - %(message)s'),
+                "%(asctime)s - %(name)s - "
+                + _("%(levelname)s", c="r")
+                + " - %(message)s"
+            ),
             logging.WARNING: logging.PercentStyle(
-                '%(asctime)s - %(name)s - ' + _('%(levelname)s', c='y') +
-                ' - %(message)s'),
+                "%(asctime)s - %(name)s - "
+                + _("%(levelname)s", c="y")
+                + " - %(message)s"
+            ),
             logging.CRITICAL: logging.PercentStyle(
-                '%(asctime)s - %(name)s - ' +
-                _('%(levelname)s', c='5;31;1;49') + ' - %(message)s'),
+                "%(asctime)s - %(name)s - "
+                + _("%(levelname)s", c="5;31;1;49")
+                + " - %(message)s"
+            ),
             logging.DEBUG: logging.PercentStyle(
-                '%(asctime)s - %(name)s - ' + _('%(levelname)s', c='m') +
-                ' - %(message)s'),
-            'DEFAULT': logging.PercentStyle(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
+                "%(asctime)s - %(name)s - "
+                + _("%(levelname)s", c="m")
+                + " - %(message)s"
+            ),
+            "DEFAULT": logging.PercentStyle(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            ),
         }
 
     def format(self, record):
-        self._style = self._formatter.get(record.levelno,
-                                          self._formatter['DEFAULT'])
+        """Format the record with the style matching its level."""
+        self._style = self._formatter.get(
+            record.levelno, self._formatter["DEFAULT"]
+        )
         return logging.Formatter.format(self, record)
 
 
-logger = logging.getLogger('pyGIMLi')
+logger = logging.getLogger("pyGIMLi")
 streamHandler = logging.StreamHandler()
 streamHandler.setFormatter(ColorFormatter())
 logger.root.addHandler(streamHandler)
 
 
 def setLogLevel(level):
-    """Shortcut to change the current log level"""
+    """Shortcut to change the current log level."""
     logger.setLevel(level)
 
 
@@ -207,7 +224,7 @@ def addLogLevel(value, name):
 VERBOSE = 15
 # DEBUG = 10
 # NOTSET = 0
-addLogLevel(VERBOSE, 'VERBOSE')
+addLogLevel(VERBOSE, "VERBOSE")
 
 
 def __logVerbose(msg, *args, **kwargs):
@@ -220,20 +237,21 @@ logger.verbose = __logVerbose
 __verbose_level__ = 0
 
 
-class VerboseScope(object):
+class VerboseScope:
+    """Temporarily enable or disable verbose logging."""
+
     def __init__(self, verb):
         self._oldState = __verbose_level__
         self._state = verb
         setVerbose(self._state)
 
     def __del__(self):
+        """Restore the previous verbose level."""
         setVerbose(self._oldState)
 
     def __bool__(self):
-        if self._state == 1:
-            return True
-        else:
-            return False
+        """Return whether the scope enables verbose logging."""
+        return self._state == 1
 
 
 def setVerbose(v):
@@ -244,13 +262,7 @@ def setVerbose(v):
     v : bool
         If True, sets the log level to VERBOSE; if False, reverts to INFO.
     """
-    level = logging.INFO
-    if v:
-        __verbose_level__ = 1
-        level = logging.VERBOSE
-    else:
-        __verbose_level__ = 0
-        level = logging.INFO
+    level = logging.VERBOSE if v else logging.INFO
 
     logger.setLevel(level)
 
@@ -262,23 +274,25 @@ def v(funct):
     --------
     >>> import pygimli as pg
     >>> @pg.v                                                  # doctest: +SKIP
-    >>> def foo():                                             # doctest: +SKIP
-    ...     pg.verbose('foo')                                  # doctest: +SKIP
-    >>> foo()                                                  # doctest: +SKIP
+    >>> def foo():  # doctest: +SKIP
+    ...     pg.verbose("foo")  # doctest: +SKIP
+    >>> foo()  # doctest: +SKIP
     >>> def bar(d):
-    ...     pg.verbose('bar', d)
-    >>> bar('verbose should be off')
+    ...     pg.verbose("bar", d)
+    >>> bar("verbose should be off")
     >>> pg.setVerbose(1)
-    >>> bar('verbose should be on (1)')
+    >>> bar("verbose should be on (1)")
     >>> pg.setVerbose(0)
-    >>> pg.v(bar)('verbose should be on (2)')
+    >>> pg.v(bar)("verbose should be on (2)")
     """
+
     def wrapper(*args, **kwargs):
         o = logger.level
         logger.setLevel(logging.VERBOSE)
         rv = funct(*args, **kwargs)
         logger.setLevel(o)
         return rv
+
     return wrapper
 
 
@@ -289,23 +303,25 @@ def d(funct):
     --------
     >>> import pygimli as pg
     >>> @pg.d                                                  # doctest: +SKIP
-    >>> def foo():                                             # doctest: +SKIP
-    ...     pg.debug('foo')                                    # doctest: +SKIP
-    >>> foo()                                                  # doctest: +SKIP
+    >>> def foo():  # doctest: +SKIP
+    ...     pg.debug("foo")  # doctest: +SKIP
+    >>> foo()  # doctest: +SKIP
     >>> def bar(d):
-    ...     pg.debug('bar', d)
-    >>> bar('debug should be off')
+    ...     pg.debug("bar", d)
+    >>> bar("debug should be off")
     >>> pg.setDebug(1)
-    >>> bar('debug should be on (1)')
+    >>> bar("debug should be on (1)")
     >>> pg.setDebug(0)
-    >>> pg.d(bar)('debug should be on (2)')
+    >>> pg.d(bar)("debug should be on (2)")
     """
+
     def wrapper(*args, **kwargs):
         o = logger.level
         logger.setLevel(logging.DEBUG)
         rv = funct(*args, **kwargs)
         logger.setLevel(o)
         return rv
+
     return wrapper
 
 
@@ -328,9 +344,9 @@ def setDebug(d):
         level = logging.INFO
 
     logger.setLevel(level)
-    logging.getLogger('Core').setLevel(level)
-    fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=level, format=fmt, datefmt='%m/%d/%Y %H:%M:%S')
+    logging.getLogger("Core").setLevel(level)
+    fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    logging.basicConfig(level=level, format=fmt, datefmt="%m/%d/%Y %H:%M:%S")
     # filename='pygimli.log'
 
 
@@ -393,6 +409,10 @@ def verbose(*args):
     logger.verbose(_msg(*args))
 
 
+class _CriticalError(Exception):
+    """Raised by :func:`critical` if no exception type is given."""
+
+
 def critical(*args):
     """Log a CRITICAL message and raise an Exception.
 
@@ -424,10 +444,10 @@ def critical(*args):
         except Exception:
             pass
         raise e
-    raise Exception(_msg(*args))
+    raise _CriticalError(_msg(*args))
 
 
-def deprecated(msg='', hint=''):
+def deprecated(msg="", hint=""):
     """Emit a deprecation warning including the call site location.
 
     Parameters
@@ -450,7 +470,7 @@ def deprecated(msg='', hint=''):
 #     return newFunc(**inspect.stack()[1].frame.f_locals)
 
 
-def renameKwarg(old, new, kwargs, ver=''):
+def renameKwarg(old, new, kwargs, ver=""):
     """Handle a renamed keyword argument with a backward-compatible warning.
 
     If *old* is present in *kwargs*, it is renamed to *new* in-place and a
@@ -468,19 +488,28 @@ def renameKwarg(old, new, kwargs, ver=''):
         Version in which the old name will be removed.
     """
     if old in kwargs:
-        logger.warning("Keyword argument changed from '" + old +
-                       "' to '" + new + "' and will be removed in v " + ver)
+        logger.warning(
+            "Keyword argument changed from '"
+            + old
+            + "' to '"
+            + new
+            + "' and will be removed in v "
+            + ver
+        )
         kwargs[new] = kwargs.pop(old)
 
 
-def renameArg(old, new, kwargs, default, ver=''):
+def renameArg(old, new, kwargs, default, ver=""):
     """Argument old is renamed into new.
 
-    Look in kwargs if the old name is used and return these value or the default.
+    Look in kwargs if the old name is used and return these value or the
+    default.
     """
     if old in kwargs:
-        logger.warning(whereAmI(nr=2) + ": argument '{0}' has been renamed to "
-                    "'{1}' and will be removed in v: {2}".format(old, new, ver))
+        logger.warning(
+            whereAmI(nr=2) + f": argument '{old}' has been "
+            f"renamed to '{new}' and will be removed in v: {ver}"
+        )
         kwargs[new] = kwargs.pop(old)
         return kwargs[new]
     return default
@@ -495,6 +524,8 @@ def warnNonEmptyArgs(kwargs):
         Keyword arguments that should have been fully consumed by the caller.
     """
     if len(kwargs) > 0:
-        logger.warning(whereAmI() +
-                       "Unrecognized keyword arguments for method:" +
-                       _msg(kwargs))
+        logger.warning(
+            whereAmI()
+            + "Unrecognized keyword arguments for method:"
+            + _msg(kwargs)
+        )

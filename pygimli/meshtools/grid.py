@@ -38,10 +38,10 @@ def createGrid(x=None, y=None, z=None, **kwargs):  # -> Mesh:
         Default marker are left=1, right=2, bottom=3, top=4, front=5, back=6
 
     degree: float
-        Foward word x to :py:mod:`pygimli.meshtools.createGridPieShaped`
+        Forward word x to :py:mod:`pygimli.meshtools.createGridPieShaped`
 
     phi: iterable of float
-        Foward with x to :py:mod:`pygimli.meshtools.createGridPieShaped`
+        Forward with x to :py:mod:`pygimli.meshtools.createGridPieShaped`
 
     Returns
     -------

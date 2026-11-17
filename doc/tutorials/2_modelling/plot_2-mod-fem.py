@@ -5,8 +5,9 @@ Basics of Finite Element Analysis
 This tutorial covers the first steps into Finite Element computation
 referring the *M* (Modelling) in *pyGIMLi*.
 
-We will not dig into deep details about the theory of the Finite Elements Analysis (FEA)
-here, as this can be found in several books, e.g., :cite:`Zienkiewicz1977`.
+We will not dig into deep details about the theory of the Finite Elements
+Analysis (FEA) here, as this can be found in several books,
+e.g., :cite:`Zienkiewicz1977`.
 
 Anyhow, there is a little need for theory to understand what it means
 to use FEA for the solution of a boundary value problem.
@@ -31,9 +32,11 @@ On the boundary :math:`\partial\Omega` of the domain, we want
 known values of :math:`u=g` as so called Dirichlet boundary conditions.
 
 A common approach to solve this problem is the method of weighted residuals.
-The base assumption states that an approximated solution :math:`u_h\approx u` will
-only satisfy the differential equation with a rest :math:`R`: :math:`\Delta u_h + f = R`. If we choose some weighting functions :math:`w`,
-we can try to minimize the resulting residuum over our modelling domain as:
+The base assumption states that an approximated solution
+:math:`u_h\approx u` will only satisfy the differential equation with a
+rest :math:`R`: :math:`\Delta u_h + f = R`. If we choose some weighting
+functions :math:`w`, we can try to minimize the resulting residuum over our
+modelling domain as:
 
 .. math::
 
@@ -52,18 +55,23 @@ This leads to the so called weak formulation:
 
 .. math::
 
-    \int_{\Omega} \nabla u_h \nabla w - \int_{\partial \Omega}\mathbf{n}\nabla u_h w & = \int_{\Omega} f w \\
-    \int_{\Omega} \nabla u_h \nabla w & = \int_{\Omega} f w + \int_{\partial \Omega}\frac{\partial u_h}{\partial\mathbf{n}} w\;.
+    \int_{\Omega} \nabla u_h \nabla w
+    - \int_{\partial \Omega}\mathbf{n}\nabla u_h w & = \int_{\Omega} f w \\
+    \int_{\Omega} \nabla u_h \nabla w & = \int_{\Omega} f w
+    + \int_{\partial \Omega}\frac{\partial u_h}{\partial\mathbf{n}} w\;.
 
 We can solve these integrals after choosing an appropriate basis
 for an approximate solution :math:`u_h` as:
 
 .. math::
 
-    u_h = \sum_i \mathrm{u}_i N_i\quad\text{with}\quad i = 0\ldots\mathcal{N}\;.
+    u_h = \sum_i \mathrm{u}_i N_i\quad\text{with}\quad
+    i = 0\ldots\mathcal{N}\;.
 
-The latter fundamental FEA relation discretizes the continuous solution :math:`u_h`
-into a discrete values :math:`\mathrm{u} = \{\mathrm{u}_i\}` for a number of :math:`i = 0\ldots\mathcal{N}` discrete points, usually called nodes.
+The latter fundamental FEA relation discretizes the continuous solution
+:math:`u_h` into a discrete values
+:math:`\mathrm{u} = \{\mathrm{u}_i\}` for a number of
+:math:`i = 0\ldots\mathcal{N}` discrete points, usually called nodes.
 
 The basis functions :math:`N_i` can be understood as interpolation rules for
 the discrete solution between adjacent nodes and will be chosen later.
@@ -73,7 +81,8 @@ functions :math:`w=N_j` with :math:`j=0\ldots\mathcal{N}` (Galerkin method)
 
 .. math::
 
-    \int_{\Omega} \sum_i \mathrm{u}_i \nabla N_i \nabla N_j\\ & = \int_{\Omega} f_j N_j + \int_{\partial \Omega} h N_j
+    \int_{\Omega} \sum_i \mathrm{u}_i \nabla N_i \nabla N_j\\ & =
+    \int_{\Omega} f_j N_j + \int_{\partial \Omega} h N_j
     \quad \text{with}\quad h\\ & = \frac{\partial u}{\partial \mathbf{n}}
 
 this can be rewritten with :math:`h=0` as:
@@ -82,8 +91,10 @@ this can be rewritten with :math:`h=0` as:
 
     \mathrm{A} \mathrm{u} &= \mathrm{b} \\
     & \text{with} \\
-    \mathrm{A} & = \{\mathrm{a}_{i,j}\} = \int_{\Omega}\nabla N_i \nabla N_j \quad\text{known as 'Stiffness matrix'}\\
-    \mathrm{b} & = \{\mathrm{b}_j\} = \int_{\Omega} f_j N_j \quad\text{known as 'Load vector'}
+    \mathrm{A} & = \{\mathrm{a}_{i,j}\} = \int_{\Omega}\nabla N_i \nabla N_j
+    \quad\text{known as 'Stiffness matrix'}\\
+    \mathrm{b} & = \{\mathrm{b}_j\} = \int_{\Omega} f_j N_j
+    \quad\text{known as 'Load vector'}
 
 The solution of this linear system of equations leads to the
 discrete solution :math:`\mathrm{u} = \{\mathrm{u}_i\}` for all
@@ -116,8 +127,10 @@ the affected boundary elements: (maybe move this to the BC tutorial)
 
     \mathrm{A_D}\cdot\mathrm{u} &= \mathrm{b_D} \\
     & \text{with} \\
-    \mathrm{A_D} & = \{\mathrm{a}_{i,j}\}\quad\forall i, j ~\notin~ k ~\text{and}~1~\text{for}~i,j \in k\\
-    \mathrm{b_D} & = \{\mathrm{b}_j\} - \mathrm{A}\cdot\mathrm{g}\quad\forall j \notin k~\text{and}~g_k~\text{for}~j \in k
+    \mathrm{A_D} & = \{\mathrm{a}_{i,j}\}\quad\forall i, j ~\notin~ k
+    ~\text{and}~1~\text{for}~i,j \in k\\
+    \mathrm{b_D} & = \{\mathrm{b}_j\} - \mathrm{A}\cdot\mathrm{g}
+    \quad\forall j \notin k~\text{and}~g_k~\text{for}~j \in k
 
 Now we have all parts together to assemble :math:`\mathrm{A_D}` and
 :math:`\mathrm{b_D}` and finally solve the given boundary value problem.
@@ -131,7 +144,8 @@ and select the domain geometry suitable for nice Dirichlet values.
 
     u(x,y) & = \operatorname{sin}(x)\operatorname{sin}(y)\\
     - \Delta u & = f(x,y) = 2 \operatorname{sin}(x)\operatorname{sin}(y)\\
-    \Omega \in I\!R^2 & \quad \text{on}\quad 0 \leq x \leq 2\pi,~~  0 \leq y \leq 2\pi \\
+    \Omega \in I\!R^2 & \quad \text{on}\quad 0 \leq x \leq 2\pi,~~
+    0 \leq y \leq 2\pi \\
     u & = g = 0 \quad \text{on}\quad \partial \Omega
 
 We now can solve the Poison equation applying the FEA capabilities of pygimli
@@ -148,8 +162,9 @@ import pygimli as pg
 # The desired mesh of our domain will be a grid with equidistant spacing in
 # x and y directions.
 #
-domain = pg.createGrid(x=np.linspace(0.0, 2*np.pi, 25),
-                       y=np.linspace(0.0, 2*np.pi, 25))
+domain = pg.createGrid(
+    x=np.linspace(0.0, 2 * np.pi, 25), y=np.linspace(0.0, 2 * np.pi, 25)
+)
 
 uExact = lambda pos: np.sin(pos[0]) * np.sin(pos[1])
 f = lambda cell: 2.0 * np.sin(cell.center()[0]) * np.sin(cell.center()[1])
@@ -168,7 +183,7 @@ b = pg.solver.createLoadVector(domain, f)
 # To apply the boundary condition we first need to identify all boundary
 # elements. The default grid applies the following boundary marker on the
 # outermost boundaries: 1 (left), 2(right), 3(top), and 4(bottom).
-boundaries = pg.solver.parseArgToBoundaries({'1,2,3,4': 0.0}, domain)
+boundaries = pg.solver.parseArgToBoundaries({"1,2,3,4": 0.0}, domain)
 
 ###############################################################################
 # `parseArgToBoundaries` is a helper function to collect a list of
@@ -186,33 +201,33 @@ u = pg.solver.linSolve(A, b)
 ###############################################################################
 # The resulting scalar field can displayed with the `pg.show` shortcut.
 #
-ax, cb = pg.show(domain, u, label='Approximated solution $u$', nLevs=7)
+ax, cb = pg.show(domain, u, label="Approximated solution $u$", nLevs=7)
 
 ###############################################################################
 # For analyzing the accuracy for the approximation we apply the
 # L2 norm for the finite element space :py:mod:`pygimli.solver.normL2` for a
 # set of different solutions with decreasing cell size. Instead of using the
-# the single assembling steps again, we apply our Finite Element shortcut function
-# :py:mod:`pygimli.solver.solve`.
+# the single assembling steps again, we apply our Finite Element shortcut
+# function :py:mod:`pygimli.solver.solve`.
 #
-domain = pg.createGrid(x=np.linspace(0.0, 2*np.pi, 3),
-                       y=np.linspace(0.0, 2*np.pi, 3))
+domain = pg.createGrid(
+    x=np.linspace(0.0, 2 * np.pi, 3), y=np.linspace(0.0, 2 * np.pi, 3)
+)
 
 h = []
 l2 = []
-for i in range(5):
+for _ in range(5):
     domain = domain.createH2()
-    u_h = pg.solve(domain, f=f, bc={'Dirichlet':{'1:5': 0}})
+    u_h = pg.solve(domain, f=f, bc={"Dirichlet": {"1:5": 0}})
     u = np.array([uExact(_) for _ in domain.positions()])
     l2.append(pg.solver.normL2(u - u_h, domain))
     h.append(min(domain.boundarySizes()))
-    print("NodeCount: {0}, h:{1}m, L2:{2}%".format(domain.nodeCount(),
-                                                   h[-1], l2[-1]))
+    print(f"NodeCount: {domain.nodeCount()}, h:{h[-1]}m, L2:{l2[-1]}%")
 
-ax,_ = pg.show()
-ax.loglog(h, l2, 'o-')
-ax.set_ylabel('Approximation error: $L_2$ norm')
-ax.set_xlabel('Cell size $h$ (m)')
+ax, _ = pg.show()
+ax.loglog(h, l2, "o-")
+ax.set_ylabel("Approximation error: $L_2$ norm")
+ax.set_xlabel("Cell size $h$ (m)")
 ax.grid()
 
 ###############################################################################

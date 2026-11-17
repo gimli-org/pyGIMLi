@@ -77,14 +77,14 @@ public:
     typedef RVector Vec;
     typedef RVector ModelVector;
 
-    /*! Minimal constructor. verbose -- gives some output and status information about the inversion progress; dosave -- advanced debuging, saves alot of stuff and temporary data */
+    /*! Minimal constructor. verbose -- gives some output and status information about the inversion progress; dosave -- advanced debugging, saves a lot of stuff and temporary data */
     RInversion(bool verbose=false, bool dosave=false)
         : InversionBase< double >(), verbose_(verbose),
         dosave_(dosave), saveModelHistory_(dosave){
         this->init_();
     }
 
-    /*! Contructor for forward operator only */
+    /*! Constructor for forward operator only */
     RInversion(ModellingBase & forward,
               bool verbose=false, bool dosave=false)
         : InversionBase< double >(), verbose_(verbose),
@@ -156,7 +156,7 @@ private:
 
 
 protected:
-    /*! Internal initialization function, which is called from constructor. Set default paramater and allocate required memory */
+    /*! Internal initialization function, which is called from constructor. Set default parameter and allocate required memory */
     void init_(){
         transDataDefault_   = new Trans< Vec >;
         transModelDefault_  = new Trans< Vec >;
@@ -309,7 +309,7 @@ public:
     inline bool doSave() const { return dosave_; }
 
     /*! Set and get verbose behaviour */
-    inline void saveModelHistory(bool doSaveModelHistory){ 
+    inline void saveModelHistory(bool doSaveModelHistory){
         saveModelHistory_ = doSaveModelHistory; }
 
     /*! Set and get line search */
@@ -338,7 +338,7 @@ public:
     inline double lambdaMinimum() const { return lambdaMin_; }
 
     /*! Set whether regularization is global or local (e.g. Marquardt method) */
-    void setLocalRegularization(bool localReg){ 
+    void setLocalRegularization(bool localReg){
         localRegularization_ = localReg; }
     /*! Return whether regularization is global or local (e.g. Marquardt method) */
     bool localRegularization() const { return localRegularization_; }
@@ -359,7 +359,7 @@ public:
     inline void setCGLSTolerance(double tol){ CGLStol_ = tol; }
     inline double maxCGLSTolerance() const { return CGLStol_; }
 
-    /*! Return curent iteration number */
+    /*! Return current iteration number */
     inline uint iter() const { return iter_; }
 
     /*! Return true if inversion is running */
@@ -431,9 +431,9 @@ public:
     inline void setResponse(const Vec & response){ response_ = response; }
 
     /*! Set constraint right-hand side by hand (very special cases, so be careful) */
-    inline void setConstraintsH(const Vec & constraintsH){ 
+    inline void setConstraintsH(const Vec & constraintsH){
         __MS("who use this. Please note any setting of this will be overwritten in run.")
-        constraintsH_ = constraintsH; 
+        constraintsH_ = constraintsH;
     }  // size check?
 
     /*! Return a reference to the current response vector */
@@ -468,13 +468,15 @@ public:
         if (verbose_) std::cout << "Robust reweighting " << std::endl;
         Vec deltaData((tD_->trans(data_) - tD_->trans(response_)) * dataWeight_);
         //** reweight errors according to IRLS scheme
-        // cr: error wird nur noch von getPhiD genutzt und dataweight wird im Laufe der Inversion nicht mehr aktualisiert, soll das so sein? DRY?
-        // tg: checkerror ist doch genau das richtige oder?
+        // cr: error is only used by getPhiD now and dataweight is no longer
+        // cr: updated in the course of the inversion, is that intended? DRY?
+        // tg: checkError is exactly the right thing to do, isn't it?
         error_ /= (getIRLSWeights(deltaData, 0.0, 1.0) + TOLERANCE);
-        checkError(); //** macht implizit:
+        checkError(); //** implicitly does:
         // dataWeight_ = (1.0 / tD_->error(data_, error_));
         // tg: maybe better just reweight dweight and hold error constant
-        // tg: geht nicht weil phiD auf Fehlern beruht (und das auch muss wegen Trafowechsel)
+        // tg: does not work because phiD is based on errors (and has to be,
+        // tg: because of the transformer change)
     }
 
     /*! Apply blocky model constraints (see also setBlockyModel) */
@@ -512,7 +514,7 @@ public:
     Vec modelCellResolution(int iModel) {
         Vec resolution(model_.size(), 0.0);
         resolution[ iModel ] = 1.0; //** both for retrieving solumn and as starting model for resolution
-        //** retrieve one colomn from the jacobian matrix and scale according to data/model transformation
+        //** retrieve one column from the jacobian matrix and scale according to data/model transformation
         Vec sensCol = (*forward_->jacobian()) * resolution * tD_->deriv(response_) / tM_->deriv(model_)[ iModel ];
         //** call inverse substep with sensCol on right hand side (see Gnther, 2004)
         Vec deltaModel0(model_.size());// !!! h   zvariante
@@ -539,7 +541,7 @@ public:
                 ipos = i;
             }
         }
-        // Achtung Parametermapping und Backgroundzellen!
+        // caution: parameter mapping and background cells!
         return modelCellResolution(ipos);
     }
 
@@ -552,8 +554,8 @@ public:
 
     /*! Return (C * m * m_w) * c_w */
     RVector roughness(const RVector & model) const {
-       RVector r(*forward_->constraints() 
-                  * Vec(tM_->trans(model) * modelWeight_) 
+       RVector r(*forward_->constraints()
+                  * Vec(tM_->trans(model) * modelWeight_)
                   * constraintWeights_);
 
         if (haveReferenceModel_) {
@@ -577,29 +579,29 @@ public:
     double getPhiM(const Vec & model) const;
 
     /*! Return total objective function (data OF plus lambda times model OF)
-     DEPRECATED wrong nameing scheme*/
+     DEPRECATED wrong naming scheme*/
     double getPhi(const Vec & model, const Vec & response) const {
         return getPhiD(response) + getPhiM(model) * lambda_ * (1.0 - double(localRegularization_));
     }
 
     /*! Shortcut for \ref getPhiD(response_) necessary ?
-     DEPRECATED wrong nameing scheme*/
+     DEPRECATED wrong naming scheme*/
     inline double getPhiD() const { return getPhiD(response_); }
 
     /*! Shortcut for \ref getPhiM(model_) necessary ?
-     DEPRECATED wrong nameing scheme*/
+     DEPRECATED wrong naming scheme*/
     inline double getPhiM() const { return getPhiM(model_); }
 
     /*! Shortcut for \ref getPhi(model_, response_) necessary ?
-     DEPRECATED wrong nameing scheme*/
+     DEPRECATED wrong naming scheme*/
     inline double getPhi() const { return getPhiD() + getPhiM() * lambda_ * (1.0 - double(localRegularization_)); }
 
     /*! Return the chi-squared data misfit
-     DEPRECATED wrong nameing scheme*/
+     DEPRECATED wrong naming scheme*/
     inline double getChi2() const { return getPhiD() / data_.size(); }
 
     /*! Return the chi-squared data misfit for given forward response.
-     DEPRECATED wrong nameing scheme*/
+     DEPRECATED wrong naming scheme*/
     inline double getChi2(const Vec & response) const { return getPhiD(response) / data_.size(); }
 
     /*! Return last chi-squared data misfit */
@@ -659,7 +661,7 @@ public:
             }
             if (verbose_) std::cout << std::endl;
 
-            if (tau < 0.03) { //! negative or nearly zero (stucked) -> use small step instead
+            if (tau < 0.03) { //! negative or nearly zero (stuck) -> use small step instead
                 tau = 0.03;
                 if (verbose_) std::cout << " tau < 0.03 ==> tau = " << tau << std::endl;
             }
@@ -722,7 +724,7 @@ public:
     /*! Start the inversion procedure from the last model and return the final model vector.*/
     const Vec & run();
 
-    /*! Specialized run function that tries to reach a datafit chi^2=1 by varying the regularization paramater lambda */
+    /*! Specialized run function that tries to reach a datafit chi^2=1 by varying the regularization parameter lambda */
     Vec runChi1(double acc = 0.01, int maxiter = 50){
         stopAtChi1(false);
         Vec model = run();
@@ -820,7 +822,7 @@ protected:
     /*! Set this to zero if u want to use absolute errors == zero*/
     bool fixError_;
 
-    /*! Hold old models, for debuging */
+    /*! Hold old models, for debugging */
     std::vector < RVector > modelHist_;
 
 };

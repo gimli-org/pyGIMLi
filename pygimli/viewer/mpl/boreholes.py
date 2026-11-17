@@ -1,9 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
+"""Borehole data plotting helpers.
+
 Created on Mon Feb 16 09:33:14 2015
 
 @author: Marcus Wennermark
 """
+
+from pathlib import Path
+
 import numpy as np
 
 from .modelview import draw1DColumn
@@ -11,16 +14,14 @@ from .colorbar import cmapFromName
 
 
 def create_legend(ax, cmap, ids, classes):
-    """
-    Create a list of patch objects that can be used for borehole legends.
-    """
+    """Create a list of patches for borehole legends."""
     import matplotlib.patches as mpatches
 
     patches = [mpatches.Patch(color=cmap(i), label=classes[i]) for i in ids]
     return patches
 
 
-class BoreHole(object):
+class BoreHole:
     r"""Class for handling (structural) borehole data for inclusion in plots.
 
     Each row in the data file must contain a start depth [m], end depth and a
@@ -34,6 +35,7 @@ class BoreHole(object):
         0.0 1.6 clti \n
         1.6 10.0 shale
     """
+
     def __init__(self, fname):
         """Load a single borehole from *fname*.
 
@@ -46,36 +48,48 @@ class BoreHole(object):
         self._load()
 
     def __repr__1(self):
-        return self.__class__.__name__ + '("{}")'.format(self._fname)
+        return self.__class__.__name__ + f'("{self._fname}")'
 
     def __repr__(self):
-        out = 'Borehole id: {}\n Inline position (x, z): {}\n Layers:'.format(
-            self.borehole_id, self.inline_pos)
+        """Return string representation of the borehole."""
+        out = (
+            f"Borehole id: {self.borehole_id}\n"
+            f" Inline position (x, z): {self.inline_pos}\n Layers:"
+        )
 
         for layer in self.data[1:]:
-            out = ''.join([out, '\n ', str(layer)])
+            out = "".join([out, "\n ", str(layer)])
 
         return out
 
     def _load(self):
-        """Loads the data file."""
+        """Load the data file."""
         self.data = np.genfromtxt(self._fname, dtype=None)
         if len(self.data) > 1:
-            header = self.data[0][2].decode('UTF-8').split('_')
+            header = self.data[0][2].decode("UTF-8").split("_")
             self.borehole_id = header[0]
             if len(header) > 1:
                 self._textoffset = float(header[1])
 
             self.inline_pos = (self.data[0][0], self.data[0][1])
-            self.classes = [d[-1].decode('UTF-8') for d in self.data[1:]]
-            self.unique_classes, self.class_id = \
-                np.unique(self.classes, return_inverse=True)
+            self.classes = [d[-1].decode("UTF-8") for d in self.data[1:]]
+            self.unique_classes, self.class_id = np.unique(
+                self.classes, return_inverse=True
+            )
         else:
-            raise Warning('File "{}" contains no layers!'.format(self._fname))
+            raise Warning(f'File "{self._fname}" contains no layers!')
 
-    def plot(self, ax, plot_thickness=1.0, cmin=None, cmax=None, cm=None,
-             do_legend=True, **legend_kwargs):
-        """Plots the data on the specified axis."""
+    def plot(
+        self,
+        ax,
+        plot_thickness=1.0,
+        cmin=None,
+        cmax=None,
+        cm=None,
+        do_legend=True,
+        **legend_kwargs,
+    ):
+        """Plot the data on the specified axis."""
         start_depths = np.asarray([d[0] for d in self.data[1:]])
         end_depths = np.asarray([d[1] for d in self.data[1:]])
         thickness = end_depths - start_depths
@@ -88,22 +102,31 @@ class BoreHole(object):
             cm = cmapFromName("Set3", len(self.unique_classes))
             # cm = plt.get_cmap('jet', len(self.unique_classes))
 
-        draw1DColumn(ax, self.inline_pos[0], self.class_id, thickness,
-                     ztopo=self.inline_pos[1], width=plot_thickness, cMin=cmin,
-                     cMax=cmax, name=self.borehole_id, cMap=cm,
-                     textoffset=self._textoffset, logScale=False)
+        draw1DColumn(
+            ax,
+            self.inline_pos[0],
+            self.class_id,
+            thickness,
+            ztopo=self.inline_pos[1],
+            width=plot_thickness,
+            cMin=cmin,
+            cMax=cmax,
+            name=self.borehole_id,
+            cMap=cm,
+            textoffset=self._textoffset,
+            logScale=False,
+        )
 
         if do_legend:
             self.add_legend(ax, cm, **legend_kwargs)
 
     def add_legend(self, ax, cmap, **legend_kwargs):
         """Add a legend to the plot."""
-
         leg = create_legend(ax, cmap, self.class_id, self.unique_classes)
         ax.legend(handles=leg, **legend_kwargs)
 
 
-class BoreHoles(object):
+class BoreHoles:
     """Class to load and handle several boreholes belonging to one profile.
 
     It makes the color coding consistent across boreholes.
@@ -111,24 +134,24 @@ class BoreHoles(object):
 
     def __init__(self, fnames):
         """Load a list of bore hole from filenames."""
-        if isinstance(fnames, str):
-            if fnames.find("*") >= 0:
-                from glob import glob
-                fnames = glob(fnames)
+        if isinstance(fnames, str) and fnames.find("*") >= 0:
+            pattern = Path(fnames)
+            fnames = [str(f) for f in pattern.parent.glob(pattern.name)]
         self._fnames = fnames
         if len(fnames) > 0:
             self.boreholes = [BoreHole(f) for f in fnames]
         else:
-            raise Warning('No filenames specified!')
+            raise Warning("No filenames specified!")
 
     def __repr__1(self):
-        return self.__class__.__name__ + '({})'.format(self._fnames)
+        return self.__class__.__name__ + f"({self._fnames})"
 
     def __repr__(self):
-        out = '{} borehole files loaded:'.format(len(self._fnames))
+        """Return string representation of all loaded boreholes."""
+        out = f"{len(self._fnames)} borehole files loaded:"
 
         for b in self.boreholes:
-            out = ''.join([out, str(b)])
+            out = "".join([out, str(b)])
         return out
 
     def _build_common_colormap(self):
@@ -137,9 +160,10 @@ class BoreHoles(object):
         Such that a certain classification has the same color on all boreholes.
         """
         import matplotlib.pyplot as plt
+
         self.common_unique, rev_idx = np.unique(
-            np.hstack([b.classes for b in self.boreholes]),
-            return_inverse=True)
+            np.hstack([b.classes for b in self.boreholes]), return_inverse=True
+        )
 
         self.class_id = rev_idx
 
@@ -151,13 +175,13 @@ class BoreHoles(object):
             b.unique_classes = self.common_unique
             start_idx += diff_idx
 
-        self.cm = plt.get_cmap('jet', len(self.common_unique))
+        self.cm = plt.get_cmap("jet", len(self.common_unique))
         self.cmin = min(self.class_id)
         self.cmax = max(self.class_id)
 
     def plot(self, ax, plot_thickness=1.0, do_legend=True, **kwargs):
         """Plot the boreholes on the specified axis.
-        
+
         Parameters
         ----------
         ax : matplotlib.Axes
@@ -171,31 +195,46 @@ class BoreHoles(object):
         self._build_common_colormap()
 
         for b in self.boreholes:
-            b.plot(ax, plot_thickness=plot_thickness, do_legend=False,
-                   cmin=self.cmin, cmax=self.cmax, cm=self.cm)
+            b.plot(
+                ax,
+                plot_thickness=plot_thickness,
+                do_legend=False,
+                cmin=self.cmin,
+                cmax=self.cmax,
+                cm=self.cm,
+            )
 
         if do_legend:
             self.add_legend(ax, self.cm, **kwargs)
 
     def add_legend(self, ax, cmap, **legend_kwargs):
         """Add a legend to the plot.
-        
+
         Parameters
         ----------
         ax : matplotlib.axes
         cmap : matplotlib.colormap
-        
+
         Keyword arguments passed to ax.legend:
         fontsize, markerscale
         """
         leg = create_legend(ax, cmap, np.arange(cmap.N), self.common_unique)
 
-        extra = dict(bbox_to_anchor=(0.9, 0.05, 0.1, 0.1), ncol=cmap.N / 2,
-                     mode='scale', fancybox=False, shadow=False, fontsize=3.0,
-                     columnspacing=1.0, loc='center right', markerscale=0.7,
-                     framealpha=1.0, borderpad=0.5, handleheight=0.5,
-                     frameon=True)
-        
+        extra = dict(
+            bbox_to_anchor=(0.9, 0.05, 0.1, 0.1),
+            ncol=cmap.N / 2,
+            mode="scale",
+            fancybox=False,
+            shadow=False,
+            fontsize=3.0,
+            columnspacing=1.0,
+            loc="center right",
+            markerscale=0.7,
+            framealpha=1.0,
+            borderpad=0.5,
+            handleheight=0.5,
+            frameon=True,
+        )
+
         extra.update(legend_kwargs)
         ax.legend(handles=leg, **extra)
-

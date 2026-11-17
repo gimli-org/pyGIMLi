@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Vertical electrical sounding (VES) manager class."""
+
 import numpy as np
 import pygimli as pg
 from pygimli.frameworks import MethodManager1d
@@ -20,7 +21,7 @@ class VESManager(MethodManager1d):
     >>> # 3 layer with 100, 500 and 20 Ohmm
     >>> # and layer thickness of 4, 6, 10 m
     >>> # over a half-space of 800 Ohmm
-    >>> synthModel = pg.cat([4., 6., 10.], [100., 5., 20., 800.])
+    >>> synthModel = pg.cat([4.0, 6.0, 10.0], [100.0, 5.0, 20.0, 800.0])
     >>> ves = VESManager()
     >>> ra, err = ves.simulate(synthModel, ab2=ab2, mn2=mn2, noiseLevel=0.01)
     >>> ax = ves.showData(ra, error=err)
@@ -39,7 +40,7 @@ class VESManager(MethodManager1d):
                 Accept complex resistivities.
 
         """
-        self._complex = kwargs.pop('complex', False)
+        self._complex = kwargs.pop("complex", False)
 
         super().__init__(**kwargs)
 
@@ -84,11 +85,12 @@ class VESManager(MethodManager1d):
         if self.complex:
             if len(err) == 2:
                 nData = len(dataVals) // 2
-                err = pg.cat(np.ones(nData)*err[0],
-                             np.abs(err[1] / dataVals[nData:]))
+                err = pg.cat(
+                    np.ones(nData) * err[0], np.abs(err[1] / dataVals[nData:])
+                )
         else:
             if len(err) == 1:
-                err = np.ones(nData)*err[0]
+                err = np.ones(nData) * err[0]
 
         return err
 
@@ -122,7 +124,7 @@ class VESManager(MethodManager1d):
 
         if data is not None:
             if self.complex:
-                nData = len(data)//2
+                nData = len(data) // 2
                 self.dataTrans = pg.trans.TransCumulative()
                 self.dataTrans.add(self.rhoaTrans, nData)
                 self.dataTrans.add(self.phiaTrans, nData)
@@ -131,13 +133,15 @@ class VESManager(MethodManager1d):
 
             self.inv.dataTrans = self.dataTrans
 
-        if 'layerLimits' not in kwargs:
-            kwargs['layerLimits'] = [min(self.fop.mn2)/5,
-                                     max(self.fop.ab2)/2]
+        if "layerLimits" not in kwargs:
+            kwargs["layerLimits"] = [
+                min(self.fop.mn2) / 5,
+                max(self.fop.ab2) / 2,
+            ]
 
-        if 'paraLimits' in kwargs and self.complex:
-            pL = kwargs['paraLimits'][1]
-            kwargs['paraLimits'][1] = [pL[0]/1000, pL[1]/1000]
+        if "paraLimits" in kwargs and self.complex:
+            pL = kwargs["paraLimits"][1]
+            kwargs["paraLimits"][1] = [pL[0] / 1000, pL[1] / 1000]
 
         return super().invert(data=data, err=err, **kwargs)
 
@@ -150,17 +154,20 @@ class VESManager(MethodManager1d):
         if len(mat[0]) == 6:
             self.complex = True
             self.fop.setDataSpace(ab2=mat[:, 0], mn2=mat[:, 1])
-            return (mat[:, 0], mat[:, 1],
-                    np.array(pg.cat(mat[:, 2], mat[:, 4])),
-                    np.array(pg.cat(mat[:, 3], mat[:, 5])))
+            return (
+                mat[:, 0],
+                mat[:, 1],
+                np.array(pg.cat(mat[:, 2], mat[:, 4])),
+                np.array(pg.cat(mat[:, 3], mat[:, 5])),
+            )
 
     def exportData(self, fileName, data=None, error=None):
         """Export data into simple ascii matrix.
 
         Useful?
         """
-        mn2 = np.abs((self.fop.am - self.fop.an) / 2.)
-        ab2 = (self.fop.am + self.fop.bm) / 2.
+        mn2 = np.abs((self.fop.am - self.fop.an) / 2.0)
+        ab2 = (self.fop.am + self.fop.bm) / 2.0
         mat = None
         if data is None:
             data = self.inv.dataVals
@@ -169,21 +176,28 @@ class VESManager(MethodManager1d):
             error = self.inv.errorVals
 
         if self.complex:
-            nData = len(data)//2
-            mat = np.array([ab2, mn2,
-                            data[:nData], error[:nData],
-                            data[nData:], error[nData:]
-                            ]).T
-            np.savetxt(fileName, mat,
-                       header=r'ab/2\tmn/2\trhoa\terr\tphia\terrphi')
+            nData = len(data) // 2
+            mat = np.array(
+                [
+                    ab2,
+                    mn2,
+                    data[:nData],
+                    error[:nData],
+                    data[nData:],
+                    error[nData:],
+                ]
+            ).T
+            np.savetxt(
+                fileName, mat, header=r"ab/2\tmn/2\trhoa\terr\tphia\terrphi"
+            )
         else:
             mat = np.array([ab2, mn2, data, error]).T
-            np.savetxt(fileName, mat, header=r'ab/2\tmn/2\trhoa\terr')
+            np.savetxt(fileName, mat, header=r"ab/2\tmn/2\trhoa\terr")
 
 
 def VESManagerApp():
     """Call VESManager as console app."""
-    parser = VESManager.createArgParser(dataSuffix='ves')
+    parser = VESManager.createArgParser(dataSuffix="ves")
     options = parser.parse_args()
 
     verbose = not options.quiet
@@ -196,12 +210,16 @@ def VESManagerApp():
     ab2, mn2, ra, err = mgr.loadData(options.dataFileName)
 
     mgr.showData(ra, err)
-    mgr.invert(ra, err, ab2, mn2,
-               maxIter=options.maxIter,
-               lam=options.lam,
-               )
+    mgr.invert(
+        ra,
+        err,
+        ab2,
+        mn2,
+        maxIter=options.maxIter,
+        lam=options.lam,
+    )
     mgr.showResultAndFit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     VESManagerApp()

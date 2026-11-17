@@ -424,7 +424,8 @@ template < class ValueType > PolynomialFunction < ValueType >
 operator * (const PolynomialFunction < ValueType > & f, const PolynomialFunction < ValueType > & g){
 
 
-    //TODO & TEST das muss besser werden weil es nicht immer f.size() + g.size() aufspannt. bsp. x*y statt x*x
+    //TODO & TEST this needs to improve because it does not always span
+    // f.size() + g.size(). e.g. x*y instead of x*x
     PolynomialFunction < ValueType > h(RVector(f.size() + g.size(), 0.0));
 
     for (Index k = 0; k < f.size(); k ++){ // z

@@ -111,7 +111,7 @@ developers, your PR will be merged to the main repository.
 
 ### 6. Updating your work with changes from upstream
 
-While you work on your forked repository, sometimes changes are commited to the
+While you work on your forked repository, sometimes changes are committed to the
 main repository (usually called **upstream**).
 You do NOT need to delete your forked repository and refork to apply these
 changes to your own fork.

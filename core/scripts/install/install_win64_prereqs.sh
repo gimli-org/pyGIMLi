@@ -12,10 +12,10 @@ echo "#########################################################################"
 
 pacman -S --needed --noconfirm make tar git unzip wget
 
-# for some weird resson you can't install diffutils and pathc in one run
+# for some weird reason you can't install diffutils and patch in one run
 #pacman -S --needed --noconfirm diffutils
 
-# for some weird resson you can't install diffutils and pathc in one run
+# for some weird reason you can't install diffutils and patch in one run
 #pacman -S --needed --noconfirm patch
 
 # default cmake does not recognize WIN32 settings

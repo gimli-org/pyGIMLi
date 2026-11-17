@@ -4,6 +4,7 @@
 import json
 import os
 import sys
+from pathlib import Path
 
 from .logger import info, debug
 
@@ -11,31 +12,31 @@ from .core import pgcore
 
 # pyGIMLi default configuration
 rc = {
-    'lang': 'eng', # 'eng', 'german', 'de', 'ger'
-    'unitStyle': 2,
+    "lang": "eng",  # 'eng', 'german', 'de', 'ger'
+    "unitStyle": 2,
     # 1: german style: 'value in unit'
     # 2: default style: 'value (unit)'
     # auto: Use pyvista if installed or set to 'fallback' to force fallback mode
-    'view3D': 'auto',
-    'pyvista.backend': 'client',
-    'globalCache': True,
+    "view3D": "auto",
+    "pyvista.backend": "client",
+    "globalCache": True,
     # call pg.wait() before the terminal script ends if there are pending
     # mpl widgets and your backend this supports
-    'waitOnExit': True,
-    'matplotlib': 'ipympl',
+    "waitOnExit": True,
+    "matplotlib": "ipympl",
 }
 
 
 def getCPUCount():
     """Return number of processors on multiple platforms."""
-    if os.name == 'nt':
-        return int(os.getenv('NUMBER_OF_PROCESSORS'))
+    if os.name == "nt":
+        return int(os.getenv("NUMBER_OF_PROCESSORS"))
     # Linux
-    elif sys.platform == 'linux2':
+    elif sys.platform == "linux2":
         retv = 0
-        with open('/proc/cpuinfo', 'rt') as cpuinfo:
+        with Path("/proc/cpuinfo").open() as cpuinfo:
             for line in cpuinfo:
-                if line[:9] == 'processor':
+                if line[:9] == "processor":
                     retv += 1
             else:
                 return pgcore.numberOfCPU()
@@ -62,41 +63,42 @@ def getConfigPath():
     system = sys.platform
 
     if system == "win32":
-        path = os.path.join(os.environ['APPDATA'])
+        path = Path(os.environ["APPDATA"])
     elif system == "darwin":
-        path = os.path.expanduser('~/Library/Preferences/')
+        path = Path("~/Library/Preferences/").expanduser()
     else:
-        path = os.getenv('XDG_CONFIG_HOME', os.path.expanduser("~/.config"))
+        path = Path(
+            os.getenv("XDG_CONFIG_HOME", str(Path("~/.config").expanduser()))
+        )
 
-    return os.path.join(path, appname)
+    return str(path / appname)
 
 
 __configpath = getConfigPath()
-__configfile = os.path.join(__configpath, "config.json")
+__configfile = str(Path(__configpath) / "config.json")
 
 
-if os.path.isfile(__configfile):
-    #info("Loading user configuration file at " + __configfile)
-    with open(__configfile) as cfg:
+if Path(__configfile).is_file():
+    # info("Loading user configuration file at " + __configfile)
+    with Path(__configfile).open() as cfg:
         debug("Loading user configuration file at " + __configfile)
         userrc = json.load(cfg)
 
     # Check if user config holds all keys and update if necessary
     if len(userrc.keys()) != len(rc.keys()):
-        #print(userrc)
+        # print(userrc)
         rc.update(userrc)
-        #print(rc)
+        # print(rc)
         info("Updating user configuration.")
         # # for key in rc:
         #     if key not in userrc:
         #         info("Updating user configuration with", key, "=", rc[key])
         #         userrc[key] = rc[key]
-        with open(__configfile, "w") as cfg:
+        with Path(__configfile).open("w") as cfg:
             json.dump(rc, cfg, indent=4, sort_keys=True)
     rc.update(userrc)
 else:
     info("Creating default user configuration file at " + __configfile)
-    os.makedirs(os.path.join(__configpath, "pygimli"), exist_ok=True)
-    with open(__configfile, "w") as cfg:
+    (Path(__configpath) / "pygimli").mkdir(parents=True, exist_ok=True)
+    with Path(__configfile).open("w") as cfg:
         json.dump(rc, cfg, indent=4, sort_keys=True)
-

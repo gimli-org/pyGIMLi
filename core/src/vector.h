@@ -490,7 +490,7 @@ public:
     }
 
     /*! Set the val where bv is true.
-     * Throws out of length exception if sizes dismatch.
+     * Throws out of length exception if sizes mismatch.
      * Same as setVal(val, find(bv)) but faster. */
     inline Vector< ValueType > & setVal(const ValueType & val,
                                         const BVector & bv) {
@@ -848,7 +848,7 @@ DEFINE_UNARY_MOD_OPERATOR__(*, MULT)
 
 #undef DEFINE_UNARY_MOD_OPERATOR__
 
-    /*! Negation operator thats return a copy of this with negative values. */
+    /*! Negation operator that returns a copy of this with negative values. */
     inline Vector < ValueType > operator - () const { return *this * -1.0; }
 
     /*! Return dot(this, b[off::]) */
@@ -2041,7 +2041,7 @@ template < class ValueType >
 Vector< ValueType > increasingRange(const ValueType & first,
                                     const ValueType & last, Index n){
     if (sign(first) != sign(last)){
-        throwError("cant increase range from [0 " + str(first) + " to " + str(last) + "]");
+        throwError("can't increase range from [0 " + str(first) + " to " + str(last) + "]");
     }
 
     Placeholder x__;
@@ -2277,4 +2277,3 @@ namespace std {
     };
 }
 #endif // PYGIMLI_CAST
-

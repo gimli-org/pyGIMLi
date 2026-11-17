@@ -66,7 +66,7 @@ void vectorizePosVectorList(const std::vector < PosVector > & v, PosVector & r){
     //     count += v[i].size();
     // }
     // r.resize(count);
-    // Indes start = 0;
+    // Index start = 0;
     // for (Index i = 0; i < v.size(); i ++) {
     //     r.setVal(v[count += v[i].size();
     // }

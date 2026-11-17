@@ -46,7 +46,7 @@ DLLEXPORT double mixedBoundaryCondition(const Boundary & boundary,
                                         double k=0.0);
 
 DLLEXPORT void assembleCompleteElectrodeModel(RSparseMatrix & S,
-                                              const std::vector < ElectrodeShape * > & elecs,                                               
+                                              const std::vector < ElectrodeShape * > & elecs,
                                               uint oldMatSize, bool lastIsReferenz,
                                               const RVector & contactImpedances);
 
@@ -255,7 +255,7 @@ public:
                               const std::vector < ElectrodeShape * > & eB){
     }
 
-    /*! Estimate singular value for the calulated potential if the
+    /*! Estimate singular value for the calculated potential if the
      * source electrode position lies on an node.*/
     void setSingValue(bool s=true) { setSingValue_=s;}
 
@@ -264,7 +264,7 @@ public:
 
     /*! Set a custom solver if you don't want the default Choldmod or UMFPACK. */
     void setSolver(SolverWrapper *solver){ solver_ = solver; }
-    
+
 private:
     void init_();
 

@@ -409,8 +409,11 @@ def setup(app):
     app.add_config_value("srclink_branch", "master", True)
     app.add_config_value("srclink_src_path", "", True)  # 'eg' "docs/"
     app.connect("html-page-context", html_page_context)
-    # Do not declare parallel_read_safe: myst-nb executes the notebooks while
-    # the sources are read, which deadlocks Sphinx when reading in parallel.
+    # myst-nb executes the notebooks while the sources are read, which
+    # deadlocks Sphinx when reading in parallel. Declaring it explicitly keeps
+    # the build serial and silences "extension does not declare if parallel
+    # reading is safe".
+    return {"parallel_read_safe": False, "parallel_write_safe": True}
 
 
 class TestRepositorycontexts(unittest.TestCase):

@@ -32,10 +32,10 @@ public:
     /*! Default constructor. Constructs an invalid straight line. */
     Line();
 
-    /*! Constructor, construct a line between p0 and the orign [0.0, 0.0, 0.0 ]. */
+    /*! Constructor, construct a line between p0 and the origin [0.0, 0.0, 0.0 ]. */
     Line(const RVector3 & p0);
 
-    /*! Constructor construct a line betweem p0, and p1.*/
+    /*! Constructor construct a line between p0, and p1.*/
     Line(const RVector3 & p0, const RVector3 & p1);
 
     /*! Copycontructor */

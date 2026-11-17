@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Digital Elevation Model (DEM) class for interpolating elevations."""
+
 import math
 from pathlib import Path
 import numpy as np
@@ -28,12 +29,10 @@ class DEM:
         zone: int [32]
             UTM zone to be chosen
         """
-        from scipy.interpolate import RegularGridInterpolator
-
         self.latlon = False
         self.x = x
         self.y = y
-        self.fallback = kwargs.pop('fallback', kwargs.pop('z0', None))
+        self.fallback = kwargs.pop("fallback", kwargs.pop("z0", None))
 
         if isinstance(self.fallback, str):
             self.fallback = DEM(self.fallback)
@@ -43,23 +42,26 @@ class DEM:
             for addfile in demfile[1:]:
                 self.add(addfile)
         elif isinstance(demfile, str):
-            if demfile[-4:].lower() == '.asc':
+            if demfile[-4:].lower() == ".asc":
                 self.loadASC(demfile)
-            elif demfile[-4:].lower() == '.hgt':
+            elif demfile[-4:].lower() == ".hgt":
                 self.loadHGT(demfile)
             else:
                 self.loadTXT(demfile)
         elif x is not None and y is not None:
             self.z = demfile
         else:
-            raise AttributeError("Either DEM file or z with x and y must be given!")
+            raise AttributeError(
+                "Either DEM file or z with x and y must be given!"
+            )
 
         if self.latlon:
-            self._toLatLon = kwargs.pop('toLatLon', None)
+            self._toLatLon = kwargs.pop("toLatLon", None)
             if self._toLatLon is None:
                 import utm
-                zone = kwargs.pop('zone', 32)
-                self._toLatLon = lambda x_, y_: utm.to_latlon(x_, y_, zone, 'N')
+
+                zone = kwargs.pop("zone", 32)
+                self._toLatLon = lambda x_, y_: utm.to_latlon(x_, y_, zone, "N")
 
     def __repr__(self):
         """Return string representation."""
@@ -73,7 +75,7 @@ class DEM:
         if y is None:
             return self.dem(x)
         else:
-            out = self.dem(x, y) if hasattr(self, 'tri') else self.dem((x, y))
+            out = self.dem(x, y) if hasattr(self, "tri") else self.dem((x, y))
 
         if isinstance(out, np.ma.MaskedArray):
             out = out.data
@@ -86,13 +88,12 @@ class DEM:
 
         return out
 
-
     def loadTXT(self, demfile):
         """Load column-based DEM."""
         xp, yp, zp = np.loadtxt(demfile, unpack=True)
         if len(np.unique(xp)) * len(np.unique(yp)) > len(xp):
             import matplotlib.tri as mtri
-            from scipy.interpolate import LinearNDInterpolator
+
             self.x = xp
             self.y = yp
             self.z = zp
@@ -103,8 +104,10 @@ class DEM:
 
         if np.isclose(yp[0], yp[1], rtol=1e-32, atol=1e-2):
             if np.isclose(xp[0], xp[1], rtol=1e-32, atol=1e-2):
-                print('Fatal error! Neither first two x- nor y- coords are '
-                      'increasing in the specified xyz file! Aborting...')
+                print(
+                    "Fatal error! Neither first two x- nor y- coords are "
+                    "increasing in the specified xyz file! Aborting..."
+                )
                 raise SystemExit
             elif xp[1] > xp[0]:
                 nx = np.argwhere(np.diff(xp) < 0)[0][0] + 1
@@ -143,30 +146,30 @@ class DEM:
             while len(sp) < 3:
                 sp = fid.readline().split()
                 if len(sp) < 3:
-                    header[sp[0]] = float(sp[1].replace(',', '.'))
+                    header[sp[0]] = float(sp[1].replace(",", "."))
                     nheader += 1
 
         self.z = np.flipud(np.genfromtxt(ascfile, skip_header=nheader))
-        if 'NODATA_value' in header:
-            self.z[self.z == header['NODATA_value']] = np.nan
-        dx = header.pop('cellsize', 1.0)  # just a guess
-        self.x = np.arange(header['ncols']) * dx + header['xllcorner']
-        self.y = np.arange(header['nrows']) * dx + header['yllcorner']
+        if "NODATA_value" in header:
+            self.z[self.z == header["NODATA_value"]] = np.nan
+        dx = header.pop("cellsize", 1.0)  # just a guess
+        self.x = np.arange(header["ncols"]) * dx + header["xllcorner"]
+        self.y = np.arange(header["nrows"]) * dx + header["yllcorner"]
         self.createGridInterpolator()
 
     def loadHGT(self, hgtfile):
         """Load ASC (DEM matrix with location header) file."""
         # siz = os.path.getsize(hgtfile)
         siz = Path(hgtfile).stat().st_size
-        samples = int(math.sqrt(siz/2))
+        samples = int(math.sqrt(siz / 2))
         lat = int(hgtfile[-10:-8])
         lon = int(hgtfile[-7:-4])
-        self.x = np.linspace(lon,lon+1,samples, endpoint=False)
-        self.y = np.linspace(lat,lat+1,samples, endpoint=False)
-        be = self.fallback is None
-        with Path(hgtfile).open('rb') as hgt_data:
-            self.z = np.fromfile(hgt_data, np.dtype('>i2'),
-                                 samples*samples).reshape((samples, samples))
+        self.x = np.linspace(lon, lon + 1, samples, endpoint=False)
+        self.y = np.linspace(lat, lat + 1, samples, endpoint=False)
+        with Path(hgtfile).open("rb") as hgt_data:
+            self.z = np.fromfile(
+                hgt_data, np.dtype(">i2"), samples * samples
+            ).reshape((samples, samples))
             self.z[self.z < -32000] = 0
         self.z = np.flipud(self.z)
         self.createGridInterpolator()
@@ -184,7 +187,8 @@ class DEM:
         """
         if isinstance(new, (str, list, tuple)):
             new = DEM(new)
-        assert isinstance(new, DEM), "No DEM instance!"
+        if not isinstance(new, DEM):
+            raise TypeError("No DEM instance!")
         if len(self.y) == len(new.y) and np.allclose(self.y, new.y):
             if self.x[0] < new.x[0]:
                 self.x = np.concatenate([self.x, new.x])
@@ -206,10 +210,11 @@ class DEM:
     def createGridInterpolator(self):
         """Generate grid interpolator."""
         from scipy.interpolate import RegularGridInterpolator
-        be = self.fallback is None
-        self.dem = RegularGridInterpolator((self.x, self.y),
-                                           self.z.T, bounds_error=be)
 
+        be = self.fallback is None
+        self.dem = RegularGridInterpolator(
+            (self.x, self.y), self.z.T, bounds_error=be
+        )
 
     def show(self, cmap="terrain", cbar=True, ax=None, **kwargs):
         """Show digital elevation model (i.e. the elevation map).
@@ -230,25 +235,27 @@ class DEM:
         """
         import matplotlib.pyplot as plt
         import matplotlib.tri as mtri
-        from scipy.interpolate import RegularGridInterpolator, LinearNDInterpolator
+        from scipy.interpolate import LinearNDInterpolator
 
         if ax is None:
-            fig, ax = plt.subplots(figsize=kwargs.pop('figsize', (12, 12)))
+            fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (12, 12)))
 
         # extract some kwargs for axis setting and colorbar
-        orientation = kwargs.pop('orientation', 'vertical')
-        xlim = kwargs.pop('xlim', (-9e99, 9e99))
-        ylim = kwargs.pop('ylim', (-9e99, 9e99))
-        clim = kwargs.pop('clim', (np.min(self.z), np.max(self.z)))
-        cmap = kwargs.pop('cmap', 'terrain')
+        orientation = kwargs.pop("orientation", "vertical")
+        xlim = kwargs.pop("xlim", (-9e99, 9e99))
+        ylim = kwargs.pop("ylim", (-9e99, 9e99))
+        clim = kwargs.pop("clim", (np.min(self.z), np.max(self.z)))
+        cmap = kwargs.pop("cmap", "terrain")
         nl = kwargs.pop("nl", 15)
         if isinstance(self.dem, mtri.TriInterpolator):
-            im = ax.tricontourf(self.tri, self.z, cmap=cmap,
-                                levels=np.linspace(*clim, nl))
-            ax.triplot(self.tri, '-', color='gray', alpha=0.5, lw=0.5)
+            im = ax.tricontourf(
+                self.tri, self.z, cmap=cmap, levels=np.linspace(*clim, nl)
+            )
+            ax.triplot(self.tri, "-", color="gray", alpha=0.5, lw=0.5)
         elif isinstance(self.dem, LinearNDInterpolator):
-            im = ax.tripcolor(self.dem.points[:, 0], self.dem.points[:, 1],
-                              self.dem.tri)
+            im = ax.tripcolor(
+                self.dem.points[:, 0], self.dem.points[:, 1], self.dem.tri
+            )
         else:
             x = self.dem.grid[0]
             y = self.dem.grid[1]
@@ -261,9 +268,13 @@ class DEM:
             if iy1 < 0:
                 iy1 = len(y)
 
-            im = ax.pcolormesh(x[ix0:ix1], y[iy0:iy1],
-                               self.dem.values[ix0:ix1, iy0:iy1].T,
-                               cmap=cmap, **kwargs)
+            im = ax.pcolormesh(
+                x[ix0:ix1],
+                y[iy0:iy1],
+                self.dem.values[ix0:ix1, iy0:iy1].T,
+                cmap=cmap,
+                **kwargs,
+            )
 
         im.set_clim(clim)
         cb = None
@@ -278,7 +289,6 @@ class DEM:
         return ax
 
 
-if __name__ == '__main__':  # if called directly as a script
-    dgm = DEM('dgm5_borkum.asc')
+if __name__ == "__main__":  # if called directly as a script
+    dgm = DEM("dgm5_borkum.asc")
     ax = dgm.show(vmin=0, vmax=10)
-

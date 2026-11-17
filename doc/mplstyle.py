@@ -1,3 +1,5 @@
+"""Matplotlib style parameters used for the pyGIMLi documentation."""
+
 import math
 
 phi = (math.sqrt(5) + 1) / 2
@@ -12,21 +14,17 @@ plot_rcparams = {
     "xtick.labelsize": 10 * fontscale,
     "ytick.labelsize": 10 * fontscale,
     "legend.fontsize": 10 * fontscale,
-
     "grid.linewidth": 1,
     "lines.linewidth": 1.75,
-    "patch.linewidth": .3,
+    "patch.linewidth": 0.3,
     "lines.markersize": 7,
     "lines.markeredgewidth": 0,
-
     "xtick.major.width": 1,
     "ytick.major.width": 1,
-    "xtick.minor.width": .5,
-    "ytick.minor.width": .5,
-
+    "xtick.minor.width": 0.5,
+    "ytick.minor.width": 0.5,
     "xtick.major.pad": 7,
     "ytick.major.pad": 7,
-
     "text.usetex": False,
     "figure.subplot.bottom": 0.2,
     "figure.subplot.left": 0.2,
@@ -35,7 +33,6 @@ plot_rcparams = {
     "figure.subplot.wspace": 0.4,
     "figure.figsize": (5 * phi, 5),
     "figure.dpi": 96,
-
     "figure.facecolor": "white",
     "text.color": dark_gray,
     "axes.labelcolor": dark_gray,
@@ -49,8 +46,13 @@ plot_rcparams = {
     "axes.axisbelow": True,
     "image.cmap": "viridis",
     "font.family": ["sans-serif"],
-    "font.sans-serif": ["Arial", "DejaVu Sans", "Liberation Sans",
-                        "Bitstream Vera Sans", "sans-serif"],
+    "font.sans-serif": [
+        "Arial",
+        "DejaVu Sans",
+        "Liberation Sans",
+        "Bitstream Vera Sans",
+        "sans-serif",
+    ],
     "grid.linestyle": "-",
     "lines.solid_capstyle": "round",
     "axes.facecolor": "white",

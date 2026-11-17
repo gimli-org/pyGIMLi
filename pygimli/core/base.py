@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Misc type checker."""
+
 import numpy as np
 
-from .core import (Pos, R3Vector, RMatrix, RDenseMatrix)
+from .core import Pos, R3Vector, RMatrix, RDenseMatrix
 
 
 def isInt(v, val=None):
@@ -39,14 +40,15 @@ def isScalar(v, val=None):
     False
     >>> print(pg.isScalar(1.0, 1.0))
     True
-    >>> print(pg.isScalar(1+1j))
+    >>> print(pg.isScalar(1 + 1j))
     True
     >>> print(pg.isScalar([0.0, 1.0]))
     False
     """
     if val is None:
-        return isinstance(v, (int, float, complex, np.integer, np.complex128)) \
-            or (isinstance(v, np.ndarray) and v.ndim == 0)
+        return isinstance(
+            v, (int, float, complex, np.integer, np.complex128)
+        ) or (isinstance(v, np.ndarray) and v.ndim == 0)
     # maybe add some tolerance check
     return isScalar(v) and v == val
 
@@ -64,7 +66,7 @@ def isIterable(v, N=None):
     True
     """
     if N is None:
-        return hasattr(v, '__iter__')
+        return hasattr(v, "__iter__")
 
     return isIterable(v) and len(v) == N
 
@@ -86,15 +88,16 @@ def isArray(v, N=None):
     True
     >>> print(pg.isArray(pg.Vector(5), N=2))
     False
-    >>> print(pg.isArray('foo'))
+    >>> print(pg.isArray("foo"))
     False
     """
     if N is None:
-        if isinstance(v, (tuple,list)):
+        if isinstance(v, (tuple, list)):
             return isScalar(v[0])
 
-        return (hasattr(v, '__iter__') and \
-            not isinstance(v, (str, dict))) and v.ndim == 1
+        return (
+            hasattr(v, "__iter__") and not isinstance(v, (str, dict))
+        ) and v.ndim == 1
 
     return isArray(v) and len(v) == N
 
@@ -115,7 +118,7 @@ def isPos(v):
     Examples
     --------
     >>> import pygimli as pg
-    >>> print(pg.isPos([0.0, 0.0, 1.]))
+    >>> print(pg.isPos([0.0, 0.0, 1.0]))
     True
     >>> print(pg.isPos(pg.Pos(0.0, 0.0, 0.0)))
     True
@@ -124,8 +127,7 @@ def isPos(v):
     >>> print(pg.isPos(np.ones(4)))
     False
     """
-    return isinstance(v, Pos) or \
-        isArray(v, 1) or isArray(v, 2) or isArray(v, 3)
+    return isinstance(v, Pos) or isArray(v, 1) or isArray(v, 2) or isArray(v, 3)
 
 
 def isR3Array(v, N=None):
@@ -134,22 +136,30 @@ def isR3Array(v, N=None):
     Examples
     --------
     >>> import pygimli as pg
-    >>> print(pg.isR3Array([[0.0, 0.0, 1.], [1.0, 0.0, 1.]]))
+    >>> print(pg.isR3Array([[0.0, 0.0, 1.0], [1.0, 0.0, 1.0]]))
     True
     >>> print(pg.isR3Array(np.ones((33, 3)), N=33))
     True
-    >>> print(pg.isR3Array(pg.meshtools.createGrid(2,2).positions()))
+    >>> print(pg.isR3Array(pg.meshtools.createGrid(2, 2).positions()))
     True
     """
     try:
         if N is None:
-            return isinstance(v, R3Vector) or \
-                (    isinstance(v, list) and isPos(v[0])) or \
-                (not isinstance(v, list) and hasattr(v, '__iter__') and \
-                    not isinstance(v, (str)) and v.ndim == 2 and isPos(v[0]))
+            return (
+                isinstance(v, R3Vector)
+                or (isinstance(v, list) and isPos(v[0]))
+                or (
+                    not isinstance(v, list)
+                    and hasattr(v, "__iter__")
+                    and not isinstance(v, (str))
+                    and v.ndim == 2
+                    and isPos(v[0])
+                )
+            )
         return isR3Array(v) and len(v) == N
     except BaseException:
         return False
+
 
 isPosList = isR3Array
 isVecField = isR3Array
@@ -159,10 +169,14 @@ def isMatrix(v, shape=None):
     """Check is v has ndim=2 or is comparable list."""
     try:
         if shape is None:
-            return isinstance(v, (RMatrix, RDenseMatrix)) or \
-                    hasattr(v, 'ndim') and v.ndim == 2 or \
-                    isinstance(v, list) and isArray(v[0])
-        return isMatrix(v) and (hasattr(v, 'shape') and v.shape == shape)
+            return (
+                isinstance(v, (RMatrix, RDenseMatrix))
+                or hasattr(v, "ndim")
+                and v.ndim == 2
+                or isinstance(v, list)
+                and isArray(v[0])
+            )
+        return isMatrix(v) and (hasattr(v, "shape") and v.shape == shape)
     except BaseException:
         return False
 

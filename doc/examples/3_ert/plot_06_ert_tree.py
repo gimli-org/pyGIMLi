@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 ERT inversion of data measured on a standing tree
 =================================================
@@ -24,7 +23,7 @@ from pygimli.physics import ert
 ###############################################################################
 # Get some example data with, typically by a call like
 # data = ert.load("filename.dat")
-data = pg.getExampleData('ert/hollow_limetree.ohm', verbose=True)
+data = pg.getExampleData("ert/hollow_limetree.ohm", verbose=True)
 print(data)
 
 ###############################################################################
@@ -39,8 +38,9 @@ print(data)
 # We first generate the geometry by creating a closed polygon.
 # Between each two electrodes, we place three additional nodes whose positions
 # are interpolated using a spline.
-plc = mt.createPolygon(data.sensors(), isClosed=True,
-                       addNodes=3, interpolate='spline')
+plc = mt.createPolygon(
+    data.sensors(), isClosed=True, addNodes=3, interpolate="spline"
+)
 ax, cb = pg.show(plc)
 
 ###############################################################################
@@ -50,7 +50,7 @@ mesh = mt.createMesh(plc, quality=34.3, area=2e-4, smooth=[10, 1])
 print(mesh)
 ax, _ = pg.show(mesh)
 for i, s in enumerate(data.sensors()):
-    ax.text(s.x(), s.y(), str(i+1), zorder=100)
+    ax.text(s.x(), s.y(), str(i + 1), zorder=100)
 
 ###############################################################################
 # We first create the geometric factors to multiply the resistances to obtain
@@ -81,7 +81,8 @@ ax = mgr.showFit(circular=True)
 
 ###############################################################################
 # Finally, we have a look at the resulting resistivity distribution.
-# It clearly shows a cavity inside the tree trunk, indicated by the high resistivity region.
+# It clearly shows a cavity inside the tree trunk, indicated by the high
+# resistivity region.
 ax, cb = mgr.showResult(cMin=100, cMax=500, coverage=1)
 
 ###############################################################################

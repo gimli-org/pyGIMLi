@@ -78,11 +78,13 @@ test = [
     "pytest>=6.0",
     "pytest-cov",
     "pytest-html",
+    "pytest-xdist",
 ]
 doc = [
     "pygimli[test]",
     "bibtexparser",
     "jupytext",
+    "joblib",
     "linkify-it-py",
     "myst_nb",
     "pydata-sphinx-theme",
@@ -172,6 +174,7 @@ exclude = [
     ".venv-py311",
     ".venv-py312",
     ".venv-py313",
+    ".venv-py314",
     # generated/vendored files, not maintained here (was `ignore` in .pylintrc)
     "_version.py",
     "versioneer.py",
@@ -203,19 +206,6 @@ select = [
 ]
 
 ignore = [
-    # "D100",
-    # "D101",
-    # "D102",
-    # "D103",
-    # "D104",
-    # "D105",
-    # "D106",
-    # "D107",
-    # "D200",
-    # "D401",
-    # "E402",
-    # "E501",
-    # "F401",
     "C408", # Allow use dic(**kwargs)
     "E731", # Allow simple lambda function generators
     "E741", # Allow use of l I o, variable names
@@ -226,7 +216,6 @@ ignore = [
     "N816",  # Allow mixedCase module level variables
     "N999",  # Allow "wrong" modulname
     "Q000",  # Allow single quotes in docstrings
-    "Q001",  # Allow double quotes in docstrings
     "S110",  # Allow use of except/pass
     "S301",  # Disable warning for use of pickle (security warning)
     "SIM105", # all try: BaseException except: pass
@@ -253,20 +242,6 @@ convention = "numpy"
     "F403",  # from x import *
     "F405",  # name may be defined from star import
     "N801",  # legacy public class names (tictoc, pygimli, ...)
-]
-"tests/*.py" = [
-    # "D100",
-    # "D101",
-    # "D102",
-    # "D103",
-    # "D104",
-    # "D105",
-    # "D106",
-    # "D107",
-    "S101",  # use of "assert"
-    "S102",  # use of "exec"
-    "S106",  # possible hardcoded password.
-    "PGH001",  # use of "eval"
 ]
 "pygimli/core/matrix.py" = [
     # public API hub: names are re-exported for pygimli.core and friends
@@ -322,4 +297,54 @@ convention = "numpy"
 staticmethod-decorators = [
     "pydantic.validator",
     "pydantic.root_validator",
+]
+
+[tool.codespell]
+# Spelling check for comments, docstrings and documentation. Used by the
+# `codespell` pre-commit hook and for manual runs over the whole tree:
+#     codespell --toml pyproject.toml
+# The ignore list holds identifiers, acronyms, author names, German words
+# from the source comments and the journal abbreviation "Int. J. Numer.".
+skip = [
+    # build artefacts, scratch and generated files (matched as directory names)
+    "build",
+    "tmp",
+    "pygimli.egg-info",
+    # bundled third party code
+    "kdtree++",
+    # binary/data formats, vendored web assets and notebooks (outputs are not
+    # maintained here)
+    "*.ipynb",
+    "*.pyc",
+    "*.vtu",
+    "*.vtk",
+    "*.poly",
+    "*.msh",
+    "*.bms",
+    "*.ves",
+    "*.vector",
+    "*.pdf",
+    "*.png",
+    "*.jpg",
+    "*.svg",
+    "*.css",
+    "*.js",
+]
+# BibTeX protects capitals as {F}requency and spells accents as {\"a}rger,
+# which splits words for the checker; the protected form is stripped first.
+# Single quotes keep the backslashes readable (literal TOML string).
+ignore-regex = '\{[A-Za-z]\}[A-Za-z]+|\{\\[^}]*\}[A-Za-z]*'
+ignore-words-list = [
+    "nd",  # loop/iterator variable in C++ code
+    "codespell",
+    "modelL", "modelLS", "NodeL",  # variable names
+    "aline", "eNew", "eSpacing", "inot", "inout", "nam", "pres", "siz",
+    "uE", "valU", "childs", "listin", "onlyOnce",  # variable names
+    "COO", "NED", "TE",  # sparse matrix format, North-East-Down, transverse
+    "notin",  # LaTeX \notin in formula markup
+    "feld",  # German "Feld" in translation strings (units.py)
+    "SAEM",  # semi-airborne electromagnetics
+    "Numer",  # "Int. J. Numer. Meth. Engng." in a reference
+    "Hadler", "Thi",  # author names in citations
+    "Thirdparty", "ThirdParty", "thirdParty",  # directory/variable names
 ]

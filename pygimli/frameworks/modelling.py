@@ -1,33 +1,30 @@
 """pyGIMLi Modelling Frameworks."""
+
 import numpy as np
 import pygimli as pg
 
 DEFAULT_STYLES = {
-    'Default': {
-        'color': 'C0',
-        'lw': 1.5,
-        'linestyle': '-'
+    "Default": {"color": "C0", "lw": 1.5, "linestyle": "-"},
+    "Data": {
+        "color": "C0",  # blueish
+        "lw": 1.5,
+        "linestyle": ":",
+        "marker": "o",
+        "ms": 6,
     },
-    'Data': {
-        'color': 'C0',  # blueish
-        'lw': 1.5,
-        'linestyle': ':',
-        'marker': 'o',
-        'ms': 6
+    "Response": {
+        "color": "C0",  # blueish
+        "lw": 2.0,
+        "linestyle": "-",
+        "marker": "None",
+        "alpha": 0.4,
     },
-    'Response': {
-        'color': 'C0',  # blueish
-        'lw': 2.0,
-        'linestyle': '-',
-        'marker': 'None',
-        'alpha': 0.4
-    },
-    'Error': {
-        'color': 'C3',  # reddish
-        'lw': 0,
-        'linestyle': '-',
-        'elinewidth': 2,
-        'alpha': 0.5
+    "Error": {
+        "color": "C3",  # reddish
+        "lw": 0,
+        "linestyle": "-",
+        "elinewidth": 2,
+        "alpha": 0.5,
     },
 }
 
@@ -76,7 +73,7 @@ class Modelling(pg.core.ModellingBase):
         self._data = None  # dataContainer
         self._modelTrans = None
 
-        self.fop = kwargs.pop('fop', None)
+        self.fop = kwargs.pop("fop", None)
         # super(Modelling, self).__init__(**kwargs)
         super().__init__(**kwargs)
 
@@ -88,7 +85,6 @@ class Modelling(pg.core.ModellingBase):
 
         self.modelTrans = pg.trans.TransLog()  # Model transformation operator
 
-
     def __hash__(self):
         """Create a hash for Method Manager."""
         # ^ pg.utils.dirHash(self._regionProperties)
@@ -96,7 +92,6 @@ class Modelling(pg.core.ModellingBase):
             return pg.utils.strHash(str(type(self))) ^ hash(self._data)
         else:
             return pg.utils.strHash(str(type(self)))
-
 
     def Sx(self, x):
         """Right-hand side multiplication of Jacobian J*x.
@@ -106,7 +101,6 @@ class Modelling(pg.core.ModellingBase):
         """
         return self.jacobian().mult(x)
 
-
     def STy(self, y):
         """Right-hand side multiplication of Jacobian J.T*y.
 
@@ -115,40 +109,37 @@ class Modelling(pg.core.ModellingBase):
         """
         return self.jacobian().transMult(y)
 
-
     def __call__(self, *args, **kwargs):
         """Call forward operator."""
         return self.response(*args, **kwargs)
-
 
     @property
     def fop(self):
         """Forward operator."""
         return self._fop
 
-
     @fop.setter
     def fop(self, fop):
         """Set forward operator."""
         if fop is not None:
             if not isinstance(fop, pg.frameworks.Modelling):
-                pg.critical('Forward operator needs to be an instance of '
-                            'pg.modelling.Modelling but is of type:', fop)
+                pg.critical(
+                    "Forward operator needs to be an instance of "
+                    "pg.modelling.Modelling but is of type:",
+                    fop,
+                )
 
             self._fop = fop
-
 
     @property
     def data(self):
         """Return data."""
         return self._data
 
-
     @data.setter
     def data(self, d):
         """Set data (short property setter)."""
         self.setData(d)
-
 
     def setData(self, data):
         """Set data (actual version)."""
@@ -157,23 +148,20 @@ class Modelling(pg.core.ModellingBase):
         else:
             self._data = data
 
-
     def setDataPost(self, data):
         """Call when the dataContainer has been set successfully."""
         pass
 
-
     def setDataContainer(self, data):
         """Set Data container."""
         if self.fop is not None:
-            pg.critical('in use?')
+            pg.critical("in use?")
             self.fop.setData(data)
         else:
             super().setData(data)
             self._data = data
 
         self.setDataPost(self.data)
-
 
     @property
     def modelTrans(self):
@@ -183,7 +171,6 @@ class Modelling(pg.core.ModellingBase):
             return self.regionManager().transModel()
         return self._modelTrans
 
-
     @modelTrans.setter
     def modelTrans(self, tm):
         """Set model transformation."""
@@ -191,7 +178,6 @@ class Modelling(pg.core.ModellingBase):
             tm = pg.core.trans.str2Trans(tm)
 
         self._modelTrans = tm
-
 
     def regionManager(self):
         """Region manager."""
@@ -202,7 +188,6 @@ class Modelling(pg.core.ModellingBase):
         self._applyRegionProperties()
         return super().regionManager()
 
-
     @property
     def parameterCount(self):
         """Return parameter count."""
@@ -212,21 +197,17 @@ class Modelling(pg.core.ModellingBase):
 
         return pC
 
-
     def ensureContent(self):
         """Whatever this is."""
         pass
-
 
     def initModelSpace(self, **kwargs):
         """TODO."""
         pass
 
-
     def createDefaultStartModel(self, dataVals):
         """Create the default startmodel as the median of the data values."""
         pg.critical("'don't use me")
-
 
     def createStartModel(self, dataVals=None):
         """Create the default startmodel as the median of the data values.
@@ -243,12 +224,10 @@ class Modelling(pg.core.ModellingBase):
             sm = self.regionManager().createStartModel()
         return sm
 
-
     def clearRegionProperties(self):
         """Clear all region parameter."""
         self._regionChanged = True
         self._regionProperties = {}
-
 
     def regionProperties(self, regionNr=None):
         """Return dictionary of all properties for region number regionNr."""
@@ -260,7 +239,6 @@ class Modelling(pg.core.ModellingBase):
         except KeyError:
             print(self._regionProperties)
             pg.error("no region for region #:", regionNr)
-
 
     def setRegionProperties(self, regionNr, **kwargs):
         """Set region properties. regionNr can be '*' for all regions.
@@ -297,7 +275,7 @@ class Modelling(pg.core.ModellingBase):
         strike : float [0]
             angle between y and y' (second correlation length)
         """
-        if regionNr == '*':
+        if regionNr == "*":
             for regionNr in self.regionManager().regionIdxs():
                 self.setRegionProperties(regionNr, **kwargs)
             return
@@ -306,21 +284,22 @@ class Modelling(pg.core.ModellingBase):
                 self.setRegionProperties(r, **kwargs)
             return
 
-        pg.verbose(f'Set property for region: {regionNr}: {kwargs}')
+        pg.verbose(f"Set property for region: {regionNr}: {kwargs}")
         if regionNr not in self._regionProperties:
-            self._regionProperties[regionNr] = {'startModel': None,
-                                                'modelControl': 1.0,
-                                                'zWeight': 1.0,
-                                                'cType': None,  # RM defaults
-                                                'limits': [0, 0],
-                                                'trans': 'Log',  # RM defaults
-                                                'background': None,
-                                                'single': None,
-                                                'fix': None,
-                                                'correlationLengths': None,
-                                                'dip': None,
-                                                'strike': None,
-                                                }
+            self._regionProperties[regionNr] = {
+                "startModel": None,
+                "modelControl": 1.0,
+                "zWeight": 1.0,
+                "cType": None,  # RM defaults
+                "limits": [0, 0],
+                "trans": "Log",  # RM defaults
+                "background": None,
+                "single": None,
+                "fix": None,
+                "correlationLengths": None,
+                "dip": None,
+                "strike": None,
+            }
 
         for key in list(kwargs.keys()):
             val = kwargs.pop(key)
@@ -329,18 +308,25 @@ class Modelling(pg.core.ModellingBase):
                 self._regionProperties[regionNr][key] = val
 
         if len(kwargs) > 0:
-            pg.warn('Unhandled region properties:', kwargs)
+            pg.warn("Unhandled region properties:", kwargs)
 
     def setInterRegionCoupling(self, region1, region2, weight=1.0):
         """Set the weighting for constraints across regions."""
-        region1 = self.regionManager().regionIdxs() if region1 == "*" else [region1]
-        region2 = self.regionManager().regionIdxs() if region2 == "*" else [region2]
+        if region1 == "*":
+            region1 = self.regionManager().regionIdxs()
+        else:
+            region1 = [region1]
+        if region2 == "*":
+            region2 = self.regionManager().regionIdxs()
+        else:
+            region2 = [region2]
 
         for reg1 in region1:
             for reg2 in region2:
-                if reg1 != reg2 and \
-                    (not self._regionProperties[reg1]['background'] and
-                        not self._regionProperties[reg2]['background']):
+                if reg1 != reg2 and (
+                    not self._regionProperties[reg1]["background"]
+                    and not self._regionProperties[reg2]["background"]
+                ):
                     self._interRegionCouplings.append([reg1, reg2, weight])
 
         self._regionsNeedUpdate = True
@@ -354,49 +340,58 @@ class Modelling(pg.core.ModellingBase):
         #  __applyRegionProperies itself
         rMgr = super().regionManager()
         for rID, vals in self._regionProperties.items():
-            if vals['fix'] is not None and rMgr.region(rID).fixValue() != vals['fix']:
-                vals['background'] = True
-                rMgr.region(rID).setFixValue(vals['fix'])
+            if (
+                vals["fix"] is not None
+                and rMgr.region(rID).fixValue() != vals["fix"]
+            ):
+                vals["background"] = True
+                rMgr.region(rID).setFixValue(vals["fix"])
                 self._regionChanged = True
 
-            if (vals['background'] is not None and
-                    rMgr.region(rID).isBackground() != vals['background']):
-                rMgr.region(rID).setBackground(vals['background'])
+            if (
+                vals["background"] is not None
+                and rMgr.region(rID).isBackground() != vals["background"]
+            ):
+                rMgr.region(rID).setBackground(vals["background"])
                 self._regionChanged = True
 
-            if (vals['single'] is not None and
-                    rMgr.region(rID).isSingle() != vals['single']):
-                rMgr.region(rID).setSingle(vals['single'])
+            if (
+                vals["single"] is not None
+                and rMgr.region(rID).isSingle() != vals["single"]
+            ):
+                rMgr.region(rID).setSingle(vals["single"])
                 self._regionChanged = True
 
-            if vals['startModel'] is not None:
-                rMgr.region(rID).setStartModel(vals['startModel'])
+            if vals["startModel"] is not None:
+                rMgr.region(rID).setStartModel(vals["startModel"])
 
-            if vals['trans'] is not None:
-                rMgr.region(rID).setModelTransStr_(vals['trans'])
+            if vals["trans"] is not None:
+                rMgr.region(rID).setModelTransStr_(vals["trans"])
 
-            if (vals['cType'] is not None and
-                    rMgr.region(rID).constraintType() != vals['cType']):
+            if (
+                vals["cType"] is not None
+                and rMgr.region(rID).constraintType() != vals["cType"]
+            ):
                 self.clearConstraints()
-                rMgr.region(rID).setConstraintType(vals['cType'])
+                rMgr.region(rID).setConstraintType(vals["cType"])
 
-            if vals['zWeight'] is not None:
-                rMgr.region(rID).setZWeight(vals['zWeight'])
+            if vals["zWeight"] is not None:
+                rMgr.region(rID).setZWeight(vals["zWeight"])
                 self.clearConstraints()
 
-            rMgr.region(rID).setModelControl(vals['modelControl'])
+            rMgr.region(rID).setModelControl(vals["modelControl"])
 
-            if vals['limits'][0] != 0:
-                rMgr.region(rID).setLowerBound(vals['limits'][0])
+            if vals["limits"][0] != 0:
+                rMgr.region(rID).setLowerBound(vals["limits"][0])
 
-            if vals['limits'][1] > vals['limits'][0]:
-                rMgr.region(rID).setUpperBound(vals['limits'][1])
+            if vals["limits"][1] > vals["limits"][0]:
+                rMgr.region(rID).setUpperBound(vals["limits"][1])
 
-            if vals['correlationLengths'] is not None:
+            if vals["correlationLengths"] is not None:
                 self.clearConstraints()
-            if vals['dip'] is not None:
+            if vals["dip"] is not None:
                 self.clearConstraints()
-            if vals['strike'] is not None:
+            if vals["strike"] is not None:
                 self.clearConstraints()
 
         for r1, r2, w in self._interRegionCouplings:
@@ -407,16 +402,17 @@ class Modelling(pg.core.ModellingBase):
     def setDataSpace(self, **kwargs):
         """Set data space, e.g., DataContainer, times, coordinates."""
         if self.fop is not None:
-            pg.critical('in use?')
+            pg.critical("in use?")
             self.fop.setDataSpace(**kwargs)
         else:
-            data = kwargs.pop('dataContainer', None)
+            data = kwargs.pop("dataContainer", None)
             if isinstance(data, pg.DataContainer):
                 self.setDataContainer(data)
             else:
                 print(data)
-                pg.critical("nothing known to do? "
-                            "Implement me in derived classes")
+                pg.critical(
+                    "nothing known to do? Implement me in derived classes"
+                )
 
     def estimateError(self, data, **kwargs):
         """Create data error fallback when the data error is not known.
@@ -430,7 +426,7 @@ class Modelling(pg.core.ModellingBase):
     def drawModel(self, ax, model, **kwargs):
         """Draw a model into a given axis."""
         if self.fop is not None:
-            pg.critical('in use?')
+            pg.critical("in use?")
             self.fop.drawModel(ax, model, **kwargs)
         else:
             print(kwargs)
@@ -508,6 +504,20 @@ class Block1DModelling(Modelling):
         """Set number of layers."""
         return self.initModelSpace(nLayers)
 
+    def setMultiThreadJacobian(self, nThreads):
+        """Set the number of processes used for the Jacobian.
+
+        Remembers the choice so that a later model space change does not
+        silently restore the automatic ``2*nLayers - 1``.
+
+        Parameters
+        ----------
+        nThreads : int
+            Number of worker processes, 1 computes the Jacobian serially.
+        """
+        self._withMultiThread = nThreads > 1
+        super().setMultiThreadJacobian(nThreads)
+
     def initModelSpace(self, nLayers):
         """Set number of layers for the 1D block model."""
         if nLayers == self._nLayers:
@@ -522,21 +532,22 @@ class Block1DModelling(Modelling):
         self.setMesh(mesh)
         # setting region 0 (layers) and 1..nPara (values)
         for i in range(1 + self._nPara):
-            self.setRegionProperties(i, trans='log')
+            self.setRegionProperties(i, trans="log")
 
         if self._withMultiThread:
-            self.setMultiThreadJacobian(2*nLayers - 1)
+            self.setMultiThreadJacobian(2 * nLayers - 1)
 
         # self._applyRegionProperties()
 
     def drawModel(self, ax, model, **kwargs):
         """Draw model into a given axis."""
-        pg.viewer.mpl.drawModel1D(ax=ax,
-                                  model=model,
-                                  plot='loglog',
-                                  xlabel=kwargs.pop('xlabel',
-                                                    'Model parameter'),
-                                  **kwargs)
+        pg.viewer.mpl.drawModel1D(
+            ax=ax,
+            model=model,
+            plot="loglog",
+            xlabel=kwargs.pop("xlabel", "Model parameter"),
+            **kwargs,
+        )
         return ax
 
     def drawData(self, ax, data, err=None, label=None, **kwargs):
@@ -546,23 +557,26 @@ class Block1DModelling(Modelling):
         Modelling creates the data and should know best how to draw them.
         """
         nData = len(data)
-        yVals = range(1, nData+1)
-        ax.loglog(data, yVals,
-                  label=label,
-                  **DEFAULT_STYLES.get(label, DEFAULT_STYLES['Default'])
-                  )
+        yVals = range(1, nData + 1)
+        ax.loglog(
+            data,
+            yVals,
+            label=label,
+            **DEFAULT_STYLES.get(label, DEFAULT_STYLES["Default"]),
+        )
 
         if err is not None:
-            ax.errorbar(data, yVals,
-                        xerr=err*data,
-                        label='Error',
-                        **DEFAULT_STYLES.get('Error',
-                                             DEFAULT_STYLES['Default'])
-                        )
+            ax.errorbar(
+                data,
+                yVals,
+                xerr=err * data,
+                label="Error",
+                **DEFAULT_STYLES.get("Error", DEFAULT_STYLES["Default"]),
+            )
 
         ax.set_ylim(max(yVals), min(yVals))
-        ax.set_xlabel('Data')
-        ax.set_ylabel('Data Number')
+        ax.set_xlabel("Data")
+        ax.set_ylabel("Data Number")
         return ax
 
 
@@ -580,18 +594,16 @@ class MeshModelling(Modelling):
         super().__init__(**kwargs)
         self._axs = None
         self._meshNeedsUpdate = True
-        self._baseMesh = None               ## keep a copy of the original mesh
+        self._baseMesh = None  ## keep a copy of the original mesh
         # optional p2 refinement for forward task
         self._refineP2 = False
         self._refineH2 = True
         self._pd = None
-        self._C = None # custom Constraints matrix
-
+        self._C = None  # custom Constraints matrix
 
     def __hash__(self):
         """Return unique hash for caching."""
         return super().__hash__() ^ hash(self.mesh())
-
 
     @property
     def paraDomain(self):
@@ -599,11 +611,10 @@ class MeshModelling(Modelling):
         # We need our own copy here because its possible that we want to use
         # the mesh after the fop was deleted
         if not self.mesh():
-            pg.critical('paraDomain needs a mesh')
+            pg.critical("paraDomain needs a mesh")
 
         self._pd = pg.Mesh(self.regionManager().paraDomain())
         return self._pd
-
 
     def setCustomConstraints(self, C):
         """Set custom constraints matrix for lazy evaluation.
@@ -612,7 +623,6 @@ class MeshModelling(Modelling):
         """
         self._C = C
 
-
     def createConstraints(self):
         """Create constraint matrix."""
         # just ensure there is valid mesh
@@ -620,24 +630,33 @@ class MeshModelling(Modelling):
 
         foundGeoStat = False
         for reg, props in self.regionProperties().items():
-            if not props['background'] and \
-                props['correlationLengths'] is not None or \
-                    props['dip'] is not None or props['strike'] is not None:
+            if (
+                not props["background"]
+                and props["correlationLengths"] is not None
+                or props["dip"] is not None
+                or props["strike"] is not None
+            ):
+                cL = props.get("correlationLengths") or 5
+                dip = props.get("dip") or 0
+                strike = props.get("strike") or 0
 
-                cL = props.get('correlationLengths') or 5
-                dip = props.get('dip') or 0
-                strike = props.get('strike') or 0
-
-                pg.info('Creating GeostatisticConstraintsMatrix for region' +
-                        f' {reg} with: I={cL}, dip={dip}, strike={strike}')
+                pg.info(
+                    "Creating GeostatisticConstraintsMatrix for region"
+                    + f" {reg} with: I={cL}, dip={dip}, strike={strike}"
+                )
 
                 if foundGeoStat is True:
-                    pg.critical('Only one global GeostatisticConstraintsMatrix'
-                                'possible at the moment.')
+                    pg.critical(
+                        "Only one global GeostatisticConstraintsMatrix"
+                        "possible at the moment."
+                    )
 
                 # keep a copy of C until refcounting in the core works
                 self._C = pg.matrix.GeostatisticConstraintsMatrix(
-                    mesh=self.paraDomain, I=cL, dip=dip, strike=strike,
+                    mesh=self.paraDomain,
+                    I=cL,
+                    dip=dip,
+                    strike=strike,
                 )
                 foundGeoStat = True
                 self.setConstraints(self._C)
@@ -646,7 +665,6 @@ class MeshModelling(Modelling):
             super().createConstraints()
 
         return self.constraints()
-
 
     def paraModel(self, model):
         """Return parameter model, i.e. model mapped back with cell markers."""
@@ -658,7 +676,6 @@ class MeshModelling(Modelling):
         mod.isParaModel = True
         return mod
 
-
     def ensureContent(self):
         """Ensure there is a valid initialized mesh.
 
@@ -669,14 +686,12 @@ class MeshModelling(Modelling):
         # Need to call this once to be sure the mesh is initialized when needed
         self.mesh()
 
-
     def setMeshPost(self, mesh):
         """Set mesh, called when the mesh has been set successfully.
 
         Might be overwritten by child classes.
         """
         pass
-
 
     def createRefinedFwdMesh(self, mesh):
         """Refine the current mesh for higher accuracy.
@@ -696,7 +711,6 @@ class MeshModelling(Modelling):
         pg.info("Mesh for forward task:", m)
         return m
 
-
     def createFwdMesh_(self):
         """Create forward mesh."""
         pg.info("Creating forward mesh from region infos.")
@@ -705,12 +719,14 @@ class MeshModelling(Modelling):
         regionIds = self.regionManager().regionIdxs()
         for iId in regionIds:
             r = self.regionManager().region(iId)
-            pg.verbose(f"\tRegion: {iId}, "
-                       f"Parameter: {r.parameterCount()}, "
-                       f"PD: {r.isInParaDomain()},"
-                       f" Single: {r.isSingle()}, "
-                       f"Background: {r.isBackground()}, "
-                       f"Fixed: {r.fixValue()}")
+            pg.verbose(
+                f"\tRegion: {iId}, "
+                f"Parameter: {r.parameterCount()}, "
+                f"PD: {r.isInParaDomain()},"
+                f" Single: {r.isSingle()}, "
+                f"Background: {r.isBackground()}, "
+                f"Fixed: {r.fixValue()}"
+            )
         m = self.createRefinedFwdMesh(m)
         self.setMeshPost(m)
 
@@ -718,9 +734,8 @@ class MeshModelling(Modelling):
         super().setMesh(m, ignoreRegionManager=True)
 
         if self._C is not None:
-            pg.info('Set custom constraints matrix.')
+            pg.info("Set custom constraints matrix.")
             self.setConstraints(self._C)
-
 
     def mesh(self):
         """Return currently used mesh."""
@@ -730,7 +745,6 @@ class MeshModelling(Modelling):
             self.createFwdMesh_()
 
         return super().mesh()
-
 
     def setMesh(self, mesh, ignoreRegionManager=False):
         """Set mesh and specify whether region manager can be ignored."""
@@ -754,17 +768,16 @@ class MeshModelling(Modelling):
         self.regionManager().setMesh(mesh)
         self.setDefaultBackground()
 
-
     def setDefaultBackground(self):
         """Set the lowest region to background if several exist."""
         regionIds = self.regionManager().regionIdxs()
         pg.info(f"Found {len(regionIds)} regions.")
         if len(regionIds) > 1:
             bk = pg.sort(regionIds)[0]
-            pg.info("Region with smallest marker set to background "
-                    f"(marker={bk})")
+            pg.info(
+                f"Region with smallest marker set to background (marker={bk})"
+            )
             self.setRegionProperties(bk, background=True)
-
 
     def drawModel(self, ax, model, **kwargs):
         """Draw the model as mesh-based distribution."""
@@ -792,26 +805,32 @@ class MeshModelling(Modelling):
                 self._axs, _ = pg.show()
             ax = self._axs
 
-        if hasattr(ax, '__cBar__'):
+        if hasattr(ax, "__cBar__"):
             # we assume the axes already holds a valid mappable and we only
             # update the model data
             cBar = ax.__cBar__
-            kwargs.pop('label', None)
-            kwargs.pop('cMap', None)
+            kwargs.pop("label", None)
+            kwargs.pop("cMap", None)
             pg.viewer.mpl.setMappableData(cBar.mappable, mod, **kwargs)
         else:
-            diam = kwargs.pop('diam', None)
+            diam = kwargs.pop("diam", None)
 
-            ax, cBar = pg.show(mesh=self.paraDomain,
-                               data=mod,
-                               label=kwargs.pop('label', 'Model parameter'),
-                               logScale=kwargs.pop('logScale', False),
-                               ax=ax,
-                               **kwargs
-                               )
+            ax, cBar = pg.show(
+                mesh=self.paraDomain,
+                data=mod,
+                label=kwargs.pop("label", "Model parameter"),
+                logScale=kwargs.pop("logScale", False),
+                ax=ax,
+                **kwargs,
+            )
             if diam is not None:
-                pg.viewer.mpl.drawSensors(ax, self.data.sensors(), diam=diam,
-                                          edgecolor='black', facecolor='white')
+                pg.viewer.mpl.drawSensors(
+                    ax,
+                    self.data.sensors(),
+                    diam=diam,
+                    edgecolor="black",
+                    facecolor="white",
+                )
 
         return ax, cBar
 
@@ -936,11 +955,12 @@ class JointModelling(MeshModelling):
         for fi in self.fops:
             fi.setMesh(mesh)
 
+
 # 220817 to be implemented!!
 # class JointMeshModelling(JointModelling):
 #    def __init__(self, fopList):
-        # super().__init__(self, fopList)
-        # self.setRegionManager(self.fops[0].regionManagerRef())
+# super().__init__(self, fopList)
+# self.setRegionManager(self.fops[0].regionManagerRef())
 
 
 class LCModelling(Modelling):
@@ -1019,21 +1039,26 @@ class LCModelling(Modelling):
             e.g., nPar = 1 for VES (invert for resisitivies),
             nPar = 2 for VESC (invert for resisitivies and phases)
         """
-        nCols = (nPar+1) * nLayers - 1  # fail for VES-C
+        nCols = (nPar + 1) * nLayers - 1  # fail for VES-C
         self._parPerSounding = nCols
         self._nSoundings = nSoundings
 
-        self._mesh = pg.meshtools.createMesh2D(range(nCols + 1),
-                                               range(nSoundings + 1))
-        self._mesh.rotate(pg.RVector3(0, 0, -np.pi/2))
+        self._mesh = pg.meshtools.createMesh2D(
+            range(nCols + 1), range(nSoundings + 1)
+        )
+        self._mesh.rotate(pg.RVector3(0, 0, -np.pi / 2))
 
         cm = np.ones(nCols * nSoundings) * 1
 
         if not self._singleRegion:
             for i in range(nSoundings):
                 for j in range(nPar):
-                    cm[i * self._parPerSounding + (j+1) * nLayers-1:
-                       i * self._parPerSounding + (j+2) * nLayers-1] += (j+1)
+                    cm[
+                        i * self._parPerSounding + (j + 1) * nLayers - 1 : i
+                        * self._parPerSounding
+                        + (j + 2) * nLayers
+                        - 1
+                    ] += j + 1
 
         self._mesh.setCellMarkers(cm)
         self.setMesh(self._mesh)
@@ -1043,7 +1068,7 @@ class LCModelling(Modelling):
         # print(np.array(pID))
         # print(np.array(cID))
         # print(self.parameterCount
-        perm = [0]*self.parameterCount
+        perm = [0] * self.parameterCount
         for i in range(len(perm)):
             perm[pID[i]] = cID[i]
 
@@ -1080,7 +1105,7 @@ class LCModelling(Modelling):
         for i in range(nSoundings):
             kwargs = {}
             for key, val in self._fopKwargs.items():
-                if hasattr(val, '__iter__'):
+                if hasattr(val, "__iter__"):
                     if len(val) == nSoundings:
                         kwargs[key] = val[i]
                 else:
@@ -1106,11 +1131,10 @@ class LCModelling(Modelling):
 
     def drawModel(self, ax, model, **kwargs):
         """Draw models as stitched 1D model section."""
-        mods = np.asarray(model).reshape(self._nSoundings,
-                                         self._parPerSounding)
-        pg.viewer.mpl.showStitchedModels(mods, ax=ax, useMesh=True,
-                                         x=self.soundingPos,
-                                         **kwargs)
+        mods = np.asarray(model).reshape(self._nSoundings, self._parPerSounding)
+        pg.viewer.mpl.showStitchedModels(
+            mods, ax=ax, useMesh=True, x=self.soundingPos, **kwargs
+        )
 
 
 class ParameterModelling(Modelling):
@@ -1121,8 +1145,9 @@ class ParameterModelling(Modelling):
         self.function = None
         self._params = {}
         self.dataSpace = None  # x, t freqs, or whatever
-        self.defaultModelTrans = 'lin'
-        self._model = None # last active to use the FOP as function for interpolation
+        self.defaultModelTrans = "lin"
+        # last active model, to use the FOP as function for interpolation
+        self._model = None
 
         super().__init__(**kwargs)
 
@@ -1136,6 +1161,7 @@ class ParameterModelling(Modelling):
 
     @property
     def model(self):
+        """Return the last used model."""
         return self._model
 
     def _initFunction(self, funct):
@@ -1143,30 +1169,34 @@ class ParameterModelling(Modelling):
         self.function = funct
         # the first varname is supposed to be f or freqs
         self.dataSpaceName = funct.__code__.co_varnames[0]
-        pg.debug('data space:', self.dataSpaceName)
+        pg.debug("data space:", self.dataSpaceName)
 
-        args = funct.__code__.co_varnames[1:funct.__code__.co_argcount]
+        args = funct.__code__.co_varnames[1 : funct.__code__.co_argcount]
         for varname in args:
-            if varname != 'verbose':
-                pg.debug('add parameter:', varname)
+            if varname != "verbose":
+                pg.debug("add parameter:", varname)
                 self._params[varname] = 0.0
 
         # nPara = len(self._params.keys())  # not used!
 
         # for i, [k, p] in enumerate(self._params.items()):
         for i, k in enumerate(self._params.keys()):
-            self.addParameter(k, id=i, cType=0,
-                              single=True,
-                              trans=self.defaultModelTrans,
-                              startModel=1)
+            self.addParameter(
+                k,
+                id=i,
+                cType=0,
+                single=True,
+                trans=self.defaultModelTrans,
+                startModel=1,
+            )
 
     def response(self, params):
         """Compute and return model response."""
         if np.isnan([*params]).any():
             print(params)
-            pg.critical('invalid params for response')
+            pg.critical("invalid params for response")
         if self.dataSpace is None:
-            pg.critical('no data space given')
+            pg.critical("no data space given")
 
         ## Store model, which can be handy
         self._model = np.array(params)
@@ -1174,11 +1204,12 @@ class ParameterModelling(Modelling):
         return ret
 
     def __call__(self, dataSpace):
+        """Evaluate the function for *dataSpace* with the last model."""
         return self.function(np.asarray(dataSpace), *self._model.tolist())
 
     def setRegionProperties(self, k, **kwargs):
         """Set Region Properties by parameter name."""
-        if isinstance(k, int) or (k == '*'):
+        if isinstance(k, int) or (k == "*"):
             super().setRegionProperties(k, **kwargs)
         else:
             self.setRegionProperties(self._params[k], **kwargs)
@@ -1193,11 +1224,11 @@ class ParameterModelling(Modelling):
         return id
 
     def drawModel(self, ax=None, model=None):
-        """"""
+        """Draw the parameter model into the given axes."""
         if model is None:
             model = self._model
 
-        label = ''
+        label = ""
         for k, p in self._params.items():
             label += k + f"={pg.utils.prettyFloat(model[p])} "
         pg.info("Model: ", label)

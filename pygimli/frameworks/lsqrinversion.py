@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""LSQR solver based inversion framework."""
+
 from math import sqrt
 import numpy as np
 import pygimli as pg
@@ -9,7 +10,7 @@ from .linesearch import lineSearch
 
 
 class LSQRInversion(Inversion):
-    """LSQR solver based inversion"""
+    """LSQR solver based inversion."""
 
     def __init__(self, *args, **kwargs):
         """Init."""
@@ -40,12 +41,12 @@ class LSQRInversion(Inversion):
         self.A = pg.BlockMatrix()  # to be filled with scaled J and C matrices
         # part 1: data part
         J = self.fop.jacobian()
-        self.dScale = 1.0 / pg.log(self.errorVals+1.0)
+        self.dScale = 1.0 / pg.log(self.errorVals + 1.0)
         self.leftJ = tD.deriv(self.response) * self.dScale
-#        self.leftJ = self.dScale / tD.deriv(self.response())
+        #        self.leftJ = self.dScale / tD.deriv(self.response())
         self.rightJ = 1.0 / tM.deriv(model)
         self.JJ = pg.matrix.MultLeftRightMatrix(J, self.leftJ, self.rightJ)
-#        self.A.addMatrix(self.JJ, 0, 0)
+        #        self.A.addMatrix(self.JJ, 0, 0)
         self.mat1 = self.A.addMatrix(self.JJ)
         self.A.addMatrixEntry(self.mat1, 0, 0)
         # part 2: normal constraints
@@ -53,8 +54,7 @@ class LSQRInversion(Inversion):
         self.C = self.fop.constraints()
         self.leftC = pg.Vector(self.C.rows(), 1.0)
         self.rightC = pg.Vector(self.C.cols(), 1.0)
-        self.CC = pg.matrix.MultLeftRightMatrix(self.C,
-                                                self.leftC, self.rightC)
+        self.CC = pg.matrix.MultLeftRightMatrix(self.C, self.leftC, self.rightC)
         self.mat2 = self.A.addMatrix(self.CC)
         lam = self.lam
         self.A.addMatrixEntry(self.mat2, nData, 0, sqrt(lam))
@@ -64,11 +64,11 @@ class LSQRInversion(Inversion):
             self.GG = pg.matrix.MultRightMatrix(self.G, self.rightG)
             self.mat3 = self.A.addMatrix(self.GG)
             nConst = self.C.rows()
-            self.A.addMatrixEntry(self.mat3, nData+nConst, 0, sqrt(self.my))
+            self.A.addMatrixEntry(self.mat3, nData + nConst, 0, sqrt(self.my))
 
         self.A.recalcMatrixSize()
         # right-hand side vector
-        deltaD = (tD.fwd(self.dataVals)-tD.fwd(self.response)) * self.dScale
+        deltaD = (tD.fwd(self.dataVals) - tD.fwd(self.response)) * self.dScale
         deltaC = -(self.CC * tM.fwd(model) * sqrt(lam))
         deltaC *= 1.0 - self.inv.localRegularization()  # oper. on DeltaM only
         rhs = pg.cat(deltaD, deltaC)
@@ -79,7 +79,7 @@ class LSQRInversion(Inversion):
         dM = lssolver(self.A, rhs, maxiter=self.LSQRiter, verbose=self.verbose)
         tau, responseLS = lineSearch(self, dM)
         pg.debug(f"tau={tau}")
-        self.model = tM.update(self.model, dM*tau)
+        self.model = tM.update(self.model, dM * tau)
         if tau == 1.0:
             self.inv.setResponse(responseLS)
         else:  # compute new response
@@ -90,28 +90,34 @@ class LSQRInversion(Inversion):
         return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     nlay = 4  # number of layers
-    lam = 200.  # (initial) regularization parameter
-    errPerc = 3.  # relative error of 3 percent
+    lam = 200.0  # (initial) regularization parameter
+    errPerc = 3.0  # relative error of 3 percent
     ab2 = np.logspace(-1, 2, 50)  # AB/2 distance (current electrodes)
-    mn2 = ab2 / 3.  # MN/2 distance (potential electrodes)
+    mn2 = ab2 / 3.0  # MN/2 distance (potential electrodes)
     f = pg.physics.ves.VESModelling(ab2=ab2, mn2=mn2, nLayers=nlay)
-    synres = [100., 500., 20., 800.]  # synthetic resistivity
-    synthk = [0.5, 3.5, 6.]  # synthetic thickness (nlay-th layer is infinite)
-    rhoa = f(synthk+synres)
-    rhoa = rhoa * (pg.randn(len(rhoa)) * errPerc / 100. + 1.)
+    synres = [100.0, 500.0, 20.0, 800.0]  # synthetic resistivity
+    synthk = [0.5, 3.5, 6.0]  # synthetic thickness (nlay-th layer is infinite)
+    rhoa = f(synthk + synres)
+    rhoa = rhoa * (pg.randn(len(rhoa)) * errPerc / 100.0 + 1.0)
     tLog = pg.trans.TransLog()
 
     inv = LSQRInversion(fop=f, verbose=True)
     inv.LSQRiter = 20
     inv.dataTrans = tLog
     inv.modelTrans = tLog
-    startModel = pg.cat(pg.Vector(nlay-1, 5), pg.Vector(nlay, pg.median(rhoa)))
+    startModel = pg.cat(
+        pg.Vector(nlay - 1, 5), pg.Vector(nlay, pg.median(rhoa))
+    )
     inv.inv.setMarquardtScheme()
     # unconstrained
-    model1 = inv.run(rhoa, pg.Vector(len(rhoa), errPerc/100), lam=1000,
-                     startModel=startModel)
+    model1 = inv.run(
+        rhoa,
+        pg.Vector(len(rhoa), errPerc / 100),
+        lam=1000,
+        startModel=startModel,
+    )
     print(model1)
     # constrained
     G = pg.Matrix(rows=1, cols=len(startModel))
@@ -120,20 +126,25 @@ if __name__ == '__main__':
 
     c = pg.Vector(1, pg.sum(synthk))
     inv.setParameterConstraints(G, c, 100)
-    model2 = inv.run(rhoa, pg.Vector(len(rhoa), errPerc/100), lam=1000,
-                     startModel=startModel)
+    model2 = inv.run(
+        rhoa,
+        pg.Vector(len(rhoa), errPerc / 100),
+        lam=1000,
+        startModel=startModel,
+    )
     print(model2)
-    print(inv.chi2(), inv.relrms(), pg.sum(inv.model[:nlay-1]))
+    print(inv.chi2(), inv.relrms(), pg.sum(inv.model[: nlay - 1]))
     # %%
     fig, ax = pg.plt.subplots()
     ax.loglog(rhoa, ab2, "x")
     ax.loglog(inv.response, ab2, "-")
     # %%
     fig, ax = pg.plt.subplots()
-    pg.viewer.mpl.drawModel1D(ax, synthk, synres, plot="semilogx",
-                              label="synth")
+    pg.viewer.mpl.drawModel1D(
+        ax, synthk, synres, plot="semilogx", label="synth"
+    )
     pg.viewer.mpl.drawModel1D(ax, model=model1, label="unconstrained")
     pg.viewer.mpl.drawModel1D(ax, model=model2, label="constrained")
     ax.set_ylim(15, 0)
     ax.grid(True)
-    ax.legend();
+    ax.legend()

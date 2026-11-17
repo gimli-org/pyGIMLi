@@ -469,7 +469,7 @@ void Cell::deRegisterSecNode_(Node *n){
 
 Node * Cell::oppositeTo(const Boundary & bound){
     THROW_TO_IMPL
-    //** maybee obsolete pls check
+    //** maybe obsolete pls check
 
 //     std::set < Node * > nodes;
 //     for (int i = 0; i < 3; i++) nodes.insert(&node(i));

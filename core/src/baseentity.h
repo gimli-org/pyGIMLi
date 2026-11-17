@@ -24,9 +24,9 @@
 namespace GIMLI{
 
   //! Base Entity
-  /*! The is a base entity which holds some basic informations. An identification
+  /*! The is a base entity which holds some basic information. An identification
   * number for the object, a validation status flag and a runtime type information (RTTI).
-  * This information will be inherited in many objects i.e. the mesh and data entitys. */
+  * This information will be inherited in many objects i.e. the mesh and data entities. */
 class DLLEXPORT BaseEntity{
     public:
     BaseEntity()

@@ -1,4 +1,5 @@
 """Refraction for 1D layered Earth models."""
+
 from math import sqrt
 import numpy as np
 import pygimli as pg
@@ -28,7 +29,7 @@ def simulateNlayerRefraction(offsets, thk, vel, muteDirect=False):
     tt : np.array
         Traveltimes from origin to the offset positions.
     """
-    s = 1. / np.array(vel)
+    s = 1.0 / np.array(vel)
     tt = offsets * s[0]
 
     if muteDirect:
@@ -39,7 +40,7 @@ def simulateNlayerRefraction(offsets, thk, vel, muteDirect=False):
     for i in range(1, nlay):  # i-th refracted
         tn = offsets * s[i]  # slope
         for j in range(i):  # sum over intercepts
-            dsq = np.maximum(s[j]**2 - s[i]**2, 0)
+            dsq = np.maximum(s[j] ** 2 - s[i] ** 2, 0)
             tn += 2 * thk[j] * sqrt(dsq)
 
         tt = np.minimum(tt, tn)
@@ -70,13 +71,13 @@ class RefractionNLayer(pg.core.ModellingBase):
 
     def thkVel(self, model):
         """Return thickness and velocity vectors from model."""
-        return model(0, self.nlay-1), \
-               np.cumprod(model(self.nlay-1,
-                                self.nlay*2-1)) * self.vbase
+        return model(0, self.nlay - 1), np.cumprod(
+            model(self.nlay - 1, self.nlay * 2 - 1)
+        ) * self.vbase
 
     def response(self, model):
         """Return forward response f(m)."""
-        if len(model) != self.nlay*2-1:
+        if len(model) != self.nlay * 2 - 1:
             raise IndexError("Length of model does not match!")
         return simulateNlayerRefraction(self.offset, *self.thkVel(model))
 
@@ -84,8 +85,9 @@ class RefractionNLayer(pg.core.ModellingBase):
 class RefractionNLayerFix1stLayer(pg.core.ModellingBase):
     """FOP for 1D Refraction seismic with layered model (e.g. water layer)."""
 
-    def __init__(self, offset=0, nlay=3, v0=1465, d0=200, muteDirect=False,
-                 verbose=True):
+    def __init__(
+        self, offset=0, nlay=3, v0=1465, d0=200, muteDirect=False, verbose=True
+    ):
         """Init forward operator for velocity increases with fixed 1st layer.
 
         Parameters
@@ -112,19 +114,20 @@ class RefractionNLayerFix1stLayer(pg.core.ModellingBase):
 
     def thkVel(self, model):
         """Return thickness and velocity vectors from model."""
-        thk = pg.cat(pg.Vector(1, self.d0), model(0, self.nlay-1))
-        relvel = model(self.nlay-1, self.nlay*2-1)
+        thk = pg.cat(pg.Vector(1, self.d0), model(0, self.nlay - 1))
+        relvel = model(self.nlay - 1, self.nlay * 2 - 1)
         vel = self.v0 * np.cumprod(pg.cat(pg.Vector(1, 1.0), relvel))
         return thk, vel
 
     def response(self, model):
         """Return forward response f(m)."""
-        if len(model) != self.nlay*2-1:
+        if len(model) != self.nlay * 2 - 1:
             raise IndexError("Length of model does not match!")
 
-        return simulateNlayerRefraction(self.offset, *self.thkVel(model),
-                                        muteDirect=self.mDirect)
+        return simulateNlayerRefraction(
+            self.offset, *self.thkVel(model), muteDirect=self.mDirect
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

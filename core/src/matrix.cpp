@@ -883,7 +883,7 @@ bool loadMatrixVectorsBin_T(Matrix < ValueType > & A,
 
     for (Index i = 0; i < kCount; i++){
         Index count = 0;
-        while (1){ // load as long as posible
+        while (1){ // load as long as possible
             if (kCount > 1){
                 filename = filenameBody + "." + str(count) + "_" + str(i) + ".pot";
             } else {

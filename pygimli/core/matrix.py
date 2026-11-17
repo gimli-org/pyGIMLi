@@ -874,7 +874,7 @@ def sparseMatrix2csr(A):
         )
     elif isinstance(A, BlockMatrix):
         M = A.sparseMapMatrix()
-        warn("bad efficency BlockMatrix->csr")
+        warn("bad efficiency BlockMatrix->csr")
         return sparseMatrix2csr(M)
 
     return scipy.sparse.csr_matrix(A)
@@ -905,7 +905,7 @@ def sparseMatrix2csc(A):
 
     if isinstance(A, BlockMatrix):
         M = A.sparseMapMatrix()
-        warn("bad efficency BlockMatrix->csc")
+        warn("bad efficiency BlockMatrix->csc")
         return sparseMatrix2csc(M)
 
     return scipy.sparse.csc_matrix(A)

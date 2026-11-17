@@ -138,10 +138,10 @@ DLLEXPORT RVector toArray(const R3Vector & vec);
 /*! Create two dimensional [n x 3] array from R3Vector */
 DLLEXPORT RMatrix toMatrix(const R3Vector & vec);
 
-/*! Temporary transformation vor R3Vector until std::vector < RVector3 > will be removed. */
+/*! Temporary transformation for R3Vector until std::vector < RVector3 > will be removed. */
 DLLEXPORT R3Vector stdVectorR3VectorToR3Vector(const std::vector < RVector3 > & rv);
 
-/*! Temporary transformation vor R3Vector until std::vector < RVector3 > will be removed. */
+/*! Temporary transformation for R3Vector until std::vector < RVector3 > will be removed. */
 DLLEXPORT std::vector < RVector3 > R3VectorTostdVectorR3Vector(const R3Vector & rv);
 
 /*! Convert a vector of Node pointers to an R3Vector of positions */

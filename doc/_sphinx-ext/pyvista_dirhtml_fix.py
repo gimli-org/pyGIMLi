@@ -24,12 +24,15 @@ logger = logging.getLogger(__name__)
 
 
 class OfflineViewerDirective(Directive):
+    """Embed a pyvista viewer that works with every Sphinx builder."""
+
     required_arguments = 1
     optional_arguments = 0
     final_argument_whitespace = True
     has_content = True
 
     def run(self):
+        """Copy the viewer and its data and return the resulting iframe."""
         env = self.state.document.settings.env
         builder = env.app.builder
         source_dir = Path(env.app.srcdir)
@@ -37,8 +40,13 @@ class OfflineViewerDirective(Directive):
         build_dir = output_dir.parent
 
         source_file = (
-            Path(self.state.document.current_source).parent / self.arguments[0]
-        ).absolute().resolve()
+            (
+                Path(self.state.document.current_source).parent
+                / self.arguments[0]
+            )
+            .absolute()
+            .resolve()
+        )
         if not source_file.is_file():
             logger.warning(f"Source file {source_file} does not exist.")
             return []
@@ -69,8 +77,10 @@ class OfflineViewerDirective(Directive):
         if source_file != dest_file:
             try:
                 shutil.copy(source_file, dest_file)
-            except Exception as e:  # noqa: BLE001
-                logger.warning(f"Failed to copy {source_file} to {dest_file}: {e}")
+            except Exception as e:
+                logger.warning(
+                    f"Failed to copy {source_file} to {dest_file}: {e}"
+                )
 
         # Builder-aware URIs. `get_target_uri(docname)` gives the right output
         # path for the current page in any builder (e.g. `foo/bar.html` for
@@ -95,6 +105,7 @@ class OfflineViewerDirective(Directive):
 
 
 def setup(app):
+    """Register the directive, overriding pyvista's one."""
     # Override pyvista.ext.viewer_directive's registration. Sphinx's
     # add_directive replaces any previous directive of the same name, so as
     # long as this extension is listed after `pyvista.ext.viewer_directive`

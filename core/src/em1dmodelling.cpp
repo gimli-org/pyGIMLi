@@ -215,7 +215,7 @@ RVector MRS1dBlockModelling::response(const RVector & model){
         //! extract water content and thickness from model vector
         RVector wc(model, nlay_ - 1 , nlay_ * 2 - 1);
         RVector thk(model, 0 , nlay_ - 1);
-        //! fill vector of original size wit last layer water content
+        //! fill vector of original size with last layer water content
         RVector wcvec(nvec_, wc[nlay_ - 1]);
         size_t iz1 = 0, iz2 = 0;
         double zthk = 0;

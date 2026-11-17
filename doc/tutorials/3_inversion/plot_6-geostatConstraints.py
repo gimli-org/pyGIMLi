@@ -21,7 +21,7 @@ It defines the correlation between model cells as a function of correlation
 lengths (ranges) :math:`I_x`, :math:`I_y`, and :math:`I_z`. Of course, the
 orientation of the coordinate axes is arbitrary and can be chosen by rotation.
 Let us illustrate this by a simple mesh:
-"""  # noqa: D205, D400
+"""
 
 # %%
 # Computing covariance and constraint matrices
@@ -92,9 +92,9 @@ cor = C * vec
 
 # %%
 # and plot it using a linear or logarithmic scale
-kwLin = dict(cMin=-1, cMax=1, cMap="bwr")  # noqa: N816
+kwLin = dict(cMin=-1, cMax=1, cMap="bwr")
 ax, cb = pg.show(mesh, cor, **kwLin)
-kwLog = dict(cMin=1e-3, cMax=1, cMap="magma_r", logScale=True)  # noqa: N816
+kwLog = dict(cMin=1e-3, cMax=1, cMap="magma_r", logScale=True)
 ax, cb = pg.show(mesh, pg.abs(cor), **kwLog)
 
 # %%
@@ -134,44 +134,47 @@ kw = dict(
     colorBar=True,
     cMin=30,
     cMax=300,
-    orientation='vertical',
-    cMap='Spectral_r',
-    logScale=True)
+    orientation="vertical",
+    cMap="Spectral_r",
+    logScale=True,
+)
 
 # We want to use a homogenenous starting model
 vals = np.array([30, 50, 300, 100, 200])
 # We assume a 5% relative accuracy of the values
-relError = 0.05  # noqa: N816
+relError = 0.05
 # set up data and log-scaled data transformation
 inv = pg.Inversion(fop=fop)
-inv.transData = 'log'  # model already is
+inv.transData = "log"  # model already is
 inv.startModel = 30  # for all
 
 # Initially, we use the first-order constraints (default)
 # inv.setRegularization(cType=2)
 res = inv.run(vals, relativeError=relError, cType=1, lam=30)
-print(('Ctype=1: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
+print(("Ctype=1: " + "{:.1f} " * 6).format(*fop(res), inv.chi2()))
 pg.show(mesh, res, ax=ax[0, 0], **kw)
 ax[0, 0].set_title("1st order")
 np.testing.assert_array_less(inv.chi2(), 1.2)
 
 # Next, we use the second order (curvature) constraint type
 res = inv.run(vals, relativeError=relError, cType=2, lam=25)
-print(('Ctype=2: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
+print(("Ctype=2: " + "{:.1f} " * 6).format(*fop(res), inv.chi2()))
 pg.show(mesh, res, ax=ax[0, 1], **kw)
 ax[0, 1].set_title("2nd order")
 np.testing.assert_array_less(inv.chi2(), 1.2)
 
 # Now we set the geostatistic isotropic operator with 5m correlation length
 res = inv.run(vals, relativeError=relError, lam=15, correlationLengths=5)
-print(('Cg-5/5m: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
+print(("Cg-5/5m: " + "{:.1f} " * 6).format(*fop(res), inv.chi2()))
 pg.show(mesh, res, ax=ax[1, 0], **kw)
 ax[1, 0].set_title("I=5")
 np.testing.assert_array_less(inv.chi2(), 1.2)
 
 # and finally we use the dipping constraint matrix
-res = inv.run(vals, relativeError=relError, lam=15, correlationLengths=[9, 2], dip=-25)
-print(('Cg-9/2m: ' + '{:.1f} ' * 6).format(*fop(res), inv.chi2()))
+res = inv.run(
+    vals, relativeError=relError, lam=15, correlationLengths=[9, 2], dip=-25
+)
+print(("Cg-9/2m: " + "{:.1f} " * 6).format(*fop(res), inv.chi2()))
 pg.show(mesh, res, ax=ax[1, 1], **kw)
 ax[1, 1].set_title("I=[9/2], dip=25")
 np.testing.assert_array_less(inv.chi2(), 1.2)
@@ -179,10 +182,10 @@ np.testing.assert_array_less(inv.chi2(), 1.2)
 # plot the position of the priors
 patches = [CirclePolygon(po, 0.2) for po in pos]
 for ai in ax.flat:
-    p = PatchCollection(patches, cmap=kw['cMap'])
+    p = PatchCollection(patches, cmap=kw["cMap"])
     p.set_facecolor(None)
     p.set_array(np.array(vals))
-    p.set_norm(LogNorm(kw['cMin'], kw['cMax']))
+    p.set_norm(LogNorm(kw["cMin"], kw["cMax"]))
     ai.add_collection(p)
 
 # %%

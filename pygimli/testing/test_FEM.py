@@ -8,7 +8,7 @@ import numpy as np
 
 
 class TestFiniteElementBasics(unittest.TestCase):
-    """Test some FEM basics. Superseeded by Oskar, kept for history."""
+    """Test some FEM basics. Superseded by Oskar, kept for history."""
 
     def test_Helmholtz(self):
         """Test Helmholtz equation in 1D with Dirichlet BC.
@@ -294,7 +294,7 @@ class TestFiniteElementBasics(unittest.TestCase):
 
         # 3D tet
         try:
-            # test only work with tetgen-1.5.1. superseed by Oskar so no fix
+            # test only work with tetgen-1.5.1. supersede by Oskar so no fix
             mesh = pg.meshtools.createMesh(
                 pg.meshtools.createCube(
                     size=[4, 4, 4], boundaryMarker=9, area=1.1

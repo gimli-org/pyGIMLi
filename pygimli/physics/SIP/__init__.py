@@ -56,14 +56,10 @@ from .models import (
     PeltonPhiEM,
     DebyePhi,
     DebyeComplex,
-    tauRhoToTauSigma
+    tauRhoToTauSigma,
 )
 
-from .plotting import (
-    showSpectrum,
-    drawPhaseSpectrum,
-    drawAmplitudeSpectrum
-)
+from .plotting import showSpectrum, drawPhaseSpectrum, drawAmplitudeSpectrum
 
-#__all__ = [name for name in dir() if '_' not in name]
-#__all__ = [SIPSpectrum, ColeColeRho, ColeColePhi, DoubleColeColePhi]
+# __all__ = [name for name in dir() if '_' not in name]
+# __all__ = [SIPSpectrum, ColeColeRho, ColeColePhi, DoubleColeColePhi]

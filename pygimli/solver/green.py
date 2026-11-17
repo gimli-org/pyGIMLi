@@ -44,12 +44,12 @@ def greenDiffusion1D(x, t=0, a=1, dim=1):
     >>> import numpy as np
     >>> from pygimli.solver import greenDiffusion1D
     >>> dx = 0.001
-    >>> x = np.arange(0, 0.1+dx, dx)
+    >>> x = np.arange(0, 0.1 + dx, dx)
     >>> g = greenDiffusion1D(np.hstack((-x[:0:-1], x)), t=1.0, a=1e-4)
     >>> g *= dx
     >>> f = np.zeros(len(x))
-    >>> f[int(len(x)/2)] = 1.
-    >>> u = np.convolve(g, f)[len(x)-1:2*len(x)-1]
+    >>> f[int(len(x) / 2)] = 1.0
+    >>> u = np.convolve(g, f)[len(x) - 1 : 2 * len(x) - 1]
 
     >>> import matplotlib.pyplot as plt
     >>> fig, ax = plt.subplots()
@@ -58,5 +58,8 @@ def greenDiffusion1D(x, t=0, a=1, dim=1):
     >>> _ = ax.legend()
     >>> fig.show()
     """
-    return 1. / (4. * np.pi * a * t)**(dim / 2.0) * \
-            np.exp(-(x**2) / (4. * a * t))
+    return (
+        1.0
+        / (4.0 * np.pi * a * t) ** (dim / 2.0)
+        * np.exp(-(x**2) / (4.0 * a * t))
+    )

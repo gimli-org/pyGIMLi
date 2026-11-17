@@ -482,7 +482,7 @@ RVector ModellingBase::createMappedModel(const RVector & model,
                 cellAtts[i] = val;
                 // __MS(val)
             } else {
-                // temporay hack until fixed in modelling.py
+                // temporary hack until fixed in modelling.py
                 if (warned == false){
                     // __MS(cellAtts[i])
                     log(Warning, "** TMP HACk ** fixing region: ", regionMarker, " to: ", 1/0.058);

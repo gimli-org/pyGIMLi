@@ -491,7 +491,8 @@ bool Shape::touch(const Pos & pos, double tol, bool verbose) const {
 double Shape::domainSize() const {
     if (!hasDomSize_) {
         domSize_ = domainSize_();
-        //** gefaehrlich nach nem node::trans, rot, scale stimmt das nicht mehr (siehe unittest:testFEM)
+        //** dangerous: after a node::trans, rot, scale this is no longer
+        //** valid (see unittest:testFEM)
         hasDomSize_ = true;
     }
     return domSize_;
@@ -622,7 +623,8 @@ double QuadrangleShape::area() const {
 
     return sum;
 
-    //** Gaußsche Trapezformel fails for surface boundaries (along other then xy-orientation)
+    //** Gaussian trapezoidal rule fails for surface boundaries (along other
+    //** than xy-orientation)
 
 /*
   double x13 = this->node(0).pos()[0]- this->node(2).pos()[0];
@@ -825,4 +827,3 @@ Pos PyramidShape::rst(Index i) const{
 }
 
 } // namespace GIMLI
-

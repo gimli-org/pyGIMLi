@@ -33,7 +33,7 @@ enum NodeState{No, Original, Secondary, Connected};
 //! 3D Node
 /*!
  * Node is a basic entity of a mesh at a 3D position x/y/z (a vertex),
- * which owns a marker, an id, and information about connected boundarys and cells.
+ * which owns a marker, an id, and information about connected boundaries and cells.
  * For a 2D node ignore $z$ or let $z$-coord = 0.0.
  */
 class DLLEXPORT Node : public BaseEntity {
@@ -54,10 +54,10 @@ public:
     /*! Copy constructor */
     Node(const Node & node);
 
-    /*! Assignement operator */
+    /*! Assignment operator */
     Node & operator = (const Node & node);
 
-    /*! Destruct the node and all containing informations */
+    /*! Destruct the node and all containing information */
     ~Node();
 
     /*! Unchecked index operator to pos */

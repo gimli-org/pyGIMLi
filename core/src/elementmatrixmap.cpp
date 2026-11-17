@@ -842,7 +842,7 @@ void createUMap(const Mesh & mesh, Index order, ElementMatrixMap & ret,
     ret.resize(mesh.cellCount());
 
     #pragma omp parallel if (useOMP())
-    { // omp paralell
+    { // omp parallel
 
         #pragma omp for schedule(runtime)
         for (auto c: mesh.cells()){
@@ -857,7 +857,7 @@ void createUMap(const Mesh & mesh, Index order, ElementMatrixMap & ret,
             ret.pMat(c->id())->fillMatX_U_(true);
         }
 
-    }  // omp paralell
+    }  // omp parallel
 
     ret.cleanCellMask();
 }
@@ -903,7 +903,7 @@ void createUMap1_(const Mesh & mesh, Index order, ElementMatrixMap & ret,
     Index dofPerCoeff(mesh.nodeCount());
 
     #pragma omp parallel  if (useOMP())
-    { // omp paralell
+    { // omp parallel
 
         #pragma omp for schedule(runtime)
         for (auto c: mesh.cells()){
@@ -912,7 +912,7 @@ void createUMap1_(const Mesh & mesh, Index order, ElementMatrixMap & ret,
             e->fillEntityAndOrder_(*c, order);
             e->resizeMatX_U_();
         }
-    }  // omp paralell
+    }  // omp parallel
 
     ret.cleanCellMask();
 }
@@ -920,14 +920,14 @@ void createUMap1_(const Mesh & mesh, Index order, ElementMatrixMap & ret,
 void createUMap2_(const Mesh & mesh, Index order, ElementMatrixMap & ret,
                 Index nCoeff, Index dofOffset){
     #pragma omp parallel  if (useOMP())
-    { // omp paralell
+    { // omp parallel
 
         #pragma omp for schedule(runtime)
         for (auto c: mesh.cells()){
             ret.pMat(c->id())->fillMatX_U_(true);
         }
 
-    }  // omp paralell
+    }  // omp parallel
 
     ret.cleanCellMask();
 

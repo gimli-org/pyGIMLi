@@ -25,6 +25,7 @@ def createCrossholeData(sensors=None, x=None, z=None):
         for shot and receiver numbers.
     """
     from itertools import product
+
     if sensors is None:
         if x is None or z is None:
             raise ValueError("Both x and z must be given")
@@ -32,8 +33,10 @@ def createCrossholeData(sensors=None, x=None, z=None):
         sensors = np.array([(xi, zi) for xi in x for zi in z])
 
     if len(sensors) % 2 > 0:
-        pg.error("createCrossholeData is only defined for an equal number of"
-                 " sensors in two boreholes.")
+        pg.error(
+            "createCrossholeData is only defined for an equal number of"
+            " sensors in two boreholes."
+        )
     n = len(sensors) // 2
     numbers = np.arange(n)
     rays = np.array(list(product(numbers, numbers + n)))
@@ -173,8 +176,12 @@ def createGradientModel2D(data, mesh, vTop, vBot, flat=False):
         p = np.polyfit(xVals, yVals, deg=1)  # slope-intercept form
         n = np.asarray([-p[0], 1.0])  # normal vector
         nLen = np.sqrt(np.dot(n, n))
-        d = np.array([np.abs(np.dot(pos[i, :], n) - p[1]) / nLen for i
-                      in range(pos.shape[0])])
+        d = np.array(
+            [
+                np.abs(np.dot(pos[i, :], n) - p[1]) / nLen
+                for i in range(pos.shape[0])
+            ]
+        )
     else:
         d = np.interp(x, xVals, yVals) - z
 

@@ -102,7 +102,7 @@ from .core.logger import (
     warn,
 )
 
-warning = warn  # conveniance
+warning = warn  # convenience
 
 from .core.config import getConfigPath, rc, getCPUCount
 

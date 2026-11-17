@@ -139,7 +139,7 @@ public:
 
     /*! Set fixed value for background regions that will not
      * part of any value prolongation.*/
-    void setFixValue(double val); 
+    void setFixValue(double val);
     inline double fixValue() const { return fixValue_;}
 
     void fillBoundaryNorm(std::vector< RVector3 > & vnorm, Index boundCount);
@@ -152,7 +152,7 @@ public:
 
     void fillModelControl(RVector & vec);
 
-    /*! Returns read_only acccess to the boundaries of this region */
+    /*! Returns read_only access to the boundaries of this region */
     const std::vector < Boundary * > & boundaries() const { return bounds_; }
 
     const std::vector < Cell * > & cells() const { return cells_; }
@@ -161,10 +161,10 @@ public:
 
     void countParameter(Index start);
 
-    /*!Are the parameter indecies are ascending or permuted.*/
+    /*!Are the parameter indices are ascending or permuted.*/
     bool isPermuted() const { return isPermuted_; }
 
-    /*!Permute parameter indecies.*/
+    /*!Permute parameter indices.*/
     void permuteParameterMarker(const IndexArray & p);
 
     /*! Return all parameter indices of this region.*/
@@ -276,7 +276,7 @@ public:
 
     /*!Add an new single region.*/
     Region * addRegion(SIndex marker);
-    
+
     Region * addRegion(SIndex marker, const Mesh & mesh){
         return addRegion(marker, mesh, marker);
     }
@@ -376,21 +376,21 @@ public:
     /*!Set inter region constraint weights between region a and b.*/
     void setInterRegionConstraint(SIndex a, SIndex b, double weight);
 
-    /*!Retrun inter region constraint weights for all connecting regions.*/
-    const std::map< std::pair< SIndex, SIndex >, double > interRegionConstraints() const { 
-        return this->interRegionConstraints_; 
+    /*!Return inter region constraint weights for all connecting regions.*/
+    const std::map< std::pair< SIndex, SIndex >, double > interRegionConstraints() const {
+        return this->interRegionConstraints_;
     }
     /*!Set interface constraints weight for boundaries with a given marker.*/
-    void setInterfaceConstraint(SIndex marker, double weight) { 
-        this->interfaceConstraints_[marker] = weight; 
+    void setInterfaceConstraint(SIndex marker, double weight) {
+        this->interfaceConstraints_[marker] = weight;
     }
     /*!Return read only access to the interface constraint weights map.*/
-    const std::map< SIndex, double > interfaceConstraints() const { 
-        return this->interfaceConstraints_; 
+    const std::map< SIndex, double > interfaceConstraints() const {
+        return this->interfaceConstraints_;
     }
 
     void findInterRegionInterfaces();
-    
+
 protected:
     void copy_(const RegionManager & rm);
 

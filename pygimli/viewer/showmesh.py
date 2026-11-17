@@ -415,7 +415,7 @@ def showMesh(
     validData = False
 
     uniquemarkers = None
-    ### if levels equals unqiue cell data, plot as markers
+    ### if levels equals unique cell data, plot as markers
     if kwargs.get("levels") is not None:
         ud = pg.unique(data)
         levs = kwargs["levels"]

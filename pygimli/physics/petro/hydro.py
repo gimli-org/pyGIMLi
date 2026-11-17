@@ -1,12 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """TODO WRITEME."""
 
 import pygimli as pg
 
 
-def permeabilityEngelhardtPitter(poro, q=3.5, s=5e-3,
-                                 mesh=None, meshI=None):
+def permeabilityEngelhardtPitter(poro, q=3.5, s=5e-3, mesh=None, meshI=None):
     r"""Empirical model for porosity to hydraulic permeability.
 
     Postulated for sand and sandstones. :cite:`EngelhardtPit1955`
@@ -25,19 +23,34 @@ def permeabilityEngelhardtPitter(poro, q=3.5, s=5e-3,
 
     Parameters
     ----------
+    poro : float | array | callable
+        Porosity between 0.0 and 1.0.
+    q : float | array | callable [3.5]
+        Shape factor (3 for spheres, > 3 for non-spherical grains).
+    s : float | array | callable [5e-3]
+        Specific surface in cm^-1.
+    mesh : :gimliapi:`GIMLI::Mesh` [None]
+        Mesh to calculate a value for every cell.
+    meshI : :gimliapi:`GIMLI::Mesh` [None]
+        Mesh to interpolate the result to.
 
     Returns
     -------
-    k :
-        in Darcy
+    k : float | array
+        Hydraulic permeability in Darcy.
     """
     poro = pg.solver.parseArgToArray(poro, mesh.cellCount(), mesh)
     q = pg.solver.parseArgToArray(q, mesh.cellCount(), mesh)
     s = pg.solver.parseArgToArray(s, mesh.cellCount(), mesh)
 
     st = q * s
-    k = 2e7 * (poro**2 / (1.0-poro)**2) * 1.0/st**2 * \
-        pg.physics.Constants.Darcy
+    k = (
+        2e7
+        * (poro**2 / (1.0 - poro) ** 2)
+        * 1.0
+        / st**2
+        * pg.physics.Constants.Darcy
+    )
 
     if meshI is not None:
         k = pg.interpolate(mesh, k, meshI.cellCenters())

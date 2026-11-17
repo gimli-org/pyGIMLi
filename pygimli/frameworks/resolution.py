@@ -1,8 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-Methods to calculate the model resolution.
-"""
+"""Methods to calculate the model resolution."""
 
 import numpy as np
 
@@ -30,6 +27,7 @@ def scaledJacobianMatrix(inv):
         return left * pg.matrix.asArray(J) * right
     else:
         raise TypeError("Matrix type cannot be converted")
+
 
 def resolutionMatrix(inv, returnRD=False):
     r"""Formal model (and data) resolution matrix (MCM) from inversion.
@@ -61,9 +59,9 @@ def resolutionMatrix(inv, returnRD=False):
     """
     DJ = scaledJacobianMatrix(inv)
     C = pg.matrix.asArray(inv.fop.constraints())
-    #C = pg.matrix.asCOO(inv.fop.constraints())
+    # C = pg.matrix.asCOO(inv.fop.constraints())
     cw = inv.fop.regionManager().constraintWeights()
-    CC = np.reshape(cw ,[-1, 1]) * C
+    CC = np.reshape(cw, [-1, 1]) * C
     JTJ = DJ.T @ DJ
     JI = np.linalg.inv(JTJ + CC.T @ CC * inv.lam)
     RM = JI @ JTJ
@@ -72,6 +70,7 @@ def resolutionMatrix(inv, returnRD=False):
         return RM, RD
     else:
         return RM
+
 
 def modelResolutionMatrix(inv):
     r"""Formal model resolution matrix (MCM) from inversion.
@@ -94,6 +93,7 @@ def modelResolutionMatrix(inv):
     """
     return resolutionMatrix(inv)
 
+
 def modelResolutionKernel(inv, nr=0, maxiter=50):
     """Compute single resolution kernel by solving an inverse problem.
 
@@ -112,6 +112,7 @@ def modelResolutionKernel(inv, nr=0, maxiter=50):
         resolution
     """
     from pygimli.solver.leastsquares import lsqr
+
     td = inv.dataTrans  # data transformation (e.g. lin/log/symlog)
     tm = inv.modelTrans  # model transformation (typically log or logLU)
     C = inv.fop.constraints()  # (sparse) regularization matrix
@@ -123,9 +124,9 @@ def modelResolutionKernel(inv, nr=0, maxiter=50):
     JC.addMatrix(C, DS.rows(), 0, np.sqrt(inv.lam))
     JC.recalcMatrixSize()
     if isinstance(nr, int):
-        invec = pg.cat(pg.math.matrix.matrixColumn(DS, nr),
-                       pg.Vector(C.rows()))
+        invec = pg.cat(pg.math.matrix.matrixColumn(DS, nr), pg.Vector(C.rows()))
         return lsqr(JC, invec, maxiter=50)
+
 
 def modelResolutionRadius(inv, nr=None, RM=None):
     """Compute resolution radius from model resolution matrix diagonal.
@@ -157,11 +158,12 @@ def modelResolutionRadius(inv, nr=None, RM=None):
         rm = np.diag(RM)
 
     if pd.dim() == 2:
-        return np.abs(cs/rm/np.pi)**0.5
+        return np.abs(cs / rm / np.pi) ** 0.5
     elif pd.dim() == 3:
-        return np.abs(cs/rm*3/4/np.pi)**(1/3)
-    else: # 1D
-        return cs/rm
+        return np.abs(cs / rm * 3 / 4 / np.pi) ** (1 / 3)
+    else:  # 1D
+        return cs / rm
+
 
 def computeR(J, C, alpha=0.5):
     r"""Return diagonal of model resolution matrix.
@@ -190,17 +192,16 @@ def computeR(J, C, alpha=0.5):
     """
     lin = pg.optImport("scipy.linalg", "Calculate model resolution matrices.")
     if lin:
-        import scipy.sparse as sp
-        from scipy.sparse import coo_matrix, csc_matrix
-        from scipy.sparse.linalg import aslinearoperator, LinearOperator, lsqr
+        pass
 
     JTJ = J.T.dot(J)
     CM_inv = C.T.dot(C)
-#    Jsharp = lin.solve(JTJ + alpha * CM_inv, J.T)
-#    R = np.diag(Jsharp.dot(J))
+    #    Jsharp = lin.solve(JTJ + alpha * CM_inv, J.T)
+    #    R = np.diag(Jsharp.dot(J))
     RM = lin.solve(JTJ + alpha * CM_inv, JTJ)
     R = np.diag(RM)
     return R
+
 
 def modelCovariance(inv):
     """Formal model covariance matrix (MCM) from inversion.
@@ -229,13 +230,12 @@ def modelCovariance(inv):
     DJ = scaledJacobianMatrix(inv)
     JTJ = DJ.T.dot(DJ)
     try:
-        MCM = np.linalg.inv(JTJ)   # model covariance matrix
+        MCM = np.linalg.inv(JTJ)  # model covariance matrix
         varVG = np.sqrt(np.diag(MCM))  # standard deviations from main diagonal
-        di = (1.0 / varVG)  # variances as column vector
+        di = 1.0 / varVG  # variances as column vector
 
         # scaled model covariance (=correlation) matrix
         MCMs = di.reshape(len(di), 1) * MCM * di
-        return varVG, MCMs
 
     except BaseException as e:
         print(e)
@@ -243,7 +243,13 @@ def modelCovariance(inv):
         import sys
 
         traceback.print_exc(file=sys.stdout)
-        return np.zeros(len(inv.model()),), 0
+        return np.zeros(
+            len(inv.model()),
+        ), 0
+
+    else:
+        return varVG, MCMs
+
 
 #
 # # self-made imports
@@ -263,7 +269,8 @@ def modelCovariance(inv):
 #     """ Load constraint matrix in sparse format """
 #     global mesh
 #     i, j, data = np.loadtxt(fname, unpack=True, dtype=int)
-#     C = coo_matrix((data, (i,j)), shape=(mesh.boundaryCount(), mesh.cellCount()), dtype=int)
+#     C = coo_matrix((data, (i,j)),
+#                    shape=(mesh.boundaryCount(), mesh.cellCount()), dtype=int)
 #     return C
 #
 # def Rmult(x):
@@ -302,7 +309,8 @@ def modelCovariance(inv):
 #         d = d_k
 #         k +=1
 #
-#     print "Stopped stochastic estimation after %d iterations with chi = %s." % (k, chi)
+#     print "Stopped stochastic estimation after %d iterations with " \
+#           "chi = %s." % (k, chi)
 #     return d
 #
 # def compute_res(J, C, alpha=0.5):

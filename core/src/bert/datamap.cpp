@@ -201,7 +201,7 @@ RVector DataMap::data(const DataContainerERT & data, bool reciprocity, bool imag
             if (b != -1 && n != -1) uBN = map_[b + offSet][n];
         } else {
             if (map_.rows() + 1 == nElecs && map_.cols() == nElecs){
-                //!** probably measured agains last electrode as current and power reference
+                //!** probably measured against last electrode as current and power reference
                 if (a == (int)nElecs -1) a = -1;
                 if (b == (int)nElecs -1) b = -1;
 
@@ -216,7 +216,7 @@ RVector DataMap::data(const DataContainerERT & data, bool reciprocity, bool imag
 
         if (std::fabs(uVec[i]) < TOLERANCE/1000. || std::isnan(uVec[i])){
             if (!imag){
-                
+
                 std::stringstream str1;
                 str1 << WHERE_AM_I << std::endl << " a = " << a
                     << " b = " << b << " m = " << m << " n = " << n 	<< std::endl

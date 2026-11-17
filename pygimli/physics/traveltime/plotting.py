@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Plotting functions for traveltime."""
+
 import numpy as np
 
 import pygimli as pg
@@ -16,15 +17,15 @@ def drawTravelTimeData(ax, data, t=None):
     x = pg.x(data.sensorPositions())
     # z = pg.z(data.sensorPositions())
 
-    shots = pg.unique(pg.sort(data['s']))
-    geoph = pg.unique(pg.sort(data['g']))
+    shots = pg.unique(pg.sort(data["s"]))
+    geoph = pg.unique(pg.sort(data["g"]))
 
     startOffsetIDX = 0
 
     if min(min(shots), min(geoph)) == 1:
         startOffsetIDX = 1
 
-    tShow = data['t']
+    tShow = data["t"]
     if t is not None:
         tShow = t
 
@@ -33,36 +34,47 @@ def drawTravelTimeData(ax, data, t=None):
     ax.figure.show()  # a draw function should never trigger a figure show
 
     for shot in shots:
-        gIdx = pg.find(data['s'] == shot)
-        sensorIdx = [int(i__ - startOffsetIDX) for i__ in data['g'][gIdx]]
-        ax.plot(x[sensorIdx], tShow[gIdx], 'x-')
+        gIdx = pg.find(data["s"] == shot)
+        sensorIdx = [int(i__ - startOffsetIDX) for i__ in data["g"][gIdx]]
+        ax.plot(x[sensorIdx], tShow[gIdx], "x-")
 
-    yPixel = ax.transData.inverted().transform_point((1, 1))[1] - \
-        ax.transData.inverted().transform_point((0, 0))[1]
-    xPixel = ax.transData.inverted().transform_point((1, 1))[0] - \
-        ax.transData.inverted().transform_point((0, 0))[0]
+    yPixel = (
+        ax.transData.inverted().transform_point((1, 1))[1]
+        - ax.transData.inverted().transform_point((0, 0))[1]
+    )
+    xPixel = (
+        ax.transData.inverted().transform_point((1, 1))[0]
+        - ax.transData.inverted().transform_point((0, 0))[0]
+    )
 
     # draw shot points
-    ax.plot(x[[int(i__ - startOffsetIDX) for i__ in shots]],
-            np.zeros(len(shots)) + 8. * yPixel, 'gv', markersize=8)
+    ax.plot(
+        x[[int(i__ - startOffsetIDX) for i__ in shots]],
+        np.zeros(len(shots)) + 8.0 * yPixel,
+        "gv",
+        markersize=8,
+    )
 
     # draw geophone points
-    ax.plot(x[[int(i__ - startOffsetIDX) for i__ in geoph]],
-            np.zeros(len(geoph)) + 3. * yPixel, 'r^', markersize=8)
+    ax.plot(
+        x[[int(i__ - startOffsetIDX) for i__ in geoph]],
+        np.zeros(len(geoph)) + 3.0 * yPixel,
+        "r^",
+        markersize=8,
+    )
 
     ax.grid()
-    ax.set_ylim([max(tShow), + 16. * yPixel])
-    ax.set_xlim([min(x) - 5. * xPixel, max(x) + 5. * xPixel])
+    ax.set_ylim([max(tShow), +16.0 * yPixel])
+    ax.set_xlim([min(x) - 5.0 * xPixel, max(x) + 5.0 * xPixel])
 
-    ax.set_xlabel('x-Coordinate [m]')
-    ax.set_ylabel('Traveltime [ms]')
+    ax.set_xlabel("x-Coordinate [m]")
+    ax.set_ylabel("Traveltime [ms]")
 
 
-def plotFirstPicks(ax, data, tt=None, plotva=False, marker='x-'):
+def plotFirstPicks(ax, data, tt=None, plotva=False, marker="x-"):
     """Naming convention. drawFOO(ax, ... )."""
     pg.deprecated("use drawFirstPicks")
-    return drawFirstPicks(ax=ax, data=data, tt=tt, plotva=plotva,
-                          marker=marker)
+    return drawFirstPicks(ax=ax, data=data, tt=tt, plotva=plotva, marker=marker)
 
 
 def drawFirstPicks(ax, data, tt=None, plotva=False, **kwargs):
@@ -92,10 +104,10 @@ def drawFirstPicks(ax, data, tt=None, plotva=False, **kwargs):
     uns = np.unique(sx)
 
     cols = pg.plt.cm.tab10(np.arange(10))
-    kwargs.setdefault('marker', 'x')
-    kwargs.setdefault('markersize', 8)
-    kwargs.setdefault('linestyle', '-')
-    plotSource = kwargs.pop('plotSource', True)
+    kwargs.setdefault("marker", "x")
+    kwargs.setdefault("markersize", 8)
+    kwargs.setdefault("linestyle", "-")
+    plotSource = kwargs.pop("plotSource", True)
     GCI = []
     for i, si in enumerate(uns):
         ti = tt[sx == si]
@@ -103,7 +115,7 @@ def drawFirstPicks(ax, data, tt=None, plotva=False, **kwargs):
         ii = gi.argsort()
         GCI.append(ax.plot(gi[ii], ti[ii], color=cols[i % 10], **kwargs))
         if plotSource:
-            ax.plot(si, 0., 's', color=cols[i % 10])
+            ax.plot(si, 0.0, "s", color=cols[i % 10])
 
     ax.grid(True)
     if plotva:
@@ -156,7 +168,7 @@ def drawVA(ax, data, vals=None, usePos=True, pseudosection=False, **kwargs):
         vals = data(vals)
 
     if vals is None:
-        vals = data['t']
+        vals = data["t"]
 
     px = pg.x(data)
     gx = np.asarray([px[g] for g in data.id("g")])
@@ -166,20 +178,24 @@ def drawVA(ax, data, vals=None, usePos=True, pseudosection=False, **kwargs):
 
     if min(vals) < 1e-10:
         print(vals)
-        pg.error('zero traveltimes found.')
+        pg.error("zero traveltimes found.")
     va = offset / vals
-    kwargs.setdefault('squeeze', True)
-    kwargs.setdefault('logScale', False)
-    kwargs.setdefault('label', pg.unit('va'))
-    kwargs.setdefault('cMap', pg.utils.cMap('va'))
+    kwargs.setdefault("squeeze", True)
+    kwargs.setdefault("logScale", False)
+    kwargs.setdefault("label", pg.unit("va"))
+    kwargs.setdefault("cMap", pg.utils.cMap("va"))
     if pseudosection:
         midpoint = (gx + sx) / 2
-        gci = pg.viewer.mpl.dataview.drawVecMatrix(ax, midpoint, offset, va, **kwargs)
+        gci = pg.viewer.mpl.dataview.drawVecMatrix(
+            ax, midpoint, offset, va, **kwargs
+        )
     else:
-        gci = pg.viewer.mpl.dataview.drawVecMatrix(ax, data["g"], data["s"], va, **kwargs)
+        gci = pg.viewer.mpl.dataview.drawVecMatrix(
+            ax, data["g"], data["s"], va, **kwargs
+        )
 
-    ax.set_xlabel('Receiver Index')
-    ax.set_ylabel('Shot Index')
+    ax.set_xlabel("Receiver Index")
+    ax.set_ylabel("Shot Index")
 
     if usePos:
         nt = np.maximum(data.sensorCount() // 50, 10)

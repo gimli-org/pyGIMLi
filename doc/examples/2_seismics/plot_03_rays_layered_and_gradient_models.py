@@ -12,6 +12,7 @@ hence the numerical accuracy of traveltime calculations, can be significantly
 improved by a few secondary nodes along the cell edges. Details can be found in
 `Giroux & Larouche (2013) <https://doi.org/10.1016/j.cageo.2012.12.005>`_.
 """
+
 # sphinx_gallery_thumbnail_number = 3
 from math import asin, tan
 
@@ -29,7 +30,8 @@ from pygimli.physics import TravelTimeManager
 # We start by building a regular grid.
 
 mesh_layered = mt.createGrid(
-    np.arange(-20, 155, step=5, dtype=float), np.linspace(-60, 0, 13))
+    np.arange(-20, 155, step=5, dtype=float), np.linspace(-60, 0, 13)
+)
 
 ###############################################################################
 # We now construct the velocity vector for the two-layer case by iterating over
@@ -48,11 +50,12 @@ ax, cb = pg.show(mesh_layered, vel_layered, label="Velocity (m/s)")
 # is the minimum of the direct and critically refracted wave, where the latter
 # is governed by Snell's law.
 
+
 def analyticalSolution2Layer(x, zlay=25, v1=1000, v2=3000):
     """Analytical solution for 2 layer case."""
     tdirect = np.abs(x) / v1  # direct wave
     alfa = asin(v1 / v2)  # critically refracted wave angle
-    xreflec = tan(alfa) * zlay * 2.  # first critically refracted
+    xreflec = tan(alfa) * zlay * 2.0  # first critically refracted
     trefrac = (x - xreflec) / v2 + xreflec * v2 / v1**2
     return np.minimum(tdirect, trefrac)
 
@@ -77,8 +80,9 @@ b = 100
 vel_gradient = []
 for node in mesh_gradient.nodes():
     vel_gradient.append(a + b * abs(node.y()))
-vel_gradient = pg.meshtools.nodeDataToCellData(mesh_gradient,
-                                               np.array(vel_gradient))
+vel_gradient = pg.meshtools.nodeDataToCellData(
+    mesh_gradient, np.array(vel_gradient)
+)
 ax, cb = pg.show(mesh_gradient, vel_gradient, label="Velocity (m/s)")
 
 ###############################################################################
@@ -89,22 +93,28 @@ ax, cb = pg.show(mesh_gradient, vel_gradient, label="Velocity (m/s)")
 #     v = \left|b^{-1}cosh^{-1}\left(1 + \frac{b^2 x^2}{2a^2}\right)\right|
 #
 
+
 def analyticalSolutionGradient(x, a=1000, b=100):
     """Analytical solution for gradient model."""
     tdirect = np.abs(x) / a  # direct wave
-    tmp = 1 + ((b**2 * np.abs(x)**2) / (2 * a**2))
+    tmp = 1 + ((b**2 * np.abs(x) ** 2) / (2 * a**2))
     trefrac = np.abs(b**-1 * np.arccosh(tmp))
     return np.minimum(tdirect, trefrac)
+
 
 ###############################################################################
 # The loop below calculates the travel times and makes the comparison plot.
 
 fig, ax = plt.subplots(3, 2, figsize=(10, 10), sharex=True)
 
-for j, (case, mesh, vel) in enumerate(zip(["layered", "gradient"],
-                                          [mesh_layered, mesh_gradient],
-                                          [vel_layered, vel_gradient],
-                                          strict=False)):
+for j, (case, mesh, vel) in enumerate(
+    zip(
+        ["layered", "gradient"],
+        [mesh_layered, mesh_gradient],
+        [vel_layered, vel_gradient],
+        strict=False,
+    )
+):
     pg.boxprint(case)
     if case == "gradient":
         ana = analyticalSolutionGradient
@@ -124,8 +134,8 @@ for j, (case, mesh, vel) in enumerate(zip(["layered", "gradient"],
     # A data container with index arrays named s (shot) and g (geophones) is
     # created and filled with the positions and shot/geophone indices.
     data = pg.DataContainer()
-    data.registerSensorIndex('s')
-    data.registerSensorIndex('g')
+    data.registerSensorIndex("s")
+    data.registerSensorIndex("g")
 
     for i, pxi in enumerate(px):
         data.createSensor([pxi, 0.0])
@@ -134,12 +144,20 @@ for j, (case, mesh, vel) in enumerate(zip(["layered", "gradient"],
 
     nData = len(px)
     data.resize(nData)
-    data['s'] = [source] * nData # only one shot at first sensor
-    data['g'] = range(nData)  # and all sensors are receiver geophones
+    data["s"] = [source] * nData  # only one shot at first sensor
+    data["g"] = range(nData)  # and all sensors are receiver geophones
 
     # Draw initial mesh with velocity distribution
-    pg.show(mesh, vel, ax=ax[0, j], label="Velocity (m/s)", hold=True,
-            logScale=False, cMap="summer_r", coverage=0.7)
+    pg.show(
+        mesh,
+        vel,
+        ax=ax[0, j],
+        label="Velocity (m/s)",
+        hold=True,
+        logScale=False,
+        cMap="summer_r",
+        coverage=0.7,
+    )
     drawMesh(ax[0, j], mesh, color="white", lw=0.21)
 
     # We compare the accuracy for 0-5 secondary nodes
@@ -154,7 +172,6 @@ for j, (case, mesh, vel) in enumerate(zip(["layered", "gradient"],
     recs = [1, 3, 8, 13]
 
     for i, n in enumerate(sec_nodes):
-
         # Perform traveltime calculations and log time with pg.tic() & pg.toc()
         pg.tic()
         res = mgr.simulate(vel=vel, scheme=data, mesh=mesh, secNodes=n)
@@ -162,7 +179,7 @@ for j, (case, mesh, vel) in enumerate(zip(["layered", "gradient"],
         # an array in res, and res will be removed in the next iteration.
         # Unfortunately, we don't have any reference counting for core
         # objects yet.
-        t_all.append(res['t'].array())
+        t_all.append(res["t"].array())
         durations.append(pg.dur())
         pg.toc(f"Raytracing with {n} secondary nodes:")
 
@@ -174,7 +191,7 @@ for j, (case, mesh, vel) in enumerate(zip(["layered", "gradient"],
 
             path = mgr.fop.dijkstra.shortestPath(sourceNode, recNode)
             points = mgr.fop.mesh().positions(withSecNodes=True)[path].array()
-            ax[0, j].plot(points[:,0], points[:,1], cols[i], label=lab)
+            ax[0, j].plot(points[:, 0], points[:, 1], cols[i], label=lab)
 
     t_ana = ana(px)
 
@@ -182,8 +199,11 @@ for j, (case, mesh, vel) in enumerate(zip(["layered", "gradient"],
     ax[1, j].plot(px, t_ana * 1000, label="Analytical solution")
 
     for i, n in enumerate(sec_nodes):
-        ax[1, j].plot(px, t_all[i] * 1000,
-                      label=f"Dijkstra ({n} sec nodes, {durations[i]:.2f} s)")
+        ax[1, j].plot(
+            px,
+            t_all[i] * 1000,
+            label=f"Dijkstra ({n} sec nodes, {durations[i]:.2f} s)",
+        )
 
     ax[2, j].plot(px, np.zeros_like(px), label="Zero line")  # keep colors
 

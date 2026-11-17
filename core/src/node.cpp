@@ -30,10 +30,10 @@ std::ostream & operator << (std::ostream & str, const GIMLI::Node & n){
     return str;
 }
 
-std::ostream & operator << (std::ostream & str, 
+std::ostream & operator << (std::ostream & str,
                             const std::vector < GIMLI::Node * > & nodes){
     for (auto *n: nodes) {
-        str << n->id() << " "; 
+        str << n->id() << " ";
     }
     str << std::endl;
     return str;
@@ -105,9 +105,10 @@ void Node::init_(){
 
 void Node::smooth(uint function){
     std::set< Node * > common(commonNodes(this->boundSet()));
-    //** Achtung konkave gebiete koennen entstehen wenn zu festen knoten benachbarte gesmooth werden
-    //** aufzeichen -> pruefen -> fixen.
-    //** was passiert bei node at interface or boundary
+    //** caution: concave regions can appear when the neighbours of fixed
+    //** nodes are smoothed
+    //** record -> check -> fix.
+    //** what happens for a node at interface or boundary
     RVector3 c(0.0, 0.0, 0.0);
     for (std::set< Node * >::iterator it = common.begin(); it != common.end(); it ++){
         c += (*it)->pos();
@@ -116,4 +117,3 @@ void Node::smooth(uint function){
 }
 
 } // namespace GIMLI{
-

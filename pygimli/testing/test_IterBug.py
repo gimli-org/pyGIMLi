@@ -1,35 +1,35 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Test the pygimli iterator reference handling."""
 
 # write a correct test!
 import unittest
 
 import pygimli as pg
 
+
 class TestIterBug(unittest.TestCase):
-    
+    """Test that iteration keeps the referenced objects alive."""
+
     def test_MissingRefCounter(self):
-        """
-        """
+        """Test slicing a vector and iterating over the result."""
         a = pg.Vector(10, 1)
 
-        # das geht schief wegen fehlendem referenzcounter. der Iter nutzt das
-        # temporary Object a(0,9) das nicht weiter gezaehlt wird
-        # ich glaub unsere pygimli objecte brauchen einen refcounter 
-        # wenn sie von py aus generiert werden
+        # this fails because of a missing reference counter: the iterator uses
+        # the temporary object a(0, 9) whose reference count is not increased
+        # I think our pygimli objects need a reference counter
+        # when they are created from Python
         # print((a(0, 9).beginPyIter()[0], "!=", a[0]))
         # this might goes wrong but we cannot test it
         # self.assertNotEqual(a(0, 9).beginPyIter()[0], a[0])
 
-        # das geht weil wir einen eigenen iter definieren der die reference haellt
+        # this works because we define our own iterator that keeps the
+        # reference
         # see: class VectorIter: in pygimli.__init__.py
         i = 0
         for ai in a[0:9]:
             self.assertEqual(ai, a[i])
             i = i + 1
-            
-if __name__ == '__main__':
-    
+
+
+if __name__ == "__main__":
     unittest.main()
-
-

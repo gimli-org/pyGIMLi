@@ -222,7 +222,7 @@ def createMeshTetgen(
 
     TODO
     ----
-        * translate default params -> kwargs to superseed switches for
+        * translate default params -> kwargs to supersede switches for
         python wrapper
         * direct conversion of PLC to tetgen input format
         for direct python wrapper without file usage. Need to be implemented
@@ -283,7 +283,7 @@ def createMeshTetgen(
 
         tet = tg.TetGen(plcFname)
 
-        # TODO: translate params -> kwargs to superseeds switches
+        # TODO: translate params -> kwargs to supersedes switches
         # kwargs['minratio'] = quality
         # kwargs['maxvolume'] = area
         if switches == "ignore":

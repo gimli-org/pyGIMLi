@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Least-Squares solvers for linear equation systems A^T A x = A^T b."""
+
 from math import sqrt
 import numpy as np
 from numpy.linalg import norm
@@ -52,7 +53,7 @@ def lsqr(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
     rhoU = alfa
     for i in range(maxiter):
         if verbose and (i % 10 == 0):
-            pg.debug(i, Arnorm, Arnorm/Arnorm0)
+            pg.debug(i, Arnorm, Arnorm / Arnorm0)
 
         u = A.mult(v) - alfa * u
         beta = norm(u)
@@ -70,10 +71,10 @@ def lsqr(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
         c = rhoU / rho
         s = beta / rho
         theta = s * alfa
-        rhoU = - c * alfa
+        rhoU = -c * alfa
         phi = c * phiU
         phiU = s * phiU
-        x += (phi/rho) * w
+        x += (phi / rho) * w
         # w = v - (theta/rho) * w
         w *= -theta / rho
         w += v
@@ -81,13 +82,13 @@ def lsqr(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
         if Arnorm / Arnorm0 < tol:
             if verbose:
                 pg.debug("Solution norm reached")
-                pg.debug(i, Arnorm, Arnorm/Arnorm0)
+                pg.debug(i, Arnorm, Arnorm / Arnorm0)
 
             break
 
     if verbose:
         pg.debug("Maximum iteration reached")
-        pg.debug(i, Arnorm, Arnorm/Arnorm0)
+        pg.debug(i, Arnorm, Arnorm / Arnorm0)
 
     return x
 
@@ -140,12 +141,12 @@ def rrlsqr(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
     rr0 = rr
     for i in range(maxiter):
         if verbose and (i % 10 == 0):
-            pg.info(i, rr, rr/rr0)
+            pg.info(i, rr, rr / rr0)
 
         p = A.mult(w)
         lam = dot(p, r) / dot(p, p)
         r -= p * lam
-        u = p - r * (rhoU/phiU)
+        u = p - r * (rhoU / phiU)
         beta = norm(u)
         if np.isclose(beta, 0.0):
             if verbose:
@@ -162,18 +163,18 @@ def rrlsqr(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
         c = rhoU / rho
         s = beta / rho
         theta = s * alfa
-        rhoU = - c * alfa
+        rhoU = -c * alfa
         # phi = c * phiU
         phiU = s * phiU
         x += w * lam
         # w = v - w * (theta/rho)
-        w *= - theta/rho
+        w *= -theta / rho
         w += v
         rr = dot(r, r)
         if rr / rr0 < tol:
             if verbose:
                 pg.info("Solution norm reached")
-                pg.info(i, rr, rr/rr0)
+                pg.info(i, rr, rr / rr0)
 
             break
 
@@ -220,7 +221,7 @@ def cgls(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
     rr0 = rr
     for i in range(maxiter):
         if verbose and (i % 10 == 0):
-            pg.info(i, rr, rr/rr0)
+            pg.info(i, rr, rr / rr0)
 
         q = A.mult(p)
         alfa = gamma / dot(q, q)
@@ -236,7 +237,7 @@ def cgls(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
         if rr / rr0 < tol:
             if verbose:
                 pg.info("Solution norm reached")
-                pg.info(i, rr, rr/rr0)
+                pg.info(i, rr, rr / rr0)
 
             break
 
@@ -284,7 +285,7 @@ def rrls(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
     rr0 = rr
     for i in range(maxiter):
         if verbose and (i % 10 == 0):
-            pg.info(i, rr, rr/rr0)
+            pg.info(i, rr, rr / rr0)
 
         p = A.mult(w)
         rho = norm(p)
@@ -294,13 +295,13 @@ def rrls(A, b, x=None, maxiter=200, tol=1e-8, verbose=False, damp=0.0):
         v = A.transMult(p) - rho * v
         theta = norm(v)
         v /= theta
-        x += w * (lam/rho)
-        w = v - w * (theta/rho)
+        x += w * (lam / rho)
+        w = v - w * (theta / rho)
         rr = dot(r, r)
         if rr / rr0 < tol:
             if verbose:
                 pg.info("Solution norm reached")
-                pg.info(i, rr, rr/rr0)
+                pg.info(i, rr, rr / rr0)
 
             break
 

@@ -172,7 +172,7 @@ void dcfemDomainAssembleStiffnessMatrix(SparseMatrix < ValueType > & S, const Me
     ElementMatrix < double > Se, Stmp;
 
     if (atts.size() != mesh.cellCount()){
-       throwLengthError(WHERE_AM_I + " attribute size missmatch" + str(atts.size())
+       throwLengthError(WHERE_AM_I + " attribute size mismatch" + str(atts.size())
                        + " != " + str(mesh.cellCount()));
     }
     ValueType rho = 0.0;
@@ -404,7 +404,7 @@ void assembleCompleteElectrodeModel_(RSparseMatrix & S,
             }
         } else {
             if (::fabs(sumArea) < TOLERANCE){
-                //** asuming node electrode
+                //** assuming node electrode
                 mapS[mat_ID][mat_ID] = 1.0;
             } else {
                 mapS[mat_ID][mat_ID] = sumArea / contactImpedance;
@@ -716,7 +716,7 @@ void DCMultiElectrodeModelling::updateMeshDependency_(){
     electrodes_.clear();
 
     electrodeRef_        = NULL;
-    //** Try to analyse the geometrie, check for topography and looking
+    //** Try to analyse the geometry, check for topography and looking
     // for surface Z-Koordinate
     topography_     = false;
     neumannDomain_  = true;
@@ -1038,7 +1038,7 @@ void DCMultiElectrodeModelling::searchElectrodes_(){
             }
         }
     } else {
-        //throwError(WHERE_AM_I+ " Warning ! Found neighter electrode nodes nor electrode facets, don't know what to do. ");
+        //throwError(WHERE_AM_I+ " Warning ! Found neither electrode nodes nor electrode facets, don't know what to do. ");
         std::cout << "Warning! Found neigther electrode nodes nor electrode facets, don't know what to do. " << std::endl;
     }
 
@@ -1128,7 +1128,7 @@ RVector DCMultiElectrodeModelling::response(const RVector & model,
     //     if (!this->topography_ ){
     //         return RVector(dataContainer_->size(), min(model));
     //     } else {
-    //         std::cout << "Calcuating numerical response for homogeneous model due to topography";
+    //         std::cout << "Calculating numerical response for homogeneous model due to topography";
     //     }
     // }
 
@@ -2006,7 +2006,7 @@ void DCSRMultiElectrodeModelling::checkPrimpotentials_(const std::vector < Elect
 // MEMINFO
             //! check for sizes here!!!
         } else {
-            //! no binary matrix so calculate if topography present and no alternativ filename given
+            //! no binary matrix so calculate if topography present and no alternative filename given
             if (topography() && primPotFileBody_.find(NOT_DEFINED) != std::string::npos){
                 if (verbose_) {
                     std::cout << std::endl
@@ -2016,7 +2016,7 @@ void DCSRMultiElectrodeModelling::checkPrimpotentials_(const std::vector < Elect
 
                 if (!primMesh_){
                     primMesh_ = new Mesh;
-// dangerous can lead to extremly large meshes
+// dangerous can lead to extremely large meshes
                     *primMesh_ = mesh_->createP2();
 //                    *primMesh_ = *mesh_;
                     primMeshOwner_ = true;
@@ -2143,7 +2143,7 @@ void DCSRMultiElectrodeModelling::checkPrimpotentials_(const std::vector < Elect
 
 void DCSRMultiElectrodeModelling::preCalculate(const std::vector < ElectrodeShape * > & eA,
                                                 const std::vector < ElectrodeShape * > & eB){
-    //! check for valid primary potentials, calculate analytical or numerical if nessecary
+    //! check for valid primary potentials, calculate analytical or numerical if necessary
     checkPrimpotentials_(eA, eB);
     mesh1_ = *mesh_;
     mesh1_.setCellAttributes(1.0);

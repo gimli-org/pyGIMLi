@@ -196,7 +196,7 @@ getGIMLI(){
         chmod +x $PYGIMLI_SOURCE_DIR/apps/*
 
         if is_virtual_env; then
-            echo "Installing requirements into virtual enviroment"
+            echo "Installing requirements into virtual environment"
             pip3 install -r $PYGIMLI_SOURCE_DIR/dev_requirements.txt
         else
             echo "Installing requirements into user space"
@@ -215,7 +215,7 @@ buildGIMLI(){
 
         pushd $GIMLI_BUILD_DIR
             echo "Installing for python=$PYVERSION"
-            cmake -G "$CMAKE_GENERATOR" $GIMLI_SOURCE_DIR -DPYVERSION=$PYVERSION          
+            cmake -G "$CMAKE_GENERATOR" $GIMLI_SOURCE_DIR -DPYVERSION=$PYVERSION
 
             make -j$PARALLEL_BUILD && make pygimli J=$PARALLEL_BUILD
         popd
@@ -251,7 +251,7 @@ if [ "$GET" == "curl" ]; then
     getGIMLI
 else
     echo -e "\n========================================================================="
-    echo "local call .. skipp fetching sources"
+    echo "local call .. skip fetching sources"
     echo "-------------------------------------------------------------------------"
 fi
 
@@ -266,7 +266,7 @@ echo "-------------------------------------------------------------------------"
 testGIMLI
 
 echo -e "\n========================================================================="
-echo "Finialize:                                                               "
+echo "Finalize:                                                               "
 echo "-------------------------------------------------------------------------"
 echo "Set the following setting to use pygimli, either locally"
 echo "per session or permanently in your $HOME/.bashrc"

@@ -97,7 +97,7 @@ public:
     /*! Set specific columns to zero. */
     void cleanCols(const IndexArray & c);
 
-    /*! Fill the node ids with a number of coefficents.
+    /*! Fill the node ids with a number of coefficients.
     For vector field approximation give field dimension 2 or 3.
     Please note that you need to give the number of nodes to the ElementMatrix constructor.
     */
@@ -614,7 +614,7 @@ DEFINE_DOT_MULT(const Pos &)        // vector per cell .. check Pos before RVect
 DEFINE_DOT_MULT(const PosVector &)  // vector per quad
 DEFINE_DOT_MULT(const RSmallMatrix  &) // matrix per cell
 DEFINE_DOT_MULT(const std::vector < RSmallMatrix  > &) // matrix per quad
-DEFINE_DOT_MULT(const FEAFunction &)  // aribrary function
+DEFINE_DOT_MULT(const FEAFunction &)  // arbitrary function
 #undef DEFINE_DOT_MULT
 
 #define DEFINE_DOT_MULT(A_TYPE) \
@@ -791,7 +791,7 @@ public:
     /*!Set expected value size for evaluation */
     void setValueSize(Index s) { _valueSize = s; }
 
-    /*! Set evaluation order, i.e., mark the function to be evaluatated
+    /*! Set evaluation order, i.e., mark the function to be evaluated
     on cell centers(2), on nodes(1) or at quadrature points (2). */
     inline void setEvalOrder(Index o) { this->_evalOrder = o; }
     /*! Get evaluation order. */

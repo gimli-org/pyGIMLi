@@ -1,4 +1,5 @@
 """BFGS ( Broyden–Fletcher–Goldfarb–Shanno) Matrix implementation."""
+
 import pygimli.core as pgcore
 
 
@@ -22,12 +23,11 @@ class BFGSMatrix(pgcore.MatrixBase):
 
     def mult(self, x):
         """Multiply using s/y vectors and Hk matrix."""
-        Imryst = x - sum(self.s*x)*self.rho*self.y
+        Imryst = x - sum(self.s * x) * self.rho * self.y
         a = self.Hk.mult(Imryst)
-        Imrsyt = a - sum(self.y*a) * self.rho * self.s
-        return Imrsyt + sum(self.s*x) * self.rho * self.s
+        Imrsyt = a - sum(self.y * a) * self.rho * self.s
+        return Imrsyt + sum(self.s * x) * self.rho * self.s
 
     def transMult(self, y):
         """Multiply using s/y vectors and Hk matrix."""
         return self.mult(y)  # symmetric!
-

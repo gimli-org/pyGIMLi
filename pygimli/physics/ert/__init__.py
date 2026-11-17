@@ -29,25 +29,36 @@ and functions:
 """
 
 import pygimli as pg
-from .ert import (simulate, estimateError,
-                  createGeometricFactors, createInversionMesh)
+from .ert import (
+    simulate,
+    estimateError,
+    createGeometricFactors,
+    createInversionMesh,
+)
 from .ertManager import ERTManager
 from .ertIPManager import ERTIPManager
 from .ertModelling import ERTModelling, ERTModellingReference
 from .ertScheme import createData
-from .processing import (uniqueERTIndex, generateDataFromUniqueIndex,
-                         reciprocalIndices, fitReciprocalErrorModel,
-                         reciprocalProcessing, combineMultipleData,
-                         removeDuplicates)
+from .processing import (
+    uniqueERTIndex,
+    generateDataFromUniqueIndex,
+    reciprocalIndices,
+    fitReciprocalErrorModel,
+    reciprocalProcessing,
+    combineMultipleData,
+    removeDuplicates,
+)
 from .timelapse import TimelapseERT
 from .crosshole import CrossholeERT
 from .visualization import showERTData, drawERTData, generateDataPDF
 from .importData import load
 
 
-@pg.renamed(createData, '1.3')  # 20210302
+@pg.renamed(createData, "1.3")  # 20210302
 def createERTData(*args, **kwargs):
+    """Return createData(*args, **kwargs) (deprecated name)."""
     pass
+
 
 showData = showERTData
 show = showERTData  # better create a function that can also handle mgr
@@ -59,8 +70,10 @@ geometricFactors = geometricFactor  # to be removed
 #     self['k'] = createGeometricFactors(self, *args, **kwargs)
 #     return self['k']
 
-# __DataContainerERT_createGeometricFactors.__doc__ = createGeometricFactors.__doc__
-# pg.core.DataContainerERT.createGeometricFactors = __DataContainerERT_createGeometricFactors
+# __DataContainerERT_createGeometricFactors.__doc__ = \
+#     createGeometricFactors.__doc__
+# pg.core.DataContainerERT.createGeometricFactors = \
+#     __DataContainerERT_createGeometricFactors
 
 # Module prototypes
 DataContainer = pg.core.DataContainerERT

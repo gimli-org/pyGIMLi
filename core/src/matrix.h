@@ -258,7 +258,7 @@ public:
        return this->_rows;
     }
 
-    /*! Return number of colums */
+    /*! Return number of columns */
     inline Index cols() const {
         return this->_cols;
     }
@@ -419,7 +419,7 @@ public:
     IdentityMatrix()
         : MatrixBase(), val_(0.0){}
 
-    /*! Constructor with number of rows/colums. */
+    /*! Constructor with number of rows/columns. */
     IdentityMatrix(Index rows, double val=1.0)
         : MatrixBase(rows, rows), val_(val){
     }
@@ -576,11 +576,11 @@ public:
         return _data;
     }
 
-    /*! For template compatablity. Does nothing but return data buffer.*/
+    /*! For template compatibility. Does nothing but return data buffer.*/
     ValueType * toData(ValueType * target, Index size=0) const {
         return _data.get();
     }
-    /*! For template compatablity. Does nothing if src is equal data or perform memcopy. */
+    /*! For template compatibility. Does nothing if src is equal data or perform memcopy. */
     void fromData(ValueType * src, Index m, Index n){
         if (src != _data.get()){
             __MS("should I be here? Check!")
@@ -670,7 +670,7 @@ public:
     }
     void push_back(const Vector< ValueType > & vec) {
         ASSERT_VEC_SIZE(vec, this->_cols)
-        log(Warning, "Efficency .. push_back for dense matrix not recommanded");
+        log(Warning, "Efficiency .. push_back for dense matrix not recommended");
         __MS("Check Refcounter!")
 
         if (_data.use_count() > 2){
@@ -1100,7 +1100,7 @@ public:
     inline Vector< ValueType > & operator ()(Index i) {
         return mat_[i];}
 
-    /*! Implicite type converter. */
+    /*! Implicit type converter. */
     template < class T > operator Matrix< T >(){
         Matrix< T > f(this->rows());
         for (uint i = 0; i < this->rows(); i ++){ f[i] = Vector < T >(mat_[i]); }
@@ -1174,7 +1174,7 @@ public:
                                 str(i) + " " + str(this->cols())) ;
         }
         Vector < ValueType > col(this->rows());
-        for (Index j = 0, jmax = rows(); j < jmax; j ++) col[j] = mat_[j][i];
+        for (Index j = 0, jMax = rows(); j < jMax; j ++) col[j] = mat_[j][i];
         return col;
     }
 
@@ -1187,7 +1187,7 @@ public:
         rowFlag_.resize(rowFlag_.size() + 1);
         this->_rows = mat_.size();
 
-        // don't use vec here .. if vec was content of this matrix is isnt
+        // don't use vec here .. if vec was content of this matrix it isn't
         // valid anymore after any reallocation
 
         // if (vec.size() > 10){
@@ -1228,7 +1228,7 @@ public:
         for (Index i = 0; i < v.size(); i ++) mat_[i][col] += v[i];
     }
 
-    /*! Return reference to row flag vector. Maybee you can check if the rows are valid. Size is set automatic to the amount of rows. */
+    /*! Return reference to row flag vector. Maybe you can check if the rows are valid. Size is set automatic to the amount of rows. */
     BVector & rowFlag(){ return rowFlag_; }
 
     /*! A += a*/
@@ -1765,7 +1765,7 @@ template < class ValueType > double det(const Matrix3< ValueType > & A){
 
 /*! Return determinant for Matrix A. This function is a stub. Only Matrix dimensions of 2 and 3 are considered. */
 template < class Matrix > double det(const Matrix & A){
-    //** das geht viel schoener, aber nicht mehr heute.;
+    //** could be done much nicer, but not today.;
     double det = 0.0;
     switch (A.rows()){
         case 2: det = A[0][0] * A[1][1] - A[0][1] * A[1][0];
@@ -1817,7 +1817,7 @@ template < class ValueType > inline void inv(const Matrix3< ValueType > & A,
 
 /*! Return the inverse of Matrix A. This function is a stub. Only Matrix dimensions of 2 and 3 are considered. */
 template < class Matrix > Matrix inv(const Matrix & A){
-    //** das geht viel schoener, aber nicht mehr heute.; Wie?
+    //** could be done much nicer, but not today.; How?
     Matrix I(A.rows(), A.cols());
     inv(A, I);
     return I;
@@ -1825,7 +1825,7 @@ template < class Matrix > Matrix inv(const Matrix & A){
 
 /*! Return the inverse of Matrix A. This function is a stub. Only Matrix dimensions of 2 and 3 are considered. */
 template < class Matrix > void inv(const Matrix & A, Matrix & I){
-    //** das geht viel schoener, aber nicht mehr heute.; Wie?
+    //** could be done much nicer, but not today.; How?
 
     switch (I.rows()){
         case 2:
@@ -1917,4 +1917,3 @@ std::ostream & operator << (std::ostream & str, const DenseMatrix < T > & M){
 }
 
 } //namespace GIMLI
-

@@ -302,7 +302,9 @@ ElectrodeShapeDomain::ElectrodeShapeDomain(const std::vector < MeshEntity * > & 
 
     pos_ /= nodes.size();
 
-    //**! Pos muss nicht zwangl�ufig == dem center des PLC entsprechen da tetgen ja unsymmetrisch mehr Knoten reingebaut haben kann. und durch mittelung nicht zwangsl�ufig das center der einh�llenden bestimmt wird.
+    //**! Pos does not necessarily match the center of the PLC because tetgen
+    //**! may have inserted extra nodes asymmetrically, and averaging does not
+    //**! necessarily yield the center of the hull.
     valid_ = true;
 //     std::cout << "ElectrodeShapeDomain::ElectrodeShapeDomain(const std::vector < MeshEnity * > & entities): "
 //     << pos_ << std::endl;
@@ -331,7 +333,7 @@ double ElectrodeShapeDomain::geomMeanCellAttributes() const {
             Cell * le = dynamic_cast < Boundary * > (entities_[i])->leftCell();
             Cell * ri = dynamic_cast < Boundary * > (entities_[i])->rightCell();
             if (le && ri) {
-                //** cem ist im moment nur f�r �ussere boundary faces definiert
+                //** cem is currently only defined for outer boundary faces
                 CERR_TO_IMPL
                 return 0.0;
             }

@@ -28,53 +28,64 @@ namespace GIMLI{
 /*! Utility function for interpolation. */
 DLLEXPORT void interpolate(const Mesh & srcMesh, const RVector & inVec,
                            const R3Vector & destPos, RVector & outVec,
-                           bool verbose=false, double fillValue=0.0);
+                           bool verbose=false, double fillValue=0.0,
+                           bool nearest=false);
 
 /*! Utility function for interpolation. */
 DLLEXPORT RVector interpolate(const Mesh & srcMesh, const RVector & inVec,
                               const R3Vector & destPos,
-                              bool verbose=false, double fillValue=0.0);
+                              bool verbose=false, double fillValue=0.0,
+                              bool nearest=false);
 
 /*! Utility function for interpolation. */
 DLLEXPORT void interpolate(const Mesh & srcMesh, const RVector & inVec,
                            const Mesh & destMesh, RVector & outVec,
-                           bool verbose=false, double fillValue=0.0);
+                           bool verbose=false, double fillValue=0.0,
+                           bool nearest=false);
 
 /*! Utility function for interpolation. Read in data from fileName and add the
  interpolated data into the destination mesh. */
 DLLEXPORT void interpolate(const Mesh & srcMesh, const std::string & fileName,
-                           Mesh & destMesh, bool verbose=false, double fillValue=0.0);
+                           Mesh & destMesh, bool verbose=false,
+                           double fillValue=0.0, bool nearest=false);
 
 /*! Utility function for interpolation.*/
 DLLEXPORT RVector interpolate(const Mesh & srcMesh, const RVector & inVec,
                               const RVector & x, const RVector & y,
-                              const RVector & z, bool verbose=false, double fillValue=0.0);
+                              const RVector & z, bool verbose=false,
+                              double fillValue=0.0, bool nearest=false);
 
 /*! Utility function for interpolation.*/
 DLLEXPORT RVector interpolate(const Mesh & srcMesh, const RVector & inVec,
                               const RVector & x, const RVector & y,
-                              bool verbose=false, double fillValue=0.0);
+                              bool verbose=false, double fillValue=0.0,
+                              bool nearest=false);
 
 /*! Utility function for interpolation.*/
 DLLEXPORT RVector interpolate(const Mesh & srcMesh, const RVector & inVec,
                               const RVector & x,
-                              bool verbose=false, double fillValue=0.0);
+                              bool verbose=false, double fillValue=0.0,
+                              bool nearest=false);
 
 /*! Utility function for interpolation.
  * Interpolate all export data from srcMesh to the destination mesh.
  * Point and Cell based. */
 DLLEXPORT void interpolate(const Mesh & srcMesh, Mesh & destMesh,
-                           bool verbose=false, double fillValue=0.0);
+                           bool verbose=false, double fillValue=0.0,
+                           bool nearest=false);
 
 /*!Interpolate a given input data regarding the mesh srcMesh to a set of positions
  * and write the interpolated data to outMat. outMat will resized if necessary.
  * Each data vector in inMat have to correspond to mesh.nodeCount().
  * If data length is mesh.cellCount() \ref cellDataToPointData will performed.
  * The interpolation rule depend on the shape functions of mesh cells.
+ * Positions outside the mesh get fillValue. If nearest is set, the value of the
+ * nearest cell is used instead, which extrapolates with the shape functions.
  * Several utility or shortcut functions are defined. */
 DLLEXPORT void interpolate(const Mesh & srcMesh, const RMatrix & inMat,
                            const R3Vector & destPos, RMatrix & outMat,
-                           bool verbose=false, double fillValue=0.0);
+                           bool verbose=false, double fillValue=0.0,
+                           bool nearest=false);
 
 /*! Utility function for interpolation.
  * Interpolate the z-coordinate from mesh to the z-coordinate of the

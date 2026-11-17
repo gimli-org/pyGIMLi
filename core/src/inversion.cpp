@@ -22,7 +22,7 @@
 namespace GIMLI{
 
 void RInversion::checkConstraints() {
-    
+
     if (forward_->constraints()->cols() == 0 ||
         forward_->constraints()->rows() == 0){
         if (verbose_) std::cout << "Building constraints matrix" << std::endl;
@@ -39,7 +39,7 @@ void RInversion::checkConstraints() {
     }
 
     if (model_.size() != nModelC){
-        //** vielleicht irgendwo ne schöne resize funktion
+        //** maybe there is a nice resize function somewhere
         std::cout << WHERE_AM_I << " resize model " << model_.size()
                     << " to fit constrain size: "
                     << nModelC << std::endl;
@@ -494,4 +494,3 @@ ALLOW_PYTHON_THREADS
 }
 
 } // namespace GIMLI
-

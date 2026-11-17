@@ -146,7 +146,7 @@ ax, cb = mgr.showResult(**kw)
 #
 
 water = mesh.createSubMesh(mesh.cells(mesh.cellMarkers() == 3))
-resWater = mgr.fw.model[len(mgr.model)-water.cellCount():]
+resWater = mgr.fw.model[len(mgr.model) - water.cellCount() :]
 ax, cb = pg.show(water, resWater)
 
 

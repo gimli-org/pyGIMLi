@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Special meta forward operator for modelling with petrophysical relations."""
 
 import pygimli as pg
@@ -16,7 +15,7 @@ class PetroModelling(pg.Modelling):
 
     def __init__(self, fop, trans, mesh=None, verbose=False):
         """Save forward class and transformation, create Jacobian matrix."""
-        pg.warn('do not use')
+        pg.warn("do not use")
         super().__init__(verbose=verbose)
         self.fop = fop
         self.trans = trans  # class defining m(p)
@@ -33,14 +32,13 @@ class PetroModelling(pg.Modelling):
     def setMesh(self, mesh):
         """TODO."""
         if mesh is None and self.fop.mesh() is None:
-            raise BaseException("Please provide a mesh for "
-                                "this forward operator")
+            raise ValueError("Please provide a mesh for this forward operator")
 
         if mesh is not None:
             self.fop.setMesh(mesh)
             self.fop.createRefinedForwardMesh(refine=False)
 
-        # self.setMesh(f.mesh(), ignoreRegionManager=True) # not really necessary
+        # self.setMesh(f.mesh(), ignoreRegionManager=True) # not necessary
         self.setRegionManager(self.fop.regionManagerRef())
 
         self.nModel = self.regionManager().parameterCount()
@@ -64,8 +62,8 @@ class PetroJointModelling(pg.Modelling):
     """Cumulative (joint) forward operator for petrophysical inversions."""
 
     def __init__(self, f=None, p=None, mesh=None, verbose=True):
-        """Constructor."""
-        pg.warn('do not use')
+        """Initialise the joint petrophysical forward operator."""
+        pg.warn("do not use")
         super().__init__(verbose=verbose)
 
         self.fops = None
@@ -78,8 +76,10 @@ class PetroJointModelling(pg.Modelling):
 
     def setFopsAndTrans(self, fops, trans):
         """TODO."""
-        self.fops = [PetroModelling(fi, pi, self.mesh)
-                     for fi, pi in zip(fops, trans)]
+        self.fops = [
+            PetroModelling(fi, pi, self.mesh)
+            for fi, pi in zip(fops, trans, strict=False)
+        ]
 
     def setMesh(self, mesh):
         """TODO."""
@@ -114,7 +114,7 @@ class PetroJointModelling(pg.Modelling):
         return resp
 
     def createJacobian(self, model):
-        """Creating individual Jacobian matrices."""
+        """Create individual Jacobian matrices."""
         self.initJacobian()
         for f in self.fops:
             f.createJacobian(model)
@@ -125,7 +125,7 @@ class JointPetroInversion(MethodManager):  # bad name: no inversion framework!
 
     def __init__(self, managers, trans, verbose=False, debug=False, **kwargs):
         """TODO."""
-        pg.warn('do not use')
+        pg.warn("do not use")
         MethodManager.__init__(self, verbose=verbose, debug=debug, **kwargs)
 
         self.managers = managers
@@ -178,22 +178,24 @@ class JointPetroInversion(MethodManager):  # bad name: no inversion framework!
                     t = mgr.tD
                     self.tD.add(t, data[i].size())
 
-                    self.dataVals = pg.cat(self.dataVals,
-                                           data[i](mgr.dataToken()))
+                    self.dataVals = pg.cat(
+                        self.dataVals, data[i](mgr.dataToken())
+                    )
 
                     if mgr.errIsAbsolute:
                         self.dataErrs = pg.cat(
                             self.dataErrs,
-                            data[i]('err') / data[i](mgr.dataToken()))
+                            data[i]("err") / data[i](mgr.dataToken()),
+                        )
                     else:
-                        self.dataErrs = pg.cat(self.dataErrs, data[i]('err'))
+                        self.dataErrs = pg.cat(self.dataErrs, data[i]("err"))
 
                 self.data = data
 
                 self.inv.setTransData(self.tD)
                 self.inv.setTransModel(self.tM)
             else:
-                raise BaseException("To few datacontainer given")
+                raise ValueError("To few datacontainer given")
 
     def setMesh(self, mesh):
         """TODO."""
@@ -201,9 +203,8 @@ class JointPetroInversion(MethodManager):  # bad name: no inversion framework!
 
     def invert(self, data=None, mesh=None, lam=20, limits=None, **kwargs):
         """TODO."""
-
-        if 'verbose' in kwargs:
-            self.setVerbose(kwargs.pop('verbose'))
+        if "verbose" in kwargs:
+            self.setVerbose(kwargs.pop("verbose"))
 
         self.setData(data)
         self.setMesh(mesh)
@@ -212,21 +213,26 @@ class JointPetroInversion(MethodManager):  # bad name: no inversion framework!
         startModel = None
 
         if limits is not None:
-            if hasattr(self.tM, 'setLowerBound'):
+            if hasattr(self.tM, "setLowerBound"):
                 if self.verbose:
-                    print('Lower limit set to', limits[0])
+                    print("Lower limit set to", limits[0])
                 self.tM.setLowerBound(limits[0])
-            if hasattr(self.tM, 'setUpperBound'):
+            if hasattr(self.tM, "setUpperBound"):
                 if self.verbose:
-                    print('Upper limit set to', limits[1])
+                    print("Upper limit set to", limits[1])
                 self.tM.setUpperBound(limits[1])
 
-            startModel = pg.Vector(nModel, (limits[1]-limits[0])/2.0)
+            startModel = pg.Vector(nModel, (limits[1] - limits[0]) / 2.0)
         else:
             for i in range(len(self.managers)):
-                startModel += pg.Vector(nModel, pg.math.median(
-                    self.trans[i].inv(
-                        self.managers[i].createApparentData(self.data[i]))))
+                startModel += pg.Vector(
+                    nModel,
+                    pg.math.median(
+                        self.trans[i].inv(
+                            self.managers[i].createApparentData(self.data[i])
+                        )
+                    ),
+                )
             startModel /= len(self.managers)
 
         self.inv.setModel(startModel)
@@ -242,8 +248,9 @@ class JointPetroInversion(MethodManager):  # bad name: no inversion framework!
     def showModel(self, **showkwargs):
         """TODO."""
         if len(showkwargs):
-            pg.show(self.fop.regionManager().paraDomain(),
-                    self.mod, **showkwargs)
+            pg.show(
+                self.fop.regionManager().paraDomain(), self.mod, **showkwargs
+            )
 
 
 class PetroInversion(JointPetroInversion):

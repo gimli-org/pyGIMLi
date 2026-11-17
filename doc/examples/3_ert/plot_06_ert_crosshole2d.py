@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# encoding: utf-8
 """
 2D crosshole ERT inversion
 ==========================
@@ -42,7 +41,9 @@ print(np.sort(data["rhoa"])[-5:])
 
 data.remove(data["rhoa"] > 200)
 m = np.sign(data["m"] - data["n"]) * data["m"]
-ax, cb = showDataContainerAsMatrix(data, m, data["a"], "rhoa", cMap="Spectral_r")
+ax, cb = showDataContainerAsMatrix(
+    data, m, data["a"], "rhoa", cMap="Spectral_r"
+)
 
 # %%%
 # We determine the x and z positions and create a regular grid with a spacing
@@ -55,10 +56,10 @@ ex = np.unique(pg.x(data))
 ez = np.unique(pg.z(data))
 dx = 0.1
 nb = 4
-xmin, xmax = min(ex) - nb*dx, max(ex) + nb*dx
-zmin, zmax = min(ez) - nb*dx, 0
-x = np.arange(xmin, xmax+.001, dx)
-z = np.arange(zmin, zmax+.001, dx)
+xmin, xmax = min(ex) - nb * dx, max(ex) + nb * dx
+zmin, zmax = min(ez) - nb * dx, 0
+x = np.arange(xmin, xmax + 0.001, dx)
+z = np.arange(zmin, zmax + 0.001, dx)
 grid = mt.createGrid(x, z, marker=2)
 ax, cb = pg.show(grid, showMesh=True, markers=True)
 ax.plot(pg.x(data), pg.z(data), "mx")

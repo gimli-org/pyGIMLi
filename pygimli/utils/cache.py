@@ -19,6 +19,7 @@ To use the cache without the decorator, you can call it also like this:
 
 import sys
 import os
+import contextlib
 from pathlib import Path
 import traceback
 import inspect
@@ -29,6 +30,35 @@ import pickle
 
 import numpy as np
 import pygimli as pg
+
+
+@contextlib.contextmanager
+def _cacheLock(path):
+    """Serialize access to a cache entry between processes.
+
+    Parallel test runs (pytest-xdist) or parallel examples in the documentation
+    may store the same cache entry at the same time. The cache files are
+    written without an atomic rename, so the writers have to be serialized per
+    entry. On platforms without ``fcntl`` (Windows) no lock is taken.
+
+    Parameters
+    ----------
+    path : str or pathlib.Path
+        Path of the cache entry to lock.
+    """
+    handle = Path(str(path) + ".lock").open("a+")  # noqa: SIM115  closed below
+    try:
+        with contextlib.suppress(ImportError, OSError):
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        yield
+    finally:
+        with contextlib.suppress(ImportError, OSError):
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        handle.close()
 
 
 class CacheUseSettings:
@@ -278,27 +308,31 @@ class Cache:
         #     pg.error('only single return caches supported for now.')
         #     return
 
-        self.info["file"] = self._name
+        # Writers of the same cache entry (e.g. parallel pytest workers) must
+        # not interleave, the files are written without atomic rename.
+        with _cacheLock(self._name):
+            self.info["file"] = self._name
 
-        # pg._r(self.info)
+            # pg._r(self.info)
 
-        if self.info["type"] == "Mesh":
-            pg.info("Save Mesh binary")
-            v.save(self._name)
-        elif self.info["type"] == "RVector":
-            pg.info("Save RVector binary")
-            v.save(self._name, format=pg.core.Binary)
-        elif self.info["type"] == "ndarray":
-            pg.info("Save ndarray")
-            np.save(self._name, v, allow_pickle=True)
-        elif hasattr(v, "save") and hasattr(v, "load"):
-            v.save(self._name)
-        else:
-            self.info["type"] = "pickle"
-            with Path(self._name + ".pkl").open("wb") as f:
-                pickle.dump(v, f)
+            if self.info["type"] == "Mesh":
+                pg.info("Save Mesh binary")
+                v.save(self._name)
+            elif self.info["type"] == "RVector":
+                pg.info("Save RVector binary")
+                v.save(self._name, format=pg.core.Binary)
+            elif self.info["type"] == "ndarray":
+                pg.info("Save ndarray")
+                np.save(self._name, v, allow_pickle=True)
+            elif hasattr(v, "save") and hasattr(v, "load"):
+                v.save(self._name)
+            else:
+                self.info["type"] = "pickle"
+                with Path(self._name + ".pkl").open("wb") as f:
+                    pickle.dump(v, f)
 
-        self.updateCacheInfo()
+            self.updateCacheInfo()
+
         self._value = v
         pg.info("Cache stored:", self._name)
 
@@ -315,6 +349,11 @@ class Cache:
 
     def restore(self):
         """Restore cache from json infos."""
+        with _cacheLock(self._name):
+            self._restoreFromDisk()
+
+    def _restoreFromDisk(self):
+        """Restore cache from json infos, the lock is held by the caller."""
         if Path(self._name).with_suffix(".json").exists():
             # mpl kills locale setting to system default .. this went
             # horrible wrong for german 'decimal_point': ','
@@ -423,8 +462,7 @@ class CacheManager:
         """
         path = pg.getCachePath() if pg.rc["globalCache"] else ".cache"
 
-        if not Path(path).exists():
-            Path(path).mkdir()
+        Path(path).mkdir(parents=True, exist_ok=True)
 
         return Path(path) / fName
 

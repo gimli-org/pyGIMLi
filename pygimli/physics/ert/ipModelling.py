@@ -1,4 +1,5 @@
 """Tools for (time domain) IP modelling using chargeability."""
+
 import pygimli as pg
 
 
@@ -19,14 +20,15 @@ class IPSeigelModelling(pg.frameworks.MeshModelling):
         self.rhoaAC = pg.Vector(self.rhoaDC)  # a copy to have correct size.
 
         self.dmdrhoa = -1.0 / self.rhoaDC
-        self.J = pg.matrix.MultLeftRightMatrix(f.jacobian(), self.dmdrhoa,
-                                               self.drhodm)
+        self.J = pg.matrix.MultLeftRightMatrix(
+            f.jacobian(), self.dmdrhoa, self.drhodm
+        )
         self.setJacobian(self.J)
         self.fullJacobian = False
 
     def response(self, m):
         """Return forward response as function of chargeability model."""
-        self.rhoaAC = self.f.response(self.rhoDC / (1. - m))
+        self.rhoaAC = self.f.response(self.rhoDC / (1.0 - m))
         if self.fullJacobian:
             self.dmdrhoa = -1.0 / self.rhoaAC
 
@@ -51,8 +53,9 @@ class DCIPSeigelModelling(pg.frameworks.MeshModelling):
         self.setMesh(ERT.paraDomain)
         self.resp = ERT.inv.response
         self.res = ERT.inv.model
-        self.J = pg.matrix.MultLeftRightMatrix(ERT.fop.jacobian(),
-                                               1./self.resp, self.res)
+        self.J = pg.matrix.MultLeftRightMatrix(
+            ERT.fop.jacobian(), 1.0 / self.resp, self.res
+        )
         # G = pg.utils.gmat2numpy(ERT.fop.jacobian())
         # Glog = np.reshape(1./self.resp, (-1, 1)) * G * self.res
         # self.J = Glog / np.sum(Glog, 1)
@@ -85,14 +88,15 @@ class DCIPMModelling(pg.frameworks.MeshModelling):
 
         self.rhoaAC = self.rhoaDC * 1
         self.dmdrhoa = -1.0 / self.rhoaDC
-        self.J = pg.matrix.MultLeftRightMatrix(f.jacobian(), self.dmdrhoa,
-                                               self.drhodm)
+        self.J = pg.matrix.MultLeftRightMatrix(
+            f.jacobian(), self.dmdrhoa, self.drhodm
+        )
         self.setJacobian(self.J)
         self.fullJacobian = False
 
     def response(self, m):
         """Return forward response as function of chargeability model."""
-        self.rhoaAC = self.f.response(self.rhoDC * (1. - m))
+        self.rhoaAC = self.f.response(self.rhoDC * (1.0 - m))
         if self.fullJacobian:
             self.dmdrhoa = -1.0 / self.rhoaAC
 

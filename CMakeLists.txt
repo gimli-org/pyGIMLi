@@ -142,7 +142,7 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-infinite-recursion")
     endif()
 elseif(MSVC)
-	# MSVC complain a lot of possible unsecure std function
+	# MSVC complain a lot of possible insecure std function
 	add_definitions(-D_SCL_SECURE_NO_WARNINGS)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
@@ -255,7 +255,7 @@ set(Python_FIND_VIRTUALENV FIRST)
 if (OS_VAR STREQUAL "almalinux")
     ## almalinux used for manylinux builds,
     ## EXACT fails since Python_Includes are not part of
-    ## build virtual enviroment but on /opt
+    ## build virtual environment but on /opt
     find_package(Python ${PYVERSION} COMPONENTS Interpreter REQUIRED)
     find_package(Python ${PYVERSION} COMPONENTS Development.Module REQUIRED)
     find_package(Python ${PYVERSION} COMPONENTS NumPy REQUIRED)
@@ -331,7 +331,7 @@ function(find_boost_root_from_distname_file)
 
     if (EXISTS ${Boost_ROOT})
         set(Boost_ROOT ${Boost_ROOT} CACHE FILEPATH "Boost root distribution")
-        set(Boost_INCLUDE_DIR ${Boost_ROOT}/include CACHE FILEPATH "Boost inlude path")
+        set(Boost_INCLUDE_DIR ${Boost_ROOT}/include CACHE FILEPATH "Boost include path")
         get_filename_component(Boost_INCLUDE_DIR "${Boost_INCLUDE_DIR}" ABSOLUTE)
         message(STATUS "Boost_ROOT from hint file: ${Boost_ROOT}")
         message(STATUS "Boost_INCLUDE_DIR from hint file: ${Boost_INCLUDE_DIR}")
@@ -348,7 +348,7 @@ if (NOT Boost_INCLUDE_DIR OR NOT Boost_ROOT)
     if (Boost_ROOT)
         message(STATUS "Found Boost_ROOT: ${Boost_ROOT}")
         get_filename_component(Boost_ROOT "${Boost_ROOT}" ABSOLUTE)
-        set(Boost_INCLUDE_DIR ${Boost_ROOT}/include CACHE FILEPATH "Boost inlude path")
+        set(Boost_INCLUDE_DIR ${Boost_ROOT}/include CACHE FILEPATH "Boost include path")
         message(STATUS "set Boost_INCLUDE_DIR: ${Boost_INCLUDE_DIR}")
     else()
         message(STATUS "Boost_ROOT not set: building local")
@@ -371,7 +371,7 @@ endif(NOT Boost_INCLUDE_DIR OR NOT Boost_ROOT)
 message(STATUS "Found Boost_ROOT: ${Boost_ROOT}")
 message(STATUS "Found Boost_INCLUDE_DIR: ${Boost_INCLUDE_DIR}")
 if (NOT Boost_PYTHON_LIBRARY)
-    # Who sets this? It prevents successfull search directly after build
+    # Who sets this? It prevents successful search directly after build
     unset(Boost_USE_DEBUG_RUNTIME)
     find_package(Boost COMPONENTS "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
     #find_or_build_package(Boost boost)
@@ -382,7 +382,7 @@ mark_as_advanced(Boost_INCLUDE_DIR Boost_ROOT)
 
 if (NOT Boost_PYTHON_LIBRARY)
     ################################################################################
-    # Manuall check for boost python
+    # Manual check for boost python
     ################################################################################
     function(find_boost_python_manual bp_version)
         message(STATUS "----------- searching for libboost_python${bp_version}")
@@ -535,7 +535,7 @@ set(CMAKE_FIND_DEBUG_MODE FALSE)
 # message(STATUS "BLAS_LIBRARIES = ${BLAS_LIBRARIES}")
 
 ################################################################################
-# Manuall check for openblas
+# Manual check for openblas
 ################################################################################
 
 #if (";${BLAS_LIBRARIES};" MATCHES "openblas")
@@ -559,7 +559,7 @@ if (BLAS_FOUND)
     endif()
 
     if (NOT OpenBLAS_INCLUDE_DIR)
-        message(STATUS "search for OpenBLAS cblas.h in prefered paths.")
+        message(STATUS "search for OpenBLAS cblas.h in preferred paths.")
 
         FIND_PATH(OpenBLAS_INCLUDE_DIR
             NAMES

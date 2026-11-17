@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Some data related viewer."""
 
 import numpy as np
@@ -34,21 +33,22 @@ def generateMatrix(xvec, yvec, vals, **kwargs):
         dictionaries for accessing matrix position (row/col number from x/y[i])
     """
     verbose = kwargs.get("verbose", True)
-    if kwargs.pop('full', False):
-        xymap = {xy: ii
-                 for ii, xy in enumerate(np.unique(np.hstack((xvec, yvec))))}
+    if kwargs.pop("full", False):
+        xymap = {
+            xy: ii for ii, xy in enumerate(np.unique(np.hstack((xvec, yvec))))
+        }
         xmap = xymap
         ymap = xymap
     else:
         xu, yu = np.unique(xvec), np.unique(yvec)
-        if kwargs.pop('fillx', False):
+        if kwargs.pop("fillx", False):
             if verbose:
-                pg.info('filling x', len(xu))
+                pg.info("filling x", len(xu))
             dx = np.median(np.diff(xu)).round(1)
             xu = np.arange(0, xu[-1] - xu[0] + dx * 0.5, dx) + xu[0]
             if verbose:
                 pg.info(len(xu))
-        if kwargs.pop('filly', False):
+        if kwargs.pop("filly", False):
             dy = np.median(np.diff(yu)).round(1)
             yu = np.arange(0, yu[-1] - yu[0] + dy * 0.5, dy) + yu[0]
         xmap = {xx: ii for ii, xx in enumerate(xu)}
@@ -64,12 +64,10 @@ def generateMatrix(xvec, yvec, vals, **kwargs):
             inot.append(i)
         A[ymap[yi], xmap[xi]] = vals[i]
 
-    if len(inot) > 0:
-        if verbose:
-            pg.info(len(inot), "data of", nshow, "not shown")
+    if verbose and len(inot) > 0:
+        pg.info(len(inot), "data of", nshow, "not shown")
         if len(inot) < 30:
-            if verbose:
-                pg.info(inot)
+            pg.info(inot)
 
     return A, xmap, ymap
 
@@ -95,13 +93,15 @@ def showValMapPatches(vals, xVec=None, yVec=None, dx=1, dy=None, **kwargs):
     colorBar : bool [True]
         Whether to create a color bar.
     """
-    ax, _ = pg.show(ax=kwargs.pop('ax', None))
+    ax, _ = pg.show(ax=kwargs.pop("ax", None))
 
-    gci, ymap = drawValMapPatches(ax, vals, xVec=xVec, yVec=yVec, dx=dx, dy=dy,
-                                  **kwargs)
+    gci, ymap = drawValMapPatches(
+        ax, vals, xVec=xVec, yVec=yVec, dx=dx, dy=dy, **kwargs
+    )
 
     cbar = pg.viewer.mpl.createColorBar(
-        gci, **kwargs, onlyColorSet=not kwargs.pop('colorBar', True))
+        gci, **kwargs, onlyColorSet=not kwargs.pop("colorBar", True)
+    )
 
     return ax, cbar, ymap
 
@@ -127,9 +127,10 @@ def drawValMapPatches(ax, vals, xVec=None, yVec=None, dx=1, dy=None, **kwargs):
     """
     from matplotlib.collections import PatchCollection
     from matplotlib.patches import Wedge, Rectangle
+
     recs = []
 
-    circular = kwargs.pop('circular', False)
+    circular = kwargs.pop("circular", False)
     if circular:
         recs = [None] * len(xVec)
         if dy is None:  # map y values to unique
@@ -142,11 +143,11 @@ def drawValMapPatches(ax, vals, xVec=None, yVec=None, dx=1, dy=None, **kwargs):
                 xyMap[y].append(i)
 
             # maxR = max(ymap.values())  # what's that for? not used
-            dR = 1 / (len(ymap.values())+1)
+            dR = 1 / (len(ymap.values()) + 1)
             # dOff = np.pi / 2  # what's that for? not used
 
             for y, xIds in xyMap.items():
-                r = 1. - dR*(ymap[y]+1)
+                r = 1.0 - dR * (ymap[y] + 1)
                 # ax.plot(r * np.cos(xvec[xIds]),
                 #         r * np.sin(xvec[xIds]), 'o')
 
@@ -156,28 +157,33 @@ def drawValMapPatches(ax, vals, xVec=None, yVec=None, dx=1, dy=None, **kwargs):
                     # x = r * np.cos(phi)  # what's that for? not used
                     y = r * np.sin(phi)
 
-                    dPhi = (xVec[1] - xVec[0])
+                    dPhi = xVec[1] - xVec[0]
 
-                    recs[i] = Wedge((0., 0.), r + dR/1.5,
-                                    (phi - dPhi)*360/(2*np.pi),
-                                    (phi + dPhi)*360/(2*np.pi),
-                                    width=dR,
-                                    zorder=1+r)
+                    recs[i] = Wedge(
+                        (0.0, 0.0),
+                        r + dR / 1.5,
+                        (phi - dPhi) * 360 / (2 * np.pi),
+                        (phi + dPhi) * 360 / (2 * np.pi),
+                        width=dR,
+                        zorder=1 + r,
+                    )
                     # if i < 5:
                     #     ax.text(x, y, str(i))
                     # pg.wait()
         else:
-            raise BaseException("Not implemented")
+            raise NotImplementedError("Not implemented")
     else:
         if dy is None:  # map y values to unique
             ymap = {xy: ii for ii, xy in enumerate(np.unique(yVec))}
             for i in range(len(vals)):
-                recs.append(Rectangle((xVec[i] - dx / 2, ymap[yVec[i]] - 0.5),
-                                      dx, 1))
+                recs.append(
+                    Rectangle((xVec[i] - dx / 2, ymap[yVec[i]] - 0.5), dx, 1)
+                )
         else:
             for i in range(len(vals)):
-                recs.append(Rectangle((xVec[i] - dx / 2, yVec[i] - dy / 2),
-                                      dx, dy))
+                recs.append(
+                    Rectangle((xVec[i] - dx / 2, yVec[i] - dy / 2), dx, dy)
+                )
         ax.set_xlim(min(xVec) - dx / 2, max(xVec) + dx / 2)
         ax.set_ylim(len(ymap) - 0.5, -0.5)
 
@@ -189,14 +195,26 @@ def drawValMapPatches(ax, vals, xVec=None, yVec=None, dx=1, dy=None, **kwargs):
     gci = ax.add_collection(pp)
 
     if circular:
-        pp.set_edgecolor('black')
+        pp.set_edgecolor("black")
         pp.set_linewidth(0.1)
 
     return gci, ymap
 
 
-def patchValMap(vals, xvec=None, yvec=None, ax=None, cMin=None, cMax=None,
-                logScale=None, label=None, dx=1, dy=None, cTrim=0, **kwargs):
+def patchValMap(
+    vals,
+    xvec=None,
+    yvec=None,
+    ax=None,
+    cMin=None,
+    cMax=None,
+    logScale=None,
+    label=None,
+    dx=1,
+    dy=None,
+    cTrim=0,
+    **kwargs,
+):
     """Plot previously generated (generateVecMatrix) y map (category).
 
     Parameters
@@ -233,7 +251,7 @@ def patchValMap(vals, xvec=None, yvec=None, ax=None, cMin=None, cMax=None,
         # cMin = np.nanquantile(vals, 1-cTrim/100)
 
     if logScale is None:
-        logScale = (cMin > 0.0)
+        logScale = cMin > 0.0
 
     norm = None
     if logScale and cMin > 0:
@@ -246,7 +264,7 @@ def patchValMap(vals, xvec=None, yvec=None, ax=None, cMin=None, cMax=None,
 
     recs = []
 
-    circular = kwargs.pop('circular', False)
+    circular = kwargs.pop("circular", False)
     if circular:
         recs = [None] * len(xvec)
         if dy is None:  # map y values to unique
@@ -259,10 +277,10 @@ def patchValMap(vals, xvec=None, yvec=None, ax=None, cMin=None, cMax=None,
                 xyMap[y].append(i)
 
             # maxR = max(ymap.values())  # what's that for? not used
-            dR = 1 / (len(ymap.values())+1)
+            dR = 1 / (len(ymap.values()) + 1)
             # dOff = np.pi / 2  # what's that for? not used
             for y, xIds in xyMap.items():
-                r = 1. - dR*(ymap[y]+1)
+                r = 1.0 - dR * (ymap[y] + 1)
                 # ax.plot(r * np.cos(xvec[xIds]),
                 #         r * np.sin(xvec[xIds]), 'o')
 
@@ -272,25 +290,30 @@ def patchValMap(vals, xvec=None, yvec=None, ax=None, cMin=None, cMax=None,
                     # x = r * np.cos(phi)  # what's that for? not used
                     y = r * np.sin(phi)
 
-                    dPhi = (xvec[1] - xvec[0])
+                    dPhi = xvec[1] - xvec[0]
 
-                    recs[i] = Wedge((0., 0.), r + dR/1.5,
-                                    (phi - dPhi)*360/(2*np.pi),
-                                    (phi + dPhi)*360/(2*np.pi),
-                                    width=dR,
-                                    zorder=1+r)
+                    recs[i] = Wedge(
+                        (0.0, 0.0),
+                        r + dR / 1.5,
+                        (phi - dPhi) * 360 / (2 * np.pi),
+                        (phi + dPhi) * 360 / (2 * np.pi),
+                        width=dR,
+                        zorder=1 + r,
+                    )
         else:
-            raise BaseException("Implementme")
+            raise NotImplementedError("Implementme")
     else:
         if dy is None:  # map y values to unique
             ymap = {xy: ii for ii, xy in enumerate(np.unique(yvec))}
             for i in range(len(vals)):
-                recs.append(Rectangle((xvec[i] - dx / 2, ymap[yvec[i]] - 0.5),
-                                      dx, 1))
+                recs.append(
+                    Rectangle((xvec[i] - dx / 2, ymap[yvec[i]] - 0.5), dx, 1)
+                )
         else:
             for i in range(len(vals)):
-                recs.append(Rectangle((xvec[i] - dx / 2, yvec[i] - dy / 2),
-                                      dx, dy))
+                recs.append(
+                    Rectangle((xvec[i] - dx / 2, yvec[i] - dy / 2), dx, dy)
+                )
         ax.set_xlim(min(xvec) - dx / 2, max(xvec) + dx / 2)
         ax.set_ylim(len(ymap) - 0.5, -0.5)
 
@@ -299,19 +322,19 @@ def patchValMap(vals, xvec=None, yvec=None, ax=None, cMin=None, cMax=None,
     col = ax.add_collection(pp)
     pp.set_edgecolor(None)
     pp.set_linewidth(0.0)
-    if 'alpha' in kwargs:
-        pp.set_alpha(kwargs['alpha'])
+    if "alpha" in kwargs:
+        pp.set_alpha(kwargs["alpha"])
 
     if circular:
-        pp.set_edgecolor('black')
+        pp.set_edgecolor("black")
         pp.set_linewidth(0.1)
 
     cmap = pg.viewer.mpl.cmapFromName(**kwargs)
-    if kwargs.pop('markOutside', False):
-        cmap.set_bad('grey')
-        cmap.set_under('darkgrey')
-        cmap.set_over('lightgrey')
-        cmap.set_bad('black')
+    if kwargs.pop("markOutside", False):
+        cmap.set_bad("grey")
+        cmap.set_under("darkgrey")
+        cmap.set_over("lightgrey")
+        cmap.set_bad("black")
     pp.set_cmap(cmap)
 
     pp.set_norm(norm)
@@ -319,29 +342,40 @@ def patchValMap(vals, xvec=None, yvec=None, ax=None, cMin=None, cMax=None,
     pp.set_clim(cMin, cMax)
 
     updateAxes_(ax)
-    cbar = kwargs.pop('colorBar', True)
+    cbar = kwargs.pop("colorBar", True)
 
-    ori = kwargs.pop('orientation', 'horizontal')
-    if cbar in ['horizontal', 'vertical']:
+    ori = kwargs.pop("orientation", "horizontal")
+    if cbar in ["horizontal", "vertical"]:
         ori = cbar
         cbar = True
 
     if cbar is True:  # not for cbar=1, which is really confusing!
-        cbar = pg.viewer.mpl.createColorBar(col, cMin=cMin, cMax=cMax,
-                                            nLevs=5, label=label,
-                                            orientation=ori)
+        cbar = pg.viewer.mpl.createColorBar(
+            col, cMin=cMin, cMax=cMax, nLevs=5, label=label, orientation=ori
+        )
 
     elif cbar is not False:
         # .. cbar is an already existing cbar .. so we update its values
-        pg.viewer.mpl.updateColorBar(cbar, cMin=cMin, cMax=cMax,
-                                     nLevs=5, label=label)
+        pg.viewer.mpl.updateColorBar(
+            cbar, cMin=cMin, cMax=cMax, nLevs=5, label=label
+        )
 
     updateAxes_(ax)
     return ax, cbar, ymap
 
 
-def patchMatrix(mat, xmap=None, ymap=None, ax=None, cMin=None, cMax=None,
-                logScale=None, label=None, dx=1, **kwargs):
+def patchMatrix(
+    mat,
+    xmap=None,
+    ymap=None,
+    ax=None,
+    cMin=None,
+    cMax=None,
+    logScale=None,
+    label=None,
+    dx=1,
+    **kwargs,
+):
     """Plot previously generated (generateVecMatrix) matrix.
 
     Parameters
@@ -364,7 +398,7 @@ def patchMatrix(mat, xmap=None, ymap=None, ax=None, cMin=None, cMax=None,
         width of the matrix elements (by default 1)
     """
     from matplotlib.collections import PatchCollection
-    from matplotlib.patches import Wedge, Rectangle
+    from matplotlib.patches import Rectangle
     from matplotlib.colors import LogNorm, Normalize
 
     mat = np.ma.masked_where(mat == 0.0, mat, False)
@@ -373,7 +407,7 @@ def patchMatrix(mat, xmap=None, ymap=None, ax=None, cMin=None, cMax=None,
     if cMax is None:
         cMax = np.max(mat)
     if logScale is None:
-        logScale = (cMin > 0.0)
+        logScale = cMin > 0.0
     if logScale:
         norm = LogNorm(vmin=cMin, vmax=cMax)
     else:
@@ -393,23 +427,24 @@ def patchMatrix(mat, xmap=None, ymap=None, ax=None, cMin=None, cMax=None,
     col = ax.add_collection(pp)
     pp.set_edgecolor(None)
     pp.set_linewidth(0.0)
-    if 'cmap' in kwargs:
-        pp.set_cmap(kwargs.pop('cmap'))
-    if 'cMap' in kwargs:
-        pp.set_cmap(kwargs.pop('cMap'))
+    if "cmap" in kwargs:
+        pp.set_cmap(kwargs.pop("cmap"))
+    if "cMap" in kwargs:
+        pp.set_cmap(kwargs.pop("cMap"))
     pp.set_norm(norm)
     pp.set_array(np.array(vals))
     pp.set_clim(cMin, cMax)
-    xval = [k for k in xmap.keys()]
+    xval = list(xmap)
     ax.set_xlim(min(xval) - dx / 2, max(xval) + dx / 2)
     ax.set_ylim(len(ymap) + 0.5, -0.5)
 
     updateAxes_(ax)
     cb = None
-    if kwargs.pop('colorBar', True):
-        ori = kwargs.pop('orientation', 'horizontal')
-        cb = pg.viewer.mpl.createColorBar(col, cMin=cMin, cMax=cMax, nLevs=5,
-                                          label=label, orientation=ori)
+    if kwargs.pop("colorBar", True):
+        ori = kwargs.pop("orientation", "horizontal")
+        cb = pg.viewer.mpl.createColorBar(
+            col, cMin=cMin, cMax=cMax, nLevs=5, label=label, orientation=ori
+        )
     return ax, cb
 
 
@@ -429,22 +464,32 @@ def showDataMatrix(mat, xmap=None, ymap=None, **kwargs):
     cb : matplotlib colorbar
         colorbar object
     """
-    ax, _ = pg.show(ax=kwargs.pop('ax', None))
+    ax, _ = pg.show(ax=kwargs.pop("ax", None))
     gci = drawDataMatrix(ax, mat, xmap=xmap, ymap=ymap, **kwargs)
     cb = None
-    if kwargs.pop('colorBar', True):
-        ori = kwargs.pop('orientation', 'horizontal')
-        cMin = kwargs.pop('cMin', None)
-        cMax = kwargs.pop('cMax', None)
-        label = kwargs.pop('label', None)
-        cb = pg.viewer.mpl.createColorBar(gci, cMin=cMin, cMax=cMax, nLevs=5,
-                                          label=label, orientation=ori)
+    if kwargs.pop("colorBar", True):
+        ori = kwargs.pop("orientation", "horizontal")
+        cMin = kwargs.pop("cMin", None)
+        cMax = kwargs.pop("cMax", None)
+        label = kwargs.pop("label", None)
+        cb = pg.viewer.mpl.createColorBar(
+            gci, cMin=cMin, cMax=cMax, nLevs=5, label=label, orientation=ori
+        )
 
     return ax, cb
 
 
-def drawDataMatrix(ax, mat, xmap=None, ymap=None, cMin=None, cMax=None,
-                   logScale=None, label=None, **kwargs):
+def drawDataMatrix(
+    ax,
+    mat,
+    xmap=None,
+    ymap=None,
+    cMin=None,
+    cMax=None,
+    logScale=None,
+    label=None,
+    **kwargs,
+):
     """Draw previously generated (generateVecMatrix) matrix.
 
     Parameters
@@ -480,36 +525,36 @@ def drawDataMatrix(ax, mat, xmap=None, ymap=None, cMin=None, cMax=None,
     if cMax is None:
         cMax = np.nanmax(mat_)
     if logScale is None:
-        logScale = (cMin > 0.0)
+        logScale = cMin > 0.0
     if logScale:
         norm = LogNorm(vmin=cMin, vmax=cMax)
     else:
         norm = Normalize(vmin=cMin, vmax=cMax)
 
-    gci = ax.imshow(mat_, norm=norm, interpolation='nearest')
-    if 'cmap' in kwargs:
-        pg.deprecated('use cMap')  # 190422
-        gci.set_cmap(kwargs.pop('cmap'))
-    if 'cMap' in kwargs:
-        gci.set_cmap(kwargs.pop('cMap'))
+    gci = ax.imshow(mat_, norm=norm, interpolation="nearest")
+    if "cmap" in kwargs:
+        pg.deprecated("use cMap")  # 190422
+        gci.set_cmap(kwargs.pop("cmap"))
+    if "cMap" in kwargs:
+        gci.set_cmap(kwargs.pop("cMap"))
 
-    ax.set_aspect(kwargs.pop('aspect', 1))
+    ax.set_aspect(kwargs.pop("aspect", 1))
     ax.grid(True)
     xt = np.unique(ax.get_xticks().clip(0, len(xmap) - 1))
     yt = np.unique(ax.get_xticks().clip(0, len(ymap) - 1))
 
-    if kwargs.pop('showally', False):
+    if kwargs.pop("showally", False):
         yt = np.arange(len(ymap))
     else:
         yt = np.round(np.linspace(0, len(ymap) - 1, 5))
 
-    xx = np.sort([k for k in xmap])
+    xx = np.sort(list(xmap))
     ax.set_xticks(xt)
-    ax.set_xticklabels(['{:g}'.format(round(xx[int(ti)], 2)) for ti in xt])
+    ax.set_xticklabels([f"{round(xx[int(ti)], 2):g}" for ti in xt])
 
-    yy = np.unique([k for k in ymap])
+    yy = np.unique(list(ymap))
     ax.set_yticks(yt)
-    ax.set_yticklabels(['{:g}'.format(round(yy[int(ti)], 2)) for ti in yt])
+    ax.set_yticklabels([f"{round(yy[int(ti)], 2):g}" for ti in yt])
     return gci
 
 
@@ -549,8 +594,9 @@ def showVecMatrix(xvec, yvec, vals, full=False, **kwargs):
     cb : matplotlib colorbar
         colorbar object
     """
-    A, xmap, ymap = generateMatrix(xvec, yvec, vals, full=full,
-                                   verbose=kwargs.get("verbose", True))
+    A, xmap, ymap = generateMatrix(
+        xvec, yvec, vals, full=full, verbose=kwargs.get("verbose", True)
+    )
     return showDataMatrix(A, xmap=xmap, ymap=ymap, **kwargs)
 
 
@@ -562,7 +608,7 @@ def drawVecMatrix(ax, xvec, yvec, vals, full=False, **kwargs):
 
 def plotDataContainerAsMatrix(*args, **kwargs):
     """Plot datacontainer as matrix (deprecated)."""
-    pg.deprecated('plotDataContainerAsMatrix', 'showDataContainerAsMatrix')
+    pg.deprecated("plotDataContainerAsMatrix", "showDataContainerAsMatrix")
     return showDataContainerAsMatrix(*args, **kwargs)
 
 
@@ -571,20 +617,20 @@ def showDataContainerAsMatrix(data, x=None, y=None, v=None, **kwargs):
 
     for each x, y and v token strings or vectors should be given
     """
-    xToken = ''
-    yToken = ''
-    mul = kwargs.pop('mul', 10**int(np.ceil(np.log10(data.sensorCount()))))
-    plus = kwargs.pop('plus', 1)  # add 1 to count
-    verbose = kwargs.get('verbose', False)
+    xToken = ""
+    yToken = ""
+    mul = kwargs.pop("mul", 10 ** int(np.ceil(np.log10(data.sensorCount()))))
+    plus = kwargs.pop("plus", 1)  # add 1 to count
+    verbose = kwargs.get("verbose", False)
     if isinstance(x, str):
         xToken = x
         x = data[x]
-    elif hasattr(x, '__iter__') and isinstance(x[0], str):
+    elif hasattr(x, "__iter__") and isinstance(x[0], str):
         num = np.zeros(data.size())
         for token in x:
             num *= mul
             num += data[token] + plus
-            xToken += token + ' '
+            xToken += token + " "
         x = num.copy()
 
     if verbose:
@@ -593,29 +639,31 @@ def showDataContainerAsMatrix(data, x=None, y=None, v=None, **kwargs):
     if isinstance(y, str):
         yToken = y
         y = data[y]
-    elif hasattr(y, '__iter__') and isinstance(y[0], str):
+    elif hasattr(y, "__iter__") and isinstance(y[0], str):
         num = np.zeros(data.size())
         for token in y:
             num *= mul
             num += data[token] + plus
-            yToken += token + ' '
+            yToken += token + " "
         y = num.copy()
 
     if isinstance(v, str):
         v = data[v]
 
-#        kwargs.setdefault('ymap', {n: i for i, n in enumerate(np.unique(y))})
+    #        kwargs.setdefault('ymap',
+    #            {n: i for i, n in enumerate(np.unique(y))})
     if verbose:
         pg.info("found " + str(len(np.unique(y))) + " y values")
-        pg.info("x vector length: {:d}".format(len(x)))
-        pg.info("y vector length: {:d}".format(len(y)))
-        pg.info("v vector length: {:d}".format(len(v)))
+        pg.info(f"x vector length: {len(x):d}")
+        pg.info(f"y vector length: {len(y):d}")
+        pg.info(f"v vector length: {len(v):d}")
 
     if x is None or y is None or v is None:
-        raise Exception("Vectors or strings must be given")
+        raise ValueError("Vectors or strings must be given")
     if len(x) != len(y) or len(x) != len(v):
-        raise Exception("lengths x/y/v not matching: {:d}!={:d}!={:d}".format(
-            len(x), len(y), len(v)))
+        raise ValueError(
+            f"lengths x/y/v not matching: {len(x):d}!={len(y):d}!={len(v):d}"
+        )
     ax, cbar = showVecMatrix(x, y, v, **kwargs)
     try:
         ax.set_xlabel(xToken)
@@ -635,9 +683,13 @@ def drawSensorAsMarker(ax, data):
         elecsX.append(data.sensorPositions()[i][0])
         elecsY.append(data.sensorPositions()[i][1])
 
-    electrodeMarker, = ax.plot(elecsX, elecsY, 'x', color='black', picker=5.)
+    (electrodeMarker,) = ax.plot(elecsX, elecsY, "x", color="black", picker=5.0)
 
-    ax.set_xlim([data.sensorPositions()[0][0] - 1.,
-                 data.sensorPositions()[data.sensorCount() - 1][0] + 1.])
+    ax.set_xlim(
+        [
+            data.sensorPositions()[0][0] - 1.0,
+            data.sensorPositions()[data.sensorCount() - 1][0] + 1.0,
+        ]
+    )
 
     return electrodeMarker

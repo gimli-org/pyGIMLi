@@ -283,7 +283,7 @@ def getUrlFile(url, fileName, timeout=30, retries=3, verbose=False):
 
 def _writeUrlFile(url, fileName, timeout=30, verbose=False):
     """Download url into fileName (single attempt)."""
-    from urllib.request import urlopen  # noqa: S310 (fixed https url)
+    from urllib.request import urlopen
     import hashlib
 
     md5_hash = hashlib.md5()  # noqa: S324 (checksum only, no security)

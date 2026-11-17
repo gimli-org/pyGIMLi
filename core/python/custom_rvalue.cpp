@@ -28,7 +28,7 @@
 // this fails for win since py39
 // const static int __numpy_initialized = initNumpy_();
 
-// doesnt make any sense to me: when I use initNumpy() template from pg Matrix conversion segfaults
+// doesn't make any sense to me: when I use initNumpy() template from pg Matrix conversion segfaults
 int initNumpy_(){
     return initNumpy(); // this segfaults WTF? // maybe just a ghost
 
@@ -69,13 +69,13 @@ template < class ValueType, class SeqType > void * checkConvertibleSequenz(PyObj
 
     // is obj is a sequence
     if(!PySequence_Check(obj)){
-        __DC("\t", obj, "\t abborting no sequence")
+        __DC("\t", obj, "\t aborting no sequence")
         return NULL;
     }
 
     // has the obj a len method
     if (!PyObject_HasAttrString(obj, "__len__")){
-        __DC("\t", obj, "\t abborting no len")
+        __DC("\t", obj, "\t aborting no len")
         return NULL;
     }
 
@@ -83,7 +83,7 @@ template < class ValueType, class SeqType > void * checkConvertibleSequenz(PyObj
         typeid(SeqType) == typeid(GIMLI::RDenseMatrix)
     ){
         if (strcmp(obj->ob_type->tp_name, "RVector") == 0){
-            __DC("\t", obj, "\t abborting .. RVector will not be converted into RMatrix")
+            __DC("\t", obj, "\t aborting .. RVector will not be converted into RMatrix")
             return NULL;
         }
     }
@@ -91,7 +91,7 @@ template < class ValueType, class SeqType > void * checkConvertibleSequenz(PyObj
     if (typeid(SeqType) == typeid(GIMLI::RMatrix)||
         typeid(SeqType) == typeid(GIMLI::RDenseMatrix)){
         if (strcmp(obj->ob_type->tp_name, "list") == 0){
-            __DC("\t", obj, "\t abborting .. list will not be converted into RMatrix")
+            __DC("\t", obj, "\t aborting .. list will not be converted into RMatrix")
             return NULL;
         }
     }
@@ -110,32 +110,32 @@ template < class ValueType, class SeqType > void * checkConvertibleSequenz(PyObj
 
         if (typeid(ValueType) == typeid(GIMLI::Pos)){
             if (PyArray_NDIM(arr) == 1){
-                __DC("\t", obj, "\t abborting .. numpy array.ndim == 1")
+                __DC("\t", obj, "\t aborting .. numpy array.ndim == 1")
                 return NULL;
             }
         }
         if (typeid(ValueType) == typeid(GIMLI::RMatrix) ||
             typeid(ValueType) == typeid(GIMLI::RDenseMatrix)){
             if (PyArray_NDIM(arr) != 2){
-                __DC("\t", obj, "\t ndarray.ndim != 2 and is non convertable to GIMLI::RMatrix")
+                __DC("\t", obj, "\t ndarray.ndim != 2 and is non convertible to GIMLI::RMatrix")
                 return NULL;
             }
         }
         if (typeid(ValueType) == typeid(double) && typeid(SeqType) == typeid(GIMLI::RMatrix)) {
             if (PyArray_NDIM(arr) != 2){
-                __DC("\t", obj, "\t ndarray.ndim != 2 and is non convertable to std::vector< RVector > ")
+                __DC("\t", obj, "\t ndarray.ndim != 2 and is non convertible to std::vector< RVector > ")
                 return NULL;
             }
         }
         if (typeid(ValueType) == typeid(double) && typeid(SeqType) == typeid(GIMLI::RDenseMatrix)) {
             if (PyArray_NDIM(arr) != 2){
-                __DC("\t", obj, "\t ndarray.ndim != 2 and is non convertable to std::vector< RVector > ")
+                __DC("\t", obj, "\t ndarray.ndim != 2 and is non convertible to std::vector< RVector > ")
                 return NULL;
             }
         }
         if (typeid(ValueType) == typeid(double) && typeid(SeqType) == typeid(GIMLI::RVector)) {
             if (PyArray_NDIM(arr) != 1){
-                __DC("\t", obj, "\t ndarray.ndim != 1 and is non convertable to 1D type ")
+                __DC("\t", obj, "\t ndarray.ndim != 1 and is non convertible to 1D type ")
                 return NULL;
             }
         }
@@ -143,13 +143,13 @@ template < class ValueType, class SeqType > void * checkConvertibleSequenz(PyObj
         if (typeid(ValueType) == typeid(GIMLI::Index)){
             if (PyArray_TYPE(arr) == NPY_BOOL){
                 __DC("\t", obj, "\t Object is nd.array with dtype == bool*"
-                     "non convertable to GIMLI::IVector")
+                     "non convertible to GIMLI::IVector")
                 return NULL;
             }
         } else if (typeid(ValueType) == typeid(bool)){
            if (PyArray_TYPE(arr) != NPY_BOOL){
                 __DC("\t", obj, "\t Object is nd.array with dtype != bool"
-                     ".. non convertable to GIMLI::BVector")
+                     ".. non convertible to GIMLI::BVector")
                 return NULL;
             }
         }
@@ -167,7 +167,7 @@ template < class ValueType, class SeqType > void * checkConvertibleSequenz(PyObj
 
         if (typeid(ValueType) == typeid(GIMLI::Pos) &&
             strcmp(element.ptr()->ob_type->tp_name, "int") == 0){
-            __DC(obj, "\t abborting: Pos requested but sequence of ",
+            __DC(obj, "\t aborting: Pos requested but sequence of ",
                      element.ptr()->ob_type->tp_name)
                 return NULL;
         }
@@ -175,14 +175,14 @@ template < class ValueType, class SeqType > void * checkConvertibleSequenz(PyObj
         //** do not convert [long] || [ulong]  > [bool]
         if (typeid(ValueType) == typeid(GIMLI::Index) || typeid(ValueType) == typeid(GIMLI::SIndex)){
             if (strcmp(element.ptr()->ob_type->tp_name, "bool") == 0) {
-                __DC(obj, "\t abborting: Index requested but sequence of ",
+                __DC(obj, "\t aborting: Index requested but sequence of ",
                      element.ptr()->ob_type->tp_name)
                 return NULL;
             }
         } else if (typeid(ValueType) == typeid(bool)){
             // special check for BVector .. we oonly want to convert sequence of bool objects
             if (strcmp(element.ptr()->ob_type->tp_name, "bool") != 0) {
-                __DC(obj, "\t abborting: bools requested but sequence of ", element.ptr()->ob_type->tp_name)
+                __DC(obj, "\t aborting: bools requested but sequence of ", element.ptr()->ob_type->tp_name)
                 return NULL;
             }
         }

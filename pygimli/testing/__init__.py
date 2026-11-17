@@ -9,8 +9,11 @@ Writing tests for pyGIMLi
 
 Please check: https://docs.pytest.org/en/latest/
 """
+
 import sys
-from os.path import join, realpath
+import os
+from os.path import realpath
+from pathlib import Path
 
 import numpy as np
 import pygimli as pg
@@ -35,32 +38,42 @@ def devTests():
     Returns True if pygimli is in testing mode.
     """
     import os
-    if os.getenv('DEVTESTS') == '1':
+
+    if os.getenv("DEVTESTS") == "1":
         return True
-    if os.getenv('DEVTESTS') == '0':
+    if os.getenv("DEVTESTS") == "0":
         return False
 
     global __devTests__
     return __devTests__
 
 
-def test(target=None, show=False, onlydoctests=False, coverage=False,
-         htmlreport=False, abort=False, verbose=True, devTests=False,
-         exitOnError=False):
+def test(
+    target=None,
+    show=False,
+    onlydoctests=False,
+    coverage=False,
+    htmlreport=False,
+    abort=False,
+    verbose=True,
+    devTests=False,
+    exitOnError=False,
+    n=1,
+):
     """Run docstring examples and additional tests.
 
     Examples
     --------
     >>> import pygimli as pg
     >>> # Run the whole test suite.
-    >>> pg.test() # doctest: +SKIP
+    >>> pg.test()  # doctest: +SKIP
     >>> # Test a single function by a string.
-    >>> pg.test("utils.boxprint", verbose=False) # doctest: +SKIP
+    >>> pg.test("utils.boxprint", verbose=False)  # doctest: +SKIP
     >>> # The target argument can also be the function directly
     >>> from pygimli.utils import boxprint
-    >>> pg.test(boxprint, verbose=False) # doctest: +SKIP
+    >>> pg.test(boxprint, verbose=False)  # doctest: +SKIP
     >>> # Use some logical expressions
-    >>> pg.test("draw and not drawMesh") # doctest: +SKIP
+    >>> pg.test("draw and not drawMesh")  # doctest: +SKIP
 
     Parameters
     ----------
@@ -83,6 +96,10 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
     devTests: boolean[False]
         Don't skip special tests marked for development, only with the
         @pg.skipOnDefaultTest decorator. Can be overwritten by env DEVTESTS.
+    n : int [1]
+        Number of worker processes for parallel execution, requires
+        ``pytest-xdist``. Each worker imports pyGIMLi and matplotlib, so the
+        count should be limited by the available memory as well.
 
     Returns
     -------
@@ -95,50 +112,69 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
     try:
         import pytest
     except ImportError:
-        raise ImportError("pytest is required to run test suite. "
-                          "Try 'pip install pytest'.")
+        raise ImportError(
+            "pytest is required to run test suite. Try 'pip install pytest'."
+        ) from None
 
     exitOnError = exitOnError | abort
+
+    # pytest-xdist workers are fresh interpreters and would default to running
+    # the development tests (@pg.skipOnDefaultTest) while a serial run skips
+    # them. Propagate the choice through the environment.
+    os.environ["DEVTESTS"] = "1" if devTests else "0"
 
     # Remove figure warnings
     np.random.seed(1337)
     plt = pg.plt
     plt.rcParams["figure.max_open_warning"] = 1000
-    warnings.filterwarnings("ignore", category=UserWarning,
-                            message='Matplotlib is currently using agg, a '
-                                    'non-GUI backend, so cannot show figure.')
+    warnings.filterwarnings(
+        "ignore",
+        category=UserWarning,
+        message="Matplotlib is currently using agg, a "
+        "non-GUI backend, so cannot show figure.",
+    )
 
     printopt = np.get_printoptions()
 
-
     # Numpy compatibility (array string representation has changed)
     if np.__version__[:4] == "1.14":
-        pg.warn("Some doctests will fail due to old numpy version.",
-                "Consider upgrading to numpy >= 1.15")
+        pg.warn(
+            "Some doctests will fail due to old numpy version.",
+            "Consider upgrading to numpy >= 1.15",
+        )
 
     old_backend = plt.get_backend()
     old_backend_pv = pg.rc["pyvista.backend"]
 
-
     if not show:
         import pyvista
-        pyvista.OFF_SCREEN=True
+
+        pyvista.OFF_SCREEN = True
+
+        # Parallel workers (pytest-xdist) start a fresh interpreter and pick
+        # the matplotlib backend from the environment. With DISPLAY set (CI)
+        # that is a GUI backend which cannot connect to the display.
+        os.environ["MPLBACKEND"] = "Agg"
 
         plt.switch_backend("Agg")
         pg.rc["pyvista.backend"] = None
     else:
         plt.ion()
+        # Parallel workers inherit the environment; keep them interactive.
+        os.environ["MPLBACKEND"] = str(plt.get_backend())
 
-    cwd = join(realpath(__path__[0]), '..')
+    cwd = str(Path(realpath(__path__[0])).parent)
 
     excluded = [
-        "gui", "physics/traveltime/example.py", "physics/em/fdemexample.py"
+        "gui",
+        "physics/traveltime/example.py",
+        "physics/em/fdemexample.py",
     ]
 
     if onlydoctests:
         excluded.append("testing")
 
-    cmd = (["--color", "yes", "--doctest-modules", "-p", "no:warnings"])
+    cmd = ["--color", "yes", "--doctest-modules", "-p", "no:warnings"]
 
     string = f"pygimli {pg.__version__}"
 
@@ -146,6 +182,7 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
     if target:
         if not isinstance(target, str):
             import inspect
+
             target_source = inspect.getsourcefile(target)
             target = target.__name__
         else:
@@ -165,7 +202,6 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
         cmd.extend(["-v", "--durations", "5"])
         pg.boxprint(f"Testing {string}", sym="+", width=90)
 
-
     if coverage:
         pc = pg.optImport("pytest_cov", "create a code coverage report")
         if pc:
@@ -178,7 +214,13 @@ def test(target=None, show=False, onlydoctests=False, coverage=False,
             cmd.extend(["--html", htmlreport])
 
     for directory in excluded:
-        cmd.extend(["--ignore", join(cwd, directory)])
+        cmd.extend(["--ignore", str(Path(cwd) / directory)])
+
+    if n > 1:
+        if pg.optImport("xdist", "run the tests in parallel"):
+            cmd.extend(["-n", str(n)])
+        else:
+            pg.warn(f"n={n} ignored, running the tests serially.")
 
     plt.close("all")
     if target_source:

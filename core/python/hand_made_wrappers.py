@@ -38,7 +38,7 @@ PyObject * Pos_getArray(GIMLI::Pos & vec){
     // check if array is contiguous here
     // ** possible fixed due to memcpy here
     //PyArray_XINCREF(ret);
-    //Py_INCREF(ret); // das scheint ignoriert zu werden darum muessen wir aussen noch kopieren
+    //Py_INCREF(ret); // seems to be ignored, hence we have to copy outside
     //Py_DECREF(ret);
     return ret;
 }

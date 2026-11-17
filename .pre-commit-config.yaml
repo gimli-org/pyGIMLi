@@ -6,6 +6,16 @@ repos:
       - id: trailing-whitespace
       - id: check-merge-conflict
       - id: check-yaml
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.3
+    hooks:
+      # Spelling check for comments, docstrings and docs. The word list lives
+      # in pyproject.toml ([tool.codespell]); only staged files are checked.
+      # Paths have to be excluded here as well because the hook passes explicit
+      # filenames, for which codespell does not apply its `skip` patterns.
+      - id: codespell
+        args: [--toml, pyproject.toml]
+        exclude: ^(core/src/kdtree\+\+/|build/|pygimli\.egg-info/|\.venv)
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Keep in sync with the ruff pulled in by `uv` (the [dev] extra) so the
     # hook and `uv run ruff check` never disagree on rules/behaviour.
@@ -18,7 +28,4 @@ repos:
       # mechanical commit (recorded in .git-blame-ignore-revs so it stays
       # out of `git blame`); this hook keeps it that way going forward.
       #
-      # deactivated for now, as it is too aggressive and breaks
-      # the code style in some cases (it reformats every touched file,
-      # which turns small fixes into whole-file diffs).
-      # - id: ruff-format
+      - id: ruff-format

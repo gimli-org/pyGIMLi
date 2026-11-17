@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Method Manager for Magnetics."""
+
 import numpy as np
 
 import pygimli as pg
@@ -29,6 +30,7 @@ class MagManager(MeshMethodManager):
         # self.inv_ = pg.frameworks.Inversion()
         if isinstance(self.dem, str):
             from pygimli.utils import DEM
+
             self.dem = DEM(self.dem)
 
         if isinstance(data, str):
@@ -39,12 +41,17 @@ class MagManager(MeshMethodManager):
             self.z = self.DATA["z"] if "z" in nam else np.ones_like(self.x)
 
             if self.cmp is None:
-                self.cmp = [t for t in self.DATA.dtype.names
-                            if t.startswith("B") or t.startswith("T")]
+                self.cmp = [
+                    t
+                    for t in self.DATA.dtype.names
+                    if t.startswith("B") or t.startswith("T")
+                ]
             if self.igrf is None:
                 import utm
-                lat, lon = utm.to_latlon(np.mean(self.x),
-                                         np.mean(self.y), self.utmzone, 'U')
+
+                lat, lon = utm.to_latlon(
+                    np.mean(self.x), np.mean(self.y), self.utmzone, "U"
+                )
                 pg.info(f"Center of data: {lat}, {lon}")
                 self.igrf = [lat, lon]
 
@@ -55,11 +62,10 @@ class MagManager(MeshMethodManager):
 
             self.setMesh(self.mesh_)
 
-
     def __repr__(self):
         """Representation Magnetics Manager as string."""
         out = f"MagManager with {len(self.x)} data points."
-        out += f"\n{len(self.cmp)} active components: "+", ".join(self.cmp)
+        out += f"\n{len(self.cmp)} active components: " + ", ".join(self.cmp)
         if self.DATA is not None:
             out += f"\nData fields: {self.DATA.dtype.names}"
         if self.mesh_ is not None:
@@ -76,9 +82,15 @@ class MagManager(MeshMethodManager):
         """Show data."""
         cmp = cmp or self.cmp
         nc = kwargs.pop("ncols", max(2 if len(cmp) > 1 else 1, len(cmp)))
-        nr = (len(cmp)+nc-1) // nc
-        fig, ax = pg.plt.subplots(nr, nc, sharex=True, sharey=True,
-                                  squeeze=False, figsize=(7, len(self.cmp)*1+3))
+        nr = (len(cmp) + nc - 1) // nc
+        fig, ax = pg.plt.subplots(
+            nr,
+            nc,
+            sharex=True,
+            sharey=True,
+            squeeze=False,
+            figsize=(7, len(self.cmp) * 1 + 3),
+        )
         axs = np.atleast_1d(ax.flat)
         kwargs.setdefault("cmap", "bwr")
         ori = kwargs.pop("orientation", "horizontal")
@@ -87,9 +99,10 @@ class MagManager(MeshMethodManager):
             from pygimli.viewer.mpl.overlayimage import underlayBKGMap
         for i, c in enumerate(cmp):
             fld = self.DATA[c]
-            vv = max(-np.min(fld)*1., np.max(fld)*1.)
-            sc = axs[i].scatter(self.x, self.y, c=fld,
-                                vmin=-vv, vmax=vv, **kwargs)
+            vv = max(-np.min(fld) * 1.0, np.max(fld) * 1.0)
+            sc = axs[i].scatter(
+                self.x, self.y, c=fld, vmin=-vv, vmax=vv, **kwargs
+            )
             if bg is not None:
                 underlayBKGMap(ax=axs[i], mode=bg)
 
@@ -114,13 +127,13 @@ class MagManager(MeshMethodManager):
             Show detected lines.
         """
         from pygimli.utils import detectLines
+
         if self.x is None or self.y is None:
             pg.error("No x and y coordinates available for line detection.")
             return
 
         self.line = detectLines(self.x, self.y, **kwargs)
         return self.line
-
 
     def showLineData(self, line=None, cmp=None, **kwargs):
         """Show data for a specific line.
@@ -136,12 +149,18 @@ class MagManager(MeshMethodManager):
             cmp = self.cmp
 
         for l in np.atleast_1d(line):
-            x = self.x[self.line==l]
-            y = self.y[self.line==l]
-            t = np.hstack([0, np.cumsum(np.sqrt(np.diff(x)**2+ np.diff(y)**2))])
+            x = self.x[self.line == l]
+            y = self.y[self.line == l]
+            t = np.hstack(
+                [0, np.cumsum(np.sqrt(np.diff(x) ** 2 + np.diff(y) ** 2))]
+            )
             for c in cmp:
-                pg.plt.plot(t, self.DATA[c][self.line==l],
-                            label=c+f" (line {l})", **kwargs)
+                pg.plt.plot(
+                    t,
+                    self.DATA[c][self.line == l],
+                    label=c + f" (line {l})",
+                    **kwargs,
+                )
 
         pg.plt.xlabel("X")
         pg.plt.ylabel("Data")
@@ -155,7 +174,7 @@ class MagManager(MeshMethodManager):
         self.fwd.setMesh(mesh)
         self.mesh_ = mesh
 
-    def createGrid(self, dx:float=50, depth:float=800, bnd:float=0):
+    def createGrid(self, dx: float = 50, depth: float = 800, bnd: float = 0):
         """Create a grid.
 
         TODO
@@ -176,17 +195,23 @@ class MagManager(MeshMethodManager):
         mesh: :gimliapi:`GIMLI::Mesh`
             Created 3D structured grid.
         """
-        x = np.arange(min(self.x)-bnd, max(self.x)+bnd+.1, dx)
-        y = np.arange(min(self.y)-bnd, max(self.y)+bnd+.1, dx)
-        z = np.arange(-depth, .1, dx)
+        x = np.arange(min(self.x) - bnd, max(self.x) + bnd + 0.1, dx)
+        y = np.arange(min(self.y) - bnd, max(self.y) + bnd + 0.1, dx)
+        z = np.arange(-depth, 0.1, dx)
         self.mesh_ = mt.createGrid(x=x, y=y, z=z)
         self.fwd.setMesh(self.mesh_)
         return self.mesh_
 
-
-    def createMesh(self, boundary:float=0, area:float=1e5, depth:float=0,
-                   quality:float=1.3, addPLC:pg.Mesh=None, addPoints:bool=True,
-                   frame:float=0):
+    def createMesh(
+        self,
+        boundary: float = 0,
+        area: float = 1e5,
+        depth: float = 0,
+        quality: float = 1.3,
+        addPLC: pg.Mesh = None,
+        addPoints: bool = True,
+        frame: float = 0,
+    ):
         r"""Create an unstructured 3D mesh.
 
         TODO
@@ -213,21 +238,30 @@ class MagManager(MeshMethodManager):
         mesh: :gimliapi:`GIMLI::Mesh`
             Created 3D unstructured mesh.
         """
-        x = [min(self.x)-boundary, max(self.x)+boundary]
-        y = [min(self.y)-boundary, max(self.y)+boundary]
-        geo = mt.createRectangle(start=[x[0], y[1]], end=[x[1], y[0]],
-                                 marker=1, area=area, boundaryMarker=1)
+        x = [min(self.x) - boundary, max(self.x) + boundary]
+        y = [min(self.y) - boundary, max(self.y) + boundary]
+        geo = mt.createRectangle(
+            start=[x[0], y[1]],
+            end=[x[1], y[0]],
+            marker=1,
+            area=area,
+            boundaryMarker=1,
+        )
 
         if frame > 0:
             Xo = [x[0] - frame, x[1] + frame]
             Yo = [y[0] - frame, y[1] + frame]
-            geo += mt.createRectangle(start=[Xo[0], Yo[1]], end=[Xo[1], Yo[0]],
-                                      marker=2, boundaryMarker=2)
+            geo += mt.createRectangle(
+                start=[Xo[0], Yo[1]],
+                end=[Xo[1], Yo[0]],
+                marker=2,
+                boundaryMarker=2,
+            )
             # inner_pt = [(x[0] + x[1]) * 0.5, (y[0] + y[1]) * 0.5] # inner pt
-            frame_pt = [(Xo[0] + x[0]) * 0.5, (y[0] + y[1]) * 0.5] # outer pt
+            frame_pt = [(Xo[0] + x[0]) * 0.5, (y[0] + y[1]) * 0.5]  # outer pt
 
             # geo.addRegionMarker(inner_pt, marker=1, area=1e4)
-            geo.addRegionMarker(frame_pt, marker=2, area=area*100)
+            geo.addRegionMarker(frame_pt, marker=2, area=area * 100)
 
         mesh2d = mt.createMesh(geo, quality=34, smooth=True)
         if self.dem is not None:
@@ -239,13 +273,17 @@ class MagManager(MeshMethodManager):
 
         surface = mt.createSurface(mesh2d)
         if depth == 0:
-            ext = max(max(self.x)-min(self.x), max(self.y)-min(self.y))
+            ext = max(max(self.x) - min(self.x), max(self.y) - min(self.y))
             depth = ext / 2
 
         # Zmin = -depth
         # dem_zvals = [surface.node(n).z() for n in range(4)]
-        n0, n1, n2, n3 = [surface.createNode(pg.Pos(
-            surface.node(i).x(), surface.node(i).y(), -depth)) for i in range(4)]
+        n0, n1, n2, n3 = [
+            surface.createNode(
+                pg.Pos(surface.node(i).x(), surface.node(i).y(), -depth)
+            )
+            for i in range(4)
+        ]
 
         surface.createQuadrangleFace(n0, n1, n2, n3, marker=-2)
         mx = pg.x(surface).array()
@@ -292,8 +330,15 @@ class MagManager(MeshMethodManager):
         self.fwd.setMesh(self.mesh_)
         return self.mesh_
 
-    def createMeshOld(self, bnd:float=0, area:float=1e5, depth:float=0,
-                   quality:float=1.3, addPLC:pg.Mesh=None, addPoints:bool=True):
+    def createMeshOld(
+        self,
+        bnd: float = 0,
+        area: float = 1e5,
+        depth: float = 0,
+        quality: float = 1.3,
+        addPLC: pg.Mesh = None,
+        addPoints: bool = True,
+    ):
         r"""Create an unstructured 3D mesh.
 
         TODO
@@ -321,10 +366,12 @@ class MagManager(MeshMethodManager):
             Created 3D unstructured mesh.
         """
         if depth == 0:
-            ext = max(max(self.x)-min(self.x), max(self.y)-min(self.y))
+            ext = max(max(self.x) - min(self.x), max(self.y) - min(self.y))
             depth = ext / 2
-        geo = mt.createCube(start=[min(self.x)-bnd, min(self.x)-bnd, -depth],
-                            end=[max(self.x)+bnd, max(self.y)+bnd, 0])
+        geo = mt.createCube(
+            start=[min(self.x) - bnd, min(self.x) - bnd, -depth],
+            end=[max(self.x) + bnd, max(self.y) + bnd, 0],
+        )
         if addPoints is True:
             # get z values from DEM if available
             for xi, yi in zip(self.x, self.y, strict=False):
@@ -336,15 +383,14 @@ class MagManager(MeshMethodManager):
         self.fwd.setMesh(self.mesh_)
         return self.mesh_
 
-
     def createForwardOperator(self, verbose=False):
         """Create forward operator (computationally extensive!)."""
         # points = np.column_stack([self.x, self.y, -np.abs(self.z)])
         points = np.column_stack([self.x, self.y, self.z])
-        self.fwd = MagneticsModelling(points=points,
-                                      cmp=self.cmp, igrf=self.igrf, verbose=verbose)
+        self.fwd = MagneticsModelling(
+            points=points, cmp=self.cmp, igrf=self.igrf, verbose=verbose
+        )
         return self.fwd
-
 
     def inversion(self, noise_level=2, noisify=False, **kwargs):
         """Run Inversion (requires mesh and FOP).
@@ -426,7 +472,7 @@ class MagManager(MeshMethodManager):
             self.inv.setRegularization(cType=C)
 
         dw = kwargs.pop("depthWeighting", True)
-        if isinstance(dw, (float, int)): # take it as z0
+        if isinstance(dw, (float, int)):  # take it as z0
             z0 = dw * 1.0
             dw = True
         else:
@@ -455,7 +501,6 @@ class MagManager(MeshMethodManager):
 
         return model
 
-
     def saveResults(self, folder=None):
         """Save inversion results to a folder.
 
@@ -469,10 +514,10 @@ class MagManager(MeshMethodManager):
         else:
             pg.utils.createPath(folder)
 
-        self.inv.response.save(folder+"/response.dat")
-        self.exportLocations(folder+"/points.vtk")
-        np.savetxt(folder+"/data.dat", self.inv.dataVals)
-        np.savetxt(folder+"/error.dat", self.inv.errorVals)
+        self.inv.response.save(folder + "/response.dat")
+        self.exportLocations(folder + "/points.vtk")
+        np.savetxt(folder + "/data.dat", self.inv.dataVals)
+        np.savetxt(folder + "/error.dat", self.inv.errorVals)
         self.mesh_["sus"] = self.inv.model
         cov = np.zeros(len(self.inv.model))
         J = self.fwd.jacobian()
@@ -480,7 +525,7 @@ class MagManager(MeshMethodManager):
             cov += np.abs(j)
 
         self.mesh_["coverage"] = cov
-        self.mesh_.exportVTK(folder+"/result.vtk")
+        self.mesh_.exportVTK(folder + "/result.vtk")
 
     def loadResults(self, folder):
         """Load inversion results from a folder.
@@ -490,14 +535,13 @@ class MagManager(MeshMethodManager):
         folder: str
             Folder to load results from.
         """
-        self.inv.response = np.loadtxt(folder+"/response.dat")
-        self.inv.dataVals = np.loadtxt(folder+"/data.dat")
-        self.inv.errorVals = np.loadtxt(folder+"/error.dat")
+        self.inv.response = np.loadtxt(folder + "/response.dat")
+        self.inv.dataVals = np.loadtxt(folder + "/data.dat")
+        self.inv.errorVals = np.loadtxt(folder + "/error.dat")
 
-        self.mesh_ = pg.load(folder+"/result.vtk")
+        self.mesh_ = pg.load(folder + "/result.vtk")
         # self.fwd.setMesh(self.mesh_)
         # self.inv.setMesh(self.mesh_)
-
 
     def showDataFit(self, **kwargs):
         """Show data, model response and misfit.
@@ -514,22 +558,28 @@ class MagManager(MeshMethodManager):
             colorbar limits
         """
         nc = len(self.cmp)
-        fig, ax = pg.plt.subplots(ncols=3, nrows=nc, figsize=(12, 3*nc),
-                                  sharex=True, sharey=True, squeeze=False)
+        fig, ax = pg.plt.subplots(
+            ncols=3,
+            nrows=nc,
+            figsize=(12, 3 * nc),
+            sharex=True,
+            sharey=True,
+            squeeze=False,
+        )
         vals = np.reshape(self.inv.dataVals, [nc, -1])
         resp = np.reshape(self.inv.response, [nc, -1])
         errs = np.reshape(self.inv.errorVals, [nc, -1])  # relative!
-        misf = (vals - resp) / np.abs(errs *  vals)
-        mmis = kwargs.pop('maxMisfit', 3)
-        mm = kwargs.pop('maxField', np.max(np.abs(vals)))
+        misf = (vals - resp) / np.abs(errs * vals)
+        mmis = kwargs.pop("maxMisfit", 3)
+        mm = kwargs.pop("maxField", np.max(np.abs(vals)))
         fkw = kwargs.copy()
-        fkw.setdefault('cmap', "bwr")
-        fkw.setdefault('vmin', -mm)
-        fkw.setdefault('vmax', mm)
+        fkw.setdefault("cmap", "bwr")
+        fkw.setdefault("vmin", -mm)
+        fkw.setdefault("vmax", mm)
         mkw = kwargs.copy()
-        mkw.setdefault('cmap', "bwr")
-        mkw.setdefault('vmin', -mmis)
-        mkw.setdefault('vmax', mmis)
+        mkw.setdefault("cmap", "bwr")
+        mkw.setdefault("vmin", -mmis)
+        mkw.setdefault("vmax", mmis)
         for i in range(nc):
             ax[i, 0].scatter(self.x, self.y, c=vals[i], **fkw)
             ax[i, 1].scatter(self.x, self.y, c=resp[i], **fkw)
@@ -540,18 +590,24 @@ class MagManager(MeshMethodManager):
 
         return fig
 
-
     def exportLocations(self, filename="points.vtk"):
         """Export data locations to a VTK file."""
         pm = pg.Mesh(dim=3, isGeometry=True)
-        pm.createNodes(np.column_stack([self.x, self.y, self.z]));
+        pm.createNodes(np.column_stack([self.x, self.y, self.z]))
         pm.exportVTK(filename)
 
-
-    def show3DModel(self, label:str=None, trsh:float=0.025,
-                    synth:pg.Mesh=None, invert:bool=False,
-                    position:str="yz", elevation:float=10, azimuth:float=25,
-                    zoom:float=1.2, **kwargs):
+    def show3DModel(
+        self,
+        label: str = None,
+        trsh: float = 0.025,
+        synth: pg.Mesh = None,
+        invert: bool = False,
+        position: str = "yz",
+        elevation: float = 10,
+        azimuth: float = 25,
+        zoom: float = 1.2,
+        **kwargs,
+    ):
         """Show standard 3D view.
 
         Arguments
@@ -606,16 +662,29 @@ class MagManager(MeshMethodManager):
         kwargs.setdefault("logScale", False)
 
         flt = None
-        pl, _ = pg.show(self.mesh_, style="wireframe", hold=True,
-                        alpha=0.1)
+        pl, _ = pg.show(self.mesh_, style="wireframe", hold=True, alpha=0.1)
         # mm = [min(self.mesh_[label]), min(self.mesh_[label])]
         if trsh > 0:
-            flt = {"threshold": {'value':trsh, 'scalars':label,'invert':invert}}
-            pv.drawModel(pl, self.mesh_, label=label, style="surface",
-                        filter=flt, **kwargs)
+            flt = {
+                "threshold": {"value": trsh, "scalars": label, "invert": invert}
+            }
+            pv.drawModel(
+                pl,
+                self.mesh_,
+                label=label,
+                style="surface",
+                filter=flt,
+                **kwargs,
+            )
 
-        pv.drawMesh(pl, self.mesh_, label=label, style="surface", **kwargs,
-                    filter={"slice": {'normal':[-1, 0, 0], 'origin':[0, 0, 0]}})
+        pv.drawMesh(
+            pl,
+            self.mesh_,
+            label=label,
+            style="surface",
+            **kwargs,
+            filter={"slice": {"normal": [-1, 0, 0], "origin": [0, 0, 0]}},
+        )
 
         if synth:
             pv.drawModel(pl, synth, style="wireframe")

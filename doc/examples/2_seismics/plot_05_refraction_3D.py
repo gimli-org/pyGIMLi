@@ -25,7 +25,7 @@ import pyvista
 
 depth = 15
 width = 30
-plc = mt.createCube(size=[width, width, depth], pos=[0, 0, -depth/2], area=5)
+plc = mt.createCube(size=[width, width, depth], pos=[0, 0, -depth / 2], area=5)
 
 n_sensors = 8
 sensors = np.zeros((n_sensors, 3))
@@ -72,23 +72,22 @@ for receiver in sensors[1:]:
     ni = dij.shortestPathTo(mesh.findNearestNode(receiver))
     pos = mesh.positions(withSecNodes=True)[ni]
     segs = np.zeros((len(pos), 3))
-    segs[:,0] = pg.x(pos)
-    segs[:,1] = pg.y(pos)
-    segs[:,2] = pg.z(pos)
+    segs[:, 0] = pg.x(pos)
+    segs[:, 1] = pg.y(pos)
+    segs[:, 2] = pg.z(pos)
     rays.append(segs)
 
 ################################################################################
 # Plot final ray paths.
 
-pl, _ = pg.show(mesh, style='wireframe', line_width=0.1,
-                        hold=True)
-drawSensors(pl, sensors, diam=0.5, color='yellow')
+pl, _ = pg.show(mesh, style="wireframe", line_width=0.1, hold=True)
+drawSensors(pl, sensors, diam=0.5, color="yellow")
 
 for ray in rays:
     for i in range(len(ray) - 1):
         start = tuple(ray[i])
         stop = tuple(ray[i + 1])
         line = pyvista.Line(start, stop)
-        pl.add_mesh(line, color='green', line_width=2)
+        pl.add_mesh(line, color="green", line_width=2)
 
 pl.show()

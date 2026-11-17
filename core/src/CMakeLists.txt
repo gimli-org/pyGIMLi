@@ -42,7 +42,7 @@ if (PYTHON_FOUND)
     include_directories(${Python_INCLUDE_DIRS})
 
     if (NOT APPLE)
-        # needed since the later doesnt seems to work
+        # needed since the later doesn't seems to work
         target_link_libraries(${libgimli_TARGET_NAME} ${Python_LIBRARIES})
 
         if (Python_Development.Module_FOUND)
@@ -139,4 +139,3 @@ endif(WIN32)
 
 # install(FILES ${HEADER_FILES} ${PROJECT_BINARY_DIR}/${libgimli_TARGET_NAME}_export.h
 #         DESTINATION ${INCLUDE_INSTALL_DIR})
-

@@ -172,7 +172,7 @@ protected:
 };
 
 /*! Magnetic Resonance Sounding (MRS) modelling
-    non-classical variant using a block model using mapping to classical varian
+    non-classical variant using a block model using mapping to classical variant
     MRS1dBlockModelling(int nlay, RMatrix KR, KI, RVector zvec [, verbose]) */
 class DLLEXPORT MRS1dBlockModelling : public MRSModelling{
 public:

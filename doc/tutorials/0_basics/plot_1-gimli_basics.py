@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 r"""
 
 GIMLi basics
@@ -17,6 +16,8 @@ First, the library needs to be imported.
 To avoid name clashes with other libraries we suggest to ``import pygimli`` and
 alias it to the simple abbreviation ``pg``: CR
 """
+
+import numpy as np
 import pygimli as pg
 
 
@@ -43,8 +44,8 @@ print(pg.__version__)
 # GIMLi provides a collection of tools for mesh import, export and generation.
 # A simple grid generation is built-in but we also provide wrappers for
 # unstructured mesh generations, e.g., :term:`Triangle`, :term:`Tetgen` and
-# :term:`Gmsh`. To create a 2d grid you need to give two arrays/lists of sample points
-# in x and y direction, in that order, or just numbers.
+# :term:`Gmsh`. To create a 2d grid you need to give two arrays/lists of
+# sample points in x and y direction, in that order, or just numbers.
 
 grid = pg.createGrid(x=[-1.0, 0.0, 1.0, 4.0], y=[-1.0, 0.0, 1.0, 4.0])
 
@@ -60,9 +61,14 @@ print(grid)
 #
 # Or you can access them manually using different methods:
 #
-print('Mesh: Nodes:', grid.nodeCount(),
-      'Cells:', grid.cellCount(),
-      'Boundaries:', grid.boundaryCount())
+print(
+    "Mesh: Nodes:",
+    grid.nodeCount(),
+    "Cells:",
+    grid.cellCount(),
+    "Boundaries:",
+    grid.boundaryCount(),
+)
 
 ###############################################################################
 #
@@ -71,21 +77,27 @@ print('Mesh: Nodes:', grid.nodeCount(),
 # node ids per cell:
 
 for cell in grid.cells():
-    print("Cell", cell.id(), "has", cell.nodeCount(),
-          "nodes. Node IDs:", [n.id() for n in cell.nodes()])
+    print(
+        "Cell",
+        cell.id(),
+        "has",
+        cell.nodeCount(),
+        "nodes. Node IDs:",
+        [n.id() for n in cell.nodes()],
+    )
 
 print(type(grid.cell(0)))
 
 ###############################################################################
 # To generate the input arrays ``x`` and ``y``, you can use the
-# built-in :gimliapi:`GIMLI::Vector` (pre-defined with values that are type double as
-# ``pg.Vector``), standard python lists or :term:`numpy` arrays,
+# built-in :gimliapi:`GIMLI::Vector` (pre-defined with values that are type
+# double as ``pg.Vector``), standard python lists or :term:`numpy` arrays,
 # which are widely compatible with `pyGIMLi` vectors.
 
-import numpy as np
-
-grid = pg.createGrid(x=np.linspace(-1.0, 1.0, 10),
-                     y=1.0 - np.logspace(np.log10(1.0), np.log10(2.0), 10))
+grid = pg.createGrid(
+    x=np.linspace(-1.0, 1.0, 10),
+    y=1.0 - np.logspace(np.log10(1.0), np.log10(2.0), 10),
+)
 
 ###############################################################################
 #
@@ -120,5 +132,3 @@ pg.wait()
 ###############################################################################
 # For more control you can also use the appropriate draw methods
 # :py:mod:`pygimli.viewer.mpl.drawMesh`.
-
-

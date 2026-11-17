@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 """Collection of several utility functions."""
+
+import json
 import sys
 from math import floor, sqrt
 
@@ -10,6 +12,7 @@ import pygimli as pg
 try:
     from scooby import Report as ScoobyReport
 except ImportError:
+
     class ScoobyReport:
         """Local scooby reporting class."""
 
@@ -39,9 +42,9 @@ class ProgressBar:
     """
 
     def __init__(self, its, width=60, sign=":", **kwargs):
-        #ruff: noqa: D301
+        # ruff: noqa: D301
         """Create animated text-based progress bar.
-        
+
         # TODO
         # * optional: 'estimated time' instead of 'x of y complete'
 
@@ -62,8 +65,8 @@ class ProgressBar:
         Examples
         --------
         >>> from pygimli.utils import ProgressBar
-        >>> pBar = ProgressBar(its=20, width=40, sign='+')
-        >>> pBar.update(5) # doctest: +ELLIPSIS
+        >>> pBar = ProgressBar(its=20, width=40, sign="+")
+        >>> pBar.update(5)  # doctest: +ELLIPSIS
         \r[+++++++++++       30%                 ] 6 of 20 complete
         """
         self.its = int(its)
@@ -77,14 +80,17 @@ class ProgressBar:
 
         if pg.isNotebook():
             tqdm = pg.optImport(
-                'tqdm', requiredFor="use nice progressbar in jupyter notebook")
+                "tqdm", requiredFor="use nice progressbar in jupyter notebook"
+            )
 
             if tqdm is not None:
                 from tqdm.notebook import tqdm
+
                 fmt = kwargs.pop(
-                    'bar_format',
-                    '{desc} {percentage:3.0f}%|{bar}|{n_fmt}/{total_fmt}' +
-                    ' [{elapsed} < {remaining}]')
+                    "bar_format",
+                    "{desc} {percentage:3.0f}%|{bar}|{n_fmt}/{total_fmt}"
+                    + " [{elapsed} < {remaining}]",
+                )
                 self._nbProgress = tqdm(total=its, bar_format=fmt, **kwargs)
 
     def __call__(self, it, msg=""):
@@ -111,8 +117,8 @@ class ProgressBar:
         self._swatch.store()
 
         if self._nbProgress is not None:
-            ## TODO maybe catch if someone don't call with iteration steps == 1, why ever
-            self._nbProgress.update(n=iteration-self._iter)
+            ## TODO catch if iteration steps differ from 1
+            self._nbProgress.update(n=iteration - self._iter)
         else:
             self._setbar(iteration + 1)
             if len(msg) >= 1:
@@ -121,7 +127,7 @@ class ProgressBar:
             sys.stdout.flush()
 
         # last iteration here
-        if iteration == self.its-1:
+        if iteration == self.its - 1:
             if self._nbProgress is not None:
                 self._nbProgress.close()
             else:
@@ -129,24 +135,24 @@ class ProgressBar:
 
         self._iter = iteration
 
-
     def _setbar(self, elapsed_it):
         """Reset pBar based on current iteration number."""
         self._amount((elapsed_it / float(self.its)) * 100.0)
         self.pBar += f" {int(elapsed_it)} of {self.its} complete"
-
 
     def _amount(self, new_amount):
         """Calculate amount by which to update the pBar."""
         pct_done = int(round((new_amount / 100.0) * 100.0))
         full_width = self.width - 2
         num_signs = int(round((pct_done / 100.0) * full_width))
-        self.pBar = "[" + self.sign * num_signs + \
-            " " * (full_width - num_signs) + "]"
+        self.pBar = (
+            "[" + self.sign * num_signs + " " * (full_width - num_signs) + "]"
+        )
         pct_place = (len(self.pBar) // 2) - len(str(pct_done))
         pct_string = f" {pct_done}% "
-        self.pBar = self.pBar[0:pct_place] + \
-            (pct_string + self.pBar[pct_place + len(pct_string):])
+        self.pBar = self.pBar[0:pct_place] + (
+            pct_string + self.pBar[pct_place + len(pct_string) :]
+        )
 
 
 def boxprint(s, width=80, sym="#"):
@@ -155,7 +161,7 @@ def boxprint(s, width=80, sym="#"):
     Examples
     --------
     >>> from pygimli.utils import boxprint
-    >>> boxprint("This is centered in a box.", width=40, sym='+')
+    >>> boxprint("This is centered in a box.", width=40, sym="+")
     ++++++++++++++++++++++++++++++++++++++++
     +      This is centered in a box.      +
     ++++++++++++++++++++++++++++++++++++++++
@@ -173,12 +179,12 @@ def trimDocString(docstring):
     Examples
     --------
     >>> from pygimli.utils import trimDocString
-    >>> docstring = '    This is a string with indentation and whitespace.   '
-    >>> trimDocString(docstring).replace('with', 'without')
+    >>> docstring = "    This is a string with indentation and whitespace.   "
+    >>> trimDocString(docstring).replace("with", "without")
     'This is a string without indentation and whitespace.'
     """
     if not docstring:
-        return ''
+        return ""
     # Convert tabs to spaces (following the normal Python rules)
     # and split into a list of lines:
     lines = docstring.expandtabs().splitlines()
@@ -199,7 +205,7 @@ def trimDocString(docstring):
     while trimmed and not trimmed[0]:
         trimmed.pop(0)
     # Return a single string:
-    return '\n'.join(trimmed)
+    return "\n".join(trimmed)
 
 
 def unicodeToAscii(text):
@@ -230,34 +236,39 @@ def logDropTol(p, dropTol=1e-3):
     return tmp
 
 
-import json
 class PFjsonEncoder(json.JSONEncoder):
+    """JSON encoder for pygimli objects."""
+
     def default(self, obj):
-        if hasattr(obj, 'dumps'):
+        """Return the JSON serializable representation of obj."""
+        if hasattr(obj, "dumps"):
             return obj.dumps()
         if isinstance(obj, complex):
             return [obj.real, obj.imag]
         try:
             return json.JSONEncoder.default(self, obj)
-        except:
-            return f'{type(obj)}: {obj}'
+        except Exception:
+            return f"{type(obj)}: {obj}"
 
 
 def prettify(value, roundValue=False, mathtex=False):
     """Return prettified string for value .. if possible."""
     if isinstance(value, list):
-        return f'[{", ".join([prettify(v) for v in value])}]'
+        return f"[{', '.join([prettify(v) for v in value])}]"
     if isinstance(value, dict):
         try:
             return json.dumps(value, indent=4, cls=PFjsonEncoder)
         except Exception as e:
-            pg.warning('prettify fails:', e)
+            pg.warning("prettify fails:", e)
             return str(value)
     elif isinstance(value, np.int64) or pg.isScalar(value):
         return prettyFloat(value, roundValue, mathtex)
 
-    pg.warn("Don't know how to prettify the string representation for: ",
-            type(value), value)
+    pg.warn(
+        "Don't know how to prettify the string representation for: ",
+        type(value),
+        value,
+    )
     return value
 
 
@@ -273,20 +284,24 @@ def prettyFloat(value, roundValue=None, mathtex=False):
     # if change things her, look that they are still good (mod-dc-2d)
 
     if np.isnan(value):
-        return 'NaN'
+        return "NaN"
 
-    if isinstance(roundValue, int) and abs(round(value)-value) < 1e-4 and \
-        abs(value) < 1e3 and 0:
+    if (
+        isinstance(roundValue, int)
+        and abs(round(value) - value) < 1e-4
+        and abs(value) < 1e3
+        and 0
+    ):
         string = str(int(round(value, roundValue)))
     elif abs(value) < 1e-25:
         string = "0"
     elif abs(value) > 1e4 or abs(value) <= 1e-3:
-        string = str("%.1e" % value)
+        string = f"{value:.1e}"
     # elif abs(value) < 1e-2:
     #     string = str("%.4f" % round(value, 4))
     elif abs(value) < 1e-1:
         # max three symbols after comma
-         string = str("%.3f" % round(value, 3))
+        string = f"{round(value, 3):.3f}"
     elif abs(value) < 1e0:
         string = f"{round(value, 2):.2f}"
     elif abs(value) < 1e1:
@@ -303,19 +318,19 @@ def prettyFloat(value, roundValue=None, mathtex=False):
         string = string.replace(".0", "")
     elif string.endswith(".00"):
         string = string.replace(".00", "")
-    elif '.' in string and not 'e' in string and string.endswith("00"):
-        string = string[0:len(string)-2]
-    elif '.' in string and not 'e' in string and string.endswith("0"):
+    elif "." in string and "e" not in string and string.endswith("00"):
+        string = string[0 : len(string) - 2]
+    elif "." in string and "e" not in string and string.endswith("0"):
         # pg._r(string[0:len(string)-1])
-        string = string[0:len(string)-1]
+        string = string[0 : len(string) - 1]
 
     if mathtex is True:
-        if 'e+' in string:
-            string = string.replace('e+', r'\cdot 10^{')
-            string+='}'
-        elif 'e-' in string:
-            string = string.replace('e-', r'\cdot 10^{-')
-            string+='}'
+        if "e+" in string:
+            string = string.replace("e+", r"\cdot 10^{")
+            string += "}"
+        elif "e-" in string:
+            string = string.replace("e-", r"\cdot 10^{-")
+            string += "}"
 
     return string
 
@@ -338,15 +353,15 @@ def prettyTime(t):
     >>> from pygimli.utils import prettyTime
     >>> print(prettyTime(1))
     1 s
-    >>> print(prettyTime(3600*24))
+    >>> print(prettyTime(3600 * 24))
     1 day
-    >>> print(prettyTime(2*3600*24))
+    >>> print(prettyTime(2 * 3600 * 24))
     2 days
-    >>> print(prettyTime(365*3600*24))
+    >>> print(prettyTime(365 * 3600 * 24))
     1 year
     >>> print(prettyTime(3600))
     1 hour
-    >>> print(prettyTime(2*3600))
+    >>> print(prettyTime(2 * 3600))
     2 hours
     >>> print(prettyTime(3660))
     1h1m
@@ -359,51 +374,51 @@ def prettyTime(t):
     """
     if abs(t) > 1:
         seconds = int(t)
-        years, seconds = divmod(seconds, 365*86400)
+        years, seconds = divmod(seconds, 365 * 86400)
         days, seconds = divmod(seconds, 86400)
         hours, seconds = divmod(seconds, 3600)
         minutes, seconds = divmod(seconds, 60)
         if years > 0:
             if days >= 1:
-                return f'{years}y{days}d'
+                return f"{years}y{days}d"
             else:
                 if years > 1:
-                    return f'{years} years'
+                    return f"{years} years"
                 else:
-                    return f'{years} year'
+                    return f"{years} year"
         elif days > 0:
             if hours >= 1:
-                return f'{days}d{hours}h'
+                return f"{days}d{hours}h"
             else:
                 if days > 1:
-                    return f'{days} days'
+                    return f"{days} days"
                 else:
-                    return f'{days} day'
+                    return f"{days} day"
         elif hours > 0:
             if minutes >= 1:
-                return f'{hours}h{minutes}m'
+                return f"{hours}h{minutes}m"
             else:
                 if hours > 1:
-                    return f'{hours} hours'
+                    return f"{hours} hours"
                 else:
-                    return f'{hours} hour'
+                    return f"{hours} hour"
         elif minutes > 0:
             if seconds >= 1:
-                return f'{minutes}m{seconds}s'
+                return f"{minutes}m{seconds}s"
             else:
                 if minutes > 1:
-                    return f'{minutes} minutes'
+                    return f"{minutes} minutes"
                 else:
-                    return f'{minutes} minute'
+                    return f"{minutes} minute"
         else:
-            return '{seconds} s'
+            return "{seconds} s"
     else:
         if abs(t) >= 1e-3 and abs(t) <= 0.1:
-            return prettyFloat(t*1e3) + " ms"
+            return prettyFloat(t * 1e3) + " ms"
         elif abs(t) >= 1e-6 and abs(t) <= 1e-3:
-            return prettyFloat(t*1e6) + " µs"
+            return prettyFloat(t * 1e6) + " µs"
         elif abs(t) >= 1e-9 and abs(t) <= 1e-6:
-            return prettyFloat(t*1e9) + " ns"
+            return prettyFloat(t * 1e9) + " ns"
         return prettyFloat(t) + " s"
 
 
@@ -453,21 +468,21 @@ def niceLogspace(vMin, vMax, nDec=10):
 
     if vMin < 1e-12:
         print("vMin:", vMin, "vMax", vMax)
-        raise ValueError('vMin > vMax or vMin <= 0.')
+        raise ValueError("vMin > vMax or vMin <= 0.")
 
-    vMin = 10**np.floor(np.log10(vMin))
-    vMax = 10**np.ceil(np.log10(vMax))
+    vMin = 10 ** np.floor(np.log10(vMin))
+    vMax = 10 ** np.ceil(np.log10(vMax))
 
     if vMax == vMin:
         vMax *= 10
 
     n = np.log10(vMax / vMin) * nDec + 1
 
-    q = 10.**(1. / nDec)
+    q = 10.0 ** (1.0 / nDec)
 
     if reverse:
-        return (vMin*q**np.arange(n))[::-1]
-    return vMin*q**np.arange(n)
+        return (vMin * q ** np.arange(n))[::-1]
+    return vMin * q ** np.arange(n)
 
 
 def grange(start, end, dx=0, n=0, log=False):
@@ -531,7 +546,7 @@ def grange(start, end, dx=0, n=0, log=False):
         else:
             return pg.core.increasingRange(start, end, n)[1:]
     else:
-        raise ValueError('Either dx or n have to be given.')
+        raise ValueError("Either dx or n have to be given.")
 
 
 def diff(v):
@@ -592,7 +607,7 @@ def diff(v):
         d = pg.Vector(len(v) - 1)
 
     for i, _ in enumerate(d):
-        d[i] = v[i+1] - v[i]
+        d[i] = v[i + 1] - v[i]
     return d
 
 
@@ -604,7 +619,7 @@ def rate(v):
     """
     v = np.array(np.atleast_1d(v), dtype=float)
     r = np.zeros_like(v)
-    r[1:] = v[:-1]/v[1:]
+    r[1:] = v[:-1] / v[1:]
     return r
 
 
@@ -694,8 +709,8 @@ def cumDist(p):
 def cut(v, n=2):
     """Cut array v into n parts."""
     N = len(v)
-    Nc = N//n
-    cv = [v[i*Nc:(i+1)*Nc] for i in range(n)]
+    Nc = N // n
+    cv = [v[i * Nc : (i + 1) * Nc] for i in range(n)]
     return cv
 
 
@@ -743,7 +758,7 @@ def rand(n, minVal=0.0, maxVal=1.0, seed=None):
 
 def getIndex(seq, f):
     """TODO DOCUMENTME."""
-    pg.error('getIndex in use?')
+    pg.error("getIndex in use?")
     # DEPRECATED_SLOW
     idx = []
     if isinstance(seq, pg.Vector):
@@ -760,8 +775,12 @@ def getIndex(seq, f):
 
 def filterIndex(seq, idx):
     """TODO DOCUMENTME."""
-    pg.error('filterIndex in use?')
-    ret = pg.Vector(len(idx)) if isinstance(seq, pg.Vector) else list(range(len(idx)))
+    pg.error("filterIndex in use?")
+    ret = (
+        pg.Vector(len(idx))
+        if isinstance(seq, pg.Vector)
+        else list(range(len(idx)))
+    )
 
     for i, ix in enumerate(idx):
         ret[i] = seq[ix]
@@ -775,8 +794,9 @@ def findNearest(x, y, xp, yp, radius=-1):
     minDist = 1e9
     startPointDist = pg.Vector(len(x))
     for i, _ in enumerate(x):
-        startPointDist[i] = sqrt((x[i] - xp) * (x[i] - xp) + (y[i] - yp) * (y[
-            i] - yp))
+        startPointDist[i] = sqrt(
+            (x[i] - xp) * (x[i] - xp) + (y[i] - yp) * (y[i] - yp)
+        )
 
         if startPointDist[i] < minDist and startPointDist[i] > radius:
             minDist = startPointDist[i]
@@ -794,8 +814,8 @@ def unique_everseen(iterable, key=None):
     Examples
     --------
     >>> from pygimli.utils import unique_everseen
-    >>> s1 = 'AAAABBBCCDAABBB'
-    >>> s2 = 'ABBCcAD'
+    >>> s1 = "AAAABBBCCDAABBB"
+    >>> s2 = "ABBCcAD"
     >>> list(unique_everseen(s1))
     ['A', 'B', 'C', 'D']
     >>> list(unique_everseen(s2, key=str.lower))
@@ -835,7 +855,7 @@ def unique(a):
     Examples
     --------
     >>> from pygimli.utils import unique
-    >>> unique((1,1,2,2,3,1))
+    >>> unique((1, 1, 2, 2, 3, 1))
     [1, 2, 3]
 
     See Also
@@ -854,7 +874,7 @@ def uniqueRows(data, precision=2):
     --------
     >>> from pygimli.utils.utils import uniqueRows
     >>> import numpy as np
-    >>> A = np.array(([1,2,3],[3,2,1],[1,2,3]))
+    >>> A = np.array(([1, 2, 3], [3, 2, 1], [1, 2, 3]))
     >>> unA, ia, ib = uniqueRows(A)
     >>> bool(np.all(A[ia] == unA))
     True
@@ -923,44 +943,49 @@ def uniqueAndSum(indices, to_sum, return_index=False, verbose=False):
     """
     flag_mult = len(indices) != indices.size
     if verbose:
-        print(f'Get {np.shape(indices)} indices for sorting')
+        print(f"Get {np.shape(indices)} indices for sorting")
     if flag_mult:
-        ar = indices.ravel().view(
-            np.dtype((np.void,
-                      indices.dtype.itemsize * indices.shape[1]))).flatten()
+        ar = (
+            indices.ravel()
+            .view(
+                np.dtype((np.void, indices.dtype.itemsize * indices.shape[1]))
+            )
+            .flatten()
+        )
     else:
         ar = np.asanyarray(indices).flatten()
 
     to_sum = np.asanyarray(to_sum)
 
     if ar.size == 0:
-        ret = (ar, )
-        ret += (to_sum)
+        ret = (ar,)
+        ret += to_sum
         if return_index:
-            ret += (np.empty(0, np.bool), )
+            ret += (np.empty(0, np.bool),)
         return ret
     if verbose:
-        print('Performing argsort...')
-    perm = ar.argsort(kind='mergesort')
+        print("Performing argsort...")
+    perm = ar.argsort(kind="mergesort")
     aux = ar[perm]
     flag = np.concatenate(([True], aux[1:] != aux[:-1]))
-    ret = (indices[perm[flag]], ) if flag_mult else (aux[flag], ) # unique indices
+    # unique indices
+    ret = (indices[perm[flag]],) if flag_mult else (aux[flag],)
 
     if verbose:
-        print(f'Identified {np.shape(ret)} unique indices')
+        print(f"Identified {np.shape(ret)} unique indices")
     if verbose:
-        print('Performing reduceat...')
+        print("Performing reduceat...")
     summed = np.add.reduceat(to_sum[perm], np.nonzero(flag)[0])
 
-    ret += (summed, )  # summed values
+    ret += (summed,)  # summed values
 
     if return_index:
-        ret += (perm[flag], )  # optional: indices
+        ret += (perm[flag],)  # optional: indices
 
     return ret
 
 
-def filterLinesByCommentStr(lines, comment_str='#'):
+def filterLinesByCommentStr(lines, comment_str="#"):
     """Filter lines from file.readlines() beginning with symbols in comment."""
     comment_line_idx = []
     for i, line in enumerate(lines):
@@ -988,24 +1013,25 @@ class Report(ScoobyReport):
     def __init__(self, additional=None, **kwargs):
         """Initialize a scooby. Report instance."""
         # Mandatory packages.
-        core = ['pygimli', 'pgcore', 'numpy', 'matplotlib']
+        core = ["pygimli", "pgcore", "numpy", "matplotlib"]
         # Optional packages.
-        optional = ['scipy', 'tqdm', 'IPython', 'meshio', 'tetgen', 'pyvista']
+        optional = ["scipy", "tqdm", "IPython", "meshio", "tetgen", "pyvista"]
         inp = {
-            'additional': additional,
-            'core': core,
-            'optional': optional,
-            **kwargs  # User input overwrites defaults.
+            "additional": additional,
+            "core": core,
+            "optional": optional,
+            **kwargs,  # User input overwrites defaults.
         }
 
         super().__init__(**inp)
 
 
-class Table(object):
-    """Simple table for nice formated output."""
+class Table:
+    """Simple table for nice formatted output."""
 
-    def __init__(self, table, header=None, align=None, pn=None,
-                 transpose:bool=None):
+    def __init__(
+        self, table, header=None, align=None, pn=None, transpose: bool = None
+    ):
         """
         Create a simple but shiny table.
 
@@ -1034,7 +1060,7 @@ class Table(object):
         self.rows = len(table)
         self.cols = 1
 
-        if hasattr(table[0], '__iter__'):
+        if hasattr(table[0], "__iter__"):
             self.cols = len(table[0])
         else:
             self.cols = self.rows
@@ -1043,14 +1069,12 @@ class Table(object):
 
         if transpose is None:
             transpose = False
-            if hasattr(header, '__iter__'):
-                #pg._r(self.rows, self.cols, ':', len(header))
-                if len(header) == self.rows:
-                    transpose = True
+            if hasattr(header, "__iter__") and len(header) == self.rows:
+                transpose = True
 
-        #pg._g(transpose)
+        # pg._g(transpose)
         if transpose:
-            self.table = list(map(list, zip(*self.table)))
+            self.table = list(map(list, zip(*self.table, strict=False)))
 
         # for i, row in enumerate(self.table):
         #     for j, c in enumerate(row):
@@ -1059,45 +1083,47 @@ class Table(object):
 
         if self.pn is not None:
             for i, row in enumerate(self.table):
-                #self.table[i][self.pn]=f'${pg.pf(row[self.pn], mathtex=True)}$'
+                # self.table[i][self.pn] =
+                #     f'${pg.pf(row[self.pn], mathtex=True)}$'
                 if isinstance(self.pn, list):
                     for j in self.pn:
-                        self.table[i][j] = f'{pg.pf(row[j])}'
+                        self.table[i][j] = f"{pg.pf(row[j])}"
                 else:
-                    self.table[i][self.pn] = f'{pg.pf(row[self.pn])}'
-
+                    self.table[i][self.pn] = f"{pg.pf(row[self.pn])}"
 
     @property
     def fmt(self):
-        _fmt = dict(stralign="left", )
+        """Return the tabulate format settings."""
+        _fmt = dict(
+            stralign="left",
+        )
 
         ca = []
         if self.align is not None:
             for a in self.align:
-                if a == 'l':
-                    ca.append('left')
-                elif a == 'c':
-                    ca.append('center')
-                elif a == 'r':
-                    ca.append('right')
+                if a == "l":
+                    ca.append("left")
+                elif a == "c":
+                    ca.append("center")
+                elif a == "r":
+                    ca.append("right")
 
         else:
             for j, col in enumerate(self.table[0]):
                 if j == 0:
-                    ca.append('left')
-                elif j == len(self.table[0]) -1:
-                    ca.append('right')
+                    ca.append("left")
+                elif j == len(self.table[0]) - 1:
+                    ca.append("right")
                 else:
                     if isinstance(col, int):
-                        ca.append('center')
+                        ca.append("center")
                     elif not isinstance(col, str):
-                        ca.append('right')
+                        ca.append("right")
                     else:
-                        ca.append('left')
+                        ca.append("left")
 
-        _fmt['colalign'] = ca
+        _fmt["colalign"] = ca
         return _fmt
-
 
     def __str__(self):
         """Print table."""
@@ -1106,8 +1132,9 @@ class Table(object):
         if pg.isNotebook():
             from IPython.display import display, Markdown
 
-            md = tabulate(self.table, headers=self.header,
-                          tablefmt="pipe", **self.fmt)
+            md = tabulate(
+                self.table, headers=self.header, tablefmt="pipe", **self.fmt
+            )
 
             # md =  '| | | Value | Unit | Dim |\n'
             # md += '| :- | :- | -: | :- | -:|\n'
@@ -1121,29 +1148,31 @@ class Table(object):
             #     md += "\n"
 
             display(Markdown(md))
-            return ''
+            return ""
 
         elif pg.isIPyTerminal():
             return self._repr_rst_()
 
         try:
             if self.header is None:
-                return '\n' + tabulate(self.table) + '\n'
+                return "\n" + tabulate(self.table) + "\n"
 
-            return '\n' + tabulate(self.table, headers=self.header,
-                                   **self.fmt) + '\n'
+            return (
+                "\n"
+                + tabulate(self.table, headers=self.header, **self.fmt)
+                + "\n"
+            )
         except ImportError:
             pass
         except BaseException as e:
             pg.error(e)
 
         if self.header is None:
-            return '\n' + str(self.header) + '\n' + (self.table)
+            return "\n" + str(self.header) + "\n" + (self.table)
         else:
-            return '\n' + (self.table)
+            return "\n" + (self.table)
 
-
-    def format(self, fmt='plain'):
+    def format(self, fmt="plain"):
         """Return string representation of the table in given format.
 
         Parameters
@@ -1159,25 +1188,30 @@ class Table(object):
         from tabulate import tabulate
 
         if self.header is None:
-            return '\n' + tabulate(self.table, tablefmt=fmt, **self.fmt) + '\n'
+            return "\n" + tabulate(self.table, tablefmt=fmt, **self.fmt) + "\n"
 
-        return '\n' + tabulate(self.table, headers=self.header,
-                               tablefmt=fmt, **self.fmt) + '\n'
-
+        return (
+            "\n"
+            + tabulate(
+                self.table, headers=self.header, tablefmt=fmt, **self.fmt
+            )
+            + "\n"
+        )
 
     def _repr_html_(self):
-        """Return html representation for jupyter notebooks and sphinx-gallery."""
+        """Return html representation for notebooks and sphinx-gallery."""
         if pg.isNotebook():
             from tabulate import tabulate
-            #math works here
-            md = tabulate(self.table, headers=self.header,
-                          tablefmt="html", **self.fmt)
+
+            # math works here
+            md = tabulate(
+                self.table, headers=self.header, tablefmt="html", **self.fmt
+            )
             return str(md)
         elif pg.isIPyTerminal():
-            #math does not works here for tablefmt=html
+            # math does not works here for tablefmt=html
             # for Sphinx-gallery
             return None
-
 
     def _repr_rst_(self):
         """Return restructured text representation for sphinx-gallery."""
@@ -1188,10 +1222,10 @@ class Table(object):
         """
         from tabulate import tabulate
         import re
+
         def _m2r(s):
             if isinstance(s, str):
-                return re.sub(r'\$(.*)\$',
-                                lambda m: f':math:`{m.group(1)}`', s)
+                return re.sub(r"\$(.*)\$", lambda m: f":math:`{m.group(1)}`", s)
             return s
 
         for i, col in enumerate(self.header):
@@ -1201,15 +1235,14 @@ class Table(object):
             for j, r in enumerate(row):
                 self.table[i][j] = _m2r(r)
 
-        md = tabulate(self.table, headers=self.header,
-                      tablefmt="rst", **self.fmt)
+        md = tabulate(
+            self.table, headers=self.header, tablefmt="rst", **self.fmt
+        )
 
-        return SG_RST_TABLE.format(indent(md, ''))
-
+        return SG_RST_TABLE.format(indent(md, ""))
 
     def __repr__(self):
-        """
-        """
+        """Return string representation of the table."""
         if pg.isNotebook():
             ## covered by _repr_html, we don't need both
             return ""
@@ -1219,4 +1252,3 @@ class Table(object):
             return self._repr_rst_()
 
         return str(self)
-

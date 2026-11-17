@@ -94,7 +94,7 @@ HarmonicModelling::HarmonicModelling(size_t nh, const RVector & tvec, bool verbo
 
     //! vector linearly ascending from 0 (tmin) to 1 (tmax) -- drift
     double tMin = min(tvec), tMax = max(tvec);
-    RVector tOne((t_ - tMin) / (tMax - tMin)); //** wieso nicht so:
+    RVector tOne((t_ - tMin) / (tMax - tMin)); //** why not like this:
 //    RVector tOne((t_ - tMin_) / (tMax_ - tMin_));
 
     A_.push_back(tOne);

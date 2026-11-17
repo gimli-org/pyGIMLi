@@ -1,60 +1,62 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Test the OSM getter helper (currently without active test code)."""
 
 # write a correct test!
 import unittest
 
-from pygimli.viewer.mpl.overlayimage import underlayMap
-#from pygimli.io import readGPX, readSimpleLatLon
+# from pygimli.io import readGPX, readSimpleLatLon
 
-import matplotlib.pyplot as plt
-#import pyproj
+# import pyproj
+
 
 class TestOSMGetter(unittest.TestCase):
+    """Placeholder for OSM/map getter tests."""
 
     def test_OSM(self):
-        #zone = 32
-        #vendor = 'OSM'
-        #pnts = readGPX( 'rieseltag.gpx' )
+        """Keep a placeholder test that does nothing."""
+        # zone = 32
+        # vendor = 'OSM'
+        # pnts = readGPX( 'rieseltag.gpx' )
 
-        #zone = 31
-        #vendor = 'GM'
-        #pnts = readSimpleLatLon('bleicherode.dat', True)
+        # zone = 31
+        # vendor = 'GM'
+        # pnts = readSimpleLatLon('bleicherode.dat', True)
 
         ##zone = 29
         ##pnts = readGPX( 'gps.gpx' )
 
-        #proj = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
+        # proj = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
 
-        ## gauss krüger projektion 4. Meridianstreifen (GK 4), Ellipsoid = "Bessel"
-        #proj = pyproj.Proj(proj='tmerc', init='epsg:31468', ellps='WGS84')
-        ##proj = pyproj.Proj( proj = 'tmerc', init = 'epsg:31468', ellps = 'bessel' )
+        ## Gauss-Krueger projection, 4th meridian strip (GK 4),
+        ## ellipsoid = "Bessel"
+        # proj = pyproj.Proj(proj='tmerc', init='epsg:31468', ellps='WGS84')
+        ##proj = pyproj.Proj( proj = 'tmerc', init = 'epsg:31468',
+        ##                   ellps = 'bessel' )
 
-        #for p in pnts:
-            #x, y = proj(p[0], p[1])
-            #print(x, y)
-            #plt.plot(x, y, '.', markersize=18)
-            #plt.text(x, y, p[2])
+        # for p in pnts:
+        # x, y = proj(p[0], p[1])
+        # print(x, y)
+        # plt.plot(x, y, '.', markersize=18)
+        # plt.text(x, y, p[2])
 
-        #axes = plt.gca()
+        # axes = plt.gca()
 
-        #underlayMap(
-            #axes,
-            #proj,
-            #vendor=vendor,
-            #zoom=10,
-            #pixelLimit=[
-                #1024,
-                #1024],
-            #verbose=True,
-            #fitMap=True)
+        # underlayMap(
+        # axes,
+        # proj,
+        # vendor=vendor,
+        # zoom=10,
+        # pixelLimit=[
+        # 1024,
+        # 1024],
+        # verbose=True,
+        # fitMap=True)
 
-        #axes.grid()
+        # axes.grid()
 
-        #plt.show()
+        # plt.show()
         pass
 
-if __name__ == '__main__':
 
+if __name__ == "__main__":
     unittest.main()
-

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# encoding: utf-8
 """
 Inversion with structural constraints
 =====================================
@@ -18,7 +17,6 @@ are far easier to interpret.
 """
 
 # We import the numpy and matplotlib
-import numpy as np
 # Next we import pyGIMLi and the ERT and mesh tools modules
 import pygimli as pg
 import pygimli.meshtools as mt
@@ -95,7 +93,8 @@ ax, cb = mgr.showResult(cMin=50, cMax=1500)
 # Günther, T., Heinzelmann, M., Vött, A. & Rabbel, W. (2018): Constraining
 # Electric Resistivity Tomography by Direct Push Electric Conductivity
 # logs and vibracores: An exemplary study of the Fiume Morto silted riverbed
-# (Ostia Antica, Western Italy). Geophysics 83(3), B87-B103, doi:10.1190/geo2016-0660.1.
+# (Ostia Antica, Western Italy). Geophysics 83(3), B87-B103,
+# doi:10.1190/geo2016-0660.1.
 # Tanner, D.C., Buness, H., Igel, J., Günther, T., Gabriel, G., Skiba, P.,
 # Plenefisch, T., Gestermann, N. & Walter, T. (2020): Fault Detection. in:
 # Tanner, C.D. & Brandes, C. (Eds.): Understanding Faults, 380p., Elsevier,
@@ -107,5 +106,6 @@ ax, cb = mgr.showResult(cMin=50, cMax=1500)
 # Norooz, R., Olsson, P.-I., Dahlin, T., Günther, T. & Bernstone, C. (2021): A
 # geoelectrical pre-study of Älvkarleby test embankment dam: 3D forward
 # modelling and effects of structural constraints on the 3D inversion model of
-# zoned embankment dams. J. Appl. Geophys. 191, 104355, doi:10.1016/j.jappgeo.2021.104355.
+# zoned embankment dams. J. Appl. Geophys. 191, 104355,
+# doi:10.1016/j.jappgeo.2021.104355.
 #

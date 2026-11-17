@@ -6,45 +6,61 @@ import pygimli as pg
 
 def showAmplitudeSpectrum(*args, **kwargs):
     """Backward compatibility."""
-    pg.deprecated('drawAmplitudeSpectrum')
+    pg.deprecated("drawAmplitudeSpectrum")
     return drawAmplitudeSpectrum(*args, **kwargs)
 
 
 def showPhaseSpectrum(*args, **kwargs):
     """Backward compatibility."""
-    pg.deprecated('drawPhaseSpectrum')
+    pg.deprecated("drawPhaseSpectrum")
     return drawPhaseSpectrum(*args, **kwargs)
 
 
-def drawAmplitudeSpectrum(ax, freq, amp, ylabel=r'$\rho$ ($\Omega$m)',
-                          grid=True, marker='+', ylog=True, **kwargs):
+def drawAmplitudeSpectrum(
+    ax,
+    freq,
+    amp,
+    ylabel=r"$\rho$ ($\Omega$m)",
+    grid=True,
+    marker="+",
+    ylog=True,
+    **kwargs,
+):
     """Show amplitude spectrum (resistivity as a function of f)."""
-    if 'label' not in kwargs:
-        kwargs['label'] = 'obs'
+    if "label" not in kwargs:
+        kwargs["label"] = "obs"
 
     gci = ax.semilogx(freq, amp, marker=marker, **kwargs)
     if ylog is None:
-        ylog = (min(amp) > 0)
+        ylog = min(amp) > 0
     if ylog:
-        ax.set_yscale('log')
+        ax.set_yscale("log")
     # ax.set_ylim(min(amp) * .99, max(amp * 1.01))
-    ax.set_xlabel('f (Hz)')
+    ax.set_xlabel("f (Hz)")
     ax.set_ylabel(ylabel)
     ax.grid(grid)
     ax.legend()
     return gci
 
 
-def drawPhaseSpectrum(ax, freq, phi, ylabel=r'$-\phi$ (mrad)',
-                      grid=True, marker='+', ylog=False, **kwargs):
+def drawPhaseSpectrum(
+    ax,
+    freq,
+    phi,
+    ylabel=r"$-\phi$ (mrad)",
+    grid=True,
+    marker="+",
+    ylog=False,
+    **kwargs,
+):
     """Show phase spectrum (-phi as a function of f)."""
-    if 'label' not in kwargs:
-        kwargs['label'] = 'obs'
+    if "label" not in kwargs:
+        kwargs["label"] = "obs"
 
     gci = ax.semilogx(freq, phi, marker=marker, **kwargs)
     if ylog:
-        ax.set_yscale('log')
-    ax.set_xlabel('f (Hz)')
+        ax.set_yscale("log")
+    ax.set_xlabel("f (Hz)")
     ax.set_ylabel(ylabel)
     ax.grid(grid)
     ax.legend()
@@ -62,16 +78,24 @@ def showSpectrum(freq, amp, phi, nrows=2, ylog=None, axs=None, **kwargs):
     return fig, axs
 
 
-def plotSpectrum(ax, freq, vals, ylabel=r'$-\phi$ (mrad)',
-                 grid=True, marker='+', ylog=True, **kwargs):
+def plotSpectrum(
+    ax,
+    freq,
+    vals,
+    ylabel=r"$-\phi$ (mrad)",
+    grid=True,
+    marker="+",
+    ylog=True,
+    **kwargs,
+):
     """Plot some spectrum (redundant)."""
-    pg.deprecated('drawSpectrum')
-    if 'label' not in kwargs:
-        kwargs['label'] = 'obs'
+    pg.deprecated("drawSpectrum")
+    if "label" not in kwargs:
+        kwargs["label"] = "obs"
     ax.loglog(freq, vals, marker=marker, **kwargs)
     if ylog:
-        ax.set_yscale('log')
-    ax.set_xlabel('f (Hz)')
+        ax.set_yscale("log")
+    ax.set_xlabel("f (Hz)")
     ax.set_ylabel(ylabel)
     ax.grid(grid)
 

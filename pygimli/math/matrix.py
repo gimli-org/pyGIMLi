@@ -6,12 +6,19 @@ import numpy as np
 import pygimli as pg
 import pygimli.core as pgcore
 
-from pygimli.core import (MatrixBase)
+from pygimli.core import MatrixBase
 
-from pygimli.core.matrix import (asCSC, asCSR, asCOO,
-                                 asSparseMapMatrix, asSparseMatrix,
-                                 asArray, sparseMatrix2Array,
-                                 reduceEntries, removeEntries)
+from pygimli.core.matrix import (
+    asCSC,
+    asCSR,
+    asCOO,
+    asSparseMapMatrix,
+    asSparseMatrix,
+    asArray,
+    sparseMatrix2Array,
+    reduceEntries,
+    removeEntries,
+)
 
 IdentityMatrix = pgcore.IdentityMatrix
 Matrix = pgcore.RMatrix
@@ -32,12 +39,10 @@ class MultMatrix(MatrixBase):
         super().__init__(verbose)
         self.A = A
 
-
     @property
     def A(self):
         """Return underlying matrix."""
         return self._A
-
 
     @A.setter
     def A(self, A):
@@ -45,7 +50,6 @@ class MultMatrix(MatrixBase):
         self._A = A
         self.ndim = self._A.ndim
         self.resize(self._A.rows(), self._A.cols())
-
 
     def save(self, filename):
         """Save it to be used in inversion with dosave flag."""
@@ -70,11 +74,9 @@ class ScaledMatrix(MultMatrix):
         self._scale = scale
         super().__init__(A, verbose)
 
-
     def mult(self, x):
         """Multiplication from right-hand-side (A.T*x)."""
         return self.A.mult(x) * self._scale
-
 
     def transMult(self, x):
         """Multiplication from right-hand-side (A*x)."""
@@ -97,11 +99,9 @@ class TransposedMatrix(MatrixBase):
         self._A = A
         super().__init__(self._A.cols(), self._A.rows(), verbose)
 
-
     def mult(self, x):
         """Multiplication from right-hand-side (A.T*x)."""
         return self._A.transMult(x)
-
 
     def transMult(self, x):
         """Multiplication from right-hand-side (A*x)."""
@@ -124,11 +124,9 @@ class SquaredMatrix(MatrixBase):
         self._A = A
         super().__init__(self._A.cols(), self._A.cols(), verbose)
 
-
     def mult(self, x):
         """Multiplication from right-hand-side (A.T*A*x)."""
         return self._A.transMult(self._A.mult(x))
-
 
     def transMult(self, x):
         """Multiplication from right-hand-side ((A^T*A)^T*x)."""
@@ -151,11 +149,9 @@ class SquaredTransposeMatrix(MatrixBase):
         self._A = A
         super().__init__(self._A.rows(), self._A.rows(), verbose)
 
-
     def mult(self, x):
         """Multiplication from right-hand-side (A.T*A*x)."""
         return self._A.mult(self._A.transMult(x))
-
 
     def transMult(self, x):
         """Multiplication from right-hand-side ((A^T*A)^T*x)."""
@@ -190,23 +186,21 @@ class RealNumpyMatrix(MatrixBase):
             else:
                 self.M = mat
 
-        super().__init__(np.shape(self.M)[0], np.shape(self.M)[1], verbose=False)
-
+        super().__init__(
+            np.shape(self.M)[0], np.shape(self.M)[1], verbose=False
+        )
 
     def __repr__(self):
         """Return string representation of the matrix."""
         return self.M.__repr__()
 
-
     def save(self, name):
         """Save the content of this matrix."""
         np.save(name, self.M)
 
-
     def mult(self, vector):
         """Multiplication from right-hand side."""
         return self.M.dot(vector)
-
 
     def transMult(self, vector):
         """Multiplication from left-hand side."""
@@ -241,7 +235,7 @@ class MultLeftMatrix(MultMatrix):
         self._l = left
 
     @property
-    def l(self):  # better use left and right instead (pylint E743)?
+    def l(self):  # noqa: E743  better use left and right instead?
         """Return the left-side scaling vector."""
         return self._l
 
@@ -296,15 +290,18 @@ class MultRightMatrix(MultMatrix):
 
     def mult(self, x):
         """Return M*x = A*(r*x)."""
-        if hasattr(x, '__len__') and hasattr(self.r, '__len__') and \
-            len(x) != len(self.r):
-                # assuming A was complex
-                # warn('need to double x')
-                # print('mult:', self.A.rows(), " x " , self.A.cols(),
-                #        'x:', len(x), 'r:', len(self.r))
-                # print(self.perm)
-                return self.A.mult(x[self.perm] * self.r)
-                # return self.A.mult(pgcore.cat(x, x) * self.r)
+        if (
+            hasattr(x, "__len__")
+            and hasattr(self.r, "__len__")
+            and len(x) != len(self.r)
+        ):
+            # assuming A was complex
+            # warn('need to double x')
+            # print('mult:', self.A.rows(), " x " , self.A.cols(),
+            #        'x:', len(x), 'r:', len(self.r))
+            # print(self.perm)
+            return self.A.mult(x[self.perm] * self.r)
+            # return self.A.mult(pgcore.cat(x, x) * self.r)
         return self.A.mult(x * self.r)
 
     def transMult(self, x):
@@ -330,51 +327,55 @@ class MultLeftRightMatrix(MultMatrix):
             left and right side vectors to weight individual rows & columns
         """
         if A.cols() != len(right):
-                raise IndexError("Matrix columns don't fit right vector length!",
-                                A.cols(), len(right))
+            raise IndexError(
+                "Matrix columns don't fit right vector length!",
+                A.cols(),
+                len(right),
+            )
         if A.rows() != len(left):
-            raise IndexError("Matrix rows don't fit left vector length!",
-                            A.rows(), len(left))
+            raise IndexError(
+                "Matrix rows don't fit left vector length!", A.rows(), len(left)
+            )
 
         super().__init__(A, verbose)
         self._r = right
         self._l = left
 
-
     @property
-    def l(self):
+    def l(self):  # noqa: E743  compatible attribute name
         """Return the left-side scaling vector."""
         return self._l
 
-
     @l.setter
-    def l(self, l):
+    def l(self, l):  # noqa: E743  compatible attribute name
         """Set left-side scaling vector."""
         if self.A.rows() != len(l):
-            raise ValueError("Left side length does not fit Matrix rows",
-                             self.A.rows(), len(l))
+            raise ValueError(
+                "Left side length does not fit Matrix rows",
+                self.A.rows(),
+                len(l),
+            )
         self._l = l
-
 
     @property
     def r(self):
         """Return the right-side scaling vector."""
         return self._r
 
-
     @r.setter
     def r(self, r):
         """Set right-side scaling vector."""
         if self.A.cols() != len(r):
-            raise ValueError("Right-side length does not fit Matrix cols",
-                             self.A.cols(), len(r))
+            raise ValueError(
+                "Right-side length does not fit Matrix cols",
+                self.A.cols(),
+                len(r),
+            )
         self._r = r
-
 
     def mult(self, x):
         """Multiplication from right-hand-side (dot product A*x)."""
         return self.A.mult(x * self._r) * self._l
-
 
     def transMult(self, x):
         """Multiplication from right-hand-side (dot product A.T*x)."""
@@ -404,16 +405,14 @@ class Add2Matrix(MatrixBase):
         """
         self.A = A
         self.B = B
-        assert A.rows() == B.rows()
-        assert A.cols() == B.cols()
+        if A.rows() != B.rows() or A.cols() != B.cols():
+            raise ValueError("Matrix dimensions do not match!")
 
         super().__init__(self.A.rows(), self.A.cols(), verbose=False)
-
 
     def mult(self, x):
         """Return M*x = A*(r*x)."""
         return self.A.mult(x) + self.B.mult(x)
-
 
     def transMult(self, x):
         """Return M.T*x=(A.T*x)*r."""
@@ -440,15 +439,14 @@ class Mult2Matrix(MatrixBase):
         """
         self.A = A
         self.B = B
-        assert A.cols() == B.rows()
+        if A.cols() != B.rows():
+            raise ValueError("Matrix dimensions do not match!")
 
         super().__init__(self.A.rows(), self.B.cols(), verbose=True)
-
 
     def mult(self, x):
         """Return M*x = A*(B*x)."""
         return self.A.mult(self.B.mult(x))
-
 
     def transMult(self, x):
         """Return M.T*x=(A.T*x)*B."""
@@ -469,11 +467,9 @@ class DiagonalMatrix(MatrixBase):
         self.d = d
         super().__init__(len(self.d), len(self.d), verbose=False)
 
-
     def mult(self, x):
         """Return M*x = d*x (element-wise)."""
         return x * self.d
-
 
     def transMult(self, x):
         """Return M.T*x = M*x."""
@@ -511,7 +507,7 @@ class Cm05Matrix(MatrixBase):
                 raise ValueError("Matrix must by square (and symmetric)!")
 
             if verbose:
-                pg.tic(key='init cm05')
+                pg.tic(key="init cm05")
 
             eigkw = {}
             trsh = self._trsh
@@ -527,16 +523,18 @@ class Cm05Matrix(MatrixBase):
             self.resize(len(self.ew), len(self.ew))
 
             if verbose:
-                pg.info('(C) Time for eigenvalue decomposition {:.1f}s'.format(
-                        pg.dur(key='init cm05')))
+                pg.info(
+                    "(C) Time for eigenvalue decomposition {:.1f}s".format(
+                        pg.dur(key="init cm05")
+                    )
+                )
 
     @property
     def mul(self):
         """Scaling vector for A**(-0.5), 1/sqrt(eigenvalues)."""
         if self._mul is None:
-            self._mul = np.sqrt(1./self.ew)
+            self._mul = np.sqrt(1.0 / self.ew)
         return self._mul
-
 
     def save(self, fileName):
         """Save the content of this matrix.
@@ -545,22 +543,19 @@ class Cm05Matrix(MatrixBase):
         """
         np.save(fileName, dict(ew=self.ew, EV=self.EV), allow_pickle=True)
 
-
     def load(self, fileName):
         """Load the content of this matrix.
 
         Used for caching until pickling is possible for this class
         """
-        d = np.load(fileName + '.npy', allow_pickle=True).tolist()
-        self.ew = d['ew']
-        self.EV = d['EV']
+        d = np.load(fileName + ".npy", allow_pickle=True).tolist()
+        self.ew = d["ew"]
+        self.EV = d["EV"]
         self.resize(len(self.ew), len(self.ew))
-
 
     def mult(self, x):
         """Multiplication from right-hand side (dot product)."""
-        return self.EV.dot(np.dot(np.transpose(x), self.EV).T*self.mul)
-
+        return self.EV.dot(np.dot(np.transpose(x), self.EV).T * self.mul)
 
     def transMult(self, x):
         """Multiplication from right-hand side (dot product)."""
@@ -684,12 +679,13 @@ class FrameConstraintMatrix(RepeatDMatrix):
             self.Im = self.addMatrix(self.Iminus_)
             self.Ip = self.addMatrix(self.Iplus_)
             nc = self.rows()
-            for i in range(num-1):
-                self.addMatrixEntry(self.Im, nc, i*self.nm)
-                self.addMatrixEntry(self.Ip, nc, (i+1)*self.nm)
+            for i in range(num - 1):
+                self.addMatrixEntry(self.Im, nc, i * self.nm)
+                self.addMatrixEntry(self.Ip, nc, (i + 1) * self.nm)
                 nc += self.nm
         elif hasattr(scale, "__iter__"):
-            assert len(scale) == self.nm-1, "scaling vector length != num-1"
+            if len(scale) != self.nm - 1:
+                raise ValueError("scaling vector length != num-1")
             self.diag_ = np.repeat(scale, self.nm)
             self.Iminus_ = pg.matrix.DiagonalMatrix(-self.diag_)
             self.Iplus_ = pg.matrix.DiagonalMatrix(self.diag_)
@@ -747,9 +743,9 @@ class KroneckerMatrix(MatrixBase):
         self.no = outer.rows()
         self.mi = inner.cols()
         self.mo = outer.cols()
-        self.resize(self._I.rows() * self._O.rows(),
-                    self._I.cols() * self._O.cols())
-
+        self.resize(
+            self._I.rows() * self._O.rows(), self._I.cols() * self._O.cols()
+        )
 
     def mult(self, x):
         """Multiplication from right-hand-side (A.T*x)."""
@@ -762,7 +758,6 @@ class KroneckerMatrix(MatrixBase):
 
         return yy.ravel()
 
-
     def transMult(self, x):
         """Multiplication from right-hand-side (A*x)."""
         xx = np.reshape(x, [self.no, self.ni])
@@ -773,6 +768,7 @@ class KroneckerMatrix(MatrixBase):
                 yy[j] += Ixi * self._O[i, j]
 
         return yy.ravel()
+
 
 class GeostatisticConstraintsMatrix(MatrixBase):
     """Geostatistic constraints matrix.
@@ -805,8 +801,8 @@ class GeostatisticConstraintsMatrix(MatrixBase):
         withRef : bool [False]
             neglect spur (reference model effect) that is otherwise corrected
         """
-        super().__init__(kwargs.pop('verbose', False))
-        self.withRef = kwargs.pop('withRef', False)
+        super().__init__(kwargs.pop("verbose", False))
+        self.withRef = kwargs.pop("withRef", False)
         self._spur = None
         self._Cm05 = None
 
@@ -820,30 +816,28 @@ class GeostatisticConstraintsMatrix(MatrixBase):
             elif CM is None and mesh is not None:
                 CM = covarianceMatrix(mesh, **kwargs)
             else:
-                pg.critical('Give either CM or mesh')
+                pg.critical("Give either CM or mesh")
 
             self.Cm05 = createCm05(CM)
 
-
     def __repr__(self):
         """Return string representation of the matrix."""
-        return "Geostatistical constraints matrix of size " \
-                + f"{self.rows():d}x{self.cols():d} " \
-                + f"using {len(self.Cm05.ew):d} eigenvalues"
-
+        return (
+            "Geostatistical constraints matrix of size "
+            + f"{self.rows():d}x{self.cols():d} "
+            + f"using {len(self.Cm05.ew):d} eigenvalues"
+        )
 
     @property
     def Cm05(self):
         """Return Cm05 matrix."""
         return self._Cm05
 
-
     @Cm05.setter
     def Cm05(self, c):
         """Set Cm05 matrix and resize accordingly."""
         self._Cm05 = c
         self.resize(self.nModel, self.nModel)
-
 
     @property
     def spur(self):
@@ -855,39 +849,42 @@ class GeostatisticConstraintsMatrix(MatrixBase):
                 self._spur = self.Cm05 * pgcore.RVector(self.rows(), 1.0)
         return self._spur
 
-
     @property
     def nModel(self):
         """Return number of model parameters (size of Cm05)."""
         return self.Cm05.EV.shape[0] if hasattr(self.Cm05, "EV") else 0
-
 
     def save(self, fileName):
         """Save content of this matrix.
 
         Used for caching until pickling is possible for this class
         """
-        self.Cm05.save(fileName + '-Cm05')
-        np.save(fileName, dict(verbose=self.verbose(),
-                               withRef=self.withRef,
-                               Cm05=fileName + '-Cm05'),
-                allow_pickle=True)
+        self.Cm05.save(fileName + "-Cm05")
+        np.save(
+            fileName,
+            dict(
+                verbose=self.verbose(),
+                withRef=self.withRef,
+                Cm05=fileName + "-Cm05",
+            ),
+            allow_pickle=True,
+        )
 
     def load(self, fileName):
         """Load the content of this matrix.
 
         Used for caching until pickling is possible for this class
         """
-        d = np.load(fileName + '.npy', allow_pickle=True).tolist()
-        self.setVerbose(d['verbose'], )
-        self.withRef = d['withRef']
+        d = np.load(fileName + ".npy", allow_pickle=True).tolist()
+        self.setVerbose(
+            d["verbose"],
+        )
+        self.withRef = d["withRef"]
         # self.Cm05 = Cm05Matrix(d['Cm05'])
-
 
     def mult(self, x):
         """Multiplication from right-hand side (A.T*x)."""
         return self.Cm05.mult(x) - self.spur * x
-
 
     def transMult(self, x):
         """Multiplication from left-hand side (A*x)."""
@@ -905,6 +902,7 @@ class GeostatisticConstraintsMatrix(MatrixBase):
     #     return self.nModel
 
     def clear(self):
+        """Reset the Jacobian to an empty state."""
         self._Cm05 = None
         self._spur = None
         self.resize(0, 0)
@@ -918,16 +916,13 @@ class FOPJacobian(MatrixBase):
         super().__init__(len(self.fop.data), self.fop.parameterCount())
         self.fop = fop
 
-
     def mult(self, x):
         """Multiply the Jacobian with a vector, Jx."""
         return self.Sx(x)
 
-
     def transMult(self, y):
         """Multiply  Jacobian transposed with a vector, Jᵀy."""
         return self.STy(y)
-
 
     def save(self, *args):
         """There is no save for this pseudo-Jacobian."""
@@ -935,6 +930,7 @@ class FOPJacobian(MatrixBase):
 
 
 # Matrix generators
+
 
 def hstack(mats):
     """Syntactic sugar function to horizontally stacked matrix.
@@ -959,8 +955,8 @@ def hstack(mats):
     >>> print(H)
     BlockMatrix of size 4 x 5 consisting of 2 submatrices.
     """
-    assert not np.any(np.diff([m.rows() for m in mats])), \
-        "Matrix row numbers do not match!"
+    if np.any(np.diff([m.rows() for m in mats])):
+        raise ValueError("Matrix row numbers do not match!")
     A = pgcore.BlockMatrix()
     icol = 0
     for mat in mats:
@@ -994,8 +990,8 @@ def vstack(mats):
     >>> print(V)
     BlockMatrix of size 5 x 4 consisting of 2 submatrices.
     """
-    assert not np.any(np.diff([m.cols() for m in mats])), \
-        "Matrix column numbers do not match!"
+    if np.any(np.diff([m.cols() for m in mats])):
+        raise ValueError("Matrix column numbers do not match!")
     A = pgcore.BlockMatrix()
     irow = 0
     for mat in mats:
@@ -1043,7 +1039,8 @@ def dstack(mats):
 
 def matrixRow(A, n):
     """Return matrix row of arbitrary matrix."""
-    assert n < A.rows(), "number exceeds number of rows in matrix"
+    if n >= A.rows():
+        raise IndexError("number exceeds number of rows in matrix")
     one = pg.Vector(A.rows())
     one[n] = 1.0
     return A.transMult(one)
@@ -1051,7 +1048,8 @@ def matrixRow(A, n):
 
 def matrixColumn(A, n):
     """Return matrix column of arbitrary matrix."""
-    assert n < A.cols(), "number exceeds number of columns in matrix"
+    if n >= A.cols():
+        raise IndexError("number exceeds number of columns in matrix")
     one = pg.Vector(A.cols())
     one[n] = 1.0
     return A.mult(one)
@@ -1059,14 +1057,20 @@ def matrixColumn(A, n):
 
 def complexMatrix(Re, Im, scaleR=1.0, scaleI=1.0):
     """Create a complex-valued matrix from two real-valued ones."""
-    assert Re.cols() == Im.cols(), "Number of columns need to match"
-    assert Re.rows() == Im.rows(), "Number of columns need to match"
+    if Re.cols() != Im.cols():
+        raise ValueError("Number of columns need to match")
+    if Re.rows() != Im.rows():
+        raise ValueError("Number of rows need to match")
     if isinstance(Re, SparseMapMatrix) and isinstance(Im, SparseMapMatrix):
-        assert Re.vecColPtr() == Im.vecColPtr(), "sparsity structure differs"
-        assert Re.vecRowIdx() == Im.vecRowIdx(), "sparsity structure differs"
-        return pg.core.CSparseMatrix(Re.vecColPtr(), Re.vecRowIdx(),
-                                     pg.core.toComplex(Re.vecVals()*scaleR,
-                                     Im.vecVals()*scaleI))
+        if not (Re.vecColPtr() == Im.vecColPtr()):
+            raise ValueError("sparsity structure differs")
+        if not (Re.vecRowIdx() == Im.vecRowIdx()):
+            raise ValueError("sparsity structure differs")
+        return pg.core.CSparseMatrix(
+            Re.vecColPtr(),
+            Re.vecRowIdx(),
+            pg.core.toComplex(Re.vecVals() * scaleR, Im.vecVals() * scaleI),
+        )
     else:
         raise NotImplementedError("Only SparseMapMatrix supported so far.")
 
@@ -1140,7 +1144,7 @@ def concatenateAsCOO(A):
             r = np.concatenate((r, x.row))
             c = np.concatenate((c, x.col))
 
-    C = sparse.coo_matrix((d,(r,c)))
+    C = sparse.coo_matrix((d, (r, c)))
     return C
 
 
@@ -1149,7 +1153,7 @@ if __name__ == "__main__":
     Amat = pg.Matrix(3, 4)
     Bmat = TransposedMatrix(Amat)
     xvec = pg.Vector(3, 1.0)
-    print(Bmat*xvec)
+    print(Bmat * xvec)
     yvec = pg.Vector(4, 1.0)
     Cmat = SquaredMatrix(Amat)
-    print(Cmat*yvec)
+    print(Cmat * yvec)

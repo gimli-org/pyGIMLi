@@ -62,10 +62,9 @@ DLLEXPORT std::vector < CubicFunct > calcNaturalCubicClosed( const std::vector <
 /*! Create a vector of RealPos from input points with cubic spline interpolation. The edge between the input points is subdivided into nSegments.*/
 DLLEXPORT std::vector < RVector3 > createSpline( const std::vector < RVector3 > & input, int nSegments, bool close );
 
-/*! Create a vector of RealPos from input points with cubic spline interpolation. The edge between the input points is subdivided into 3 segments within the lokal distance localDX to the inputpoints.*/
+/*! Create a vector of RealPos from input points with cubic spline interpolation. The edge between the input points is subdivided into 3 segments within the local distance localDX to the inputpoints.*/
 DLLEXPORT std::vector < RVector3 > createSplineLocalDX( const std::vector < RVector3 > & input, double localDX, bool close );
 
 } // namespace GIMLI
 
 #endif // _GIMLI_SPLINE__H
-

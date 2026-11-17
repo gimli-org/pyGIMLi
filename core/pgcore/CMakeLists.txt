@@ -11,7 +11,7 @@ execute_process(COMMAND "${Python_EXECUTABLE}" getwheelname.py
 )
 
 if (STATUS EQUAL 1)
-    cprint(yellow "Can't determine wheel filenname. Skipping wheel build. "
+    cprint(yellow "Can't determine wheel filename. Skipping wheel build. "
                   "If you want to build wheels? python -m pip install wheel")
 else()
 

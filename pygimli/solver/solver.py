@@ -133,7 +133,7 @@ def cellValues(mesh, arg, **kwargs):
         interpreted as wildcard, splice or list.
         See examples or ``parseDictKey_``.
         String keys will be interpreted before integer keys, the latter will
-        overwite the first, i.e. you can fill all with wildcard '*' and
+        overwrite the first, i.e. you can fill all with wildcard '*' and
         specify others with integers.
         See examples or :py:func:`pygimli.solver.solver.parseMarkersDictKey`.
 

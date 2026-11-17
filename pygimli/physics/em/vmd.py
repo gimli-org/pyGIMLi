@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 """Electromagnetics for Vertical Magnetic Dipole (VMD) functions and class."""
 
 from math import sqrt, pi
@@ -44,15 +44,19 @@ class VMDModelling(Block1DModelling):
             pg.critical("Model space is not been initialized.")
 
         skinDepth = np.sqrt(max(self.t) * pg.math.median(rhoa)) * 500
-        thk = np.arange(self.nLayers) / sum(np.arange(self.nLayers)) * \
-            skinDepth / 2.
+        thk = (
+            np.arange(self.nLayers)
+            / sum(np.arange(self.nLayers))
+            * skinDepth
+            / 2.0
+        )
         startThicks = thk[1:]
 
         # layer thickness properties
-        self.setRegionProperties(0, startModel=startThicks, trans='log')
+        self.setRegionProperties(0, startModel=startThicks, trans="log")
 
         # resistivity properties
-        self.setRegionProperties(1, startModel=np.median(rhoa), trans='log')
+        self.setRegionProperties(1, startModel=np.median(rhoa), trans="log")
         return super().regionManager().createStartModel()
 
     def response_mt(self, par, i=0):
@@ -92,7 +96,7 @@ class VMDModelling(Block1DModelling):
         """
         # filter coefficients
         q = 10**0.1
-        rr = rmin * q**(np.array(nr) - 1)
+        rr = rmin * q ** (np.array(nr) - 1)
 
         he = ze
         hs = zs
@@ -107,7 +111,7 @@ class VMDModelling(Block1DModelling):
 
         ncnr = nc + nr - 1
 
-        # Vakuumwerte, nicht normiert
+        # vacuum values, not normalised
         if ze <= 0:
             ePhi = rr / rp**3
 
@@ -116,7 +120,7 @@ class VMDModelling(Block1DModelling):
 
         n = nc0 - nc + nu
         q = np.log(10) * 0.1
-        k = np.exp(-(n-1) * q) / rmin
+        k = np.exp(-(n - 1) * q) / rmin
 
         if ze <= 0:
             ePhi = rr / rp**3.0
@@ -128,7 +132,7 @@ class VMDModelling(Block1DModelling):
             if ze <= 0:
                 bt[i] = self.btp(k[i], f, rho, d, type=1)
             else:
-                raise RuntimeError('NeedTests')
+                raise RuntimeError("NeedTests")
                 # not used (uncommented)
                 # aa[i], aap[i], bt[i] = downward(k[i], f, rho, d, ze)
 
@@ -137,9 +141,9 @@ class VMDModelling(Block1DModelling):
             e = np.exp(k * ze) * np.exp(k * zs)
             delta = e * (bt - k) / (bt + k)
         else:
-            raise RuntimeError('NeedTests')
+            raise RuntimeError("NeedTests")
             e = np.exp(k * zs)
-            delta = 2. * k**2. / (bt + k)*e
+            delta = 2.0 * k**2.0 / (bt + k) * e
 
         # convolution
         aux3 = np.zeros(nr) * 1j
@@ -156,9 +160,9 @@ class VMDModelling(Block1DModelling):
 
                 if ze <= 0:
                     del1 = del0 * k
-                    aux3[n] = aux3[n] + del1 * fcJ1[mn-1]
+                    aux3[n] = aux3[n] + del1 * fcJ1[mn - 1]
                 else:
-                    raise RuntimeError('NeedTests')
+                    raise RuntimeError("NeedTests")
                     del3 = del0 * aa(nu)
                     aux3[n] = aux3[n] + del3 * fcJ1[mn]
 
@@ -177,7 +181,7 @@ class VMDModelling(Block1DModelling):
             ePhi = aux3
 
         # Normalization
-        ePhi *= -tm * 1j * (2*pi*f) * pg.physics.constants.mu0 / (4*pi)
+        ePhi *= -tm * 1j * (2 * pi * f) * pg.physics.constants.mu0 / (4 * pi)
         return ePhi
 
     def btp(self, k, f, rho, d, type=1):
@@ -191,17 +195,17 @@ class VMDModelling(Block1DModelling):
         """
         nl = len(rho)
         c = 1j * pg.physics.constants.mu0 * 2 * pi * f
-        b = np.sqrt(k**2 + c/rho[nl-1])
+        b = np.sqrt(k**2 + c / rho[nl - 1])
 
         if nl > 1:
             beta = 1
-            for nn in range(nl-2, -1, -1):
+            for nn in range(nl - 2, -1, -1):
                 alpha = np.sqrt(k**2 + c / rho[nn])
                 if type == 2:
                     beta = rho[nn] / rho[nn + 1]
 
-                cth = np.exp(-2. * d[nn] * alpha)
-                cth = (1-cth) / (1+cth)
+                cth = np.exp(-2.0 * d[nn] * alpha)
+                cth = (1 - cth) / (1 + cth)
                 b = (b + alpha * beta * cth) / (beta + cth * b / alpha)
 
         return b
@@ -234,10 +238,10 @@ class VMDTimeDomainModelling(VMDModelling):
         res = np.ones(nLayers) * pg.math.median(rhoa)
         if thickness is None:
             skinDepth = np.sqrt(max(self.t) * pg.math.median(rhoa)) * 500
-            thk = np.arange(nLayers) / sum(np.arange(nLayers)) * skinDepth / 2.
+            thk = np.arange(nLayers) / sum(np.arange(nLayers)) * skinDepth / 2.0
             thk = thk[1:]
         else:
-            thk = np.ones(nLayers-1) * thickness
+            thk = np.ones(nLayers - 1) * thickness
 
         self.setStartModel(pg.cat(thk, res))
         return self.startModel()
@@ -247,7 +251,7 @@ class VMDTimeDomainModelling(VMDModelling):
 
         par = [thicknesses, res]
         """
-        nLay = (len(par)-1)//2
+        nLay = (len(par) - 1) // 2
         thk = par[0:nLay]
         res = par[nLay:]
         return self.calcRhoa(thk, res)
@@ -263,16 +267,28 @@ class VMDTimeDomainModelling(VMDModelling):
         """Compute apparent resistivity response."""
         a = sqrt(self.txArea / pi)  # TX coil radius
 
-        ePhiTD, tD = self.calcEphiT(tMin=min(self.t), tMax=max(self.t),
-                                    rho=res, d=thk, rMin=a, rMax=a, z=0,
-                                    dipm=self.rxArea)
+        ePhiTD, tD = self.calcEphiT(
+            tMin=min(self.t),
+            tMax=max(self.t),
+            rho=res,
+            d=thk,
+            rMin=a,
+            rMax=a,
+            z=0,
+            dipm=self.rxArea,
+        )
 
-        ePhi = np.exp(np.interp(np.log(self.t),
-                                np.log(tD), np.log(ePhiTD[:, 0])))
+        ePhi = np.exp(
+            np.interp(np.log(self.t), np.log(tD), np.log(ePhiTD[:, 0]))
+        )
 
-        tmp = a**(4./3) * self.rxArea**(2./3) * \
-            pg.physics.constants.mu0**(5./3) / (20**(2./3) * pi**(1./3))
-        rhoa = tmp / (self.t**(5./3) * (ePhi * 2 * pi * a)**(2./3))
+        tmp = (
+            a ** (4.0 / 3)
+            * self.rxArea ** (2.0 / 3)
+            * pg.physics.constants.mu0 ** (5.0 / 3)
+            / (20 ** (2.0 / 3) * pi ** (1.0 / 3))
+        )
+        rhoa = tmp / (self.t ** (5.0 / 3) * (ePhi * 2 * pi * a) ** (2.0 / 3))
 
         return rhoa
 
@@ -294,22 +310,23 @@ class VMDTimeDomainModelling(VMDModelling):
         fef = np.zeros((ncnt, nr), complex)
         ePhi = np.zeros((nt, nr))
 
-        omega = 10. ** (0.1 * (1 - (-nc + nc0 + np.arange(1, ncnt)))) / t[0]
+        omega = 10.0 ** (0.1 * (1 - (-nc + nc0 + np.arange(1, ncnt)))) / t[0]
 
         for nn, o in enumerate(omega):
-            f = o / (2. * pi)
-            ePhiF = self.calcEPhiF(f, rho, d, ze=z, zs=0.,
-                                   rmin=r[0], nr=len(r), tm=1.0)
+            f = o / (2.0 * pi)
+            ePhiF = self.calcEPhiF(
+                f, rho, d, ze=z, zs=0.0, rmin=r[0], nr=len(r), tm=1.0
+            )
 
             fef[nn, :] = ePhiF / sqrt(o)
 
-            ita = max(0, nn-nc)
-            ite = min(nt, nn+1)
+            ita = max(0, nn - nc)
+            ite = min(nt, nn + 1)
             for it in range(ita, ite):
-                itn = nc-nn+it-1
+                itn = nc - nn + it - 1
                 ePhi[it] = ePhi[it] - np.real(fef[nn]) * fcS[itn]
 
         for it in range(nt):
-            ePhi[it] = ePhi[it] * dipm * sqrt(2/pi / t[it])
+            ePhi[it] = ePhi[it] * dipm * sqrt(2 / pi / t[it])
 
         return ePhi, t

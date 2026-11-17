@@ -104,7 +104,7 @@ ElementMatrix < double >::operator += (const ElementMatrix < double > & E){
             THROW_TO_IMPL
         }
     }
-    if (1 || this->isIntegrated()){ // force allways to stay compatible to oldfea
+    if (1 || this->isIntegrated()){ // force always to stay compatible to oldfea
         if (this->rows() == E.rows() && this->cols() == E.cols()){
             this->mat_ += E.mat();
         } else {
@@ -1407,7 +1407,7 @@ void ElementMatrix < double >::init(Index nCoeff, Index dofPerCoeff,
     // __MS(this, nCoeff, dofPerCoeff, dofOffset)
     if (nCoeff > 1 && dofPerCoeff == 0){
         __MS(nCoeff, dofPerCoeff, dofOffset)
-        log(Error, "Number of coefficents > 1 but no dofPerCoefficent given");
+        log(Error, "Number of coefficients > 1 but no dofPerCoefficent given");
     }
     this->_newStyle = true;
     this->_order = 0;
@@ -1500,7 +1500,7 @@ void ElementMatrix < double >::copyFrom(const ElementMatrix < double > & E,
 // __M
     this->_newStyle = true;
     this->_order = E.order(); //quadrature order
-    this->_nCoeff = E.nCoeff(); //number of cofficients e.g, dim
+    this->_nCoeff = E.nCoeff(); //number of coefficients e.g, dim
     this->_dofPerCoeff = E.dofPerCoeff();
     this->_dofOffset = E.dofOffset();
 
@@ -2199,7 +2199,7 @@ void dot(const ElementMatrix < double > & A,
     }
 
     const RVector &w = *A.w();
-    (*C.pMat()) *= 0.0; // needed because matMult allways adds
+    (*C.pMat()) *= 0.0; // needed because matMult always adds
 
     RSmallMatrix AtC;
 
@@ -2223,7 +2223,7 @@ void dot(const ElementMatrix < double > & A,
         RSmallMatrix & Ci = (*C.pMatX())[i];
         double wS = w[i] * A.entity()->size();
 
-        AtC *= 0.0; // needed because matMult allways adds
+        AtC *= 0.0; // needed because matMult always adds
 
         // __MS ("Ai:(", Ai.rows(), ",", Ai.cols(), ")",
         //       "Bi:(", Bi.rows(), ",", Bi.cols(), ")");

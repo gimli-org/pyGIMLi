@@ -1,19 +1,18 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-import os
+"""Test writing and reading of PLC (piecewise linear complex) files."""
 
 import unittest
+from pathlib import Path
 
 import pygimli as pg
 import numpy as np
 
 
 class TestPLCIO(unittest.TestCase):
+    """Test PLC export and import for 2D and 3D geometries."""
 
     def test_io_triangle(self):
-        """
-        """
+        """Export and re-read a 2D triangle PLC."""
         # create tempfile in most secure manner, only accessible by this process
         # id no execution allowed at all, will be deleted as soon as this
         # process stops
@@ -22,7 +21,7 @@ class TestPLCIO(unittest.TestCase):
         except ImportError:
             return
 
-        _, name2D = tmp.mkstemp(suffix='.poly')
+        _, name2D = tmp.mkstemp(suffix=".poly")
 
         # 2D, creating test trinangle poly
         m = pg.Mesh(2)
@@ -41,35 +40,34 @@ class TestPLCIO(unittest.TestCase):
         m.createEdge(nodes[1], nodes[5])
         m.createEdge(nodes[4], nodes[5])
 
-        m.addRegionMarker([0., 0.], -3, area=-1)
-        m.addRegionMarker([0., -2.5], 1, area=42.42)
+        m.addRegionMarker([0.0, 0.0], -3, area=-1)
+        m.addRegionMarker([0.0, -2.5], 1, area=42.42)
         pg.meshtools.exportPLC(m, name2D)
 
         # 2D, test triangle mesh for consistincy
         poly = pg.meshtools.readPLC(name2D)
 
-        np.testing.assert_allclose(poly.regionMarkers()[0], [0., -2.5, 0.])
-        np.testing.assert_allclose(poly.holeMarkers()[0], [0., 0., 0.])
-        np.testing.assert_allclose(np.sort(poly.positions()),
-                                   np.sort(m.positions()))
+        np.testing.assert_allclose(poly.regionMarkers()[0], [0.0, -2.5, 0.0])
+        np.testing.assert_allclose(poly.holeMarkers()[0], [0.0, 0.0, 0.0])
+        np.testing.assert_allclose(
+            np.sort(poly.positions()), np.sort(m.positions())
+        )
         np.testing.assert_equal(poly.regionMarkers()[0].area(), 42.42)
 
         try:
-            os.remove(name2D)
-        except:
+            Path(name2D).unlink()
+        except Exception:
             print("can't remove:", name2D)
 
-
     def test_io_tetgen(self):
-        """
-        """
+        """Export and re-read a 3D tetgen PLC."""
         try:
             import tempfile as tmp
         except ImportError:
             return
 
-        _, name3D = tmp.mkstemp(suffix='.poly')
-        #print(name3D)
+        _, name3D = tmp.mkstemp(suffix=".poly")
+        # print(name3D)
 
         # 3D, creating test tetgen poly
         minx = -2.0
@@ -97,7 +95,7 @@ class TestPLCIO(unittest.TestCase):
         b = cube.createBoundary([n.id() for n in [ob4, ob5, ob6, ob7]])
         b.addHoleMarker([0.0, 0.0, 1.0])
 
-        cube.addRegionMarker([0., 0., -2.0], -3, area=-1)
+        cube.addRegionMarker([0.0, 0.0, -2.0], -3, area=-1)
         cube.addRegionMarker([-1.99, 0.001, 1e-6], 1, area=42.42)
         cube.addRegionMarker([-0.99, 1, 1e-7], 1, area=1)
         cube.addRegionMarker([0.99, 11, 1e-8], 1, area=2)
@@ -110,32 +108,37 @@ class TestPLCIO(unittest.TestCase):
         # 3D, test tetgen plc for validity
         poly = pg.meshtools.readPLC(name3D)
 
-        np.testing.assert_allclose(poly.regionMarkers()[0], [-1.99, 0.001, 1e-6])
+        np.testing.assert_allclose(
+            poly.regionMarkers()[0], [-1.99, 0.001, 1e-6]
+        )
         np.testing.assert_allclose(poly.holeMarkers()[0], cube.holeMarkers()[0])
-        np.testing.assert_allclose(np.sort(poly.positions().array()),
-                                   np.sort(cube.positions().array()))
+        np.testing.assert_allclose(
+            np.sort(poly.positions().array()), np.sort(cube.positions().array())
+        )
         np.testing.assert_equal(poly.regionMarkers()[0].area(), 42.42)
-        
-        np.testing.assert_equal(poly.boundaries()[-1].holeMarkers()[0], [0.0, 0.0, 1.0])
-    
+
+        np.testing.assert_equal(
+            poly.boundaries()[-1].holeMarkers()[0], [0.0, 0.0, 1.0]
+        )
+
         try:
-            os.remove(name3D)
-        except:
+            Path(name3D).unlink()
+        except Exception:
             print("can't remove:", name3D)
 
-
     def test_io_STL(self):
+        """Load an ASCII STL file and check the resulting mesh."""
         try:
             import tempfile as tmp
         except ImportError:
             return
 
         str = r"""solid name
-    facet normal 1.000000e+000 0.000000e+000 0.000000e+000 
-        outer loop 
-            vertex   6.100000e+002 -1.046773e+002 -2.818708e+003 
-            vertex   6.100000e+002 -1.249950e+002 -2.814064e+003 
-            vertex   6.100000e+002 -2.507565e+000 -2.930000e+003 
+    facet normal 1.000000e+000 0.000000e+000 0.000000e+000
+        outer loop
+            vertex   6.100000e+002 -1.046773e+002 -2.818708e+003
+            vertex   6.100000e+002 -1.249950e+002 -2.814064e+003
+            vertex   6.100000e+002 -2.507565e+000 -2.930000e+003
         endloop
     endfacet
 endsolid
@@ -148,10 +151,9 @@ solid name
         endloop
     endfacet
 endsolid"""
-        _, fileName = tmp.mkstemp(suffix='.stl')
-        fi = open(fileName, 'w')
-        fi.write(str)
-        fi.close()
+        _, fileName = tmp.mkstemp(suffix=".stl")
+        with Path(fileName).open("w") as fi:
+            fi.write(str)
 
         mesh = pg.load(fileName, verbose=True)
 
@@ -159,14 +161,15 @@ endsolid"""
         np.testing.assert_equal(mesh.nodeCount(), 5)
         np.testing.assert_equal(mesh.boundaryCount(), 2)
 
-        np.testing.assert_equal(np.array(pg.unique(pg.sort(mesh.boundaryMarkers()))),
-                               [0, 1])
-        
+        np.testing.assert_equal(
+            np.array(pg.unique(pg.sort(mesh.boundaryMarkers()))), [0, 1]
+        )
+
         try:
-            os.remove(fileName)
-        except:
+            Path(fileName).unlink()
+        except Exception:
             print("can't remove:", fileName)
 
-            
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

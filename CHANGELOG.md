@@ -37,6 +37,22 @@ pip install pygimli=2
 
 * pg.clip(obj) to clip values to a specified range.
 
+* Documentation build: all gallery examples of all sections are executed in
+  one `joblib` pool and are started slowest first, which reduces the gallery
+  phase of the pyGIMLi documentation from about 6 to under 2 minutes. A
+  condensed progress report replaces the example output on the terminal: a
+  finished example is one line, the running ones are kept in a small table at
+  the end, and the console output of an example is kept in
+  `_examples_auto/_gallery_logs/<example>.log`. A CRITICAL message of the core
+  aborts the build and names the example and the code line.
+
+    Switches: `GIMLI_DOC_JOBS` (workers, `1` = serial),
+    `GIMLI_DOC_GLOBAL_PARALLEL` (`0` = one pool per gallery section),
+    `GIMLI_DOC_PROGRESS` (`0` = raw example output), `GIMLI_DOC_LIVE`
+    (`0` = plain lines instead of the running table) and `GIMLI_DOC_SHOW`
+    (`1` = keep figure windows). `.workflow.sh` additionally accepts
+    `CLEAN_GALLERY=1` to rerun the gallery without a full clean.
+
 
 ### Important changes
 
@@ -77,6 +93,22 @@ pip install pygimli=2
     (`drawPLC`/`drawMesh`); `showMesh` keeps its own `showBoundary` argument.
 
 * ...
+
+### Bug fixes
+
+* `pg.meshtools.extract2dSlice()` created degenerate cells for slices that
+  are not aligned with a coordinate axis. Creating such a cell caches its
+  shape functions, which fits a polynomial to the inverted element matrix and
+  fails with `getPhiD == -nan`, so the documentation build aborted in
+  `plot_05_inv-gravity-3d.py`. A slice is now projected plane-locally,
+  degenerate triangles are skipped and node and cell data are preserved.
+  Regression test: `pygimli/testing/test_extract2dSlice.py`.
+
+* `pg.interpolate()` used the nearest cell for positions outside the mesh
+  again, so `fillValue` was ignored and values were extrapolated with the
+  shape functions. That gave non-positive resistivities in
+  `plot_hydrogeophysical_modeling.py`. Regression test:
+  `pygimli/testing/test_InterpolateOutside.py`.
 
 ## v1.6.0 (11/05/2026)
 
@@ -202,8 +234,8 @@ conda install -c gimli -c conda-forge pygimli=1.0.11 # currently Linux only
 
 #### adds
 - dataContainerERT.addFourPointData accept now also values
-- pygimli/core/datacontainer.py for easy extentions
-- createCylinder(OOC: polytools), createMesh() accecpt 3D PLC and now tries a systemcall for tetgen
+- pygimli/core/datacontainer.py for easy extensions
+- createCylinder(OOC: polytools), createMesh() accept 3D PLC and now tries a systemcall for tetgen
 - dataIndex(), dataContainer.sortSensorIndex() returns now sorting indieces.
 - isGeometry flag for core.Mesh. If set meshtool automatic check for duplicated nodes.
 - BlockMatrix to sparseMap conversion
@@ -301,7 +333,7 @@ conda install -c gimli pygimli=1.0.9 # currently Linux only
 - [**closed**] marker view with pg.show() [#135](https://github.com/gimli-org/gimli/issues/135)
 
 #### fixes:
-- pure singe region now build correct interregion constraints without region file
+- pure single region now build correct interregion constraints without region file
 - passive body cem problem in bert fop
 - *Vector < operator
 - mesh bounding box problem for post createNode

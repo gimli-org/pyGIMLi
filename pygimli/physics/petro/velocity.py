@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """For the manager look at BERT https://gitlab.com/resistivity-net/bert."""
 
 import numpy as np
@@ -15,8 +14,9 @@ import pygimli as pg
 # TODO (Gardner et al. 1974) densities
 
 
-def slownessWyllie(phi, sat=1, vm=4000, vw=1484, va=343,
-                   mesh=None, meshI=None, fill=None):
+def slownessWyllie(
+    phi, sat=1, vm=4000, vw=1484, va=343, mesh=None, meshI=None, fill=None
+):
     r"""
     Return slowness :math:`s` after Wyllie time-average equation.
 
@@ -39,63 +39,68 @@ def slownessWyllie(phi, sat=1, vm=4000, vw=1484, va=343,
 
     Examples
     --------
-
     WRITEME
 
 
     """
     if mesh is None:
-        return 1./vm * (1.-phi) + 1./vw * phi * sat + 1./va * phi * (1. - sat)
+        return (
+            1.0 / vm * (1.0 - phi)
+            + 1.0 / vw * phi * sat
+            + 1.0 / va * phi * (1.0 - sat)
+        )
     else:
-        raise BaseException('TODO')
+        raise NotImplementedError("TODO")
 
     if meshI:
-        raise BaseException('TODO')
+        raise NotImplementedError("TODO")
 
     if fill:
-        raise BaseException('TODO')
+        raise NotImplementedError("TODO")
 
 
 def wyllie(phi, sat=1, vm=4000, vw=1600, va=330):
     """Return slowness after Wyllie time-average equation."""
-    return 1./vm * (1-phi) + phi * sat * 1./vw + phi * (1 - sat) * 1./va
+    return (
+        1.0 / vm * (1 - phi) + phi * sat * 1.0 / vw + phi * (1 - sat) * 1.0 / va
+    )
 
 
 def transFwdWylliePhi(sat=1, vm=4000, vw=1600, va=330):
     """Wyllie transformation function porosity(slowness)."""
     if va != 330 or sat != 1.0:
-        raise BaseException('TODO')
-    return pg.trans.TransLin(1./vw - 1./vm, 1./vm)
+        raise NotImplementedError("TODO")
+    return pg.trans.TransLin(1.0 / vw - 1.0 / vm, 1.0 / vm)
 
 
 def transInvWylliePhi(sat=1, vm=4000, vw=1600, va=330):
     """Inverse Wyllie transformation function porosity(slowness)."""
     if va != 330 or sat != 1.0:
-        raise BaseException('TODO')
-    a1 = 1./vm
-    b1 = 1./vw - 1./vm
-    return pg.trans.TransLin(1./b1, -a1/b1)
+        raise NotImplementedError("TODO")
+    a1 = 1.0 / vm
+    b1 = 1.0 / vw - 1.0 / vm
+    return pg.trans.TransLin(1.0 / b1, -a1 / b1)
 
 
 def transFwdWyllieS(phi, vm=4000, vw=1600, va=330):
     """Wyllie transformation function slowness(saturation)."""
     if va != 330.0:
         print(va, "Air velocity is not 330.0 m/s")
-        raise BaseException('TODO')
-    return pg.trans.TransLin((1/vw-1./va)*phi, (1-phi)/vm+phi/va)
+        raise NotImplementedError("TODO")
+    return pg.trans.TransLin(
+        (1 / vw - 1.0 / va) * phi, (1 - phi) / vm + phi / va
+    )
 
 
 def transInvWyllieS(phi, vm=4000, vw=1600, va=330):
     """Inverse Wyllie transformation function slowness(saturation)."""
-    a2 = 1./vm * (1 - phi) + phi * 1./va
-    b2 = phi * (1./vw - 1./va)
-    return pg.trans.TransLin(1./b2, -a2/b2)
+    a2 = 1.0 / vm * (1 - phi) + phi * 1.0 / va
+    b2 = phi * (1.0 / vw - 1.0 / va)
+    return pg.trans.TransLin(1.0 / b2, -a2 / b2)
 
 
 def test_Wyllie():
     """Test Wyllie and Transformations."""
-    import unittest
-
     phivec = np.arange(0, 0.5, 0.01)
     swvec = np.arange(0, 1, 0.01)
 
@@ -111,16 +116,16 @@ def test_Wyllie():
     rA = wyllie(phivec)
     rS = wyllie(phi0, swvec)
 
-    ax.semilogy(phivec, rA, 'b-')
-    ax.semilogy(swvec, rS, 'r-')
+    ax.semilogy(phivec, rA, "b-")
+    ax.semilogy(swvec, rS, "r-")
     # forward transformation
     fA = tFWPhi.trans(phivec)
     fS = tFWS.trans(swvec)
     np.testing.assert_allclose(rA, fA, rtol=1e-12)
     np.testing.assert_allclose(rS, fS, rtol=1e-12)
 
-    ax.semilogy(phivec, fA, 'bx', markersize=10)
-    ax.semilogy(swvec, fS, 'rx', markersize=10)
+    ax.semilogy(phivec, fA, "bx", markersize=10)
+    ax.semilogy(swvec, fS, "rx", markersize=10)
 
     # inverse transformation
     iA = tIWPhi.invTrans(phivec)
@@ -128,8 +133,8 @@ def test_Wyllie():
     np.testing.assert_allclose(rA, iA, rtol=1e-12)
     np.testing.assert_allclose(rS, iS, rtol=1e-12)
 
-    ax.semilogy(phivec, iA, 'bo')
-    ax.semilogy(swvec, iS, 'ro')
+    ax.semilogy(phivec, iA, "bo")
+    ax.semilogy(swvec, iS, "ro")
 
     plt.show()
 

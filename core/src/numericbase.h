@@ -74,7 +74,7 @@ DLLEXPORT void GaussLegendre(double x1, double x2, uint n, RVector & x, RVector 
 DLLEXPORT void GaussLaguerre(uint n, RVector & x, RVector & w);
 
 
-//! Caluculate modified Bessel function of the first kind
+//! Calculate modified Bessel function of the first kind
 /*! See Abramowitz: Handbook of math. functions; */
 //DLLEXPORT double besselI0(double x);
 template < class ValueType > ValueType besselI0(const ValueType & x) {
@@ -103,7 +103,7 @@ template < class ValueType > ValueType besselI0(const ValueType & x) {
     return result;
 }
 
-//! Caluculate modified Bessel function of the first kind
+//! Calculate modified Bessel function of the first kind
 /*! See Abramowitz: Handbook of math. functions */
 //DLLEXPORT double besselI1(double x);
 template < class ValueType > ValueType besselI1(const ValueType & x) {
@@ -129,7 +129,7 @@ template < class ValueType > ValueType besselI1(const ValueType & x) {
 }
 
 
-//! Caluculate modified Bessel function of the second kind
+//! Calculate modified Bessel function of the second kind
 /*! See Abramowitz: Handbook of math. functions */
 //DLLEXPORT double besselK0(double x);
 template < class ValueType > ValueType besselK0(const ValueType & x){
@@ -154,7 +154,7 @@ template < class ValueType > ValueType besselK0(const ValueType & x){
     return result;
 }
 
-//! Caluculate modified Bessel function of the second kind
+//! Calculate modified Bessel function of the second kind
 /*! See Abramowitz: Handbook of math. functions */
 //DLLEXPORT double besselK1(double x);
 template < class ValueType > ValueType besselK1(const ValueType & x){
