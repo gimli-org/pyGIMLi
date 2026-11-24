@@ -212,7 +212,7 @@ class MRSprofile():
             nc = ceil(sqrt(nsond*3))
         if nr == 0:
             nr = ceil(nsond/nc)
-        fig, ax = plt.subplots(nrows=int(nr), ncols=int(nc),
+        fig, ax = pg.plt.subplots(nrows=int(nr), ncols=int(nc),
                                figsize=figsize)
         for i, mrs in enumerate(self.mrs):
             mrs.showCube(ax=ax.flat[i], vec=mrs.data*1e9, islog=False,
@@ -226,9 +226,9 @@ class MRSprofile():
         for i, mrs in enumerate(self.mrs):
             IVI[:, i] = mrs.dcube[:, 0]
 
-        fig, ax = plt.subplots(figsize=(15, 10))
+        fig, ax = pg.plt.subplots(figsize=(15, 10))
         im = ax.imshow(IVI*1e9, interpolation='nearest')
-        plt.colorbar(im, ax=ax, orientation='horizontal')
+        pg.plt.colorbar(im, ax=ax, orientation='horizontal')
         self.figs['ivi'] = fig
         return fig, ax
 
@@ -390,7 +390,7 @@ class MRSprofile():
         """Show water content distribution as stitched model section."""
         fig = None
         if ax is None:
-            fig, ax = plt.subplots(figsize=(10, 5))
+            fig, ax = pg.plt.subplots(figsize=(10, 5))
             self.figs['wc'] = fig
 
         showStitchedModels(self.WMOD, ax=ax, x=self.x, islog=False, cmap=cmap,
@@ -402,7 +402,7 @@ class MRSprofile():
         """Show relaxation time distribution as stitched model section."""
         fig = None
         if ax is None:
-            fig, ax = plt.subplots(figsize=(10, 5))
+            fig, ax = pg.plt.subplots(figsize=(10, 5))
             self.figs['t2'] = fig
 
         showStitchedModels(self.TMOD, ax=ax, x=self.x, islog=True, cmap=cmap,
@@ -412,7 +412,7 @@ class MRSprofile():
     def showFits(self, ax=None):
         """Show chi-square and rms fits of individual soundings."""
         if ax is None:
-            fig, ax = plt.subplots(figsize=(10, 5))
+            fig, ax = pg.plt.subplots(figsize=(10, 5))
             self.figs['fits'] = fig
         axb = ax.twinx()
         axb.set_ylabel('rms (nV)')
@@ -424,7 +424,7 @@ class MRSprofile():
     def showModel(self, showFit=0, cmap='Spectral', figsize=(13, 12),
                   wlim=(0, 0.5), tlim=(0.05, 0.5)):
         """Show 2d model as stitched 1d models along with fit."""
-        fig, ax = plt.subplots(nrows=2+showFit, figsize=figsize, sharex=True)
+        fig, ax = pg.plt.subplots(nrows=2+showFit, figsize=figsize, sharex=True)
         self.showWC(wlim, ax=ax[-2], cmap=cmap)
         self.showT2(tlim, ax=ax[-1], cmap=cmap)
         xl = ax[-1].get_xlim()

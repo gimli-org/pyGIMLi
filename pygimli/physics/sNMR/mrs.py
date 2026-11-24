@@ -315,7 +315,7 @@ class MRS():
         if max(vec) < 1e-3:  # Volts
             mul = 1e9
         if ax is None:
-            _, ax = plt.subplots(1, 1)
+            _, ax = pg.plt.subplots(1, 1)
         if islog is None:
             print(len(vec))
             islog = (min(vec) > 0.)
@@ -347,7 +347,7 @@ class MRS():
         ax.set_yticklabels(qtl)
         ax.set_xlabel('$t$ [ms]')
         ax.set_ylabel('$q$ [As]')
-        cb = plt.colorbar(im, ax=ax, orientation='horizontal')
+        cb = pg.plt.colorbar(im, ax=ax, orientation='horizontal')
         if clab is not None:
             cb.ax.set_title(clab)
 
@@ -355,18 +355,18 @@ class MRS():
 
     def showDataAndError(self, figsize=(10, 8), show=False):
         """Show data cube along with error cube."""
-        fig, ax = plt.subplots(1, 2, figsize=figsize)
+        fig, ax = pg.plt.subplots(1, 2, figsize=figsize)
         self.showCube(ax[0], self.data * 1e9, islog=False)
         self.showCube(ax[1], self.error * 1e9, islog=True)
         if show:
-            plt.show()
+            pg.plt.show()
         self.figs['data+error'] = fig
         return fig, ax
 
     def showKernel(self, ax=None):
         """Show the kernel as matrix (Q over z)."""
         if ax is None:
-            fig, ax = plt.subplots()
+            fig, ax = pg.plt.subplots()
             self.figs['kernel'] = fig
 #        ax.imshow(self.K.T, interpolation='nearest', aspect='auto')
         ax.matshow(self.K.T, aspect='auto')
@@ -463,7 +463,7 @@ class MRS():
     def showResult(self, figsize=(10, 8), save='', fig=None, ax=None):
         """Show theta(z) and T2*(z) (+uncertainties if there)."""
         if ax is None:
-            fig, ax = plt.subplots(1, 2, sharey=True, figsize=figsize)
+            fig, ax = pg.plt.subplots(1, 2, sharey=True, figsize=figsize)
             self.figs['result'] = fig
 
         thk, wc, t2 = self.splitModel()
@@ -483,7 +483,7 @@ class MRS():
     def showResultAndFit(self, figsize=(12, 10), save='', plotmisfit=False,
                          maxdep=0, clim=None):
         """Show ec(z), T2*(z), data and model response."""
-        fig, ax = plt.subplots(2, 2 + plotmisfit, figsize=figsize)
+        fig, ax = pg.plt.subplots(2, 2 + plotmisfit, figsize=figsize)
         self.figs['result+fit'] = fig
         thk, wc, t2 = self.splitModel()
         showWC(ax[0, 0], thk, wc, maxdep=maxdep)
@@ -705,7 +705,7 @@ class MRS():
         """
         if maxfitness is None:
             maxfitness = min(self.fits) * fitratio
-        fig, ax = plt.subplots(1, 2, sharey=True)
+        fig, ax = pg.plt.subplots(1, 2, sharey=True)
         self.figs['population'] = fig
         maxz = 0
         for ind in self.pop:
@@ -737,7 +737,7 @@ class MRS():
             fig.savefig(self.EAstatfile.replace('.csv', '.pdf'),
                         bbox_inches='tight')
 
-        plt.show()
+        pg.plt.show()
 
     def plotEAstatistics(self, fname=None):
         """Plot EA statistics (best, worst, ...) over time."""
@@ -751,7 +751,7 @@ class MRS():
         colors = ['black', 'blue', 'green', 'red']
         labels = ['average', 'median', 'best', 'worst']
 
-        fig, ax = plt.subplots()
+        fig, ax = pg.plt.subplots()
         self.figs['statistics'] = fig
         ax.errorbar(gen, avg, stderr, color=colors[0], label=labels[0])
         ax.set_yscale('log')
@@ -783,4 +783,4 @@ if __name__ == "__main__":
     outThk, outWC, outT2 = mrs.result()
     mrs.saveResult(mrs.basename+'.result')
     mrs.showResultAndFit(save=mrs.basename+'.pdf')
-    plt.show()
+    pg.plt.show()
