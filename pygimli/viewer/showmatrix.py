@@ -7,7 +7,7 @@ import pygimli as pg
 
 from .mpl import createColorBar  # , updateColorBar
 from .mpl.matrixview import drawBlockMatrix, drawSparseMatrix
-from .mpl.colorbar import cmapFromName
+from .mpl.colorbar import cMapFromName
 
 
 def showMatrix(mat, ax=None, **kwargs):
@@ -49,7 +49,7 @@ def showMatrix(mat, ax=None, **kwargs):
 
         if cBar is None:
             uniqueIDs = pg.unique([e.matrixID for e in mat.entries()])
-            cMap = cmapFromName("Set3", ncols=len(uniqueIDs))
+            cMap = cMapFromName("Set3", ncols=len(uniqueIDs))
             sm = pg.plt.cm.ScalarMappable(cmap=cMap)
 
             cBar = createColorBar(

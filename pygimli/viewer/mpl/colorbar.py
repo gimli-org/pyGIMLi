@@ -6,7 +6,6 @@ import numpy as np
 import pygimli as pg
 from . import saveFigure, updateAxes
 from .utils import prettyFloat
-from pygimli.core.logger import renameKwarg
 
 
 def autolevel(
@@ -64,14 +63,14 @@ def autolevel(
     return levs
 
 
-def cmapFromName(cmapname="jet", ncols=256, bad=None, **kwargs):
-    """Get a colormap either from name or from keyworld list.
+def cMapFromName(cMapName="jet", ncols=256, bad=None, **kwargs):
+    """Get a colormap either from name or from keyword list.
 
     See http://matplotlib.org/examples/color/colormaps_reference.html
 
     Parameters
     ----------
-    cmapname : str
+    cMapName : str
         Name for the colormap.
 
     ncols : int
@@ -82,17 +81,15 @@ def cmapFromName(cmapname="jet", ncols=256, bad=None, **kwargs):
 
     **kwargs :
         cMap : str
-            Name for the colormap
-        cmap : str
-            colormap name (old)
+            Name for the Colormap
 
     Returns
     -------
     cMap :
         matplotlib Colormap
     """
-    if not isinstance(cmapname, str):
-        return cmapname
+    if not isinstance(cMapName, str):
+        return cMapName
 
     import matplotlib as mpl
     import copy
@@ -100,9 +97,7 @@ def cmapFromName(cmapname="jet", ncols=256, bad=None, **kwargs):
     if not bad:
         bad = [1.0, 1.0, 1.0, 0.0]
 
-    renameKwarg("cmap", "cMap", kwargs)
-
-    cMapName = kwargs.pop("cMap", cmapname)
+    cMapName = kwargs.pop("cMap", cMapName)
 
     cMap = None
     if cMapName is None:
@@ -239,7 +234,7 @@ def updateColorBar(
             if nCols is None:
                 nCols = nLevs
 
-            cMap = cmapFromName(cMap, ncols=nCols, bad=[1.0, 1.0, 1.0, 0.0])
+            cMap = cMapFromName(cMap, ncols=nCols, bad=[1.0, 1.0, 1.0, 0.0])
             # does not work. why??
             # cMap.set_under('yellow')
             # cMap.set_over('cyan')
@@ -420,14 +415,18 @@ def createColorBarOnly(
 
     Examples
     --------
-    >>> # import pygimli as pg
-    >>> # from pygimli.viewer.mpl import createColorBarOnly
-    >>> # createColorBarOnly(cMin=0.2, cMax=5, logScale=False,
-    >>> #                   cMap='b2r',
-    >>> #                   nLevs=7,
-    >>> #                   label=r'Ratio',
-    >>> #                   orientation='horizontal')
-    >>> # pg.wait()
+    >>> import pygimli as pg
+    >>> from pygimli.viewer.mpl import createColorBarOnly
+    >>> createColorBarOnly(
+    ...     cMin=0.2,
+    ...     cMax=5,
+    ...     logScale=False,
+    ...     cMap="b2r",
+    ...     nLevs=7,
+    ...     label=r"Ratio",
+    ...     orientation="horizontal",
+    ... )  # doctest: +ELLIPSIS
+    <...
     """
     from matplotlib.colors import LogNorm, Normalize
     from matplotlib.colorbar import ColorbarBase
@@ -445,14 +444,14 @@ def createColorBarOnly(
     else:
         norm = Normalize(vmin=cMin, vmax=cMax)
 
-    cmap = cmapFromName(cMap)
+    cMap = cMapFromName(cMap)
     kwargs.pop("colorBar", False)  # often False for multiple plots
     kwargs.pop("xlabel", False)
     kwargs.pop("ylabel", False)
     aspect = kwargs.pop("aspect", None)
     levels = kwargs.pop("levels", None)
     cbar = ColorbarBase(
-        ax, norm=norm, cmap=cmap, orientation=orientation, **kwargs
+        ax, norm=norm, cmap=cMap, orientation=orientation, **kwargs
     )
 
     #        cbar.labelpad = -20

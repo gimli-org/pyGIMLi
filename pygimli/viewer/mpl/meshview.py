@@ -6,7 +6,7 @@ import pygimli as pg
 
 from pygimli.utils import streamline
 
-from .colorbar import autolevel, createColorBar, updateColorBar, cmapFromName
+from .colorbar import autolevel, createColorBar, updateColorBar, cMapFromName
 from .utils import updateAxes as updateAxes_
 
 
@@ -873,7 +873,7 @@ def drawPLC(ax, mesh, fitView=True, **kwargs):
 
             updateColorBar(
                 cbar,
-                cMap=cmapFromName("Set3", ncols=len(uniquemarkers)),
+                cMap=cMapFromName("Set3", ncols=len(uniquemarkers)),
                 cMin=-0.5,
                 cMax=len(uniquemarkers) - 0.5,
             )

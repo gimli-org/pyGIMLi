@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from .modelview import draw1DColumn
-from .colorbar import cmapFromName
+from .colorbar import cMapFromName
 
 
 def create_legend(ax, cmap, ids, classes):
@@ -99,7 +99,7 @@ class BoreHole:
             cmax = max(self.class_id)
 
         if cm is None:
-            cm = cmapFromName("Set3", len(self.unique_classes))
+            cm = cMapFromName("Set3", len(self.unique_classes))
             # cm = plt.get_cmap('jet', len(self.unique_classes))
 
         draw1DColumn(

@@ -137,12 +137,12 @@ def createRectangle(start=None, end=None, pos=None, size=None, **kwargs):
         leftDirection : bool [True]
             TODO Rotational direction
         pnts: [[x, y],]
-            Return squared rectangle of origin-aligned boundingbox for pnts.
+            Return squared rectangle of origin-aligned bounding-box for pnts.
         minBB: False
             Return squared rectangle of non-origin-aligned minimum bounding box
             for pnts.
         minBBOffset: [1.0, 1.0]
-            Offset for minimal boundingbox in x and y direction in relative
+            Offset for minimal bounding-box in x and y direction in relative
             extent .. whatever that means for non-aligned boxes.
 
     Returns
@@ -280,15 +280,15 @@ def createRectangle(start=None, end=None, pos=None, size=None, **kwargs):
     sPos = pg.Pos(start)
     ePos = pg.Pos(end)
 
-    verts = [sPos, [sPos[0], ePos[1]], ePos, [ePos[0], sPos[1]]]
+    vertices = [sPos, [sPos[0], ePos[1]], ePos, [ePos[0], sPos[1]]]
 
     # TODO refactor with polyCreatePolygon
 
     if kwargs.pop("leftDirection", False):
-        for v in verts[::-1]:
+        for v in vertices[::-1]:
             poly.createNode(v)
     else:
-        for v in verts:
+        for v in vertices:
             poly.createNode(v)
 
     # Note that we do not support the usage of start/end AND size/pos. Only one
@@ -484,7 +484,7 @@ def createCircle(
     pos : [x, y] [[0.0, 0.0]]
         Center position
     radius : float | [a,b] [1]
-        radius or halfaxes of the circle
+        radius or half-axes of the circle
     nSegments : int [12]
         Discrete amount of segments for the circle.
     start : double [0]
@@ -688,7 +688,7 @@ def createPolygon(
         equidistant between sensors.
 
     interpolate : str ['linear']
-        Interpolation rule for addNodes. 'linear' or 'spline'. TODO 'harmfit'
+        Interpolation rule for addNodes. 'linear' or 'spline'. TODO 'harmFit'
 
     **kwargs:
 
@@ -823,14 +823,14 @@ def merge(*args, **kwargs):
     return pg.meshtools.mergeMeshes([*args], **kwargs)
 
 
-def mergePLC(plcs, tol=1e-3):
+def mergePLC(plc, tol=1e-3):
     """Merge multiply polygons.
 
     Merge multiply polygons into a single polygon.
     Common nodes and common edges will be checked and removed.
     When a node touches an edge, the edge will be split.
 
-    3D only OOC with polytools.
+    3D only OOC with poly-tools.
 
     TODO
     ----
@@ -840,7 +840,7 @@ def mergePLC(plcs, tol=1e-3):
 
     Parameters
     ----------
-    plcs: [:gimliapi:`GIMLI::Mesh`,]
+    plc: [:gimliapi:`GIMLI::Mesh`,]
         List of PLC that want to be merged into one new PLC
 
     tol: double
@@ -869,12 +869,12 @@ def mergePLC(plcs, tol=1e-3):
     >>> drawMesh(ax, mt.createMesh(plc))
     >>> pg.wait()
     """
-    if plcs[0].dim() == 3:
-        return mergePLC3D(plcs, tol)
+    if plc[0].dim() == 3:
+        return mergePLC3D(plc, tol)
 
         # tmp = pg.optImport('tempfile')
         # names = []
-        # for p in plcs:
+        # for p in plc:
         #     _, namePLC = tmp.mkstemp(suffix='.poly')
         #     pg.meshtools.exportPLC(p, namePLC)
         #     names.append(namePLC)
@@ -898,7 +898,7 @@ def mergePLC(plcs, tol=1e-3):
     # handle 2D geometries
     plc = pg.Mesh(dim=2, isGeometry=True)
 
-    for p in plcs:
+    for p in plc:
         nodes = []
         for n in p.nodes():
             nn = plc.createNodeWithCheck(
@@ -924,25 +924,25 @@ def mergePLC(plcs, tol=1e-3):
     return plc
 
 
-def mergePLC3D(plcs, tol=1e-3):
+def mergePLC3D(plc, tol=1e-3):
     """Merge a list of 3D PLC into one.
 
     Experimental replacement for polyMerge. Don't expect too much.
 
     Works if:
-        * all plcs are free and does not have any contact to each other
+        * all plc are free and does not have any contact to each other
         * contact of two facets if the second is completely within the first
     """
-    if len(plcs) < 2:
+    if len(plc) < 2:
         pg.critical("Give at least 2 PLCs.")
 
-    if plcs[0].dim() != 3:
+    if plc[0].dim() != 3:
         pg.warn("2D poly found. redirect to mergePLC")
-        return mergePLC(plcs, tol)
+        return mergePLC(plc, tol)
 
-    p0 = pg.Mesh(plcs[0])
+    p0 = pg.Mesh(plc[0])
 
-    for p in plcs[1:]:
+    for p in plc[1:]:
         for b in p.boundaries():
             p0.copyBoundary(b)
 
@@ -990,7 +990,8 @@ def createParaMeshPLC(
 
     TODO:
         * additional topographic points
-        * spline interpolation between sensorpoints or addpoints for non closed
+        * spline interpolation between sensor-points or add-points for
+          non-closed domain
         * subsurface sensors (partly .. see example)
 
     Parameters
@@ -1046,7 +1047,7 @@ def createParaMeshPLC(
     >>> # no need to import matplotlib, pygimli show does.
     >>> import pygimli as pg
     >>> import pygimli.meshtools as mt
-    >>> # Create the simplest paramesh PLC with a para box of 10 m without
+    >>> # Create the simplest para-mesh PLC with a para box of 10 m without
     >>> # sensors
     >>> p = mt.createParaMeshPLC([0, 10])
     >>> # you can add subsurface sensors now with
@@ -1075,7 +1076,7 @@ def createParaMeshPLC(
         else:  # assume 2d array with 2 or 3 values per item
             sensors = [pg.Pos(s) for s in sensors]
     elif isinstance(sensors, list) and len(sensors) == 2:
-        # guess we have just a desired Pbox with
+        # guess we have just a desired Para-box with
         sensors = [pg.Pos(sensors[0], 0.0), pg.Pos(sensors[1], 0.0)]
         noSensors = True
         paraBoundary = 0
@@ -1216,7 +1217,7 @@ def createParaMeshSurface(
 ):
     r"""Create surface mesh for an 3D inversion parameter mesh.
 
-        Topographic information (non-zero z-coodinate) can be from sensors
+        Topographic information (non-zero z-coordinate) can be from sensors
         together with addTopo, or in addTopo alone if provided.
         Outside boundary corners are set to median of all topography.
 
@@ -1330,7 +1331,7 @@ def createParaMeshSurface(
     for n in surface.nodes():
         n.translate(0, 0, sZ[n.id()])
 
-    # create 3D surfacemesh
+    # create 3D surface mesh
     s = pg.meshtools.createSurface(
         surface, boundaryMarker=pg.core.MARKER_BOUND_HOMOGEN_NEUMANN
     )
@@ -1420,7 +1421,7 @@ def createParaMeshPLC3D(
         addTopo=addTopo,
     )
 
-    # find depth and paradepth
+    # find depth and para-depth
     xSpan = max(sensors[:, 0]) - min(sensors[:, 0])
     ySpan = max(sensors[:, 1]) - min(sensors[:, 1])
 
@@ -1443,7 +1444,7 @@ def createParaMeshPLC3D(
 
     bounds = [surface]
     # close outer surfaces
-    bttm = []
+    btm = []
     for i in range(4):
         p = [n.pos() for n in surface.nodes() if n.marker() == i + 1]
         p.append(
@@ -1468,16 +1469,16 @@ def createParaMeshPLC3D(
         f = pg.meshtools.createFacet(m, boundaryMarker=-2)
 
         bounds.append(f)
-        bttm.append(p0)
-        bttm.append(p1)
+        btm.append(p0)
+        btm.append(p1)
 
-    m = pg.meshtools.createRectangle(pnts=bttm, minBB=True)
+    m = pg.meshtools.createRectangle(pnts=btm, minBB=True)
     m.translate([0, 0, depth])
-    bttmA = pg.meshtools.createFacet(m, boundaryMarker=-2)
-    bounds.append(bttmA)
+    btmA = pg.meshtools.createFacet(m, boundaryMarker=-2)
+    bounds.append(btmA)
 
     # close para surfaces
-    bttm = []
+    btm = []
     for i in range(4):
         p = [n.pos() for n in surface.nodes() if n.marker() == i + 5]
         p.append(
@@ -1502,13 +1503,13 @@ def createParaMeshPLC3D(
         f = pg.meshtools.createFacet(m, boundaryMarker=1)
 
         bounds.append(f)
-        bttm.append(p0)
-        bttm.append(p1)
+        btm.append(p0)
+        btm.append(p1)
 
-    m = pg.meshtools.createRectangle(pnts=bttm, minBB=True)
+    m = pg.meshtools.createRectangle(pnts=btm, minBB=True)
     m.translate([0, 0, paraDepth])
-    bttmP = pg.meshtools.createFacet(m, boundaryMarker=1)
-    bounds.append(bttmP)
+    btmP = pg.meshtools.createFacet(m, boundaryMarker=1)
+    bounds.append(btmP)
 
     pdPLC = pg.meshtools.mergePLC(bounds)
 
@@ -1517,12 +1518,12 @@ def createParaMeshPLC3D(
             pdPLC.createNode(s - [0.0, 0.0, paraDX])
 
     pdPLC.addRegionMarker(
-        pg.center(bttmA.positions()) + [0.0, 0.0, 0.1],
+        pg.center(btmA.positions()) + [0.0, 0.0, 0.1],
         marker=1,
         area=boundaryMaxCellSize,
     )
     pdPLC.addRegionMarker(
-        pg.center(bttmP.positions()) + [0.0, 0.0, 0.1],
+        pg.center(btmP.positions()) + [0.0, 0.0, 0.1],
         marker=2,
         area=paraMaxCellSize,
     )
@@ -1571,7 +1572,7 @@ def readPLC(filename: str, comment: str = "#"):
         raise ValueError("Format unknown! header size != 4", headerLine)
 
     fromOne = 0
-    nVerts = int(headerLine[0])
+    nVertices = int(headerLine[0])
     dimension = int(headerLine[1])
     nPointsAttributes = int(headerLine[2])
     haveNodeMarker = int(headerLine[3])
@@ -1581,7 +1582,7 @@ def readPLC(filename: str, comment: str = "#"):
     # this flag in the end
 
     # Nodes section
-    for i in range(nVerts):
+    for i in range(nVertices):
         row = content[1 + i].split("\r\n")[0].split()
 
         if len(row) == (1 + dimension + nPointsAttributes + haveNodeMarker):
@@ -1608,7 +1609,7 @@ def readPLC(filename: str, comment: str = "#"):
             )
 
     # Segment section
-    row = content[1 + nVerts].split()
+    row = content[1 + nVertices].split()
 
     if len(row) != 2:
         raise ValueError("Format unknown for segment section " + row)
@@ -1618,7 +1619,7 @@ def readPLC(filename: str, comment: str = "#"):
 
     if dimension == 2:
         for i in range(nSegments):
-            row = content[2 + nVerts + i].split()
+            row = content[2 + nVertices + i].split()
 
             if len(row) == (3 + haveBoundaryMarker):
                 marker = 0
@@ -1640,7 +1641,7 @@ def readPLC(filename: str, comment: str = "#"):
             faces = []
             markers = []
             for i in range(nSegments):
-                row = content[2 + nVerts + i + segment_offset].split()
+                row = content[2 + nVertices + i + segment_offset].split()
                 numIds = int(row[0])
                 ids = [int(_id) for _id in row[1 : 1 + numIds]]
                 marker = 0
@@ -1670,7 +1671,7 @@ def readPLC(filename: str, comment: str = "#"):
                     ) from e
         else:
             for i in range(nSegments):
-                row = content[2 + nVerts + i + segment_offset].split()
+                row = content[2 + nVertices + i + segment_offset].split()
                 numBounds = int(row[0])
                 numHoles = int(row[1])
                 # if numHoles != '0':
@@ -1682,7 +1683,7 @@ def readPLC(filename: str, comment: str = "#"):
                 face = None
                 for k in range(numBounds):
                     boundRow = content[
-                        2 + nVerts + i + segment_offset + 1
+                        2 + nVertices + i + segment_offset + 1
                     ].split()
                     # nNodes = int(boundRow[0])
                     nodeIdx = [int(_b) for _b in boundRow[1:]]
@@ -1701,7 +1702,7 @@ def readPLC(filename: str, comment: str = "#"):
                     segment_offset += 1
 
                 for _k in range(numHoles):
-                    r = content[2 + nVerts + i + segment_offset + 1].split()
+                    r = content[2 + nVertices + i + segment_offset + 1].split()
                     face.addHoleMarker([float(hm) for hm in r[1:]])
 
                     segment_offset += 1
@@ -1709,14 +1710,14 @@ def readPLC(filename: str, comment: str = "#"):
         nSegments += segment_offset
 
     # Hole section
-    row = content[2 + nVerts + nSegments].split()
+    row = content[2 + nVertices + nSegments].split()
 
     if len(row) != 1:
         raise ValueError("Format unknown for hole section " + row)
 
     nHoles = int(row[0])
     for i in range(nHoles):
-        row = content[3 + nVerts + nSegments + i].split()
+        row = content[3 + nVertices + nSegments + i].split()
         if len(row) == 3:
             poly.addHoleMarker([float(row[1]), float(row[2])])
         elif len(row) == 4 and dimension == 3:
@@ -1731,9 +1732,9 @@ def readPLC(filename: str, comment: str = "#"):
                 + str(len(row))
             )
 
-    if (3 + nVerts + nSegments + nHoles) < len(content):
+    if (3 + nVertices + nSegments + nHoles) < len(content):
         # Region section
-        row = content[3 + nVerts + nSegments + nHoles].split()
+        row = content[3 + nVertices + nSegments + nHoles].split()
 
         if len(row) != 1:
             raise TypeError("Format unknown for region section " + row)
@@ -1742,7 +1743,7 @@ def readPLC(filename: str, comment: str = "#"):
 
         for i in range(nRegions):
             row = (
-                content[4 + nVerts + nSegments + nHoles + i]
+                content[4 + nVertices + nSegments + nHoles + i]
                 .split("#")[0]
                 .split()
             )
@@ -1854,13 +1855,13 @@ def exportTrianglePoly(poly, fname, float_format=".15e"):
     if fname.rfind(".poly") == -1:
         fname = fname + ".poly"
 
-    pfmt = "{:" + float_format + "}" if float_format[0] != "{" else float_format
+    pFmt = "{:" + float_format + "}" if float_format[0] != "{" else float_format
     with Path(fname).open("w") as fid:
         fid.write(f"{poly.nodeCount():d}\t2\t0\t1\n")
         nm = poly.nodeMarkers()
         bm = poly.boundaryMarkers()
 
-        fmt = "{:d}" + ("\t" + pfmt) * 2 + "\t{:d}\n"
+        fmt = "{:d}" + ("\t" + pFmt) * 2 + "\t{:d}\n"
         for i, p in enumerate(poly.positions()):
             fid.write(fmt.format(i, p.x(), p.y(), nm[i]))
         fid.write(f"{poly.boundaryCount():d}\t1\n")
@@ -1871,12 +1872,12 @@ def exportTrianglePoly(poly, fname, float_format=".15e"):
             )
         fid.write(f"{len(poly.holeMarker()):d}\n")
 
-        fmt = "{:d}" + ("\t" + pfmt) * 2 + "\n"
+        fmt = "{:d}" + ("\t" + pFmt) * 2 + "\n"
         for i, h in enumerate(poly.holeMarker()):
             fid.write(fmt.format(i, h.x(), h.y()))
         fid.write(f"{len(poly.regionMarkers()):d}\n")
 
-        fmt = "{:d}" + ("\t" + pfmt) * 3 + "\t{:.15e}\n"
+        fmt = "{:d}" + ("\t" + pFmt) * 3 + "\t{:.15e}\n"
         for i, r in enumerate(poly.regionMarkers()):
             fid.write(fmt.format(i, r.x(), r.y(), r.marker(), r.area()))
 
@@ -1917,9 +1918,9 @@ def exportTetgenPoly(poly, filename, float_format=".12e", **kwargs):
     """
     if filename[-5:] != ".poly":
         filename = filename + ".poly"
-    polytxt = ""
+    polyTxt = ""
     sep = "\t"  # standard tab separated file
-    linesep = "\n"  # os.linesep does not work in mingwshell, testit!!
+    linesep = "\n"
     if poly.dim() != 3:
         raise ValueError("Exit, only for 3D meshes.")
     boundary_marker = 1
@@ -1927,8 +1928,8 @@ def exportTetgenPoly(poly, filename, float_format=".12e", **kwargs):
 
     # Part 1/4: node list
     # intro line
-    # <nodecount> <dimension (3)> <# of attributes> <boundary markers (0 or 1)>
-    polytxt += (
+    # <node_count> <dimension (3)> <# of attributes> <boundary markers (0 or 1)>
+    polyTxt += (
         f"{poly.nodeCount()}{sep}{3}{sep}{attribute_count}"
         f"{sep}{boundary_marker}{linesep}"
     )
@@ -1943,7 +1944,7 @@ def exportTetgenPoly(poly, filename, float_format=".12e", **kwargs):
         fill = [node.id()]
         fill.extend(list(node.pos()))
         fill.append(node.marker())
-        polytxt += point_str.format(*fill)
+        polyTxt += point_str.format(*fill)
 
     # Part 2/4: boundary list
     # intro line
@@ -1961,7 +1962,7 @@ def exportTetgenPoly(poly, filename, float_format=".12e", **kwargs):
         print("Detected ", len(extraBoundaries), " extra boundaries!")
 
     nBoundaries += len(extraBoundaries)
-    polytxt += f"{nBoundaries:d}{sep}1{linesep}"
+    polyTxt += f"{nBoundaries:d}{sep}1{linesep}"
     # loop over facets, each facet can contain an arbitrary number of holes
     # and polygons, in our case, there is always one polygon per facet.
 
@@ -1983,26 +1984,26 @@ def exportTetgenPoly(poly, filename, float_format=".12e", **kwargs):
         except BaseException:
             nHoles = 0
 
-        npolys = 1 + nSubs + len(bound.secondaryNodes())
-        polytxt += f"{npolys}{sep}{nHoles}{sep}{bound.marker():d}{linesep}"
+        nPolys = 1 + nSubs + len(bound.secondaryNodes())
+        polyTxt += f"{nPolys}{sep}{nHoles}{sep}{bound.marker():d}{linesep}"
         # inner loop over polygons
         # <# of corners> <corner 1> <corner 2> ... <corner #>
         for _k in range(1):
             poly_str = f"{bound.nodeCount():d}"
             poly_str += sep + sep.join([f"{n:d}" for n in bound.ids()])
-            polytxt += f"{poly_str}{linesep}"
+            polyTxt += f"{poly_str}{linesep}"
 
-        # loop over subfaces
+        # loop over sub-faces
         for k in range(nSubs):
             sub = bound.subface(k)
             poly_str = f"{len(sub):d}"
             poly_str += sep + sep.join([f"{n.id():d}" for n in sub])
-            polytxt += f"{poly_str}{linesep}"
+            polyTxt += f"{poly_str}{linesep}"
 
         # inner loop over holes
         if nHoles > 0:
             for n, hole in enumerate(bound.holeMarkers()):
-                polytxt += hole_str.format(n, *hole)
+                polyTxt += hole_str.format(n, *hole)
 
         # not necessary yet ?! why is there an extra hole section?
         # because this is for 2D holes in facets only
@@ -2012,36 +2013,36 @@ def exportTetgenPoly(poly, filename, float_format=".12e", **kwargs):
             ind = bound.secondaryNodes()[k].id()
             poly_str = f"{2:d}"
             poly_str += sep + f"{ind:d} {ind:d}"
-            polytxt += f"{poly_str}{linesep}"
+            polyTxt += f"{poly_str}{linesep}"
 
     # part 2b: extra boundaries that cannot be part of mesh class
     for nodes in extraBoundaries:
         # <# of polygons> [# of holes] [boundary marker]
-        npolys = 1
-        polytxt += f"1{sep}0{sep}{111:d}{linesep}"
+        nPolys = 1
+        polyTxt += f"{nPolys}{sep}0{sep}{111:d}{linesep}"
         # <# of corners> <corner 1> <corner 2> ... <corner #>
         poly_str = f"{len(nodes):d}"
         for ind in nodes:
             poly_str += sep + f"{ind:d}"
 
-        polytxt += f"{poly_str}{linesep}"
+        polyTxt += f"{poly_str}{linesep}"
 
     # part 3/4: hole list
     # intro line
     # <# of holes>
     holes = poly.holeMarker()
-    polytxt += f"{len(holes):d}{linesep}"
+    polyTxt += f"{len(holes):d}{linesep}"
     # loop over hole markers
     # <hole #> <x> <y> <z>
 
     for n, hole in enumerate(holes):
-        polytxt += hole_str.format(n, *hole)
+        polyTxt += hole_str.format(n, *hole)
 
     # part 4/4: region attributes and volume constraints (optional)
     # intro line
     # <# of regions>
     regions = poly.regionMarkers()
-    polytxt += f"{len(regions):d}{linesep}"
+    polyTxt += f"{len(regions):d}{linesep}"
     # loop over region markers
     # <region #> <x> <y> <z> <region number> <region attribute>
     region_str = "{:d}"
@@ -2050,7 +2051,7 @@ def exportTetgenPoly(poly, filename, float_format=".12e", **kwargs):
 
     region_str += sep + f"{{:d}}{sep}{{:{float_format}}}" + linesep
     for p, region in enumerate(regions):
-        polytxt += region_str.format(
+        polyTxt += region_str.format(
             p,
             region.x(),
             region.y(),
@@ -2061,7 +2062,7 @@ def exportTetgenPoly(poly, filename, float_format=".12e", **kwargs):
 
     # writing file
     with Path(filename).open("w") as out:
-        out.write(polytxt)
+        out.write(polyTxt)
 
 
 def syscallTetgen(filename, switches, verbose=False, tetgen="tetgen"):
@@ -2087,38 +2088,36 @@ def syscallTetgen(filename, switches, verbose=False, tetgen="tetgen"):
     -------
     mesh : :gimliapi:`GIMLI::Mesh`
     """
-    filebody = filename.replace(".poly", "")
-    syscal = f"{tetgen} -{switches} {filebody}.poly"
+    fileBody = filename.replace(".poly", "")
+    syscal = f"{tetgen} -{switches} {fileBody}.poly"
 
     if verbose is True:
         pg.info(syscal)
 
     # no shell=True, args passed as a list, so no injection risk
     subprocess.run(  # noqa: S603
-        [tetgen, f"-{switches}", f"{filebody}.poly"], check=False
+        [tetgen, f"-{switches}", f"{fileBody}.poly"], check=False
     )
 
     mesh = None
-    if Path(filebody + ".1.node").is_file():
-        # system('meshconvert -it -BD -o ' + filebody + ' ' + filebody + '.1')
-        mesh = pg.meshtools.readTetgen(filebody + ".1")
+    if Path(fileBody + ".1.node").is_file():
+        mesh = pg.meshtools.readTetgen(fileBody + ".1")
         try:
-            Path(filebody + ".1.node").unlink()
-            Path(filebody + ".1.ele").unlink()
-            Path(filebody + ".1.face").unlink()
+            Path(fileBody + ".1.node").unlink()
+            Path(fileBody + ".1.ele").unlink()
+            Path(fileBody + ".1.face").unlink()
         except BaseException as e:
             print(e)
     else:
-        # system('meshconvert -it -BD -o ' + filebody + ' ' + filebody + '-1')
-        mesh = pg.meshtools.readTetgen(filebody + "-1")
+        mesh = pg.meshtools.readTetgen(fileBody + "-1")
         try:
-            Path(filebody + "-1.node").unlink()
-            Path(filebody + "-1.ele").unlink()
-            Path(filebody + "-1.face").unlink()
+            Path(fileBody + "-1.node").unlink()
+            Path(fileBody + "-1.ele").unlink()
+            Path(fileBody + "-1.face").unlink()
         except BaseException as e:
             print(e)
 
-    # mesh = pg.Mesh(filebody)
+    # mesh = pg.Mesh(fileBody)
     return mesh
 
 
@@ -2126,8 +2125,6 @@ def polyCreateWorld(
     filename, x=None, depth=None, y=None, marker=0, maxCellSize=0, verbose=True
 ):
     """Create the PLC of a default world.
-
-    Out-of-core wrapper for dcfemlib::polytools::polyCreateWorld
 
     Todo
     * needs to be converted to the Python-only tools.
@@ -2251,7 +2248,7 @@ def createFacet(mesh, boundaryMarker=None):
         pg.error("need two dimensional mesh or poly")
 
     if mesh.cellCount() > 0:
-        pg.critical("Implementme")
+        pg.critical("Implement me")
 
     poly = pg.Mesh(dim=3, isGeometry=True)
 
@@ -2381,7 +2378,7 @@ def createSphere(
     nRings=10,
     rot=None,
     boundaryMarker=0,
-    var="uvsphere",
+    var="uvSphere",
     triFaces=True,
     **kwargs,
 ):
@@ -2404,10 +2401,10 @@ def createSphere(
         Rotate on the center.
     boundaryMarker: int[0]
         Boundary marker for the resulting faces.
-    var: str='uvsphere'
-        Variance of sphere: 'uvsphere', 'qsphere' or 'icosphere'.
+    var: str='uvSphere'
+        Variance of sphere: 'uvSphere', 'qSphere' or 'icoSphere'.
     triFaces: bool [True]
-        Output triangular faces instead of quadrilateral faces. Only for qsphere
+        Output triangular faces instead of quadrilateral faces. Only for qSphere
         at the moment.
 
     Keyword Args
@@ -2417,8 +2414,8 @@ def createSphere(
             See :py:mod:`pygimli.meshtools.polytools.setPolyRegionMarker`
         * refine: int [3]
             Number of refinements to create a smoother sphere.
-            Default `refine=3` for variance='qsphere' and `refine=2`
-            for 'icosphere'
+            Default `refine=3` for variance='qSphere' and `refine=2`
+            for 'icoSphere'
 
     Returns
     -------
@@ -2438,15 +2435,15 @@ def createSphere(
     >>> uvs = mt.createSphere([6, 5, 2], nSegments=25, nRings=15)
     >>> pg.show(uvs, showMesh=True, markers=True)  # doctest: +ELLIPSIS
     (<pyvista...
-    >>> uv = pg.meshtools.createSphere(var="uvsphere", pos=[3, 0, 0])
+    >>> uv = pg.meshtools.createSphere(var="uvSphere", pos=[3, 0, 0])
     >>> qs4 = pg.meshtools.createSphere(
-    ...     var="qsphere", pos=[2, 0, 0], refine=3, triFaces=False
+    ...     var="qSphere", pos=[2, 0, 0], refine=3, triFaces=False
     ... )
     >>> qs3 = pg.meshtools.createSphere(
-    ...     var="qsphere", pos=[1, 0, 0], refine=3, triFaces=True
+    ...     var="qSphere", pos=[1, 0, 0], refine=3, triFaces=True
     ... )
     >>> ico = pg.meshtools.createSphere(
-    ...     var="icosphere", pos=[0, 0, 0], refine=2
+    ...     var="icoSphere", pos=[0, 0, 0], refine=2
     ... )
     >>> pg.show(
     ...     [uv, qs4, qs3, ico], showMesh=True, markers=True
@@ -2458,7 +2455,7 @@ def createSphere(
 
     poly = pg.Mesh(3, isGeometry=True)
 
-    if var == "uvsphere":
+    if var == "uvSphere":
         if nSegments < 3:
             nSegments = 3
 
@@ -2528,7 +2525,7 @@ def createSphere(
                 ),
                 marker=boundaryMarker,
             )
-    elif var == "qsphere":
+    elif var == "qSphere":
         ## trivial version of quad sphere
         poly = createCube()
         refine = kwargs.pop("refine", 3)
@@ -2544,7 +2541,7 @@ def createSphere(
         if triFaces is True:
             poly = pg.meshtools.refineQuad2Tri(poly)
 
-    elif var == "icosphere":
+    elif var == "icoSphere":
         ## trivial version of quad sphere
 
         poly = pg.Mesh(3, isGeometry=True)
@@ -2552,7 +2549,7 @@ def createSphere(
         phi = (1 + math.sqrt(5)) / 2  # golden ratio
 
         # Vertices of a unit icosahedron centered at origin
-        verts = [
+        vertices = [
             [-1, phi, 0],
             [1, phi, 0],
             [-1, -phi, 0],
@@ -2568,12 +2565,12 @@ def createSphere(
         ]
 
         # Normalize to radius 0.5
-        verts = np.array(verts)
-        verts = 0.5 * verts / np.linalg.norm(verts[0])
+        vertices = np.array(vertices)
+        vertices = 0.5 * vertices / np.linalg.norm(vertices[0])
 
-        nodes = [poly.createNode(*v) for v in verts]
+        nodes = [poly.createNode(*v) for v in vertices]
 
-        # Faces of the icosahedron (each as 3 indices into verts)
+        # Faces of the icosahedron (each as 3 indices into vertices)
         faces = [
             [0, 11, 5],
             [0, 5, 1],
@@ -2612,7 +2609,11 @@ def createSphere(
                 # alternative could be smooth with neighbors, and
                 # post normalize with the end result, test and compare
     else:
-        pg.critical("Unknown sphere variance: ", var)
+        pg.critical(
+            "Unknown sphere variance (possible: 'uvSphere', 'qSphere',"
+            "'icoSphere'): ",
+            var,
+        )
 
     poly.scale(size)
 
@@ -2654,18 +2655,10 @@ def extrude(p2, z=-1.0, boundaryMarker=0, **kwargs):
 
     if p2.cellCount() > 0:
         return pg.meshtools.extrudeMesh(p2, z, **kwargs)
-        # pg.critical("Implementme")
 
     poly = pg.Mesh(3, isGeometry=True)
     top = [poly.createNode(n.pos()).id() for n in p2.nodes()]
-    # top = []
-    # for n in p2.nodes():
-    #     top.append(poly.createNode(n.pos()).id())
-
     bot = [poly.createNode(n.pos() + [0.0, 0.0, z]).id() for n in p2.nodes()]
-    # bot = []
-    # for n in p2.nodes():
-    #     bot.append(poly.createNode(n.pos() + [0.0, 0.0, z]).id())
 
     N = len(top)
     poly.createPolygonFace(poly.nodes(top), marker=boundaryMarker)
@@ -2692,8 +2685,6 @@ def createCylinder(
     **kwargs,
 ):
     """Create PLC of a cylinder.
-
-    Out of core wrapper for dcfemlib::polytools.
 
     Note, there is a bug in the old polytools which ignores the area settings
     for marker == 0.

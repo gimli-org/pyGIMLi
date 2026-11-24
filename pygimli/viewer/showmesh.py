@@ -18,7 +18,7 @@ from .mpl import addCoverageAlpha
 from .mpl import updateAxes
 from .mpl import createColorBar, updateColorBar
 from .mpl import CellBrowser
-from .mpl.colorbar import cmapFromName
+from .mpl.colorbar import cMapFromName
 
 
 def show(obj=None, data=None, **kwargs):
@@ -440,7 +440,7 @@ def showMesh(
 
             if cMap == "viridis":
                 cMap = "Set3"
-            cMap = cmapFromName("Set3", ncols=len(uniquemarkers))
+            cMap = cMapFromName("Set3", ncols=len(uniquemarkers))
 
             kwargs["logScale"] = False
             kwargs["cMin"] = -0.5
@@ -623,7 +623,7 @@ def showMesh(
                 mesh.gci[ax] = gci
 
                 if cMap is not None and gci is not None:
-                    gci.set_cmap(cmapFromName(cMap))
+                    gci.set_cmap(cMapFromName(cMap))
                     # gci.cmap.set_under('k')
 
             except BaseException as ex:  # super ugly!
