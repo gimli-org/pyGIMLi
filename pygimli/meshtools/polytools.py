@@ -896,12 +896,12 @@ def mergePLC(plc, tol=1e-3):
         # return plc
 
     # handle 2D geometries
-    plc = pg.Mesh(dim=2, isGeometry=True)
+    outPlc = pg.Mesh(dim=2, isGeometry=True)
 
     for p in plc:
         nodes = []
         for n in p.nodes():
-            nn = plc.createNodeWithCheck(
+            nn = outPlc.createNodeWithCheck(
                 n.pos(), tol, warn=False, edgeCheck=True
             )
             if n.marker() != 0:
@@ -909,19 +909,19 @@ def mergePLC(plc, tol=1e-3):
             nodes.append(nn)
 
         for e in p.boundaries():
-            plc.createEdge(
+            outPlc.createEdge(
                 nodes[e.node(0).id()], nodes[e.node(1).id()], e.marker()
             )
 
         if len(p.regionMarkers()) > 0:
             for rm in p.regionMarkers():
-                plc.addRegionMarker(rm)
+                outPlc.addRegionMarker(rm)
 
         if len(p.holeMarker()) > 0:
             for hm in p.holeMarker():
-                plc.addHoleMarker(hm)
+                outPlc.addHoleMarker(hm)
 
-    return plc
+    return outPlc
 
 
 def mergePLC3D(plc, tol=1e-3):
