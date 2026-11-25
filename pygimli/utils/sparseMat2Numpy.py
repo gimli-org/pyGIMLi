@@ -220,7 +220,7 @@ def sparseMatrix2Array(matrix, indices=True, getInCRS=True):
     indices: boolean (True)
         Decides weather the indices of the matrix will be returned or not.
 
-    getInCSR: boolean (True)
+    getInCRS: boolean (True)
         If returned, the indices can have the format of a compressed row
         storage (CSR), the default or uncompressed lists with column and row
         indices.
