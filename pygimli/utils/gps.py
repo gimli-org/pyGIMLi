@@ -41,10 +41,10 @@ def getUTMProjection(zone, ellps='WGS84'):
 
     Parameters
     ----------
-    utmZone : str
+    zone : str
         Zone for for UTM
 
-    ellipsoid : str
+    ellps : str
         ellipsoid based on ['wgs84']
 
     Returns

@@ -95,7 +95,7 @@ def createRAData(sensors, shotDistance=1):
     ----------
     sensors: ndarray | R3Vector
         Geophon and shot positions (same)
-    shotDistances: int [1]
+    shotDistance: int [1]
         Distance between shot indices.
 
     Returns

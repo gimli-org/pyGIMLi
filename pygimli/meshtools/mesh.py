@@ -1243,7 +1243,7 @@ def readHydrus2dMesh(fileName='MESHTRIA.TXT'):
 
     Parameters
     ----------
-    fName : str, optional
+    fileName : str, optional
         Filename of Hydrus output file.
 
     See Also
@@ -1291,7 +1291,7 @@ def readHydrus3dMesh(fileName='MESHTRIA.TXT'):
 
     Parameters
     ----------
-    fName : str, optional
+    fileName : str, optional
         Filename of Hydrus output file.
 
     See Also
@@ -1454,7 +1454,7 @@ def readGambitNeutral(fileName, verbose=False):
 
     Parameters
     ----------
-    fName : string
+    fileName : string
         Filename of the file to read (\\*.n, \\*.e \\*.f)
 
     verbose : boolean, optional

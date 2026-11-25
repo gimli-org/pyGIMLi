@@ -14,7 +14,7 @@ def simulateNlayerRefraction(offsets, thk, vel, muteDirect=False):
 
     Parameters
     ----------
-    offset : iterable
+    offsets : iterable
         Offsets distances between shot and geophone
     thk : iterable
         Thickness of the layers

@@ -849,7 +849,7 @@ def div(mesh, v):
         Discretization base, interpolation will be performed via finite element
         base shape functions.
 
-    V : array(N,3) | R3Vector
+    v : array(N,3) | R3Vector
         Vector field at cell centers or boundary centers
 
     Returns
@@ -1315,7 +1315,7 @@ def getDirichletMap(mat, boundaryPairs, time=0.0, userData={},
     ----------
     mat: :gimliapi:`GIMLI::SparseMatrix`
         System matrix of the system equation.
-    boundaryPair: list()
+    boundaryPairs: list()
         List of pairs [:gimliapi:`GIMLI::Boundary`, h].
         The value :math:`h` will assigned to the nodes of the boundaries.
         Later assignment overwrites prior.
@@ -1455,7 +1455,7 @@ def assembleNeumannBC(rhs, boundaryPairs, nDim=1, time=0.0, userData={},
     ----------
     rhs: :py:mod:`Vector`
         Right hand side vector of length node count.
-    boundaryPair : list()
+    boundaryPairs : list()
         List of pairs [ :gimliapi:`GIMLI::Boundary`, g ].
         The value :math:`g` will assigned to the nodes of the boundaries.
         Later assignment overwrites prior.
