@@ -196,7 +196,7 @@ def showqtresultfit(thk, wc, t2, datvec, resp, t,
     nq = len(datvec) / nt
     si = (nq, nt)
 
-    fig = plt.figure(1)
+    fig = pg.plt.figure(1)
     ax1 = fig.add_subplot(nu, nv, 1)
 
     draw1dmodel(wc, thk, islog=False, xlab=r'$\theta$')
@@ -206,28 +206,28 @@ def showqtresultfit(thk, wc, t2, datvec, resp, t,
     ax3.set_xticklabels(('0.02', '0.05', '0.1', '0.2', '0.5'))
     ax2 = fig.add_subplot(nu, nv, 2)
     if islog:
-        plt.imshow(np.log10(np.array(datvec).reshape(si)),
+        pg.plt.imshow(np.log10(np.array(datvec).reshape(si)),
                    interpolation='nearest', aspect='auto')
     else:
-        plt.imshow(np.array(datvec).reshape(si),
+        pg.plt.imshow(np.array(datvec).reshape(si),
                    interpolation='nearest', aspect='auto')
-    plt.clim(clim)
+    pg.plt.clim(clim)
     ax4 = fig.add_subplot(nu, nv, 4)
     if islog:
-        plt.imshow(np.log10(resp.reshape(si)),
+        pg.plt.imshow(np.log10(resp.reshape(si)),
                    interpolation='nearest', aspect='auto')
     else:
-        plt.imshow(resp.reshape(si),
+        pg.plt.imshow(resp.reshape(si),
                    interpolation='nearest', aspect='auto')
     misfit = np.array(datvec - resp)
-    plt.clim(clim)
+    pg.plt.clim(clim)
     ax5 = fig.add_subplot(nu, nv, 5)
-    plt.hist(misfit, bins=30)
-    plt.axis('tight')
-    plt.grid(which='both')
-    plt.text(plt.xlim()[0], np.mean(plt.ylim()),
+    pg.plt.hist(misfit, bins=30)
+    pg.plt.axis('tight')
+    pg.plt.grid(which='both')
+    pg.plt.text(pg.plt.xlim()[0], np.mean(pg.plt.ylim()),
              ' std=%g nV' % rndig(np.std(misfit), 3))
     ax6 = fig.add_subplot(nu, nv, 6)
-    plt.imshow(misfit.reshape(si), interpolation='nearest', aspect='auto')
+    pg.plt.imshow(misfit.reshape(si), interpolation='nearest', aspect='auto')
     ax = [ax1, ax2, ax3, ax4, ax5, ax6]
     return ax
